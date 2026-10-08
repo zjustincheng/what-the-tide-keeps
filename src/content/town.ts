@@ -6,11 +6,17 @@ export const town: Dialogue = {
     'A reptile with a church brand. The church said it would send someone. I had hoped for someone else.',
     'Grain carts leave here for the highlands every morning. For six days, every one has come back. The drivers say they were turned at the border.',
     'Nobody gave the order. Everybody has heard it. Find out who is turning my carts, and I may find a use for a convict.',
-  ] },
+  ], variants: [{ if: { flag: 'boar-defeated' }, lines: [
+    'The carts went through at dawn. The highlands will have their grain.',
+    'The boar. We burned him out over a kid who was never eaten. I signed the order myself.',
+    'I will not thank a convict in the square. I am thanking you here.',
+  ] }] },
   innkeeper: { speaker: 'THE INNKEEPER', prompt: 'Speak to the innkeeper', lines: [
     'We are full.',
     'The board says otherwise? The board is old. There is a field past the south gate. I am told your kind sleeps well enough out of doors.',
-  ] },
+  ], variants: [{ if: { flag: 'boar-defeated' }, lines: [
+    'A room has come free. Do not make me regret it.',
+  ] }] },
   shopkeeper: { speaker: 'THE STALLHOLDER', prompt: 'Speak to the stallholder', lines: [
     'Smoked fish, bandages, lamp oil. For citizens, four coppers a piece.',
     'For you, let us say twelve. The road is dangerous, and so, I hear, are you.',

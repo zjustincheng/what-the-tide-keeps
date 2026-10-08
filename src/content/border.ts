@@ -13,21 +13,22 @@ export const border: Dialogue = {
     'Six days I have driven this road. Six days a guard in a church sash stops me here and says: turn back, by order.',
     'Whose order? He does not know. He only knows it is an order.',
     'Up in the highlands they are cutting the fish ration again. Hungry wolves do not stay patient for long, convict.',
-  ] },
+  ], variants: [{ if: { flag: 'boar-defeated' }, lines: [
+    'The guard waved me through at dawn. No order, he said. There never was one.',
+    'The highlands will eat this winter. I will tell them a reptile did it. They will not believe me.',
+  ] }] },
   guard: { speaker: 'A FARMLAND GUARD', prompt: 'Speak to the guard', lines: [
     'Stay back, reptile. One of you is plenty.',
     'The order came by word of mouth from the border post. Nobody here has seen it written. Nobody here has asked.',
     'The wolves say we are starving them. We say they will eat us when the grain runs out. Both sides are waiting for the other to move first.',
-  ] },
+  ], variants: [{ if: { flag: 'boar-defeated' }, lines: [
+    'Nobody gave that order. I went to the border post and asked. I should have asked six days ago.',
+  ] }] },
   carts: { speaker: 'THE GRAIN CARTS', prompt: 'Examine the carts', lines: [
     'Grain carts, still loaded, turned around to face the farmland. Nobody has unhitched them.',
     'The farmland\'s mark has been cut from every sack, neatly, by someone with time to do it.',
   ] },
   marker: { speaker: 'THE BORDER MARKER', prompt: 'Read the marker', lines: [
     'Here ends the farmland. Here begins the highlands. Under both, older and deeper: HERE NOBODY EATS ANYBODY.',
-  ] },
-  south: { speaker: 'THE ROAD SOUTH', prompt: 'Follow the smoke', lines: [
-    'The grass is scorched past the marker. A burned farmhouse stands a little way off the road.',
-    'The boar\'s farm is not built yet. For now, the road ends here.',
   ] },
 };

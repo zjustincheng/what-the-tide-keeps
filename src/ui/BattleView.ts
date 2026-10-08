@@ -1,5 +1,5 @@
 import { act, canAct, condition, COST, ENEMIES, createBattle, enemyTarget, intent, MEMBERS, resolveEnemy, visibleMana, enemyMana, SPELL } from '../rules/battle';
-import type { Action, Battle, Fighter, MemberId, Encounter } from '../rules/battle';
+import type { Action, Battle, Fighter, Foe, MemberId, Encounter } from '../rules/battle';
 import type { Hollow } from '../rules/memory';
 
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
@@ -25,9 +25,14 @@ export class BattleView {
     this.root.innerHTML = `
       <div class="battle-heading"><p class="eyebrow">THE CONDEMNED</p><h2 id="battle-title">Stand together.</h2><p id="battle-turn"></p></div>
       <div class="enemy-row">
-        <div class="fighter enemy-fighter"><img src="${import.meta.env.BASE_URL}assets/${encounter}.svg" alt="${enemyName}" /></div>
+        <div class="fighter enemy-fighter" data-foe="0"><img src="${import.meta.env.BASE_URL}assets/${encounter}.svg" alt="${enemyName}" /></div>
         <div><h3>${enemyName}</h3><div class="health-bar" role="meter" aria-label="${enemyName} health" aria-valuemin="0" aria-valuemax="100"><span></span></div><p id="enemy-condition"></p><p class="mana" id="enemy-mana"></p></div>
+        ${this.state.followers.map((follower, index) => `<div class="follower" data-foe="${index + 1}">
+          <div class="fighter enemy-fighter"><img src="${import.meta.env.BASE_URL}assets/${follower.name.toLowerCase()}.svg" alt="${follower.name}" /></div>
+          <h4>${follower.name}</h4><div class="health-bar" role="meter" aria-label="${follower.name} health" aria-valuemin="0" aria-valuemax="100"><span></span></div><p class="follower-condition"></p><p class="mana">Mana veiled</p>
+        </div>`).join('')}
       </div>
+      ${this.state.followers.length ? `<label class="strike-label">Strike at <select id="strike-target" aria-label="Attack target"><option value="0">${enemyName}</option>${this.state.followers.map((follower, index) => `<option value="${index + 1}">${follower.name}</option>`).join('')}</select></label>` : ''}
       <p class="intent" id="enemy-intent"></p><p class="grimoire-status" aria-live="polite"></p>
       <div class="party-roster">${this.state.party.map(member => {
         const info = MEMBERS[member.id];
@@ -53,11 +58,12 @@ export class BattleView {
       for (const action of ['attack', 'support', 'suppress', 'barrier', 'analyze'] as const) {
         card.querySelector(`[data-action="${action}"]`)!.addEventListener('click', () => {
           const target = (action === 'barrier' || (member.id === 'bear' && action === 'support')) ? card.querySelector<HTMLSelectElement>('select')!.value as MemberId : member.id;
-          this.choose(member.id, action, target);
+          this.choose(member.id, action, target, action === 'attack' ? this.foe() : 0);
         }, { signal });
       }
       this.bindDrag(member.id);
     }
+    this.root.querySelector('#strike-target')?.addEventListener('change', () => this.render(), { signal });
     this.get('#battle-finish').addEventListener('click', () => {
       if (this.state.phase !== 'victory' && this.state.phase !== 'defeat') return;
       const won = this.state.phase === 'victory';
@@ -91,7 +97,8 @@ export class BattleView {
     hero.addEventListener('pointerup', event => {
       if (start && dragged) {
         const target = document.elementFromPoint(event.clientX, event.clientY);
-        if (target?.closest('.enemy-fighter')) this.choose(actor, 'attack');
+        const foe = target?.closest<HTMLElement>('[data-foe]');
+        if (foe) this.choose(actor, 'attack', actor, Number(foe.dataset.foe));
         else {
           const ally = target?.closest<HTMLElement>('[data-member]')?.dataset.member as MemberId | undefined;
           if (ally) this.choose(actor, 'support', ally);
@@ -122,9 +129,13 @@ export class BattleView {
     if (next) this.card(next.id).querySelector<HTMLButtonElement>('[data-action="support"]')!.focus({ preventScroll: true });
   }
 
-  private choose(actor: MemberId, action: Action, target: MemberId = actor) {
-    if (!canAct(this.state, actor, action, target)) return;
-    this.state = act(this.state, actor, action, target);
+  private foe(): Foe {
+    return Number(this.root.querySelector<HTMLSelectElement>('#strike-target')?.value ?? 0);
+  }
+
+  private choose(actor: MemberId, action: Action, target: MemberId = actor, foe: Foe = 0) {
+    if (!canAct(this.state, actor, action, target, foe)) return;
+    this.state = act(this.state, actor, action, target, foe);
     this.persist(); this.render();
     if (this.state.phase === 'enemy') {
       this.root.focus({ preventScroll: true });
@@ -148,7 +159,18 @@ export class BattleView {
       : `Round ${state.round} · ${state.phase === 'player' ? `${remaining} actions remaining` : 'The enemy moves'}`;
     this.get('#enemy-condition').textContent = condition(state.enemy);
     this.renderHealth(this.get('.enemy-row .health-bar'), state.enemy);
-    this.get('#enemy-mana').textContent = `Mana ${enemyMana(state)}${ENEMIES[state.encounter].veiled && !state.enemyRevealed ? ' · veiled' : ''}`;
+    state.followers.forEach((follower, index) => {
+      const card = this.get(`.follower[data-foe="${index + 1}"]`);
+      this.renderHealth(card.querySelector<HTMLElement>('.health-bar')!, follower);
+      card.querySelector('.follower-condition')!.textContent = condition(follower);
+    });
+    const strike = this.root.querySelector<HTMLSelectElement>('#strike-target');
+    if (strike) {
+      for (const option of Array.from(strike.options)) option.disabled = Number(option.value) > 0 && state.followers[Number(option.value) - 1].health === 0;
+      if (strike.selectedOptions[0]?.disabled) strike.value = '0';
+      strike.disabled = state.phase !== 'player';
+    }
+    this.get('#enemy-mana').textContent = `Mana ${enemyMana(state)}${ENEMIES[state.encounter].veiled && !state.enemyRevealed ? ' · veiled' : ''}${state.fury ? ` · Fury ${state.fury}` : ''}`;
     const target = enemyTarget(state);
     this.get('#enemy-intent').textContent = done ? '' : `${intent(state).type === 'spell' ? 'Spell' : 'Physical'} · ${intent(state).tell} ${target ? `Watching ${MEMBERS[target.id].name}.` : ''}`;
     this.get('.grimoire-status').textContent = `Grimoire · ${state.studied.includes(SPELL) ? SPELL + ' — can be blocked' : 'No spells studied'}${this.saved ? '' : ' · kept for this visit; browser save unavailable'}`;
@@ -163,7 +185,7 @@ export class BattleView {
         : member.barrier ? 'Barrier raised' : member.suppressed ? 'Hidden · attack to reveal'
         : member.guardingFor ? `Guarding ${MEMBERS[member.guardingFor].name}` : member.focused ? 'Focused'
         : member.acted ? 'Acted' : done ? '' : 'Ready';
-      for (const action of ['attack', 'support', 'suppress', 'barrier', 'analyze'] as const) card.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)!.disabled = !canAct(state, member.id, action);
+      for (const action of ['attack', 'support', 'suppress', 'barrier', 'analyze'] as const) card.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)!.disabled = !canAct(state, member.id, action, member.id, action === 'attack' ? this.foe() : 0);
       card.querySelector<HTMLButtonElement>('.party-fighter')!.disabled = !canAct(state, member.id, 'support');
       const select = card.querySelector('select');
       if (select) {

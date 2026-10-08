@@ -1,11 +1,12 @@
 import type Phaser from 'phaser';
 import { church } from '../content/church';
+import { farm } from '../content/farm';
 import type { Dialogue } from '../content/dialogue';
 import { border } from '../content/border';
 import { road } from '../content/road';
 import { town } from '../content/town';
 import type { Encounter } from '../rules/battle';
-import type { Condition } from '../rules/world';
+import type { Condition, Effect } from '../rules/world';
 
 export type Area = {
   key: string;
@@ -17,7 +18,10 @@ export type Area = {
   bounds: [x: number, y: number, width: number, height: number];
   dialogue: Dialogue;
   npcs: { point: string; texture: string }[];
-  enemies: { point: string; encounter: Encounter }[];
+  // Enemies respawn on every visit unless hiddenIf holds; defeat applies once the fight is won.
+  enemies: { point: string; encounter: Encounter; hiddenIf?: Condition[]; defeat?: Effect }[];
+  // SVG art in public/assets to load, beyond the map, tiles, and enemies.
+  assets?: string[];
   // Objects on the map that disappear once any hiddenIf condition holds. Solid ones block the way.
   props?: { point: string; texture: string; solid?: boolean; hiddenIf: Condition[] }[];
   // Points that lead elsewhere when the hero interacts with them.
@@ -87,10 +91,32 @@ export const TOWN: Area = {
 
 export const BORDER_ROAD: Area = {
   key: 'border-road', map: 'border-road', tileset: 'border', region: 'THE FARMLAND', place: 'The border road', time: 'Midday',
-  bounds: [0, 0, 512, 384], dialogue: border, enemies: [],
+  bounds: [0, 0, 512, 384], dialogue: border, enemies: [{ point: 'follower', encounter: 'acolyte' }],
   npcs: [{ point: 'driver', texture: 'driver' }, { point: 'guard', texture: 'guard' }],
   props: [1, 2, 3, 4, 5, 6, 7, 8].map(i => ({ point: `bramble-${i}`, texture: 'brambles', solid: true, hiddenIf: [{ flag: 'hedge-open' as const }] })),
-  exits: { north: { to: 'town', spawn: 'from-border', prompt: 'Return to Millbrook' } },
+  exits: {
+    north: { to: 'town', spawn: 'from-border', prompt: 'Return to Millbrook' },
+    south: { to: 'boar-farm', spawn: 'spawn', prompt: 'Follow the smoke' },
+  },
 };
 
-export const AREAS = [CHURCH, FARM_ROAD, TOWN, BORDER_ROAD];
+export const BOAR_FARM: Area = {
+  key: 'boar-farm', map: 'boar-farm', tileset: 'ash', region: 'THE FARMLAND', place: 'The burned farm', time: 'Afternoon',
+  bounds: [0, 0, 512, 384], dialogue: farm, npcs: [], assets: ['badger', 'rat'],
+  enemies: [{ point: 'boar', encounter: 'boar', hiddenIf: [{ flag: 'boar-defeated' }], defeat: { set: 'boar-defeated' } }],
+  props: [
+    { point: 'badger', texture: 'badger', solid: true, hiddenIf: [] },
+    { point: 'rat', texture: 'rat', solid: true, hiddenIf: [] },
+    { point: 'cup', texture: 'cup', hiddenIf: [{ not: { flag: 'boar-defeated' } }] },
+  ],
+  exits: { north: { to: 'border-road', spawn: 'from-farm', prompt: 'Return to the border road' } },
+  decorate(scene) {
+    // Embers still rising from the farmhouse.
+    for (let i = 0; i < 6; i++) {
+      const ember = scene.add.rectangle(80 + (i * 37) % 100, 120, 1, 1, 0xd8743a, 0.8).setDepth(5);
+      scene.tweens.add({ targets: ember, y: 60, alpha: 0, duration: 2200 + i * 300, delay: i * 400, repeat: -1 });
+    }
+  },
+};
+
+export const AREAS = [CHURCH, FARM_ROAD, TOWN, BORDER_ROAD, BOAR_FARM];

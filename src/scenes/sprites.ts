@@ -69,4 +69,9 @@ export function createSprites(scene: Phaser.Scene) {
   bell.fillStyle(0xf0d58a).fillRect(4, 3, 1, 2);
   bell.fillStyle(0x5a4330).fillRect(4, 7, 2, 1);
   bell.generateTexture('bell', 10, 9); bell.destroy();
+  const cup = scene.make.graphics({ x: 0, y: 0 });
+  cup.fillStyle(0xc89b4a).fillRect(1, 0, 8, 1).fillRect(2, 1, 6, 4).fillRect(4, 5, 2, 3).fillRect(2, 8, 6, 1);
+  cup.fillStyle(0xf0d58a).fillRect(3, 1, 1, 3);
+  cup.fillStyle(0x7b3a2e).fillRect(5, 2, 2, 1);
+  cup.generateTexture('cup', 10, 9); cup.destroy();
 }

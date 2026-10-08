@@ -3,16 +3,16 @@ import type { Conversation, Dialogue } from '../content/dialogue';
 import type { MemoryId } from './memory';
 
 export type Item = 'bell';
-export type Flag = 'lamb-thanked' | 'hedge-open';
+export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated';
 export type World = Readonly<{ flags: readonly Flag[]; carried: readonly Item[] }>;
 export const ITEMS: readonly Item[] = ['bell'];
-export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open'];
+export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defeated'];
 // A favor spell: a small everyday spell a villager trades for help. It opens the hedge on the border road.
 export const BRAMBLES = "Bramble's leave";
 
 // What a line of dialogue can depend on.
 export type Context = Readonly<{ world: World; lost: readonly MemoryId[]; studied: readonly string[] }>;
-export type Condition = { forgot: MemoryId } | { has: Item } | { flag: Flag } | { knows: string };
+export type Condition = { forgot: MemoryId } | { has: Item } | { flag: Flag } | { knows: string } | { not: Condition };
 export type Effect = { give?: Item; take?: Item; set?: Flag; learn?: string };
 
 export function createWorld(): World {
@@ -20,6 +20,7 @@ export function createWorld(): World {
 }
 
 export function holds(context: Context, condition: Condition): boolean {
+  if ('not' in condition) return !holds(context, condition.not);
   if ('forgot' in condition) return context.lost.includes(condition.forgot);
   if ('has' in condition) return context.world.carried.includes(condition.has);
   if ('flag' in condition) return context.world.flags.includes(condition.flag);

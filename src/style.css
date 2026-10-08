@@ -488,3 +488,19 @@ footer span:last-child {
   .memory-choices { grid-template-columns: minmax(0, 1fr); }
   .resurrection-intro { font-size: 11px; }
 }
+
+.follower { text-align: center; min-width: 76px; padding: 4px 6px; border: 1px solid #6b7c5844; background: #17271e44; }
+.follower .fighter { height: 46px; width: 56px; }
+.follower img { width: 44px; height: 44px; }
+.follower h4 { margin: 2px 0; font-size: 13px; font-weight: normal; }
+.follower .health-bar { margin: 4px 0; }
+.follower p { margin: 2px 0; font-size: 10px; }
+.follower .mana { color: #b7d3c7; font: 9px ui-monospace, monospace; }
+.strike-label { display: block; margin: 4px 0 0; font: 10px ui-monospace, monospace; color: #abb899; }
+.strike-label select { background: #22372a; border: 1px solid #5d7253; color: #d7d9c8; font: 11px Georgia, serif; padding: 2px; }
+@media(max-width:650px) {
+  .enemy-row:has(.follower) { flex-wrap: wrap; gap: 6px; }
+  .follower { min-width: 64px; padding: 2px 4px; }
+  .follower .fighter { height: 36px; width: 44px; }
+  .follower img { width: 34px; height: 34px; }
+}

@@ -3,7 +3,7 @@ import { createBattle, enemyMana, ENEMIES } from '../rules/battle';
 import type { Encounter } from '../rules/battle';
 import { forget, held, hollow, MEMORY_IDS, wipe } from '../rules/memory';
 import { apply, conversation, drop, holds } from '../rules/world';
-import type { Condition, Context } from '../rules/world';
+import type { Condition, Context, Effect } from '../rules/world';
 import type { Conversation } from '../content/dialogue';
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
 import { loadMemory, saveMemory } from '../storage/memory';
@@ -16,10 +16,10 @@ import { createSprites } from './sprites';
 type Direction = 'up' | 'down' | 'left' | 'right';
 type Point = { name: string; x: number; y: number };
 type Prop = { sprite: Phaser.Physics.Arcade.Sprite; hiddenIf: Condition[] };
-type Foe = { encounter: Encounter; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container };
+type Foe = { encounter: Encounter; defeat?: Effect; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container };
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 // Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
-const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10] };
+const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10] };
 // Whether the last save succeeded, shared by every area.
 let saved = true;
 
@@ -54,7 +54,7 @@ export class AreaScene extends Phaser.Scene {
     const base = import.meta.env.BASE_URL;
     this.load.svg(`${this.area.tileset}-tiles`, `${base}assets/${this.area.tileset}-tiles.svg`);
     this.load.tilemapTiledJSON(`${this.area.map}-map`, `${base}maps/${this.area.map}.json`);
-    for (const { encounter } of this.area.enemies) if (!this.textures.exists(encounter)) this.load.svg(encounter, `${base}assets/${encounter}.svg`);
+    for (const key of [...this.area.enemies.map(enemy => enemy.encounter), ...this.area.assets ?? []]) if (!this.textures.exists(key)) this.load.svg(key, `${base}assets/${key}.svg`);
   }
 
   create() {
@@ -78,7 +78,8 @@ export class AreaScene extends Phaser.Scene {
       npc.setSize(10, 8).setOffset(5, 16);
       this.physics.add.collider(this.player, npc);
     }
-    for (const { point, encounter } of this.area.enemies) this.createFoe(this.point(point), encounter);
+    const context = this.context();
+    for (const enemy of this.area.enemies) if (!enemy.hiddenIf?.some(condition => holds(context, condition))) this.createFoe(this.point(enemy.point), enemy);
     for (const { point, texture, solid, hiddenIf } of this.area.props ?? []) {
       const at = this.point(point);
       const sprite = solid ? this.physics.add.staticSprite(at.x, at.y, texture) : this.physics.add.sprite(at.x, at.y, texture);
@@ -112,14 +113,19 @@ export class AreaScene extends Phaser.Scene {
     return { world: loadWorld(), lost: loadMemory().lost, studied: loadGrimoire() };
   }
 
-  // Props vanish once their condition holds: brambles that let go, a bell already picked up.
+  // Props follow story state: brambles that let go, a bell already picked up, a cup left behind.
   private refreshProps(instant = false) {
     const context = this.context();
     for (const { sprite, hiddenIf } of this.props) {
-      if (!sprite.active || !hiddenIf.some(condition => holds(context, condition))) continue;
-      sprite.disableBody(true, false);
-      if (instant) sprite.setVisible(false);
-      else this.tweens.add({ targets: sprite, alpha: 0, scale: 0.6, duration: 700, delay: 300, onComplete: () => sprite.setVisible(false) });
+      const hidden = hiddenIf.some(condition => holds(context, condition));
+      if (hidden && sprite.active) {
+        sprite.disableBody(true, false);
+        if (instant) sprite.setVisible(false);
+        else this.tweens.add({ targets: sprite, alpha: 0, scale: 0.6, duration: 700, delay: 300, onComplete: () => sprite.setVisible(false) });
+      } else if (!hidden && !sprite.active) {
+        sprite.enableBody(false, 0, 0, true, true);
+        if (!instant) this.tweens.add({ targets: sprite, alpha: { from: 0, to: 1 }, duration: 700 });
+      }
     }
   }
 
@@ -127,7 +133,7 @@ export class AreaScene extends Phaser.Scene {
     return this.points.find(p => p.name === name)!;
   }
 
-  private createFoe(at: Point, encounter: Encounter) {
+  private createFoe(at: Point, { encounter, defeat }: Area['enemies'][number]) {
     const [width, height, x, y] = BODY[encounter];
     const sprite = this.physics.add.staticSprite(at.x, at.y, encounter).setDepth(4);
     sprite.setSize(width, height).setOffset(x, y);
@@ -137,7 +143,7 @@ export class AreaScene extends Phaser.Scene {
     const mana = this.add.text(0, veiled ? -24 : -23, `◇ ${enemyMana(createBattle(encounter))}`, { fontFamily: 'monospace', fontSize: '8px', color: veiled ? '#b7d3c7' : '#dbc58b' }).setOrigin(0.5);
     const signature = this.add.container(at.x, at.y, [ring, mana]).setDepth(5);
     this.tweens.add({ targets: ring, alpha: veiled ? 0.15 : 0.35, duration: veiled ? 1400 : 1000, yoyo: true, repeat: -1 });
-    const foe = { encounter, sprite, signature };
+    const foe = { encounter, sprite, signature, defeat };
     this.foes.push(foe);
     this.physics.add.overlap(this.player, sprite, () => this.beginBattle(foe));
   }
@@ -235,6 +241,11 @@ export class AreaScene extends Phaser.Scene {
       if(won) {
         foe.sprite.disableBody(true, true);
         foe.signature.setVisible(false);
+        if(foe.defeat) {
+          const next=apply(this.context(), foe.defeat);
+          saved=saveWorld(next.world);
+          this.refreshProps();
+        }
         this.resumeExploration();
       } else {
         // Every wipe wakes the party at the church, wherever it fell.
