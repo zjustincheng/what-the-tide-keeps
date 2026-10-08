@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { doom } from './helpers';
 
 async function enterEncounter(page: Page) {
   await page.evaluate(async () => {
@@ -49,11 +50,11 @@ test('party acts in any order, locks spent turns, and wins with protection', asy
   await expect(page.getByRole('button', { name: 'Bear attack', exact: true })).toBeDisabled();
   await expect(page.locator('#battle-turn')).toHaveText('Round 2 · 3 actions remaining');
   await expect(page.getByRole('log')).toContainText('Bear turns aside');
-  for(let round=2;round<=8;round++) {
+  for(let round=2;round<=3;round++) {
     await expect(page.locator('#battle-turn')).toHaveText(`Round ${round} · 3 actions remaining`);
     await page.getByRole('button', { name: 'Bear support', exact: true }).click();
     await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
-    if(round<8) await page.getByRole('button', { name: 'Vulture attack', exact: true }).click();
+    await page.getByRole('button', { name: 'Vulture attack', exact: true }).click();
   }
   await expect(page.locator('.battle')).toHaveAttribute('data-phase', 'victory');
   await page.getByRole('button', { name: 'Return to the church' }).click();
@@ -81,10 +82,11 @@ test('bear can drag onto an ally and vulture can tap to focus', async ({ page })
 
 test('downed companions are skipped and only a full party wipe returns to the cot', async ({ page }) => {
   await enterEncounter(page);
-  for(let round=1;round<=6;round++) {
-    const living=round<=3?['chameleon','bear','vulture']:round<=5?['chameleon','vulture']:['vulture'];
+  await doom(page);
+  for(let round=1;round<=3;round++) {
+    const living=round===1?['chameleon','bear','vulture']:round===2?['chameleon','vulture']:['vulture'];
     await expect(page.locator('#battle-turn')).toHaveText(`Round ${round} · ${living.length} actions remaining`);
-    if(round===4) {
+    if(round===2) {
       await expect(card(page, 'bear').locator('.member-condition')).toHaveText('Downed');
       await expect(page.getByRole('button', { name: 'Bear attack', exact: true })).toBeDisabled();
     }

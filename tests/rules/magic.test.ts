@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { act, canAct, createBattle, enemyMana, enemyTarget, intent, resolveEnemy, SPELL, visibleMana } from '../../src/rules/battle.ts';
+import { act, canAct, createBattle, ENEMIES, enemyMana, enemyTarget, intent, MEMBERS, resolveEnemy, SPELL, visibleMana } from '../../src/rules/battle.ts';
 import type { Battle } from '../../src/rules/battle.ts';
 const finish = (battle: Battle) => {
   for (const member of battle.party) if (!member.acted) battle = act(battle, member.id, 'support');
@@ -17,11 +17,11 @@ test('suppression pays mana, spends a turn, changes targeting, and reveals once 
   assert.equal(canAct(battle, 'bear', 'suppress'), false);
   const before = battle.enemy.health;
   battle = act(battle, 'bear', 'attack');
-  assert.equal(before - battle.enemy.health, 5);
+  assert.equal(before - battle.enemy.health, MEMBERS.bear.damage + 2);
   assert.equal(battle.party[1].suppressed, false);
   let hero = finish(act(createBattle(), 'chameleon', 'suppress'));
   hero = act(hero, 'chameleon', 'attack');
-  assert.equal(hero.enemy.health, 64, 'chameleon has the strongest reveal bonus');
+  assert.equal(hero.enemy.health, ENEMIES.locust.health - (MEMBERS.chameleon.damage + 4), 'chameleon has the strongest reveal bonus');
 });
 
 test('unknown spell countdown reveals after surviving; an unknown spell ignores barriers and guards', () => {
@@ -35,7 +35,7 @@ test('unknown spell countdown reveals after surviving; an unknown spell ignores 
   battle = act(battle, 'vulture', 'barrier', 'bear');
   assert.equal(battle.party[2].mana, 5);
   battle = finish(battle);
-  assert.equal(battle.party[1].health, 6, 'unknown magic bypasses both physical guard and barrier');
+  assert.equal(battle.party[1].health, battle.party[1].maxHealth - 18, 'unknown magic bypasses both physical guard and barrier');
   assert.deepEqual(battle.studied, [SPELL]);
   assert.equal(battle.enemyRevealed, true);
   assert.equal(enemyMana(battle), 10);
@@ -50,12 +50,12 @@ test('analysis consumes an action and mana; known barriers stop magic but never 
   battle = finish(battle);
   assert.equal(intent(battle).name, SPELL);
   battle = finish(act(battle, 'vulture', 'barrier', 'bear'));
-  assert.equal(battle.party[1].health, 24);
+  assert.equal(battle.party[1].health, battle.party[1].maxHealth);
   assert.ok(battle.log.some(line => line.includes('barrier stops')));
   // Physical attacks pass through a barrier if nobody guards.
   let physical = act(createBattle('acolyte', [SPELL]), 'vulture', 'barrier', 'bear');
   physical = resolveEnemy(act(act(physical, 'bear', 'attack'), 'chameleon', 'attack'));
-  assert.equal(physical.party[1].health, 19);
+  assert.equal(physical.party[1].health, physical.party[1].maxHealth - 4);
 });
 
 test('barriers cost five, cannot target the fallen, and spells are not learned on a total wipe', () => {

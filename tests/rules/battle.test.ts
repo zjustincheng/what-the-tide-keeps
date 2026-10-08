@@ -1,8 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { act, canAct, condition, createBattle, enemyTarget, resolveEnemy } from '../../src/rules/battle.ts';
+import { act, canAct, condition, createBattle, enemyTarget, intent, MEMBERS, resolveEnemy } from '../../src/rules/battle.ts';
 import type { Battle, MemberId } from '../../src/rules/battle.ts';
 const member = (battle: Battle, id: MemberId) => battle.party.find(member => member.id === id)!;
+// An enemy too tough to finish, for checking how the party falls.
+const tough = (battle: Battle): Battle => ({ ...battle, enemy: { ...battle.enemy, health: 999, maxHealth: 999 } });
 const round = (battle: Battle, guard = false) => resolveEnemy(act(act(act(battle, 'vulture', 'attack'), 'bear', guard ? 'support' : 'attack'), 'chameleon', 'attack'));
 
 test('all three act once in any order before the enemy; inputs remain immutable', () => {
@@ -51,11 +53,12 @@ test('bear protects another ally; protection expires after one enemy turn', () =
   battle = act(act(act(battle, 'bear', 'support', 'chameleon'), 'chameleon', 'attack'), 'vulture', 'attack');
   assert.equal(enemyTarget(battle)?.id, 'chameleon');
   battle = resolveEnemy(battle);
-  assert.equal(member(battle, 'chameleon').health, 16);
-  assert.equal(member(battle, 'bear').health, 24);
+  assert.equal(member(battle, 'chameleon').health, member(battle, 'chameleon').maxHealth);
+  assert.equal(member(battle, 'bear').health, member(battle, 'bear').maxHealth);
   assert.ok(battle.party.every(member => member.guardingFor === null));
+  const leap = intent(battle).damage;
   battle = round(battle);
-  assert.equal(member(battle, 'chameleon').health, 2);
+  assert.equal(member(battle, 'chameleon').health, member(battle, 'chameleon').maxHealth - leap);
 });
 
 test('invalid ally support does not spend a turn', () => {
@@ -72,14 +75,13 @@ test('vulture focus persists between rounds and boosts only the next attack', ()
   assert.equal(member(battle, 'vulture').focused, true);
   const before = battle.enemy.health;
   battle = act(battle, 'vulture', 'attack');
-  assert.equal(before - battle.enemy.health, 9);
+  assert.equal(before - battle.enemy.health, MEMBERS.vulture.damage + 3);
   assert.equal(member(battle, 'vulture').focused, false);
 });
 
 test('a downed member is skipped; a wipe requires every companion to fall', () => {
-  let battle = createBattle();
-  for(let i=0;i<3;i++) battle = round(battle);
-  assert.equal(member(battle, 'bear').health, 0);
+  let battle = tough(createBattle());
+  while(member(battle, 'bear').health > 0) { battle = round(battle); assert.ok(battle.round < 12); }
   assert.equal(battle.phase, 'player');
   battle = act(act(battle, 'chameleon', 'attack'), 'vulture', 'attack');
   assert.equal(battle.phase, 'enemy', 'no action is required from a downed bear');
@@ -105,7 +107,8 @@ test('coordinated guarding wins and victory cancels unused actions and retaliati
 
 test('health descriptions use words at each threshold', () => {
   const hero = member(createBattle(), 'chameleon');
-  for(const [health, label] of [[16, 'Unhurt'], [15, 'Bloodied'], [8, 'Wounded'], [4, 'Barely standing'], [0, 'Downed']] as const) {
+  const max = hero.maxHealth;
+  for(const [health, label] of [[max, 'Unhurt'], [max - 1, 'Bloodied'], [max / 2, 'Wounded'], [max / 4, 'Barely standing'], [0, 'Downed']] as const) {
     assert.equal(condition({ ...hero, health }), label);
   }
 });

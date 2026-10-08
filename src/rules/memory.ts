@@ -10,7 +10,7 @@ export const PERKS: Record<MemoryId, Perk> = {
   frog: 'force', octopus: 'force', training: 'mana', home: 'mana', name: 'force',
 };
 export const MEMORY_IDS = Object.keys(PERKS) as MemoryId[];
-export const PERK_BONUS = { mana: 2, force: 1 } as const;
+export const PERK_BONUS = { mana: 2, force: 2 } as const;
 // Lost before the game begins. Their perks are already part of the hero's starting strength.
 export const INITIAL_LOST: readonly MemoryId[] = ['home', 'name'];
 

@@ -34,24 +34,24 @@ export type Battle = Readonly<{
 }>;
 
 export const MEMBERS = {
-  chameleon: { name: 'Chameleon', attack: 'Thorn', support: 'Guard', damage: 4 },
-  bear: { name: 'Bear', attack: 'Stone fist', support: 'Protect', damage: 3 },
-  vulture: { name: 'Vulture', attack: 'Quill', support: 'Focus', damage: 6 },
+  chameleon: { name: 'Chameleon', attack: 'Thorn', support: 'Guard', damage: 7 },
+  bear: { name: 'Bear', attack: 'Stone fist', support: 'Protect', damage: 5 },
+  vulture: { name: 'Vulture', attack: 'Quill', support: 'Focus', damage: 9 },
 } as const;
 // Crop pests hide nothing and only strike physically; the exile veils its mana and casts.
 export const ENEMIES = {
-  locust: { name: 'Crop locust', short: 'locust', health: 72, mana: 2, veiled: false,
+  locust: { name: 'Crop locust', short: 'locust', health: 40, mana: 2, veiled: false,
     opening: 'A crop locust has followed the grain sacks inside. The three of you take your places.' },
-  acolyte: { name: 'Hooded exile', short: 'exile', health: 72, mana: 12, veiled: true,
+  acolyte: { name: 'Hooded exile', short: 'exile', health: 56, mana: 12, veiled: true,
     opening: 'The hooded exile shows almost no mana. A spell gathers behind the veil.' },
-  weevil: { name: 'Grain weevil', short: 'weevil', health: 60, mana: 3, veiled: false,
+  weevil: { name: 'Grain weevil', short: 'weevil', health: 48, mana: 3, veiled: false,
     opening: 'A grain weevil the size of a handcart shoulders out of the wheat.' },
-  boar: { name: 'The boar', short: 'boar', health: 80, mana: 6, veiled: false,
+  boar: { name: 'The boar', short: 'boar', health: 72, mana: 6, veiled: false,
     opening: 'The boar rises from the ashes of his own hearth. His followers close in at his flanks. "Not them," he says. "Me."' },
 } as const satisfies Record<Encounter, unknown>;
 // Outcast omnivores who follow the boar. They hide their mana; he shields them with his own body.
 export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; health: number }[]>> = {
-  boar: [{ name: 'Badger', health: 18 }, { name: 'Rat', health: 14 }],
+  boar: [{ name: 'Badger', health: 16 }, { name: 'Rat', health: 12 }],
 };
 export const FURY_PER_HIT = 3;
 export const FOLLOWER_BLOW = 2;
@@ -67,7 +67,7 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
   });
   return {
     round: 1, phase: 'player', encounter, studied: studied.includes(SPELL) ? [SPELL] : [], hollow, enemyRevealed: false,
-    party: [member('chameleon', 16, 10 + hollow.mana), member('bear', 24, 12), member('vulture', 12, 10)],
+    party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10)],
     enemy: { health: ENEMIES[encounter].health, maxHealth: ENEMIES[encounter].health, mana: ENEMIES[encounter].mana, maxMana: ENEMIES[encounter].mana },
     followers: (FOLLOWERS[encounter] ?? []).map(({ name, health }) => ({ name, health, maxHealth: health, mana: 4, maxMana: 4 })),
     fury: 0,
@@ -98,21 +98,21 @@ export function intent(battle: Battle): Move & { tell: string } {
     return {
       name: casting ? name : 'Staff strike', type: casting ? 'spell' as const : 'physical' as const,
       tell: casting ? `${name} · 1 enemy turn — releasing next.` : `A staff is raised. ${name} gathers · 2 enemy turns.`,
-      damage: casting ? 18 : 5,
+      damage: casting ? 18 : 4,
     };
   }
   if (battle.encounter === 'boar') {
     const fury = battle.fury ? ` His fury burns · ${battle.fury} will drive through any guard.` : '';
     return battle.round % 2 === 0
-      ? { name: 'Tusk charge', type: 'physical', tell: `He lowers his tusks and paws the ash. A charge is coming.${fury}`, damage: 12 + battle.fury, piercing: battle.fury }
-      : { name: 'Shoulder blow', type: 'physical', tell: `He squares his shoulders.${fury}`, damage: 5 + battle.fury, piercing: battle.fury };
+      ? { name: 'Tusk charge', type: 'physical', tell: `He lowers his tusks and paws the ash. A charge is coming.${fury}`, damage: 10 + battle.fury, piercing: battle.fury }
+      : { name: 'Shoulder blow', type: 'physical', tell: `He squares his shoulders.${fury}`, damage: 4 + battle.fury, piercing: battle.fury };
   }
   if (battle.encounter === 'weevil') return battle.round % 3 === 0
-    ? { name: 'Rolling charge', type: 'physical' as const, tell: 'It tucks its snout and rocks back. A rolling charge is coming.', damage: 12 }
-    : { name: 'Snout jab', type: 'physical' as const, tell: 'Its snout lowers. It will jab.', damage: 5 };
+    ? { name: 'Rolling charge', type: 'physical' as const, tell: 'It tucks its snout and rocks back. A rolling charge is coming.', damage: 9 }
+    : { name: 'Snout jab', type: 'physical' as const, tell: 'Its snout lowers. It will jab.', damage: 3 };
   return battle.round % 2 === 0
-    ? { name: 'Crushing leap', type: 'physical' as const, tell: 'Its hind legs draw tight. A crushing leap is coming.', damage: 14 }
-    : { name: 'Mandible strike', type: 'physical' as const, tell: 'Its mandibles part. It will strike.', damage: 6 };
+    ? { name: 'Crushing leap', type: 'physical' as const, tell: 'Its hind legs draw tight. A crushing leap is coming.', damage: 10 }
+    : { name: 'Mandible strike', type: 'physical' as const, tell: 'Its mandibles part. It will strike.', damage: 4 };
 }
 
 // Mana ties prefer the bear, then the stable party order. Downed members never draw attacks.
@@ -147,7 +147,8 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
   // The boar takes every hit aimed at his followers, and each one makes him stronger.
   const shielded = action === 'attack' && foe > 0 && battle.encounter === 'boar';
   const hitsMain = action === 'attack' && (foe === 0 || shielded);
-  const enemy = hitsMain ? { ...battle.enemy, health: Math.max(0, battle.enemy.health - damage) } : battle.enemy;
+  // Hits he takes for his followers glance off his hide at half strength.
+  const enemy = hitsMain ? { ...battle.enemy, health: Math.max(0, battle.enemy.health - (shielded ? Math.floor(damage / 2) : damage)) } : battle.enemy;
   const followers = action === 'attack' && foe > 0 && !shielded
     ? battle.followers.map((follower, index) => index === foe - 1 ? { ...follower, health: Math.max(0, follower.health - damage) } : follower)
     : battle.followers;

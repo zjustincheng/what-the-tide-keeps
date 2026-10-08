@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { act, createBattle, resolveEnemy } from '../../src/rules/battle.ts';
-import { createMemory, forget, held, hollow, INITIAL_LOST, MEMORY_IDS, wipe } from '../../src/rules/memory.ts';
+import { act, createBattle, ENEMIES, MEMBERS, resolveEnemy } from '../../src/rules/battle.ts';
+import { createMemory, forget, held, hollow, INITIAL_LOST, MEMORY_IDS, PERK_BONUS, wipe } from '../../src/rules/memory.ts';
 import type { Memory } from '../../src/rules/memory.ts';
 
 test('the hero wakes with some memories gone and no Hollow strength beyond his base', () => {
@@ -21,9 +21,9 @@ test('a wipe owes exactly one held memory, which then gives its Hollow perk', ()
   assert.deepEqual(paid.lost, [...INITIAL_LOST, 'feast']);
   assert.equal(paid.pending, false);
   assert.equal(forget(paid, 'trial'), paid, 'one memory per wipe');
-  assert.deepEqual(hollow(paid), { mana: 0, damage: 1, trained: true });
+  assert.deepEqual(hollow(paid), { mana: 0, damage: PERK_BONUS.force, trained: true });
   const twice = forget(wipe(paid), 'trial');
-  assert.deepEqual(hollow(twice), { mana: 2, damage: 1, trained: true });
+  assert.deepEqual(hollow(twice), { mana: PERK_BONUS.mana, damage: PERK_BONUS.force, trained: true });
 });
 
 test('with every memory gone, a wipe takes nothing', () => {
@@ -41,7 +41,7 @@ test('Hollow perks strengthen the hero in battle, and forgetting his training du
   let fight = act(battle, 'chameleon', 'suppress');
   fight = resolveEnemy(act(act(fight, 'bear', 'support'), 'vulture', 'support'));
   fight = act(fight, 'chameleon', 'attack');
-  assert.equal(fight.enemy.health, 72 - (4 + 1 + 2), 'base, Hollow force, and an untrained reveal');
+  assert.equal(fight.enemy.health, ENEMIES.locust.health - (MEMBERS.chameleon.damage + PERK_BONUS.force + 2), 'base, Hollow force, and an untrained reveal');
   const trained = act(createBattle('locust', [], hollow(forget(wipe(createMemory()), 'feast'))), 'chameleon', 'attack');
-  assert.equal(trained.enemy.health, 72 - 5);
+  assert.equal(trained.enemy.health, ENEMIES.locust.health - (MEMBERS.chameleon.damage + PERK_BONUS.force));
 });

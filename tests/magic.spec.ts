@@ -59,7 +59,7 @@ test('survive an unknown spell, then conceal and reveal mana on mobile', async (
   await magic(page, 'vulture', 'barrier');
   await support(page, 'Bear'); await support(page, 'Chameleon');
   await expect(page.locator('#battle-turn')).toHaveText('Round 3 · 3 actions remaining');
-  await expect(page.getByRole('meter', { name: 'Bear health', exact: true })).toHaveAttribute('aria-valuenow', '25');
+  await expect(page.getByRole('meter', { name: 'Bear health', exact: true })).toHaveAttribute('aria-valuenow', '40');
   await expect(page.locator('.grimoire-status')).toContainText('Salt lance');
   await magic(page, 'bear', 'suppress');
   await expect(page.locator('[data-member="bear"] .member-mana')).toContainText('showing 1');

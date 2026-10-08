@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { lose } from './helpers';
 
 async function ready(page: Page) {
   await expect.poll(() => page.evaluate(async () => {
@@ -16,16 +17,6 @@ async function enterLocust(page: Page) {
   await expect(page.getByRole('heading', { name: 'Crop locust' })).toBeVisible();
   await page.keyboard.up('d');
 }
-// Everyone attacks until the locust's leaps wipe the party.
-async function lose(page: Page) {
-  for (let round = 1; round <= 6; round++) {
-    const living = round <= 3 ? ['Chameleon', 'Bear', 'Vulture'] : round <= 5 ? ['Chameleon', 'Vulture'] : ['Vulture'];
-    await expect(page.locator('#battle-turn')).toHaveText(`Round ${round} · ${living.length} actions remaining`);
-    for (const name of living) await page.getByRole('button', { name: `${name} attack`, exact: true }).click();
-  }
-  await page.getByRole('button', { name: 'Wake at the cot' }).click();
-}
-
 test.beforeEach(async ({ page }) => { await page.goto('/'); await ready(page); });
 
 test('a wipe takes a chosen memory, grants a Hollow perk, and survives reload', async ({ page }) => {

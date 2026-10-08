@@ -16,5 +16,5 @@ export const memories: Record<MemoryId, { name: string; cost: string }> = {
 
 export const perks = {
   mana: 'Hollow · +2 mana. Enemies see more of him.',
-  force: 'Hollow · +1 damage on every attack.',
+  force: 'Hollow · +2 damage on every attack.',
 } as const;

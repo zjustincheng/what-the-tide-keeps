@@ -45,11 +45,14 @@ test('fighting the boar directly frees the grain and changes the farmland', asyn
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await meetBoar(page);
-  for (let round = 1; round <= 8; round++) {
+  // The bear guards; the others strike the boar himself.
+  for (let round = 1; await page.locator('.battle').getAttribute('data-phase') !== 'victory'; round++) {
+    expect(round).toBeLessThan(10);
     await expect(page.locator('#battle-turn')).toHaveText(`Round ${round} · 3 actions remaining`);
     await page.getByRole('button', { name: 'Bear support', exact: true }).click();
     await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
-    if (round < 8 || await page.locator('.battle').getAttribute('data-phase') === 'player') await page.getByRole('button', { name: 'Vulture attack', exact: true }).click();
+    if (await page.locator('.battle').getAttribute('data-phase') === 'player') await page.getByRole('button', { name: 'Vulture attack', exact: true }).click();
+    await expect(page.locator('.battle')).not.toHaveAttribute('data-phase', 'enemy');
   }
   await expect(page.locator('.battle')).toHaveAttribute('data-phase', 'victory');
   await page.getByRole('button', { name: 'Return to the church' }).click();

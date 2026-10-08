@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { lose } from './helpers';
 
 const at = (page: Page, key: string) => page.evaluate(async key => {
   const { game } = await import('/src/main.ts');
@@ -74,12 +75,7 @@ test('a wipe drops the bell back in the clearing', async ({ page }) => {
   await page.keyboard.down('d');
   await expect(page.getByRole('heading', { name: 'Crop locust' })).toBeVisible();
   await page.keyboard.up('d');
-  for (let round = 1; round <= 6; round++) {
-    const living = round <= 3 ? ['Chameleon', 'Bear', 'Vulture'] : round <= 5 ? ['Chameleon', 'Vulture'] : ['Vulture'];
-    await expect(page.locator('#battle-turn')).toHaveText(`Round ${round} · ${living.length} actions remaining`);
-    for (const name of living) await page.getByRole('button', { name: `${name} attack`, exact: true }).click();
-  }
-  await page.getByRole('button', { name: 'Wake at the cot' }).click();
+  await lose(page);
   await page.getByRole('radio', { name: /The kraken/ }).check();
   await page.getByRole('button', { name: 'Let it go' }).click();
   await go(page, 'church', 256, 330, 'Step outside', 'farm-road');
