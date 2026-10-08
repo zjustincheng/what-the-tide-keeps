@@ -7,6 +7,7 @@ import { fields } from '../content/fields';
 import { town } from '../content/town';
 import type { Encounter } from '../rules/battle';
 import type { Condition, Effect } from '../rules/world';
+import type { SpotId } from '../rules/fishing';
 
 export type Area = {
   key: string;
@@ -28,6 +29,8 @@ export type Area = {
   props?: { point: string; texture: string; solid?: boolean; hiddenIf: Condition[] }[];
   // Points that lead elsewhere when the hero interacts with them.
   exits: Record<string, { to: string; spawn: string; prompt: string }>;
+  // Points where the hero can fish.
+  fishing?: Record<string, SpotId>;
   decorate?: (scene: Phaser.Scene) => void;
 };
 
@@ -71,6 +74,7 @@ export const FARMLAND: Area = {
     ...([['camp-cache', 'cracked-mirror'], ['orchard-cache', 'crow-feather'], ['shrine-cache', 'covenant-token'], ['ford-cache', 'yoke-peg']] as const)
       .map(([point, keepsake]) => ({ point, texture: 'cache', hiddenIf: [{ owns: keepsake }] })),
   ],
+  fishing: { 'pond-spot': 'pond', 'stream-spot': 'stream' },
   exits: {
     door: { to: 'church', spawn: 'from-road', prompt: 'Return to the church' },
     south: { to: 'town', spawn: 'spawn', prompt: 'Walk on to Millbrook' },

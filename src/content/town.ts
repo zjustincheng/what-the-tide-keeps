@@ -55,7 +55,8 @@ export const town: Dialogue = {
   fishmonger: { speaker: 'THE FISHMONGER', prompt: 'Speak to the fishmonger', lines: [
     'Fresh from the capital port. Fish for the carnivore quarter, by church license, so nobody there need go hungry.',
     'The barrel? Pickling. Keep your claws off it.',
-  ] },
+    'If you have caught anything yourself, I will take it off your hands. At my price.',
+  ], then: { shop: 'fishmonger' } },
   barrel: { speaker: 'THE BARREL', lines: [
     'Something inside knocks twice against the staves, then stops.',
     'The fishmonger sets a hoof on the lid and does not look at you.',

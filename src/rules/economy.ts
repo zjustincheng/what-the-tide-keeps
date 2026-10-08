@@ -1,6 +1,7 @@
 // Pure money and supply rules. No Phaser, DOM, or storage.
 import type { Encounter } from './battle';
 import type { Flag, World } from './world';
+import { catchValue, NO_CATCH } from './fishing.ts';
 
 export type SupplyId = 'smoked-fish' | 'smelling-salts' | 'firepot';
 export type Supplies = Readonly<Record<SupplyId, number>>;
@@ -18,21 +19,25 @@ export const SUPPLY_IDS = Object.keys(SUPPLIES) as SupplyId[];
 export const BOUNTY: Record<Encounter, number> = { locust: 4, weevil: 5, acolyte: 10, boar: 30 };
 
 // Something for sale: a supply, or a one-time deed that sets a story flag.
-export type Ware = { supply: SupplyId } | { deed: Flag; name: string; text: string; price: number };
+// A shop can also buy: sellCatch trades every fish in the pack for coins.
+export type Ware = { supply: SupplyId } | { deed: Flag; name: string; text: string; price: number } | { sellCatch: true };
 
 // Shops overcharge the branded convict: triple the citizen's price, double once the boar is beaten and the town thaws.
 export function price(world: World, ware: Ware): number {
+  if ('sellCatch' in ware) return catchValue(world.fish);
   if ('deed' in ware) return ware.price;
   return SUPPLIES[ware.supply].price * (world.flags.includes('boar-defeated') ? 2 : 3);
 }
 
 export function canBuy(world: World, ware: Ware): boolean {
+  if ('sellCatch' in ware) return catchValue(world.fish) > 0;
   if ('deed' in ware && world.flags.includes(ware.deed)) return false;
   return world.coins >= price(world, ware);
 }
 
 export function buy(world: World, ware: Ware): World {
   if (!canBuy(world, ware)) return world;
+  if ('sellCatch' in ware) return { ...world, coins: world.coins + catchValue(world.fish), fish: NO_CATCH };
   const coins = world.coins - price(world, ware);
   if ('deed' in ware) return { ...world, coins, flags: [...world.flags, ware.deed] };
   return { ...world, coins, supplies: { ...world.supplies, [ware.supply]: world.supplies[ware.supply] + 1 } };

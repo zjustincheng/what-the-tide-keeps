@@ -64,6 +64,18 @@ The stallholder in Millbrook's market square sells supplies at three times the c
 
 In battle, supplies appear in a **Supplies** menu on each hero's card, and using one is that hero's action. Food goes to the ally chosen on the card. The reeve will also sell the bear's writ for 60 coins, the guideline's second way to free him.
 
+## Fishing
+
+Fish at the pond in the meadow or from the mill stream's east bank near the locust field. Cast, wait for a bite, and reel (**Space**, **Enter**, or tap **Reel**) as the sweeping marker crosses the gold zone. Reeling before the bite scares the fish off, and a hooked fish slips free after four seconds. Bigger fish leave a narrower zone and a faster marker:
+
+| Fish | Sells for | Pond | Stream |
+| --- | --- | --- | --- |
+| Minnow | 2 | 60% | 20% |
+| Perch | 3 | 35% | 50% |
+| River eel | 6 | 5% | 30% |
+
+The fishmonger in Millbrook buys the whole catch. Like coins, fish are lost on a wipe.
+
 ## Equipment
 
 Press **Tab** while on the map, or use **Equipment** below it, to open the equipment screen; **Escape** or **Done** closes it. Each hero carries a grimoire (see below) and holds two keepsakes, found by exploring off the roads. Keepsakes are kept through every death, and most come with a drawback:
@@ -163,6 +175,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/rules/battle.ts` — immutable, renderer-independent combat state and transitions.
 - `src/rules/memory.ts` — memory loss and Hollow perks, independent of the renderer.
 - `src/rules/economy.ts` — coins, prices, supplies, and bounties.
+- `src/rules/fishing.ts` — fish, spots, the sweeping marker, and landing a catch.
 - `src/rules/spells.ts` — grimoires, their spells, and sequence checking.
 - `src/rules/gear.ts` — keepsakes, slots, and what they change in battle.
 - `src/rules/world.ts` — story flags, carried items, favor spells, and which dialogue variant applies.
@@ -176,6 +189,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/ui/ResurrectionView.ts` — the wake screen where a memory is chosen.
 - `src/ui/EquipmentView.ts` — the equipment screen.
 - `src/ui/ShopView.ts` — a shopkeeper's wares.
+- `src/ui/FishingView.ts` — the fishing screen.
 - `src/content/shops.ts` — what each shop sells.
 - `src/ui/fullscreen.ts` — the full screen button.
 - `public/maps/church.json` — editable Tiled JSON map with floor, furniture, and named interaction points.
@@ -194,6 +208,8 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/rules/gear.test.ts` — slots, restrictions, and keepsake effects.
 - `tests/shop.spec.ts` — buying, using supplies, earning coins, and buying the writ.
 - `tests/rules/economy.test.ts` — prices, the thaw, wipes, and supply effects.
+- `tests/fishing.spec.ts` — landing, scaring off, and selling a catch.
+- `tests/rules/fishing.test.ts` — the marker, the zone, bites, and the catch's value.
 - `tests/spells.spec.ts` — casting, fizzling, phone keys, and swapping grimoires.
 - `tests/rules/spells.test.ts` — spell effects, fizzles, and carrying grimoires.
 - `tests/dodge.spec.ts` — dodge timing in the browser.

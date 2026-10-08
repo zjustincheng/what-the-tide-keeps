@@ -1,10 +1,11 @@
 import { SHOPS } from '../content/shops';
 import { buy, canBuy, price, SUPPLIES } from '../rules/economy';
 import type { Ware } from '../rules/economy';
+import { FISH, FISH_IDS } from '../rules/fishing';
 import type { ShopId, World } from '../rules/world';
 
-const name = (ware: Ware) => 'deed' in ware ? ware.name : SUPPLIES[ware.supply].name;
-const text = (ware: Ware) => 'deed' in ware ? ware.text : SUPPLIES[ware.supply].text;
+const name = (ware: Ware) => 'sellCatch' in ware ? 'Your catch' : 'deed' in ware ? ware.name : SUPPLIES[ware.supply].name;
+const text = (ware: Ware) => 'sellCatch' in ware ? 'Every fish in your pack.' : 'deed' in ware ? ware.text : SUPPLIES[ware.supply].text;
 
 // A shopkeeper's wares. Coins and supplies bought here are lost on a wipe.
 export class ShopView {
@@ -51,9 +52,11 @@ export class ShopView {
       const row = this.root.querySelector<HTMLElement>(`[data-ware="${index}"]`)!;
       const done = 'deed' in ware && this.world.flags.includes(ware.deed);
       const button = row.querySelector<HTMLButtonElement>('button')!;
-      button.textContent = done ? 'Bought' : `${price(this.world, ware)} coins`;
+      button.textContent = 'sellCatch' in ware ? `Sell for ${price(this.world, ware)}` : done ? 'Bought' : `${price(this.world, ware)} coins`;
+      if ('sellCatch' in ware) button.setAttribute('aria-label', 'Sell your catch');
       button.disabled = !canBuy(this.world, ware);
-      row.querySelector('.owned')!.textContent = 'supply' in ware ? `In your pack: ${this.world.supplies[ware.supply]}` : '';
+      row.querySelector('.owned')!.textContent = 'supply' in ware ? `In your pack: ${this.world.supplies[ware.supply]}`
+        : 'sellCatch' in ware ? FISH_IDS.filter(fish => this.world.fish[fish]).map(fish => `${FISH[fish].name} ×${this.world.fish[fish]}`).join(' · ') || 'You have caught nothing.' : '';
     });
   }
 

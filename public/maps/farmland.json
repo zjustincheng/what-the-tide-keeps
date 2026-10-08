@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 25,
+  "nextobjectid": 27,
   "layers": [
     {
       "id": 1,
@@ -6475,6 +6475,30 @@
           "type": "",
           "x": 216,
           "y": 680,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 25,
+          "name": "pond-spot",
+          "type": "",
+          "x": 392,
+          "y": 512,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 26,
+          "name": "stream-spot",
+          "type": "",
+          "x": 216,
+          "y": 224,
           "width": 0,
           "height": 0,
           "rotation": 0,

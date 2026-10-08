@@ -6,13 +6,15 @@ import type { BookId } from './spells';
 import type { MemberId } from './battle';
 import { NO_SUPPLIES } from './economy.ts';
 import type { Supplies } from './economy';
+import { NO_CATCH } from './fishing.ts';
+import type { Catch } from './fishing';
 
 export type Item = 'bell';
 export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated' | 'pests-field' | 'pests-yard' | 'writ-given' | 'bear-free' | 'vulture-free';
 // Things worth keeping: keepsakes and grimoires. Once found, they are kept through every death; carried items are not.
 export type Found = KeepsakeId | BookId;
 // Coins and supplies, like carried items, are lost on a wipe.
-export type World = Readonly<{ flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies }>;
+export type World = Readonly<{ flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch }>;
 export const ITEMS: readonly Item[] = ['bell'];
 export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free'];
 // A favor spell: a small everyday spell a villager trades for help. It opens the hedge on the border road.
@@ -23,10 +25,10 @@ export type Context = Readonly<{ world: World; lost: readonly MemoryId[]; studie
 export type Condition = { forgot: MemoryId } | { has: Item } | { flag: Flag } | { knows: string } | { owns: Found } | { not: Condition } | { all: Condition[] };
 // shop names a shop to open once the conversation ends.
 export type Effect = { give?: Item; take?: Item; set?: Flag; learn?: string; find?: Found; earn?: number; shop?: ShopId };
-export type ShopId = 'stall' | 'reeve';
+export type ShopId = 'stall' | 'reeve' | 'fishmonger';
 
 export function createWorld(): World {
-  return { flags: [], carried: [], found: [], coins: 0, supplies: NO_SUPPLIES };
+  return { flags: [], carried: [], found: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH };
 }
 
 export function holds(context: Context, condition: Condition): boolean {
@@ -48,7 +50,7 @@ export function apply(context: Context, effect: Effect): Context {
       carried: effect.give && !carried.includes(effect.give) ? [...carried, effect.give] : carried,
       flags: effect.set && !world.flags.includes(effect.set) ? [...world.flags, effect.set] : world.flags,
       found: effect.find && !world.found.includes(effect.find) ? [...world.found, effect.find] : world.found,
-      coins: world.coins + (effect.earn ?? 0), supplies: world.supplies,
+      coins: world.coins + (effect.earn ?? 0), supplies: world.supplies, fish: world.fish,
     },
     studied: effect.learn && !studied.includes(effect.learn) ? [...studied, effect.learn] : studied,
   };
@@ -60,9 +62,9 @@ export function roster(world: World): MemberId[] {
   return ['chameleon', ...(world.flags.includes('bear-free') ? ['bear' as const] : []), ...(world.flags.includes('vulture-free') ? ['vulture' as const] : [])];
 }
 
-// Things carried, coins, and supplies gathered since the last death are lost on a wipe. Flags, like opened shortcuts, persist.
+// Things carried, coins, supplies, and fish gathered since the last death are lost on a wipe. Flags, like opened shortcuts, persist.
 export function drop(world: World): World {
-  return { ...world, carried: [], coins: 0, supplies: NO_SUPPLIES };
+  return { ...world, carried: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH };
 }
 
 // The world remembers what the hero cannot: what he hears depends on what he has forgotten, carries, and has done.

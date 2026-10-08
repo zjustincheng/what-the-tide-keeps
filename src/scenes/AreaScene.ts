@@ -12,6 +12,9 @@ import { BattleView } from '../ui/BattleView';
 import { ResurrectionView } from '../ui/ResurrectionView';
 import { EquipmentView } from '../ui/EquipmentView';
 import { ShopView } from '../ui/ShopView';
+import { FishingView } from '../ui/FishingView';
+import { addCatch, SPOTS } from '../rules/fishing';
+import type { SpotId } from '../rules/fishing';
 import { SHOPS } from '../content/shops';
 import { BOUNTY } from '../rules/economy';
 import { loadGear, saveGear } from '../storage/gear';
@@ -44,7 +47,7 @@ export class AreaScene extends Phaser.Scene {
   private shadow!: Phaser.GameObjects.Ellipse;
   private foes: Foe[] = [];
   private props: Prop[] = [];
-  private overlay?: BattleView | ResurrectionView | EquipmentView | ShopView;
+  private overlay?: BattleView | ResurrectionView | EquipmentView | ShopView | FishingView;
   // A shop to open once the current conversation ends.
   private pendingShop?: ShopId;
 
@@ -206,6 +209,8 @@ export class AreaScene extends Phaser.Scene {
       this.line++;
       if(this.line>=this.active.lines.length) this.closeDialogue();
       else element('dialogue-text').textContent=this.active.lines[this.line];
+    } else if(this.nearby && this.area.fishing?.[this.nearby.name]) {
+      this.openFishing(this.area.fishing[this.nearby.name]);
     } else if(this.nearby && this.nearby.name in this.area.exits) {
       this.travel(this.area.exits[this.nearby.name]);
     } else if(this.nearby) {
@@ -294,6 +299,18 @@ export class AreaScene extends Phaser.Scene {
       () => { this.overlay?.destroy(); this.overlay = undefined; this.refreshProps(); this.resumeExploration(); });
   }
 
+  private openFishing(spot: SpotId) {
+    if(this.overlay || this.leaving) return;
+    this.player.setVelocity(0);
+    this.held.clear();
+    this.physics.pause();
+    element('prompt').textContent = '';
+    this.setExplorationEnabled(false);
+    this.overlay = new FishingView(spot,
+      fish => { const world = loadWorld(); saved = saveWorld({ ...world, fish: addCatch(world.fish, fish) }); },
+      () => { this.overlay?.destroy(); this.overlay = undefined; this.resumeExploration(); });
+  }
+
   private openEquipment() {
     if(this.overlay || this.leaving) return;
     this.player.setVelocity(0);
@@ -349,10 +366,10 @@ export class AreaScene extends Phaser.Scene {
     // A restrained walking bob, while the physics body stays steady.
     this.player.setOrigin(0.5,0.5+(x||y?Math.sin(time/85)*0.025:0));
     const context=this.context();
-    this.nearby=this.points.filter(p=>p.name in this.area.exits || (p.name in this.area.dialogue
+    this.nearby=this.points.filter(p=>p.name in this.area.exits || p.name in (this.area.fishing ?? {}) || (p.name in this.area.dialogue
       && !this.area.dialogue[p.name].hiddenIf?.some(condition=>holds(context, condition))))
       .find(p=>Phaser.Math.Distance.Between(this.player.x,this.player.y,p.x,p.y)<29);
     if(!this.active) element('prompt').textContent=this.nearby
-      ? `E · ${this.area.exits[this.nearby.name]?.prompt ?? this.area.dialogue[this.nearby.name].prompt ?? 'Examine '+this.nearby.name}` : '';
+      ? `E · ${this.area.exits[this.nearby.name]?.prompt ?? (this.area.fishing?.[this.nearby.name] ? `Fish ${SPOTS[this.area.fishing[this.nearby.name]].name.replace(/^The /, 'the ')}` : undefined) ?? this.area.dialogue[this.nearby.name].prompt ?? 'Examine '+this.nearby.name}` : '';
   }
 }
