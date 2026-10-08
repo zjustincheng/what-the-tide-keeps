@@ -11,12 +11,12 @@ export async function doom(page: Page) {
   });
 }
 
-// Rig the open fight so the next hit wins it, for checks about what winning unlocks.
+// Rig the open fight so the next hit wins it, for checks about what winning unlocks: followers already down, the leader at one health.
 export async function win(page: Page) {
   await page.evaluate(async () => {
     const { game } = await import('/src/main.ts');
     const view = game.scene.getScenes(true)[0].overlay;
-    view.state = { ...view.state, enemy: { ...view.state.enemy, health: 1 } };
+    view.state = { ...view.state, enemy: { ...view.state.enemy, health: 1 }, followers: view.state.followers.map((follower: object) => ({ ...follower, health: 0 })) };
     view.render();
   });
   await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();

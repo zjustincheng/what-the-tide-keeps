@@ -44,3 +44,30 @@ test('quests are told, not marked: the shepherd, the barrel, and the bounty', ()
   assert.equal(context.world.coins, 40);
   assert.doesNotMatch(talk(town, 'reeve'), /Twenty-five coins/, 'the bounty pays once');
 });
+
+test("killing the swarm-mother does not end the fight while her brood still stands", async () => {
+  const { canAct, won } = await import('../../src/rules/battle.ts');
+  let battle = createBattle('swarm');
+  battle = { ...battle, enemy: { ...battle.enemy, health: 1 } };
+  battle = act(battle, 'vulture', 'attack');
+  assert.equal(battle.enemy.health, 0);
+  assert.equal(battle.phase, 'player', 'the nymphs fight on');
+  assert.ok(battle.log.includes('The swarm-mother falls. The nymphs fight on.'));
+  assert.equal(canAct(battle, 'chameleon', 'attack'), false, 'she cannot be struck again');
+  battle = resolveEnemy(act(act(battle, 'chameleon', 'attack', 'chameleon', 1), 'bear', 'attack', 'bear', 2));
+  assert.ok(!battle.log.some(line => line.includes('Wing buffet') || line.includes('shrills')), 'a dead mother takes no turn');
+  assert.ok(battle.log.some(line => line.includes("nymph's bite")));
+  while (battle.phase === 'player') {
+    for (const member of battle.party) for (const foe of [1, 2]) battle = act(battle, member.id, 'attack', member.id, foe);
+    battle = resolveEnemy(battle);
+  }
+  assert.equal(battle.phase, 'victory');
+  assert.ok(won(battle));
+});
+
+test('the boar’s followers yield the moment he falls', () => {
+  let battle = createBattle('boar');
+  battle = act({ ...battle, enemy: { ...battle.enemy, health: 1 } }, 'vulture', 'attack');
+  assert.equal(battle.phase, 'victory');
+  assert.ok(battle.followers.every(follower => follower.health > 0));
+});

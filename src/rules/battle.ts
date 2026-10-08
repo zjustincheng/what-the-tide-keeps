@@ -77,6 +77,8 @@ export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; healt
   // The swarm-mother's brood can be killed, but she calls them back.
   swarm: [{ name: 'Nymph', health: 10, weapon: 'bite' }, { name: 'Nymph', health: 10, weapon: 'bite' }],
 };
+// Followers who give up once their leader falls. Everyone else fights until the last of them is down.
+export const YIELDING: Partial<Record<Encounter, true>> = { boar: true };
 export const FURY_PER_HIT = 3;
 export const FOLLOWER_BLOW = 2;
 export const COST = { attack: 2, support: 0, suppress: 1, barrier: 5, analyze: 2 } as const;
@@ -168,10 +170,27 @@ export function enemyTarget(battle: Battle): Member | undefined {
   }, undefined);
 }
 
+// Whether a given enemy is still on its feet.
+function standing(battle: Battle, foe: Foe): boolean {
+  return foe === 0 ? battle.enemy.health > 0 : battle.followers[foe - 1]?.health > 0;
+}
+
+// A fight is won when the main enemy is down and so is everyone who would fight on without it.
+export function won(battle: Pick<Battle, 'encounter' | 'enemy' | 'followers'>): boolean {
+  return battle.enemy.health === 0 && (Boolean(YIELDING[battle.encounter]) || battle.followers.every(follower => follower.health === 0));
+}
+
+// What the log says when the main enemy falls but its followers do not.
+function fallen(before: Battle, after: Pick<Battle, 'encounter' | 'enemy' | 'followers'>): string[] {
+  if (before.enemy.health === 0 || after.enemy.health > 0 || won(after)) return [];
+  const kinds = [...new Set(after.followers.filter(follower => follower.health > 0).map(follower => `${follower.name.toLowerCase()}s`))];
+  return [`The ${ENEMIES[after.encounter].short} falls. The ${kinds.join(' and ')} fight on.`];
+}
+
 export function canAct(battle: Battle, actor: MemberId, action: Action, target: MemberId = actor, foe: Foe = 0): boolean {
   const member = battle.party.find(member => member.id === actor);
   if (battle.phase !== 'player' || !member || member.health <= 0 || member.acted || member.mana < cost(member, action)) return false;
-  if (action === 'attack' && foe > 0 && !(battle.followers[foe - 1]?.health > 0)) return false;
+  if (action === 'attack' && !standing(battle, foe)) return false;
   if (action === 'suppress' && member.suppressed) return false;
   if (action === 'analyze' && (battle.encounter !== 'acolyte' || battle.studied.includes(SPELL))) return false;
   if (action === 'barrier' && !battle.party.some(ally => ally.id === target && ally.health > 0)) return false;
@@ -184,7 +203,7 @@ export function canAct(battle: Battle, actor: MemberId, action: Action, target: 
 
 // Damage aimed at an enemy. The boar takes every hit aimed at his followers, at half strength, and each one makes him stronger.
 function land(battle: Battle, damage: number, foe: Foe) {
-  const shielded = foe > 0 && battle.encounter === 'boar';
+  const shielded = foe > 0 && battle.encounter === 'boar' && battle.enemy.health > 0;
   const enemy = foe === 0 || shielded ? { ...battle.enemy, health: Math.max(0, battle.enemy.health - (shielded ? Math.floor(damage / 2) : damage)) } : battle.enemy;
   const followers = foe > 0 && !shielded
     ? battle.followers.map((follower, index) => index === foe - 1 ? { ...follower, health: Math.max(0, follower.health - damage) } : follower)
@@ -199,7 +218,7 @@ export function canUse(battle: Battle, actor: MemberId, supply: SupplyId, target
   const kind = SUPPLIES[supply].target;
   if (kind === 'ally') return Boolean(ally && ally.health > 0);
   if (kind === 'fallen') return Boolean(ally && ally.health === 0);
-  return foe === 0 || battle.followers[foe - 1]?.health > 0;
+  return standing(battle, foe);
 }
 
 // Using a supply is the actor's action for the round.
@@ -214,7 +233,8 @@ export function useSupply(battle: Battle, actor: MemberId, supply: SupplyId, tar
     ...(member.id === target && kind === 'fallen' ? { health: power } : {}),
   }));
   const enemy = hit?.enemy ?? battle.enemy;
-  const victory = enemy.health === 0;
+  const after = { encounter: battle.encounter, enemy, followers: hit?.followers ?? battle.followers };
+  const victory = won(after);
   const allActed = party.every(member => member.health <= 0 || member.acted);
   const aimed = foe > 0 ? battle.followers[foe - 1].name.toLowerCase() : ENEMIES[battle.encounter].short;
   const message = kind === 'ally' ? `${MEMBERS[actor].name} shares the ${name.toLowerCase()}${target !== actor ? ` with ${MEMBERS[target].name}` : ''}.`
@@ -225,14 +245,15 @@ export function useSupply(battle: Battle, actor: MemberId, supply: SupplyId, tar
     ...battle, party, enemy, followers: hit?.followers ?? battle.followers, fury: hit?.fury ?? battle.fury,
     supplies: { ...battle.supplies, [supply]: battle.supplies[supply] - 1 },
     phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
-    log: [...battle.log, message, ...(victory ? ['The signature flickers out. It is quiet again.'] : [])],
+    log: [...battle.log, message, ...fallen(battle, after), ...(victory ? ['The signature flickers out. It is quiet again.'] : [])],
   };
 }
 
 export function canCast(battle: Battle, actor: MemberId, foe: Foe = 0): boolean {
   const member = battle.party.find(member => member.id === actor);
   if (battle.phase !== 'player' || !member?.spell || member.health <= 0 || member.acted || member.mana < SPELLS[member.spell].cost) return false;
-  return foe === 0 || battle.followers[foe - 1]?.health > 0;
+  // Only damage needs a standing target; wards, mending, and snares do not.
+  return SPELLS[member.spell].kind !== 'damage' || standing(battle, foe);
 }
 
 // Cast the actor's spell. The sequence is typed in the battle view; a fizzle still spends the turn and the mana.
@@ -249,7 +270,8 @@ export function cast(battle: Battle, actor: MemberId, success: boolean, foe: Foe
     return { ...current, ...spent };
   });
   const enemy = hit?.enemy ?? battle.enemy;
-  const victory = enemy.health === 0;
+  const after = { encounter: battle.encounter, enemy, followers: hit?.followers ?? battle.followers };
+  const victory = won(after);
   const target = foe > 0 ? battle.followers[foe - 1].name.toLowerCase() : ENEMIES[battle.encounter].short;
   const message = !success ? `${MEMBERS[actor].name}'s ${spell.name.toLowerCase()} unravels half-spoken. The mana is gone.`
     : hit?.shielded ? `The boar throws himself in front of the ${target}. ${spell.name} strikes him instead, and his fury grows.`
@@ -260,9 +282,9 @@ export function cast(battle: Battle, actor: MemberId, success: boolean, foe: Foe
   const allActed = party.every(member => member.health <= 0 || member.acted);
   return {
     ...battle, party, enemy, followers: hit?.followers ?? battle.followers, fury: hit?.fury ?? battle.fury,
-    snared: battle.snared || (success && spell.kind === 'snare'),
+    snared: battle.snared || (success && spell.kind === 'snare' && enemy.health > 0),
     phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
-    log: [...battle.log, message, ...(victory ? ['The signature flickers out. It is quiet again.'] : [])],
+    log: [...battle.log, message, ...fallen(battle, after), ...(victory ? ['The signature flickers out. It is quiet again.'] : [])],
   };
 }
 
@@ -285,7 +307,8 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
     } : {}),
     barrier: (action === 'barrier' && current.id === target) || current.barrier,
   }));
-  const victory = enemy.health === 0;
+  const after = { encounter: battle.encounter, enemy, followers };
+  const victory = won(after);
   const allActed = party.every(member => member.health <= 0 || member.acted);
   const message = action === 'suppress' ? `${definition.name} conceals their mana.`
     : action === 'barrier' ? `${definition.name} raises a spell barrier around ${MEMBERS[target].name}.`
@@ -297,7 +320,7 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
     : `${definition.name} plants their feet and guards.`;
   return {
     ...battle, party, enemy, followers, fury, studied: action === 'analyze' ? [SPELL] : battle.studied, phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
-    log: [...battle.log, message, ...(victory ? ['The signature flickers out. It is quiet again.'] : [])],
+    log: [...battle.log, message, ...fallen(battle, after), ...(victory ? ['The signature flickers out. It is quiet again.'] : [])],
   };
 }
 
@@ -313,7 +336,8 @@ export function grade(errorMs: number, move: Move): Dodge {
 
 // The main enemy moves first, then each standing follower.
 function enemyMoves(battle: Battle): Move[] {
-  return [...(battle.snared ? [] : [intent(battle)]), ...battle.followers.filter(follower => follower.health > 0)
+  // A fallen leader takes no more turns; its followers do.
+  return [...(battle.snared || battle.enemy.health <= 0 ? [] : [intent(battle)]), ...battle.followers.filter(follower => follower.health > 0)
     .map(follower => ({ name: `${follower.name.toLowerCase()}'s ${FOLLOWERS[battle.encounter]!.find(kind => kind.name === follower.name)!.weapon}`, type: 'physical' as const, damage: FOLLOWER_BLOW }))];
 }
 
@@ -367,14 +391,14 @@ function enemyTurnEnds(battle: Battle): Battle {
     ...member, guardingFor: null, barrier: false, acted: false,
     mana: !defeat && member.health > 0 ? Math.min(member.maxMana, member.mana + MANA_REGEN) : member.mana,
   }));
-  const spell = !battle.snared && intent(battle).type === 'spell';
+  const spell = !battle.snared && battle.enemy.health > 0 && intent(battle).type === 'spell';
   return {
     ...battle, party, step: 0, snared: false,
     studied: spell && !defeat ? [SPELL] : battle.studied,
     enemyRevealed: battle.enemyRevealed || spell,
     enemy: { ...battle.enemy, mana: Math.min(battle.enemy.maxMana, battle.enemy.mana - (spell ? 5 : 0) + MANA_REGEN) },
     phase: defeat ? 'defeat' : 'player', round: defeat ? battle.round : battle.round + 1,
-    log: [...battle.log, ...(battle.snared ? [`The ${ENEMIES[battle.encounter].short} strains against the thorns and cannot move.`] : []), ...(spell && !defeat && !battle.studied.includes(SPELL) ? [`Surviving the spell reveals its structure. ${SPELL} joins the grimoire.`] : []), ...(defeat ? ['The last of you falls. Then, the familiar smell of salt.'] : [])],
+    log: [...battle.log, ...(battle.snared && battle.enemy.health > 0 ? [`The ${ENEMIES[battle.encounter].short} strains against the thorns and cannot move.`] : []), ...(spell && !defeat && !battle.studied.includes(SPELL) ? [`Surviving the spell reveals its structure. ${SPELL} joins the grimoire.`] : []), ...(defeat ? ['The last of you falls. Then, the familiar smell of salt.'] : [])],
   };
 }
 

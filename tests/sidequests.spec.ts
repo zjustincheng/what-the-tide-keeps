@@ -77,6 +77,19 @@ test('the swarm-mother waits deep in the woods, and the reeve pays her bounty', 
   await expect(page.getByRole('heading', { name: 'Swarm-mother' })).toBeVisible();
   await page.keyboard.up('s');
   await expect(page.getByRole('heading', { name: 'Nymph' })).toHaveCount(2);
+  // Felling the mother first leaves her brood fighting.
+  await page.evaluate(async () => {
+    const { game } = await import('/src/main.ts');
+    const view = game.scene.getScenes(true)[0].overlay;
+    view.state = { ...view.state, enemy: { ...view.state.enemy, health: 1 } };
+    view.render();
+  });
+  await page.getByRole('combobox', { name: 'Attack target' }).selectOption({ label: 'Swarm-mother' });
+  await page.getByRole('button', { name: 'Vulture attack', exact: true }).click();
+  await expect(page.getByRole('log')).toContainText('The swarm-mother falls. The nymphs fight on.');
+  await expect(page.locator('.battle')).toHaveAttribute('data-phase', 'player');
+  await expect(page.locator('#enemy-intent')).toContainText('fights on');
+  await expect(page.getByRole('combobox', { name: 'Attack target' })).not.toHaveValue('0');
   await win(page);
   await visit(page, 'town');
   await talk(page, 'town', 88, 124, 'Speak to the reeve');

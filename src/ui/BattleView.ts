@@ -290,13 +290,15 @@ export class BattleView {
     });
     const strike = this.root.querySelector<HTMLSelectElement>('#strike-target');
     if (strike) {
-      for (const option of Array.from(strike.options)) option.disabled = Number(option.value) > 0 && state.followers[Number(option.value) - 1].health === 0;
-      if (strike.selectedOptions[0]?.disabled) strike.value = '0';
+      for (const option of Array.from(strike.options)) option.disabled = Number(option.value) > 0 ? state.followers[Number(option.value) - 1].health === 0 : state.enemy.health === 0;
+      // Aim at whoever is still standing.
+      if (strike.selectedOptions[0]?.disabled) strike.value = Array.from(strike.options).find(option => !option.disabled)?.value ?? '0';
       strike.disabled = state.phase !== 'player';
     }
     this.get('#enemy-mana').textContent = `Mana ${enemyMana(state)}${ENEMIES[state.encounter].veiled && !state.enemyRevealed ? ' · veiled' : ''}${state.fury ? ` · Fury ${state.fury}` : ''}`;
     const target = enemyTarget(state);
-    this.get('#enemy-intent').textContent = done ? '' : state.snared ? 'Snared · thorns hold it. It cannot move this turn.'
+    this.get('#enemy-intent').textContent = done ? '' : state.enemy.health === 0 ? `The ${ENEMIES[state.encounter].short} is down. What stood with it fights on.`
+      : state.snared ? 'Snared · thorns hold it. It cannot move this turn.'
       : `${intent(state).type === 'spell' ? 'Spell' : 'Physical'} · ${intent(state).tell} ${target ? `Watching ${MEMBERS[target.id].name}.` : ''}`;
     this.get('.grimoire-status').textContent = `Grimoire · ${state.studied.includes(SPELL) ? SPELL + ' — can be blocked' : 'No spells studied'}${this.saved ? '' : ' · kept for this visit; browser save unavailable'}`;
     for (const member of state.party) {
