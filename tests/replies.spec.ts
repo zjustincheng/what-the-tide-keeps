@@ -103,6 +103,8 @@ test('after an answer the hero can ask the priest something else, and come back 
   await page.keyboard.press('e');
   await expect(page.locator('#dialogue-text')).toHaveText('Was there something else?');
   await expect(replies).toHaveCount(4);
+  // Nothing is dimmed in a new conversation.
+  await expect(page.locator('#choices [data-asked]')).toHaveCount(0);
 });
 
 test('people without a goodbye of their own can be left from their replies', async ({ page }) => {

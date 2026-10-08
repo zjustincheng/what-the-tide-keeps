@@ -54,7 +54,7 @@ export class AreaScene extends Phaser.Scene {
   private blips: ReturnType<typeof setTimeout>[] = [];
   // Replies on offer under the speaker's last line.
   private options: Choice[] = [];
-  // The replies to return to after an answer, and what has been asked this visit.
+  // The replies to return to after an answer, and what has been asked in this conversation.
   private menu?: Choice[];
   private returning = false;
   private asked = new Set<string>();
@@ -270,6 +270,8 @@ export class AreaScene extends Phaser.Scene {
       // Someone already spoken to this visit goes straight to the replies, rather than saying it all again.
       const again=this.talked.has(point) && replies(said.choices, this.context()).length>0 && (!said.then || Object.keys(said.then).every(key=>key==='shop'));
       this.talked.add(point);
+      // Dimming only marks what was asked in this conversation; talking again starts fresh.
+      this.asked.clear();
       // Effects land as the conversation opens, so closing it early never loses them.
       this.effect(said.then);
       this.say(again ? { ...said, lines: ['Was there something else?'] } : said, portrait, again);
