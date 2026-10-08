@@ -1,8 +1,11 @@
-import { act, canAct, condition, COST, ENEMIES, createBattle, enemyTarget, intent, MEMBERS, resolveEnemy, visibleMana, enemyMana, SPELL } from '../rules/battle';
-import type { Action, Battle, Fighter, Foe, MemberId, Encounter } from '../rules/battle';
+import { act, canAct, condition, COST, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
+import type { Action, Battle, Dodge, Fighter, Foe, MemberId, Encounter } from '../rules/battle';
 import type { Hollow } from '../rules/memory';
 
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
+
+// How long the dodge ring takes to close on its target, in milliseconds.
+const LEAD = 900;
 
 export class BattleView {
   private state: Battle;
@@ -12,6 +15,9 @@ export class BattleView {
   private cleanup = new AbortController();
   private previousFocus = document.activeElement as HTMLElement | null;
   private onFinish: (won: boolean) => void;
+  // Set while a dodge prompt is open: when the blow lands, and how to answer it.
+  private prompts = 0;
+  private prompt?: { impact: number; answer: (dodge: Dodge, early?: boolean) => void };
 
   constructor(heroImage: string, onFinish: (won: boolean) => void, encounter: Encounter = 'locust', hollow?: Hollow) {
     this.onFinish = onFinish;
@@ -45,7 +51,8 @@ export class BattleView {
         </section>`;
       }).join('')}</div>
       <div class="battle-log" role="log" aria-live="polite" aria-label="Battle events"></div>
-      <p class="battle-help">Each living companion acts once. Spellcraft uses that action too.<br />Guard physical blows. Analyze spells before blocking them. Attack while hidden to reveal.</p>
+      <div class="dodge-bar" hidden><p class="dodge-call" aria-live="assertive"></p><button id="dodge" type="button">Dodge <small>Space or tap · as the ring closes</small></button></div>
+      <p class="battle-help">Each living companion acts once. Spellcraft uses that action too.<br />Guard physical blows. Analyze spells before blocking them. Attack while hidden to reveal.<br />When a blow comes, press Space as the ring closes to dodge. Unknown spells cannot be dodged.</p>
       <button id="battle-finish" hidden></button>`;
     for (const member of this.state.party) {
       this.card(member.id).querySelector<HTMLImageElement>('img')!.src = member.id === 'chameleon' ? heroImage
@@ -64,6 +71,12 @@ export class BattleView {
       this.bindDrag(member.id);
     }
     this.root.querySelector('#strike-target')?.addEventListener('change', () => this.render(), { signal });
+    // Dodges answer on press, not release: keydown and pointerdown keep the timing honest.
+    this.root.addEventListener('keydown', event => {
+      if (!this.prompt || ![' ', 'Enter'].includes(event.key) || event.repeat) return;
+      event.preventDefault(); this.press();
+    }, { signal });
+    this.get('#dodge').addEventListener('pointerdown', event => { event.preventDefault(); this.press(); }, { signal });
     this.get('#battle-finish').addEventListener('click', () => {
       if (this.state.phase !== 'victory' && this.state.phase !== 'defeat') return;
       const won = this.state.phase === 'victory';
@@ -139,11 +152,53 @@ export class BattleView {
     this.persist(); this.render();
     if (this.state.phase === 'enemy') {
       this.root.focus({ preventScroll: true });
-      this.timer = setTimeout(() => {
-        this.timer = undefined; this.state = resolveEnemy(this.state); this.persist(); this.render();
-        if (this.state.phase === 'player') this.focusNext();
-      }, 650);
+      this.timer = setTimeout(() => this.enemyTurn(), 650);
     } else if (this.state.phase === 'player') this.focusNext();
+  }
+
+  // Play the enemy turn one blow at a time, offering a dodge whenever one is possible.
+  private enemyTurn() {
+    this.timer = undefined;
+    const next = nextStrike(this.state);
+    const land = (dodge: Dodge) => {
+      this.state = strike(this.state, dodge); this.persist(); this.render();
+      if (this.state.phase === 'enemy') this.timer = setTimeout(() => this.enemyTurn(), 450);
+      else if (this.state.phase === 'player') this.focusNext();
+    };
+    if (!next?.dodgeable) { this.timer = setTimeout(() => land('miss'), next ? 400 : 0); return; }
+    const card = this.card(next.target.id);
+    const ring = document.createElement('div');
+    ring.className = 'dodge-ring'; ring.style.setProperty('--lead', `${LEAD}ms`);
+    card.append(ring);
+    const impact = performance.now() + LEAD;
+    this.root.dataset.impact = String(impact);
+    this.get('.dodge-call').textContent = `${next.move.name} → ${MEMBERS[next.target.id].name}. Dodge!`;
+    const bar = this.get('.dodge-bar'), button = this.get<HTMLButtonElement>('#dodge');
+    const shown = ++this.prompts;
+    bar.hidden = false; button.disabled = false; button.focus({ preventScroll: true });
+    this.prompt = {
+      impact,
+      answer: (dodge, early = false) => {
+        clearTimeout(this.timer); this.prompt = undefined;
+        delete this.root.dataset.impact;
+        button.disabled = true; this.root.focus({ preventScroll: true });
+        // Leave the result up briefly, unless the next blow has already opened a new prompt.
+        setTimeout(() => { if (this.prompts === shown) bar.hidden = true; }, 700);
+        ring.dataset.result = dodge;
+        this.get('.dodge-call').textContent = dodge === 'perfect' ? 'Dodged!' : dodge === 'graze' ? 'Grazed.' : early ? 'Too soon.' : 'Too slow.';
+        setTimeout(() => ring.remove(), 350);
+        land(dodge);
+      },
+    };
+    // No press at all means the blow lands in full.
+    this.timer = setTimeout(() => this.prompt?.answer('miss'), LEAD + DODGE.graze + 1);
+  }
+
+  private press() {
+    if (!this.prompt) return;
+    const error = performance.now() - this.prompt.impact;
+    // Pressing far too early commits the dodge too soon; it cannot be retried.
+    this.prompt.answer(grade(error, nextStrike(this.state)!.move), error < 0);
   }
 
   private persist() {

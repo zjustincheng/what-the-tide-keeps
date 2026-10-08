@@ -50,6 +50,16 @@ Prototype tuning: ordinary fights last two or three rounds, and the boar about f
 
 Victory removes the locust until you use **Return to the cot**, which resets the encounter. Defeat wakes you at the cot (see below). Each new fight starts with full health and mana. Supplies are not implemented yet, and recruitment and travel beyond the church are still ahead. Encounter progress resets on reload; studied spells and memories persist.
 
+## Dodging
+
+Enemy blows can be dodged with timing, never luck. When a blow is about to land, a ring closes on the companion it targets and a **Dodge** bar appears at the bottom of the screen. Press **Space** (or **Enter**, or tap **Dodge**) as the ring meets the inner circle:
+
+- **Perfect** (within 90 ms; 60 ms for heavy, telegraphed blows such as a leap or charge): no damage.
+- **Graze** (within 200 ms): half damage.
+- **Too soon, too slow, or no press**: the full blow. A press cannot be retried, so mashing does not work.
+
+Each blow in a turn, including each of the boar's followers, is its own dodge. Blows already stopped by a guard or barrier skip the prompt. A spell the party has not studied cannot be dodged. The timing windows live in `DODGE` in `src/rules/battle.ts`.
+
 ## Magic and the shared grimoire
 
 Open a companion's **Spellcraft** menu for these actions. Each spends that companion's turn:
@@ -117,6 +127,8 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/death.spec.ts` — wipe, memory choice, and save browser checks.
 - `tests/rules/battle.test.ts` — combat tests without a browser.
 - `tests/rules/memory.test.ts` — memory and Hollow perk tests without a browser.
+- `tests/dodge.spec.ts` — dodge timing in the browser.
+- `tests/rules/dodge.test.ts` — dodge grading and the stepwise enemy turn.
 - `tests/rules/boar.test.ts` — the boar's shielding, fury, and both strategies.
 - `tests/rules/world.test.ts` — dialogue variants and the favor-spell quest.
 

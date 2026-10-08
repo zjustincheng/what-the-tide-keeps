@@ -504,3 +504,23 @@ footer span:last-child {
   .follower .fighter { height: 36px; width: 44px; }
   .follower img { width: 34px; height: 34px; }
 }
+
+/* Timed dodges: a ring closes on the targeted companion; press as it meets the inner circle. */
+.member-card { position: relative; }
+.dodge-ring { position: absolute; left: 50%; top: 46px; width: 56px; height: 56px; margin: -28px 0 0 -28px; pointer-events: none; z-index: 2; }
+.dodge-ring::before, .dodge-ring::after { content: ''; position: absolute; inset: 0; border-radius: 50%; }
+.dodge-ring::before { border: 2px solid #d2bd8a; box-shadow: 0 0 10px #d2bd8a66; }
+.dodge-ring::after { border: 2px solid #f6ead0; animation: dodge-close var(--lead, 900ms) linear forwards; }
+.dodge-ring[data-result]::after { animation: none; opacity: 0; }
+.dodge-ring[data-result="perfect"]::before { border-color: #9bad72; box-shadow: 0 0 14px #9bad72; }
+.dodge-ring[data-result="graze"]::before { border-color: #c1a05f; }
+.dodge-ring[data-result="miss"]::before { border-color: #bc755e; }
+@keyframes dodge-close { from { transform: scale(3); opacity: .25; } to { transform: scale(1); opacity: 1; } }
+.dodge-bar { position: fixed; left: 50%; bottom: 16px; z-index: 20; transform: translateX(-50%); width: min(360px, calc(100vw - 32px)); padding: 8px 10px 10px; text-align: center; background: #16231ff2; border: 1px solid #d2bd8a; box-shadow: 0 6px 24px #000a; }
+.dodge-bar[hidden] { display: none; }
+.dodge-call { min-height: 18px; margin: 0 0 6px; color: #f0e2b0; font-size: 14px; }
+#dodge { width: 100%; padding: 10px; font: 18px Georgia, serif; background: #4a4a2c; border-color: #d2bd8a; touch-action: manipulation; }
+#dodge small { display: block; margin-top: 3px; font: 9px ui-monospace, monospace; color: #d8cfae; }
+@media(max-width:650px) {
+  .dodge-ring { top: 36px; width: 46px; height: 46px; margin: -23px 0 0 -23px; }
+}

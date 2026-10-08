@@ -30,8 +30,11 @@ export type Battle = Readonly<{
   followers: readonly Follower[];
   // Strength the boar gains from hits taken for his followers. It drives through guards.
   fury: number;
+  // How many enemy blows have landed this enemy turn.
+  step: number;
   log: readonly string[];
 }>;
+export type Dodge = 'perfect' | 'graze' | 'miss';
 
 export const MEMBERS = {
   chameleon: { name: 'Chameleon', attack: 'Thorn', support: 'Guard', damage: 7 },
@@ -70,7 +73,7 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
     party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10)],
     enemy: { health: ENEMIES[encounter].health, maxHealth: ENEMIES[encounter].health, mana: ENEMIES[encounter].mana, maxMana: ENEMIES[encounter].mana },
     followers: (FOLLOWERS[encounter] ?? []).map(({ name, health }) => ({ name, health, maxHealth: health, mana: 4, maxMana: 4 })),
-    fury: 0,
+    fury: 0, step: 0,
     log: [ENEMIES[encounter].opening],
   };
 }
@@ -179,42 +182,81 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
   };
 }
 
-// The main enemy moves first, then each standing follower. Each move picks the most visible target at that moment.
-export function resolveEnemy(battle: Battle): Battle {
-  if (battle.phase !== 'enemy') return battle;
-  if (!enemyTarget(battle)) return { ...battle, phase: 'defeat' };
-  const main = intent(battle);
-  const moves: Move[] = [main, ...battle.followers.filter(follower => follower.health > 0)
+// Dodging is timed by the player, never rolled. Times are milliseconds from the moment the blow lands.
+export const DODGE = { perfect: 90, heavyPerfect: 60, graze: 200 } as const;
+
+// Early or late by errorMs; heavy, telegraphed blows leave a narrower perfect window.
+export function grade(errorMs: number, move: Move): Dodge {
+  const off = Math.abs(errorMs);
+  if (off <= (move.damage >= 10 ? DODGE.heavyPerfect : DODGE.perfect)) return 'perfect';
+  return off <= DODGE.graze ? 'graze' : 'miss';
+}
+
+// The main enemy moves first, then each standing follower.
+function enemyMoves(battle: Battle): Move[] {
+  return [intent(battle), ...battle.followers.filter(follower => follower.health > 0)
     .map(follower => ({ name: `${follower.name.toLowerCase()}'s cudgel`, type: 'physical' as const, damage: FOLLOWER_BLOW }))];
-  let party = battle.party;
-  const log: string[] = [];
-  for (const move of moves) {
-    const target = enemyTarget({ ...battle, party });
-    if (!target) break;
-    const protector = party.find(member => member.health > 0 && member.id === 'bear' && member.guardingFor !== null
-      && (member.guardingFor === target.id || member.id === target.id));
-    const guarded = move.type === 'physical' ? protector || (target.guardingFor === target.id ? target : undefined) : undefined;
-    const blocked = move.type === 'spell' && battle.studied.includes(SPELL) && target.barrier;
-    // A guard stops an ordinary blow; piercing strength still lands.
-    const damage = blocked ? 0 : guarded ? move.piercing ?? 0 : move.damage;
-    party = party.map(member => member.id === target.id ? { ...member, health: Math.max(0, member.health - damage) } : member);
-    const downed = party.find(member => member.id === target.id)!.health === 0;
-    log.push(blocked ? `${MEMBERS[target.id].name}'s barrier stops ${SPELL}.`
-      : guarded ? `${MEMBERS[guarded.id].name} turns aside the ${move.name.toLowerCase()}${guarded.id !== target.id ? ` aimed at ${MEMBERS[target.id].name}` : ''}.${damage ? ` His fury drives through anyway${downed ? `, and ${MEMBERS[target.id].name} falls` : ''}.` : ''}`
-      : `The ${move.name.toLowerCase()} catches ${MEMBERS[target.id].name}.${downed ? ' They fall.' : ''}`);
-  }
-  const defeat = party.every(member => member.health === 0);
-  party = party.map(member => ({
+}
+
+// The next blow of the enemy turn: who it will hit, for how much, and whether it can be dodged.
+export function nextStrike(battle: Battle) {
+  if (battle.phase !== 'enemy') return undefined;
+  const move = enemyMoves(battle)[battle.step];
+  const target = enemyTarget(battle);
+  if (!move || !target) return undefined;
+  const protector = battle.party.find(member => member.health > 0 && member.id === 'bear' && member.guardingFor !== null
+    && (member.guardingFor === target.id || member.id === target.id));
+  const guarded = move.type === 'physical' ? protector || (target.guardingFor === target.id ? target : undefined) : undefined;
+  const blocked = move.type === 'spell' && battle.studied.includes(SPELL) && target.barrier;
+  // A guard stops an ordinary blow; piercing strength still lands.
+  const damage = blocked ? 0 : guarded ? move.piercing ?? 0 : move.damage;
+  // Nobody can dodge a spell they have not studied.
+  const unknown = move.type === 'spell' && !battle.studied.includes(SPELL);
+  return { move, target, guarded, blocked, damage, dodgeable: damage > 0 && !unknown };
+}
+
+// Land the next blow. Each blow picks the most visible target at that moment; the last one ends the enemy turn.
+export function strike(battle: Battle, dodge: Dodge = 'miss'): Battle {
+  if (battle.phase !== 'enemy') return battle;
+  const next = nextStrike(battle);
+  if (!next) return enemyTurnEnds(battle);
+  const { move, target, guarded, blocked } = next;
+  const avoided = next.dodgeable ? dodge : 'miss';
+  const damage = avoided === 'perfect' ? 0 : avoided === 'graze' ? Math.ceil(next.damage / 2) : next.damage;
+  const party = battle.party.map(member => member.id === target.id ? { ...member, health: Math.max(0, member.health - damage) } : member);
+  const downed = party.find(member => member.id === target.id)!.health === 0;
+  const name = MEMBERS[target.id].name;
+  const message = blocked ? `${name}'s barrier stops ${SPELL}.`
+    : avoided === 'perfect' ? `${name} slips aside. The ${move.name.toLowerCase()} finds only air.`
+    : guarded ? `${MEMBERS[guarded.id].name} turns aside the ${move.name.toLowerCase()}${guarded.id !== target.id ? ` aimed at ${name}` : ''}.${damage ? ` His fury drives through anyway${avoided === 'graze' ? ', though only just' : ''}${downed ? `, and ${name} falls` : ''}.` : ''}`
+    : avoided === 'graze' ? `${name} half twists away. The ${move.name.toLowerCase()} only grazes them.${downed ? ' They fall.' : ''}`
+    : `The ${move.name.toLowerCase()} catches ${name}.${downed ? ' They fall.' : ''}`;
+  const after = { ...battle, party, step: battle.step + 1, log: [...battle.log, message] };
+  const done = party.every(member => member.health === 0) || !enemyMoves(battle)[battle.step + 1];
+  return done ? enemyTurnEnds(after) : after;
+}
+
+function enemyTurnEnds(battle: Battle): Battle {
+  const defeat = battle.party.every(member => member.health === 0);
+  const party = battle.party.map(member => ({
     ...member, guardingFor: null, barrier: false, acted: false,
     mana: !defeat && member.health > 0 ? Math.min(member.maxMana, member.mana + MANA_REGEN) : member.mana,
   }));
-  const spell = main.type === 'spell';
+  const spell = intent(battle).type === 'spell';
   return {
-    ...battle, party,
+    ...battle, party, step: 0,
     studied: spell && !defeat ? [SPELL] : battle.studied,
     enemyRevealed: battle.enemyRevealed || spell,
     enemy: { ...battle.enemy, mana: Math.min(battle.enemy.maxMana, battle.enemy.mana - (spell ? 5 : 0) + MANA_REGEN) },
     phase: defeat ? 'defeat' : 'player', round: defeat ? battle.round : battle.round + 1,
-    log: [...battle.log, ...log, ...(spell && !defeat && !battle.studied.includes(SPELL) ? [`Surviving the spell reveals its structure. ${SPELL} joins the grimoire.`] : []), ...(defeat ? ['The last of you falls. Then, the familiar smell of salt.'] : [])],
+    log: [...battle.log, ...(spell && !defeat && !battle.studied.includes(SPELL) ? [`Surviving the spell reveals its structure. ${SPELL} joins the grimoire.`] : []), ...(defeat ? ['The last of you falls. Then, the familiar smell of salt.'] : [])],
   };
+}
+
+// The whole enemy turn with no dodges attempted.
+export function resolveEnemy(battle: Battle): Battle {
+  if (battle.phase !== 'enemy') return battle;
+  if (!enemyTarget(battle)) return { ...battle, phase: 'defeat' };
+  while (battle.phase === 'enemy') battle = strike(battle);
+  return battle;
 }
