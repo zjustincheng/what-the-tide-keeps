@@ -11,6 +11,8 @@ const VILLAGERS: Record<string, Villager> = {
   child: { fur: 0xeee6d6, muzzle: 0x8a7a6a, cloth: 0x9c6b5a, trim: 0xd8cfae, ears: 'wool', child: true },
   fishmonger: { fur: 0x9a9184, muzzle: 0xcfc6b5, cloth: 0x4f6a73, trim: 0x8fa9a8, ears: 'horns' },
   fox: { fur: 0xb8693a, muzzle: 0xeadcc4, cloth: 0x4a4038, trim: 0x8c7049, ears: 'pointed' },
+  driver: { fur: 0x7d7f80, muzzle: 0xc9c4b8, cloth: 0x5a4a3a, trim: 0x8f3f32, ears: 'pointed' },
+  guard: { fur: 0xd6cdb8, muzzle: 0x9a8a72, cloth: 0x6b7a8a, trim: 0xd8cfae, ears: 'horns' },
 };
 
 function villager(scene: Phaser.Scene, key: string, v: Villager) {
@@ -53,4 +55,18 @@ export function createSprites(scene: Phaser.Scene) {
   priest.fillStyle(0x2b3b31).fillRect(8,6,1,2).fillRect(12,6,1,2);
   priest.generateTexture('priest',20,26);priest.destroy();
   for (const [key, spec] of Object.entries(VILLAGERS)) villager(scene, key, spec);
+  // A tangle of brambles across the road, and the lamb's lost bell.
+  const brambles = scene.make.graphics({ x: 0, y: 0 });
+  brambles.fillStyle(0x2c3a24).fillRect(0, 2, 16, 14);
+  brambles.fillStyle(0x4a3b2a).fillRect(0, 5, 16, 2).fillRect(2, 0, 2, 16).fillRect(9, 1, 2, 15).fillRect(0, 11, 16, 2).fillRect(13, 3, 2, 12);
+  brambles.fillStyle(0x6d8a45).fillRect(5, 3, 3, 2).fillRect(11, 8, 3, 2).fillRect(4, 13, 3, 2);
+  brambles.fillStyle(0xc7b88a).fillRect(1, 4, 1, 1).fillRect(7, 6, 1, 1).fillRect(12, 10, 1, 1).fillRect(5, 12, 1, 1).fillRect(15, 6, 1, 1);
+  brambles.fillStyle(0x7a3a4a).fillRect(6, 9, 2, 2).fillRect(14, 13, 1, 1);
+  brambles.generateTexture('brambles', 16, 16); brambles.destroy();
+  const bell = scene.make.graphics({ x: 0, y: 0 });
+  bell.fillStyle(0x9c6b5a).fillRect(1, 1, 8, 1);
+  bell.fillStyle(0xc89b4a).fillRect(3, 2, 4, 5).fillRect(2, 5, 6, 2);
+  bell.fillStyle(0xf0d58a).fillRect(4, 3, 1, 2);
+  bell.fillStyle(0x5a4330).fillRect(4, 7, 2, 1);
+  bell.generateTexture('bell', 10, 9); bell.destroy();
 }

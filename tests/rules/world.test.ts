@@ -1,10 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { church } from '../../src/content/church.ts';
-import { conversation as say } from '../../src/content/dialogue.ts';
 import { createMemory, forget, wipe } from '../../src/rules/memory.ts';
+import type { MemoryId } from '../../src/rules/memory.ts';
+import { conversation as say, createWorld } from '../../src/rules/world.ts';
 
-const conversation = (name: string, lost: Parameters<typeof say>[2]) => say(church, name, lost);
+const conversation = (name: string, lost: readonly MemoryId[]) => say(church, name, { world: createWorld(), lost, studied: [] });
 
 test('forgetting a memory changes what the church says, and only that', () => {
   const start = createMemory();
@@ -17,4 +18,31 @@ test('forgetting a memory changes what the church says, and only that', () => {
   const noTrial = forget(wipe(start), 'trial');
   assert.match(conversation('ledger', noTrial.lost).lines[1], /do not know what you did/);
   assert.equal(conversation('basin', noTrial.lost).speaker, 'THE TIDAL BASIN');
+});
+
+test('the lamb trades a favor spell for her bell, and the spell opens the hedge', async () => {
+  const { town } = await import('../../src/content/town.ts');
+  const { border } = await import('../../src/content/border.ts');
+  const { road } = await import('../../src/content/road.ts');
+  const { apply, BRAMBLES, drop, holds } = await import('../../src/rules/world.ts');
+  let context = { world: createWorld(), lost: [] as MemoryId[], studied: [] as string[] };
+  assert.match(say(border, 'hedge', context).lines[1], /pull back/);
+  assert.equal(say(border, 'hedge', context).then, undefined);
+  assert.match(say(town, 'child', context).lines.at(-1)!, /lost my bell/);
+  const found = say(road, 'bell', context);
+  context = apply(context, found.then!);
+  assert.deepEqual(context.world.carried, ['bell']);
+  assert.ok(road.bell.hiddenIf!.some(condition => holds(context, condition)), 'a bell in hand is no longer on the ground');
+  // A wipe drops what is carried, so the bell is back in the clearing.
+  assert.deepEqual(drop(context.world).carried, []);
+  const thanks = say(town, 'child', context);
+  assert.match(thanks.lines[0], /My bell/);
+  context = apply(context, thanks.then!);
+  assert.deepEqual(context.world, { flags: ['lamb-thanked'], carried: [] });
+  assert.deepEqual(context.studied, [BRAMBLES]);
+  assert.match(say(town, 'child', context).lines[0], /Did the thorns listen/);
+  const hedge = say(border, 'hedge', context);
+  assert.match(hedge.lines[1], /let go/);
+  context = apply(context, hedge.then!);
+  assert.deepEqual(drop(context.world).flags, ['lamb-thanked', 'hedge-open'], 'opened shortcuts survive a wipe');
 });

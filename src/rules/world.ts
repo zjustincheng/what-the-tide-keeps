@@ -1,0 +1,52 @@
+// Pure story state: what the hero carries and what he has changed. No Phaser, DOM, or storage.
+import type { Conversation, Dialogue } from '../content/dialogue';
+import type { MemoryId } from './memory';
+
+export type Item = 'bell';
+export type Flag = 'lamb-thanked' | 'hedge-open';
+export type World = Readonly<{ flags: readonly Flag[]; carried: readonly Item[] }>;
+export const ITEMS: readonly Item[] = ['bell'];
+export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open'];
+// A favor spell: a small everyday spell a villager trades for help. It opens the hedge on the border road.
+export const BRAMBLES = "Bramble's leave";
+
+// What a line of dialogue can depend on.
+export type Context = Readonly<{ world: World; lost: readonly MemoryId[]; studied: readonly string[] }>;
+export type Condition = { forgot: MemoryId } | { has: Item } | { flag: Flag } | { knows: string };
+export type Effect = { give?: Item; take?: Item; set?: Flag; learn?: string };
+
+export function createWorld(): World {
+  return { flags: [], carried: [] };
+}
+
+export function holds(context: Context, condition: Condition): boolean {
+  if ('forgot' in condition) return context.lost.includes(condition.forgot);
+  if ('has' in condition) return context.world.carried.includes(condition.has);
+  if ('flag' in condition) return context.world.flags.includes(condition.flag);
+  return context.studied.includes(condition.knows);
+}
+
+export function apply(context: Context, effect: Effect): Context {
+  const { world, studied } = context;
+  const carried = world.carried.filter(item => item !== effect.take);
+  return {
+    ...context,
+    world: {
+      carried: effect.give && !carried.includes(effect.give) ? [...carried, effect.give] : carried,
+      flags: effect.set && !world.flags.includes(effect.set) ? [...world.flags, effect.set] : world.flags,
+    },
+    studied: effect.learn && !studied.includes(effect.learn) ? [...studied, effect.learn] : studied,
+  };
+}
+
+// Things carried since the last death are lost on a wipe. Flags, like opened shortcuts, persist.
+export function drop(world: World): World {
+  return { ...world, carried: [] };
+}
+
+// The world remembers what the hero cannot: what he hears depends on what he has forgotten, carries, and has done.
+export function conversation(dialogue: Dialogue, name: string, context: Context): Conversation {
+  const { speaker, lines, then, variants = [] } = dialogue[name];
+  const variant = variants.find(variant => holds(context, variant.if));
+  return variant ? { speaker, lines: variant.lines, then: variant.then } : { speaker, lines, then };
+}

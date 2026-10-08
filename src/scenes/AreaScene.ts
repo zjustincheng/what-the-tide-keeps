@@ -1,9 +1,13 @@
 import Phaser from 'phaser';
-import { conversation } from '../content/dialogue';
 import { createBattle, enemyMana, ENEMIES } from '../rules/battle';
 import type { Encounter } from '../rules/battle';
 import { forget, held, hollow, MEMORY_IDS, wipe } from '../rules/memory';
+import { apply, conversation, drop, holds } from '../rules/world';
+import type { Condition, Context } from '../rules/world';
+import type { Conversation } from '../content/dialogue';
+import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
 import { loadMemory, saveMemory } from '../storage/memory';
+import { loadWorld, saveWorld } from '../storage/world';
 import { BattleView } from '../ui/BattleView';
 import { ResurrectionView } from '../ui/ResurrectionView';
 import type { Area } from './areas';
@@ -11,6 +15,7 @@ import { createSprites } from './sprites';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 type Point = { name: string; x: number; y: number };
+type Prop = { sprite: Phaser.Physics.Arcade.Sprite; hiddenIf: Condition[] };
 type Foe = { encounter: Encounter; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container };
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 // Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
@@ -25,13 +30,14 @@ export class AreaScene extends Phaser.Scene {
   private points: Point[] = [];
   private held = new Set<Direction>();
   private nearby?: Point;
-  private active?: { speaker: string; lines: string[] };
+  private active?: Conversation;
   private line = 0;
   private cleanup = new AbortController();
   private arrival = 'spawn';
   private leaving = false;
   private shadow!: Phaser.GameObjects.Ellipse;
   private foes: Foe[] = [];
+  private props: Prop[] = [];
   private overlay?: BattleView | ResurrectionView;
 
   constructor(private area: Area) { super(area.key); }
@@ -40,7 +46,7 @@ export class AreaScene extends Phaser.Scene {
     // Scene instances are reused, so every visit starts from a clean slate.
     this.arrival = data?.spawn ?? 'spawn';
     this.cleanup = new AbortController();
-    this.held = new Set(); this.foes = [];
+    this.held = new Set(); this.foes = []; this.props = [];
     this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false;
   }
 
@@ -73,6 +79,16 @@ export class AreaScene extends Phaser.Scene {
       this.physics.add.collider(this.player, npc);
     }
     for (const { point, encounter } of this.area.enemies) this.createFoe(this.point(point), encounter);
+    for (const { point, texture, solid, hiddenIf } of this.area.props ?? []) {
+      const at = this.point(point);
+      const sprite = solid ? this.physics.add.staticSprite(at.x, at.y, texture) : this.physics.add.sprite(at.x, at.y, texture);
+      if (solid) this.physics.add.collider(this.player, sprite);
+      // Loose things glint so they can be found without a marker.
+      else this.tweens.add({ targets: sprite, alpha: 0.55, duration: 900, yoyo: true, repeat: -1 });
+      sprite.setDepth(3);
+      this.props.push({ sprite, hiddenIf });
+    }
+    this.refreshProps(true);
     this.area.decorate?.(this);
     this.keys = this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT', false) as typeof this.keys;
     this.bindControls();
@@ -90,6 +106,21 @@ export class AreaScene extends Phaser.Scene {
       this.setExplorationEnabled(true);
       this.closeDialogue();
     });
+  }
+
+  private context(): Context {
+    return { world: loadWorld(), lost: loadMemory().lost, studied: loadGrimoire() };
+  }
+
+  // Props vanish once their condition holds: brambles that let go, a bell already picked up.
+  private refreshProps(instant = false) {
+    const context = this.context();
+    for (const { sprite, hiddenIf } of this.props) {
+      if (!sprite.active || !hiddenIf.some(condition => holds(context, condition))) continue;
+      sprite.disableBody(true, false);
+      if (instant) sprite.setVisible(false);
+      else this.tweens.add({ targets: sprite, alpha: 0, scale: 0.6, duration: 700, delay: 300, onComplete: () => sprite.setVisible(false) });
+    }
   }
 
   private point(name: string): Point {
@@ -154,7 +185,14 @@ export class AreaScene extends Phaser.Scene {
     } else if(this.nearby && this.nearby.name in this.area.exits) {
       this.travel(this.area.exits[this.nearby.name]);
     } else if(this.nearby) {
-      this.active=conversation(this.area.dialogue, this.nearby.name, loadMemory().lost);this.line=0;
+      const context=this.context();
+      this.active=conversation(this.area.dialogue, this.nearby.name, context);this.line=0;
+      // Effects land as the conversation opens, so closing it early never loses them.
+      if(this.active.then) {
+        const next=apply(context, this.active.then);
+        saved=saveWorld(next.world)&&saveGrimoire(next.studied);
+        this.refreshProps();
+      }
       element('speaker').textContent=this.active.speaker;
       element('dialogue-text').textContent=this.active.lines[0];
       element('dialogue').hidden=false;
@@ -200,7 +238,7 @@ export class AreaScene extends Phaser.Scene {
         this.resumeExploration();
       } else {
         // Every wipe wakes the party at the church, wherever it fell.
-        saved = saveMemory(wipe(loadMemory()));
+        saved = saveMemory(wipe(loadMemory())) && saveWorld(drop(loadWorld()));
         this.scene.start('church');
       }
     }, foe.encounter, hollow(loadMemory()));
@@ -247,7 +285,9 @@ export class AreaScene extends Phaser.Scene {
     this.shadow.setPosition(this.player.x,this.player.y+9);
     // A restrained walking bob, while the physics body stays steady.
     this.player.setOrigin(0.5,0.5+(x||y?Math.sin(time/85)*0.025:0));
-    this.nearby=this.points.filter(p=>p.name in this.area.dialogue || p.name in this.area.exits)
+    const context=this.context();
+    this.nearby=this.points.filter(p=>p.name in this.area.exits || (p.name in this.area.dialogue
+      && !this.area.dialogue[p.name].hiddenIf?.some(condition=>holds(context, condition))))
       .find(p=>Phaser.Math.Distance.Between(this.player.x,this.player.y,p.x,p.y)<29);
     if(!this.active) element('prompt').textContent=this.nearby
       ? `E · ${this.area.exits[this.nearby.name]?.prompt ?? this.area.dialogue[this.nearby.name].prompt ?? 'Examine '+this.nearby.name}` : '';

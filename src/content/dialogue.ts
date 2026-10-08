@@ -1,11 +1,7 @@
-import type { MemoryId } from '../rules/memory';
+import type { Condition, Effect } from '../rules/world';
 
-export type Conversation = { speaker: string; lines: string[] };
-export type Dialogue = Record<string, Conversation & { prompt?: string; forgotten?: Partial<Record<MemoryId, string[]>> }>;
-
-// The world remembers what the hero cannot: a forgotten memory changes what he hears.
-export function conversation(dialogue: Dialogue, name: string, lost: readonly MemoryId[]): Conversation {
-  const { speaker, lines, forgotten = {} } = dialogue[name];
-  const memory = lost.find(id => id in forgotten);
-  return { speaker, lines: memory ? forgotten[memory]! : lines };
-}
+export type Conversation = { speaker: string; lines: string[]; then?: Effect };
+type Variant = { if: Condition; lines: string[]; then?: Effect };
+// The first variant whose condition holds replaces the usual lines.
+// A point whose hiddenIf condition holds can no longer be interacted with, like a bell already picked up.
+export type Dialogue = Record<string, Conversation & { prompt?: string; variants?: Variant[]; hiddenIf?: Condition[] }>;

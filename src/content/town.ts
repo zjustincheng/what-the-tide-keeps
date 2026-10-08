@@ -25,6 +25,17 @@ export const town: Dialogue = {
     'Are you the one who killed the king?',
     'Mother says not to look at you. I am looking at you anyway.',
     'There are thorns growing over the south road. The grown-ups say it is a curse. I think the thorns are only sad.',
+    'I lost my bell in the locust field when they chased me. If you find it, I will teach you the word for thorns. It is only a children\'s spell.',
+  ], variants: [
+    { if: { flag: 'lamb-thanked' }, lines: [
+      'Did the thorns listen? They always listen to me.',
+      'Mother says you are dangerous. I told her you found my bell.',
+    ] },
+    { if: { has: 'bell' }, lines: [
+      'My bell! You went into the locust field for it?',
+      'Bend down. You say it like this, softly, as though the thorns were frightened and you were not.',
+      "Bramble's leave is written into the grimoire.",
+    ], then: { take: 'bell', learn: "Bramble's leave", set: 'lamb-thanked' } },
   ] },
   fishmonger: { speaker: 'THE FISHMONGER', prompt: 'Speak to the fishmonger', lines: [
     'Fresh from the capital port. Fish for the carnivore quarter, by church license, so nobody there need go hungry.',
@@ -43,9 +54,5 @@ export const town: Dialogue = {
     'A stall behind the tannery, shuttered tight. Chalked on the boards: AFTER DARK.',
     'Beneath it, smaller and in another hand: ASK FOR THE SALT CUT.',
     'The night market is not built yet.',
-  ] },
-  south: { speaker: 'THE SOUTH GATE', prompt: 'Follow the border road', lines: [
-    'The border road runs south toward the highlands. Past the last farm, brambles have grown across it since the carts stopped.',
-    'The border road is not built yet. For now, Millbrook is as far as the sentence reaches.',
   ] },
 };

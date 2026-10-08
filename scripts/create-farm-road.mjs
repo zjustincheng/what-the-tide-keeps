@@ -47,7 +47,7 @@ for(const [x,y] of [[22,17],[23,17],[28,17],[21,20],[27,20],[28,20]]) put(furnit
 fill(furniture,27,12,30,13,TREE);
 put(furniture,18,20,SIGN);
 const layer=(name,data,id)=>({id,name,type:'tilelayer',width:w,height:h,x:0,y:0,opacity:1,visible:true,data});
-const points=[['spawn',256,64],['door',256,44],['locust',120,168],['locust-road',232,232],['weevil',392,296],['sign',296,328],['scarecrow',104,216],['south',256,372],['from-town',256,344]];
+const points=[['spawn',256,64],['door',256,44],['locust',120,168],['locust-road',232,232],['weevil',392,296],['sign',296,328],['scarecrow',104,216],['bell',88,168],['south',256,372],['from-town',256,344]];
 const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
   layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([name,x,y],i)=>({id:i+1,name,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
   tilesets:[{firstgid:1,name:'farm',image:'../assets/farm-tiles.svg',imagewidth:128,imageheight:32,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:16,

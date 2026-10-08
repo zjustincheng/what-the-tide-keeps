@@ -60,7 +60,7 @@ Open a companion's **Spellcraft** menu for these actions. Each spends that compa
 
 The exile alternates staff attacks with a spell. Its two-turn countdown initially reads **???**. Surviving its cast also adds **Salt lance** to the grimoire, even if the target falls while another companion survives. A total wipe does not discover an unstudied spell. The exile reveals its hidden mana when casting.
 
-The shared grimoire survives cot resets, defeats, and reloads in browser local storage (`tide-keeps.grimoire.v1`). If storage is unavailable, it remains usable for the current page session and the battle view reports that it cannot save. No other game state is saved yet.
+The shared grimoire survives cot resets, defeats, and reloads in browser local storage (`tide-keeps.grimoire.v1`). If storage is unavailable, it remains usable for the current page session and the battle view reports that it cannot save. Memories and story progress are saved separately (see below).
 
 These are prototype combat encounters in the church, not the final regional placement or recruitment story. Spellcraft options supplement the original attack/support controls while testing the rules.
 
@@ -68,7 +68,11 @@ These are prototype combat encounters in the church, not the final regional plac
 
 The first part of build step 8 (one region): the farm road south of the church, between wheat fields and a hay yard. Crop pests show their full mana and only strike physically, as the guideline describes. Two crop locusts feed in a trampled clearing and on the road, and a grain weevil waits in the hay yard. The weevil jabs most turns and makes a heavy rolling charge every third round. A waymark and a scarecrow can be examined. The road continues south to Millbrook.
 
-Millbrook is a prosperous herbivore market town. The reeve, the innkeeper, a stallholder, a lamb, and the fishmonger live on the west side and around the market square. The carnivore quarter lies east, behind a wall whose gate locks from the herbivore side. Townsfolk react to the hero's species and his brand: the stallholder triples his prices, the inn turns him away, and the notice board still shows his face. The fishmonger's barrel and the shuttered stall behind the tannery are left unexplained. Money, shops, camping, and the night market are not implemented yet, so those beats are dialogue for now. The south gate toward the border road marks the edge of the prototype.
+Millbrook is a prosperous herbivore market town. The reeve, the innkeeper, a stallholder, a lamb, and the fishmonger live on the west side and around the market square. The carnivore quarter lies east, behind a wall whose gate locks from the herbivore side. Townsfolk react to the hero's species and his brand: the stallholder triples his prices, the inn turns him away, and the notice board still shows his face. The fishmonger's barrel and the shuttered stall behind the tannery are left unexplained. Money, shops, camping, and the night market are not implemented yet, so those beats are dialogue for now.
+
+South of Millbrook, the border road is blocked by a wall of brambles. The lamb in the market square lost her bell in the locust field; it lies in the trampled clearing on the farm road, where it can be grabbed by slipping past the locust or after a fight. Bring it to her and she teaches **Bramble's leave**, a favor spell written into the grimoire. Speak it at the hedge and the brambles draw back. Beyond them, loaded grain carts sit turned around while a highland carter and a farmland guard wait for each other to move first. The scorched road south toward the boar's farm marks the edge of the prototype.
+
+Nothing marks the quest. A carried item is lost on a wipe and returns to where it was found. The opened hedge and learned spells persist, saved in `tide-keeps.world.v1` and the grimoire.
 
 Leaving an area and coming back respawns its enemies. A wipe anywhere wakes the party at the church cot, and **Return to the cot** works from any area.
 
@@ -87,27 +91,30 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 
 - `src/scenes/AreaScene.ts` — Phaser exploration, collision, input, encounters, and travel, shared by every area.
 - `src/scenes/areas.ts` — each area's map, people, enemies, exits, and decoration.
-- `src/content/dialogue.ts` — dialogue lookup, with variants for forgotten memories.
-- `src/content/church.ts`, `src/content/road.ts`, `src/content/town.ts` — prototype dialogue for each area.
+- `src/content/dialogue.ts` — dialogue types: variants by memory, items, flags, or spells, and their effects.
+- `src/content/church.ts`, `road.ts`, `town.ts`, `border.ts` — prototype dialogue for each area.
 - `src/scenes/sprites.ts` — generated placeholder sprites for the hero and townsfolk.
 - `src/rules/battle.ts` — immutable, renderer-independent combat state and transitions.
 - `src/rules/memory.ts` — memory loss and Hollow perks, independent of the renderer.
+- `src/rules/world.ts` — story flags, carried items, favor spells, and which dialogue variant applies.
 - `src/content/memories.ts` — memory names and what forgetting each costs.
 - `src/storage/grimoire.ts` — versioned browser storage for studied spells.
 - `src/storage/memory.ts` — versioned browser storage for lost memories and an unpaid wipe.
+- `src/storage/world.ts` — versioned browser storage for story flags and carried items.
 - `src/ui/BattleView.ts` — accessible combat view, drag input, and turn pacing.
 - `src/ui/ResurrectionView.ts` — the wake screen where a memory is chosen.
 - `public/maps/church.json` — editable Tiled JSON map with floor, furniture, and named interaction points.
 - `public/assets/church-tiles.svg` — original placeholder tileset.
-- `public/maps/farm-road.json`, `public/maps/town.json` — the farm road and Millbrook maps, with placeholder tilesets in `public/assets/`.
-- `scripts/create-church.mjs`, `scripts/create-farm-road.mjs`, `scripts/create-town.mjs` — regenerate each map and tileset; running one replaces manual edits to that map.
+- `public/maps/farm-road.json`, `town.json`, `border-road.json` — the farmland maps, with placeholder tilesets in `public/assets/`.
+- `scripts/create-*.mjs` — regenerate each map and tileset; running one replaces manual edits to that map.
 - `tests/church.spec.ts` — browser checks.
 - `tests/battle.spec.ts` — encounter and combat browser checks.
 - `tests/road.spec.ts` — travel, the weevil, Millbrook, and waking after a wipe outside.
+- `tests/quest.spec.ts` — the lamb's bell, the favor spell, and the hedge gate.
 - `tests/death.spec.ts` — wipe, memory choice, and save browser checks.
 - `tests/rules/battle.test.ts` — combat tests without a browser.
 - `tests/rules/memory.test.ts` — memory and Hollow perk tests without a browser.
-- `tests/rules/world.test.ts` — dialogue changes from forgotten memories.
+- `tests/rules/world.test.ts` — dialogue variants and the favor-spell quest.
 
 Combat rules have no Phaser or DOM imports. Future party and memory rules should preserve that boundary, as specified in the design guideline.
 

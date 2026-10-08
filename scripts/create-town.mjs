@@ -67,7 +67,7 @@ const layer=(name,data,id)=>({id,name,type:'tilelayer',width:w,height:h,x:0,y:0,
 const points=[
   ['spawn',256,40],['north',256,20],['south',256,372],
   ['reeve',88,104],['innkeeper',120,328],['shopkeeper',168,160],['board',216,136],
-  ['child',232,216],['fishmonger',328,160],['barrel',360,152],['fox',424,104],['stall',440,312],
+  ['child',232,216],['fishmonger',328,160],['barrel',360,152],['fox',424,104],['stall',440,312],['from-border',256,344],
 ];
 const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
   layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([name,x,y],i)=>({id:i+1,name,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],

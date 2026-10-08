@@ -1,9 +1,11 @@
 import type Phaser from 'phaser';
 import { church } from '../content/church';
 import type { Dialogue } from '../content/dialogue';
+import { border } from '../content/border';
 import { road } from '../content/road';
 import { town } from '../content/town';
 import type { Encounter } from '../rules/battle';
+import type { Condition } from '../rules/world';
 
 export type Area = {
   key: string;
@@ -16,6 +18,8 @@ export type Area = {
   dialogue: Dialogue;
   npcs: { point: string; texture: string }[];
   enemies: { point: string; encounter: Encounter }[];
+  // Objects on the map that disappear once any hiddenIf condition holds. Solid ones block the way.
+  props?: { point: string; texture: string; solid?: boolean; hiddenIf: Condition[] }[];
   // Points that lead elsewhere when the hero interacts with them.
   exits: Record<string, { to: string; spawn: string; prompt: string }>;
   decorate?: (scene: Phaser.Scene) => void;
@@ -50,6 +54,7 @@ export const FARM_ROAD: Area = {
   key: 'farm-road', map: 'farm-road', tileset: 'farm', region: 'THE FARMLAND', place: 'The farm road', time: 'Dawn',
   bounds: [0, 0, 512, 384], dialogue: road, npcs: [],
   enemies: [{ point: 'locust', encounter: 'locust' }, { point: 'locust-road', encounter: 'locust' }, { point: 'weevil', encounter: 'weevil' }],
+  props: [{ point: 'bell', texture: 'bell', hiddenIf: [{ has: 'bell' }, { flag: 'lamb-thanked' }] }],
   exits: {
     door: { to: 'church', spawn: 'from-road', prompt: 'Return to the church' },
     south: { to: 'town', spawn: 'spawn', prompt: 'Walk on to Millbrook' },
@@ -67,7 +72,10 @@ export const TOWN: Area = {
   key: 'town', map: 'town', tileset: 'town', region: 'THE FARMLAND', place: 'Millbrook', time: 'Morning',
   bounds: [0, 0, 512, 384], dialogue: town, enemies: [],
   npcs: ['reeve', 'innkeeper', 'shopkeeper', 'child', 'fishmonger', 'fox'].map(name => ({ point: name, texture: name })),
-  exits: { north: { to: 'farm-road', spawn: 'from-town', prompt: 'Return to the farm road' } },
+  exits: {
+    north: { to: 'farm-road', spawn: 'from-town', prompt: 'Return to the farm road' },
+    south: { to: 'border-road', spawn: 'spawn', prompt: 'Take the border road' },
+  },
   decorate(scene) {
     // Smoke from the tannery, drifting over the carnivore quarter.
     for (let i = 0; i < 3; i++) {
@@ -77,4 +85,12 @@ export const TOWN: Area = {
   },
 };
 
-export const AREAS = [CHURCH, FARM_ROAD, TOWN];
+export const BORDER_ROAD: Area = {
+  key: 'border-road', map: 'border-road', tileset: 'border', region: 'THE FARMLAND', place: 'The border road', time: 'Midday',
+  bounds: [0, 0, 512, 384], dialogue: border, enemies: [],
+  npcs: [{ point: 'driver', texture: 'driver' }, { point: 'guard', texture: 'guard' }],
+  props: [1, 2, 3, 4, 5, 6, 7, 8].map(i => ({ point: `bramble-${i}`, texture: 'brambles', solid: true, hiddenIf: [{ flag: 'hedge-open' as const }] })),
+  exits: { north: { to: 'town', spawn: 'from-border', prompt: 'Return to Millbrook' } },
+};
+
+export const AREAS = [CHURCH, FARM_ROAD, TOWN, BORDER_ROAD];
