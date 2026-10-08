@@ -60,7 +60,7 @@ export class BattleView {
       <div class="spell-bar" hidden><p class="spell-name"></p><div class="spell-keys" aria-live="polite"></div><div class="spell-timer"><span></span></div>
         <div class="spell-pad">${[1, 2, 3, 4].map(key => `<button type="button" data-key="${key}">${key}</button>`).join('')}</div></div>
       <div class="dodge-bar" hidden><p class="dodge-call" aria-live="assertive"></p><button id="dodge" type="button">Dodge <small>Space or tap · as the ring closes</small></button></div>
-      <p class="battle-help">Each living companion acts once. Spellcraft uses that action too.<br />Guard physical blows. Analyze spells before blocking them. Attack while hidden to reveal.<br />Mana returns slowly: 1 a round, or Gather to draw back more. Spent mana stays spent until you rest.<br />When a blow comes, press Space as the ring closes to dodge. Unknown spells cannot be dodged.</p>
+      <p class="battle-help">Each living companion acts once. Spellcraft uses that action too.<br />Guard physical blows. Analyze spells before blocking them. Attack while hidden to reveal.<br />Mana returns slowly: 1 a round, or Gather to draw back more. Spent mana stays spent until you rest.<br />A spell needs time to settle before it can be cast again, and casting floods the caster's mana into view.<br />When a blow comes, press Space as the ring closes to dodge. Unknown spells cannot be dodged.</p>
       <button id="battle-finish" hidden></button>`;
     for (const member of this.state.party) {
       this.card(member.id).querySelector<HTMLImageElement>('img')!.src = member.id === 'chameleon' ? heroImage
@@ -305,7 +305,7 @@ export class BattleView {
       this.renderHealth(card.querySelector<HTMLElement>('.health-bar')!, member);
       card.querySelector('.member-mana')!.textContent = `Mana ${member.mana} / ${member.maxMana} · showing ${visibleMana(member)}`;
       card.querySelector('.member-status')!.textContent = member.health === 0 ? 'Cannot act'
-        : member.barrier ? 'Barrier raised' : member.suppressed ? 'Hidden · attack to reveal'
+        : member.flaring ? 'Flaring · the enemy sees them' : member.barrier ? 'Barrier raised' : member.suppressed ? 'Hidden · attack to reveal'
         : member.guardingFor ? `Guarding ${MEMBERS[member.guardingFor].name}` : member.focused ? 'Focused'
         : member.acted ? 'Acted' : done ? '' : 'Ready';
       for (const action of ['attack', 'support', 'gather', 'suppress', 'barrier', 'analyze'] as const) card.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)!.disabled = Boolean(this.casting) || !canAct(state, member.id, action, member.id, action === 'attack' ? this.foe() : 0);
@@ -317,7 +317,12 @@ export class BattleView {
         button.disabled = Boolean(this.casting) || !canUse(state, member.id, supply, target, this.foe());
       });
       const castButton = card.querySelector<HTMLButtonElement>('[data-cast]');
-      if (castButton) castButton.disabled = Boolean(this.casting) || !canCast(state, member.id, this.foe());
+      if (castButton && member.spell) {
+        const spell = SPELLS[member.spell];
+        castButton.disabled = Boolean(this.casting) || !canCast(state, member.id, this.foe());
+        castButton.querySelector('small')!.textContent = member.cooldown > 0
+          ? `Settling · ready in ${member.cooldown} round${member.cooldown === 1 ? '' : 's'}` : `${spell.cost} mana · ${spell.length} keys`;
+      }
       card.querySelector<HTMLButtonElement>('.party-fighter')!.disabled = !canAct(state, member.id, 'support');
       const select = card.querySelector('select');
       if (select) {

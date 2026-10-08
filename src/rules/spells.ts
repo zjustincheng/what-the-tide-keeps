@@ -7,12 +7,13 @@ export type SpellId = 'thorn-volley' | 'stone-ward' | 'gale-quill' | 'still-wate
 export type Books = Readonly<Record<MemberId, BookId | null>>;
 
 // Casting means typing a shown sequence of 1–4 within the time limit. One wrong key and the spell fizzles.
-export const SPELLS: Record<SpellId, { name: string; cost: number; length: number; seconds: number; kind: 'damage' | 'ward' | 'heal' | 'snare'; power: number; text: string }> = {
-  'thorn-volley': { name: 'Thorn volley', cost: 4, length: 5, seconds: 3, kind: 'damage', power: 12, text: 'A spray of thorns at one enemy.' },
-  'stone-ward': { name: 'Stone ward', cost: 4, length: 4, seconds: 2.6, kind: 'ward', power: 0, text: 'Every standing hero guards against physical blows this enemy turn.' },
-  'gale-quill': { name: 'Gale quill', cost: 5, length: 6, seconds: 3.2, kind: 'damage', power: 16, text: 'One quill on a gale, at one enemy.' },
-  'still-water': { name: 'Still water', cost: 4, length: 5, seconds: 3, kind: 'heal', power: 8, text: 'Every standing hero recovers 8 health.' },
-  'bramble-snare': { name: 'Bramble snare', cost: 5, length: 6, seconds: 3.2, kind: 'snare', power: 0, text: 'The main enemy loses its next move. Followers still act.' },
+// cooldown: rounds before the same hero can cast again; a grimoire needs time to settle.
+export const SPELLS: Record<SpellId, { name: string; cost: number; length: number; seconds: number; kind: 'damage' | 'ward' | 'heal' | 'snare'; power: number; cooldown: number; text: string }> = {
+  'thorn-volley': { name: 'Thorn volley', cost: 4, length: 5, seconds: 3, kind: 'damage', power: 12, cooldown: 2, text: 'A spray of thorns at one enemy.' },
+  'stone-ward': { name: 'Stone ward', cost: 4, length: 4, seconds: 2.6, kind: 'ward', power: 0, cooldown: 3, text: 'Every standing hero guards against physical blows this enemy turn.' },
+  'gale-quill': { name: 'Gale quill', cost: 5, length: 6, seconds: 3.2, kind: 'damage', power: 16, cooldown: 2, text: 'One quill on a gale, at one enemy.' },
+  'still-water': { name: 'Still water', cost: 4, length: 5, seconds: 3, kind: 'heal', power: 8, cooldown: 3, text: 'Every standing hero recovers 8 health.' },
+  'bramble-snare': { name: 'Bramble snare', cost: 5, length: 6, seconds: 3.2, kind: 'snare', power: 0, cooldown: 3, text: 'The main enemy loses its next move. Followers still act.' },
 };
 
 export const BOOKS: Record<BookId, { name: string; spell: SpellId }> = {

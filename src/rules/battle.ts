@@ -30,6 +30,10 @@ export type Member = Fighter & Readonly<{
   gear: Mods;
   // The spell taught by the grimoire this member carries.
   spell: SpellId | null;
+  // Rounds until this member can cast again.
+  cooldown: number;
+  // A member who just cast shows a flood of mana until the enemy has moved.
+  flaring: boolean;
 }>;
 export type Battle = Readonly<{
   round: number;
@@ -94,6 +98,8 @@ export const COST = { attack: 2, support: 0, suppress: 1, barrier: 5, analyze: 2
 export const MANA_REGEN = 1;
 export const GATHER = 3;
 export const ENEMY_REGEN = 3;
+// How much more mana a caster shows for the enemy turn after a spell, enough to draw the enemy's eye.
+export const FLARE = 8;
 export const UNHOLLOWED: Hollow = { mana: 0, damage: 0, trained: true };
 // Enemy health for a party of one, two, or three, so a smaller party is not simply outmatched.
 export const PARTY_SCALE = [0.45, 0.65, 1] as const;
@@ -112,7 +118,7 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
     const maxHealth = Math.max(1, base + worn.health);
     // Heroes enter hurt if they were hurt before; a hero who fell stays down.
     const health = Math.max(0, maxHealth - (wounds[id] ?? 0));
-    return { id, health, maxHealth, mana: Math.max(0, mana - (drained[id] ?? 0)), maxMana: mana, acted: false, guardingFor: null, focused: false, suppressed: false, barrier: false, gear: worn,
+    return { id, health, maxHealth, mana: Math.max(0, mana - (drained[id] ?? 0)), maxMana: mana, acted: false, guardingFor: null, focused: false, suppressed: false, barrier: false, gear: worn, cooldown: 0, flaring: false,
       spell: books[id] ? BOOKS[books[id]!].spell : null };
   };
   const size = Math.max(1, Math.min(3, roster.length));
@@ -146,7 +152,7 @@ export function condition(fighter: Fighter): string {
 }
 
 export function visibleMana(member: Member): number {
-  return member.suppressed ? Math.min(1, member.mana) : member.mana + member.gear.shown;
+  return member.suppressed ? Math.min(1, member.mana) : member.mana + member.gear.shown + (member.flaring ? FLARE : 0);
 }
 
 // What an action costs this member, after keepsakes.
@@ -292,7 +298,7 @@ export function useSupply(battle: Battle, actor: MemberId, supply: SupplyId, tar
 
 export function canCast(battle: Battle, actor: MemberId, foe: Foe = 0): boolean {
   const member = battle.party.find(member => member.id === actor);
-  if (battle.phase !== 'player' || !member?.spell || member.health <= 0 || member.acted || member.mana < SPELLS[member.spell].cost) return false;
+  if (battle.phase !== 'player' || !member?.spell || member.health <= 0 || member.acted || member.cooldown > 0 || member.mana < SPELLS[member.spell].cost) return false;
   // Only damage needs a standing target; wards, mending, and snares do not.
   return SPELLS[member.spell].kind !== 'damage' || standing(battle, foe);
 }
@@ -304,7 +310,8 @@ export function cast(battle: Battle, actor: MemberId, success: boolean, foe: Foe
   const spell = SPELLS[member.spell!];
   const hit = success && spell.kind === 'damage' ? land(battle, spell.power, foe) : undefined;
   const party = battle.party.map(current => {
-    const spent = current.id === actor ? { acted: true, mana: current.mana - spell.cost } : {};
+    // Casting spends the mana, starts the cooldown, ends any hiding, and lights the caster up for the enemy, fizzle or not.
+    const spent = current.id === actor ? { acted: true, mana: current.mana - spell.cost, cooldown: spell.cooldown, flaring: true, suppressed: false } : {};
     if (!success || current.health <= 0) return { ...current, ...spent };
     if (spell.kind === 'heal') return { ...current, ...spent, health: Math.min(current.maxHealth, current.health + spell.power) };
     if (spell.kind === 'ward') return { ...current, ...spent, guardingFor: current.guardingFor ?? current.id };
@@ -435,7 +442,7 @@ export function strike(battle: Battle, dodge: Dodge = 'miss'): Battle {
 function enemyTurnEnds(battle: Battle): Battle {
   const defeat = battle.party.every(member => member.health === 0);
   const party = battle.party.map(member => ({
-    ...member, guardingFor: null, barrier: false, acted: false,
+    ...member, guardingFor: null, barrier: false, acted: false, flaring: false, cooldown: Math.max(0, member.cooldown - 1),
     mana: !defeat && member.health > 0 ? Math.min(member.maxMana, member.mana + MANA_REGEN) : member.mana,
   }));
   const spell = !battle.snared && battle.enemy.health > 0 && intent(battle).type === 'spell';

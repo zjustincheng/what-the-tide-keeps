@@ -72,7 +72,7 @@ export class EquipmentView {
       const holder = (other: BookId) => this.party.find(member => member !== id && this.carried[member] === other);
       book.innerHTML = `<option value="">— none —</option>${this.books.map(other => `<option value="${other}" ${other === carrying ? 'selected' : ''}>${BOOKS[other].name}${holder(other) ? ` (from ${MEMBERS[holder(other)!].name})` : ''}</option>`).join('')}`;
       const spell = carrying && SPELLS[BOOKS[carrying].spell];
-      book.nextElementSibling!.textContent = spell ? `${spell.name} · ${spell.cost} mana · ${spell.length} keys in ${spell.seconds}s. ${spell.text}` : 'No spell.';
+      book.nextElementSibling!.textContent = spell ? `${spell.name} · ${spell.cost} mana · ${spell.length} keys in ${spell.seconds}s · then ${spell.cooldown - 1} round${spell.cooldown === 2 ? '' : 's'} to settle. ${spell.text}` : 'No spell.';
       card.querySelectorAll<HTMLSelectElement>('[data-slot]').forEach(select => {
         const slot = Number(select.dataset.slot);
         const held = this.gear[id][slot];

@@ -50,3 +50,20 @@ test('a grimoire is carried by one hero at a time, and only once found', () => {
   assert.deepEqual(swapped, { chameleon: null, bear: 'thornwork', vulture: 'windward' });
   assert.equal(createBattle('locust', [], { books: swapped }).party[0].spell, null);
 });
+
+test('a strong spell cannot be cast round after round, and casting draws the enemy to the caster', async () => {
+  const { act, canCast, enemyTarget, FLARE, visibleMana } = await import('../../src/rules/battle.ts');
+  let battle = cast(createBattle(), 'chameleon', true);
+  const hero = battle.party[0];
+  assert.equal(hero.cooldown, SPELLS['thorn-volley'].cooldown);
+  assert.equal(visibleMana(hero), hero.mana + FLARE);
+  battle = act(act(battle, 'bear', 'support'), 'vulture', 'support');
+  assert.equal(enemyTarget(battle)?.id, 'chameleon', 'the flare outshines the bear');
+  battle = resolveEnemy(battle);
+  assert.equal(battle.party[0].flaring, false, 'the flare fades after the enemy turn');
+  assert.equal(canCast(battle, 'chameleon'), false, 'not again the very next round');
+  battle = resolveEnemy(act(act(act(battle, 'chameleon', 'attack'), 'bear', 'support'), 'vulture', 'support'));
+  assert.equal(canCast(battle, 'chameleon'), true, 'ready again the round after');
+  const fizzled = cast(createBattle(), 'chameleon', false);
+  assert.equal(fizzled.party[0].cooldown, SPELLS['thorn-volley'].cooldown, 'a fizzle unsettles the grimoire too');
+});

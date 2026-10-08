@@ -131,6 +131,8 @@ Each hero carries one grimoire, chosen on the equipment screen, which sets their
 | Pond-keeper's primer | The heron by the pond | Still water | 4 | 5 in 3s | Every standing hero recovers 8 health |
 | Hedge-witch's primer | The burned farmhouse | Bramble snare | 5 | 6 in 3.2s | The main enemy loses its next move; followers still act |
 
+Spells have consequences inside a fight. After casting, a grimoire needs time to settle: damage spells can't be cast again the very next round, and Stone ward, Still water, and Bramble snare wait two rounds. The spell button shows when it's ready. Casting also floods the caster's mana into view for the enemy turn (+8 to the mana enemies see), so the enemy turns on the caster unless someone guards them; casting ends hiding. A fizzle triggers the cooldown and the flare too.
+
 Any hero can carry any grimoire, which is how the guideline's "the grimoire is the class" begins: giving the bear the primer makes him the healer. Damage spells follow the same targeting as attacks, so the boar still shields his followers from them. Which hero carries which grimoire is saved in `tide-keeps.books.v1`. These carried grimoires are separate from the shared grimoire of studied enemy spells.
 
 ## Dodging
