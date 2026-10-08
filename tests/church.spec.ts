@@ -44,7 +44,7 @@ test('priest dialogue pauses movement and can be completed', async ({ page }) =>
   await page.locator('#game').focus();
   await page.keyboard.press('e');
   await expect(page.locator('#dialogue')).toBeVisible();
-  await expect(page.locator('#dialogue-text')).toContainText('The sea has given you back');
+  await expect(page.locator('#dialogue-text')).toContainText('Sit up slowly');
   const before = await position(page);
   await page.keyboard.down('d');
   await page.waitForTimeout(250);
@@ -57,7 +57,7 @@ test('priest dialogue pauses movement and can be completed', async ({ page }) =>
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.locator('#dialogue-text')).toContainText('Take the south door');
   await page.getByRole('button', { name: '4. I should go.' }).click();
-  await expect(page.locator('#dialogue-text')).toHaveText('Go, then. The sea will keep your place.');
+  await expect(page.locator('#dialogue-text')).toHaveText('Go on, then. Try to come back on your feet.');
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.locator('#dialogue')).toBeHidden();
 });

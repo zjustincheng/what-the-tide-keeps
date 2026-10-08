@@ -32,7 +32,7 @@ test('quests are told, not marked: the shepherd, the barrel, and the bounty', ()
   for (const where of ['sheep-woods', 'sheep-orchard', 'sheep-yard']) talk(fields, where);
   assert.match(talk(fields, 'shepherd'), /Wool charm/);
   assert.deepEqual([context.world.coins, context.world.found], [15, ['wool-charm']]);
-  assert.match(talk(fields, 'shepherd'), /flock is whole/);
+  assert.match(talk(fields, 'shepherd'), /count them again/);
   const hidden = (name: string) => fields[name].hiddenIf!.some(condition => holds(context, condition));
   assert.equal(hidden('stream-bank'), true, 'nothing to release until the barrel is bought');
   context = apply(context, { set: 'barrel-bought' });

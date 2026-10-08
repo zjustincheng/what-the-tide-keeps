@@ -64,7 +64,7 @@ test('fighting the boar directly frees the grain and changes the farmland', asyn
   await place(page, 'boar-farm', 216, 216);
   await expect(page.locator('#prompt')).toContainText('Speak to the badger');
   await page.keyboard.press('e'); await page.keyboard.press('e');
-  await expect(page.locator('#dialogue-text')).toContainText('no fur on him at all');
+  await expect(page.locator('#dialogue-text')).toContainText('No fur on him.');
   await page.keyboard.press('Escape');
   // The boar stays beaten after a reload, and Millbrook has heard.
   await page.reload();

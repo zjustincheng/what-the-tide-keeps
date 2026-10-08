@@ -79,5 +79,5 @@ test('a forgotten memory changes what the church says', async ({ page }) => {
   await page.locator('#game').focus();
   await page.keyboard.press('e');
   await page.keyboard.press('e');
-  await expect(page.locator('#dialogue-text')).toContainText('You have stopped saying it.');
+  await expect(page.locator('#dialogue-text')).toContainText('You did not say it this time.');
 });

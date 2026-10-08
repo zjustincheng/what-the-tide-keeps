@@ -66,7 +66,7 @@ export const MEMBERS = {
 // Crop pests hide nothing and only strike physically; the exile veils its mana and casts.
 export const ENEMIES = {
   locust: { name: 'Crop locust', short: 'locust', health: 40, mana: 2, veiled: false,
-    opening: 'A crop locust has followed the grain sacks inside. The three of you take your places.' },
+    opening: 'A crop locust, fat on stolen grain, turns to face you.' },
   acolyte: { name: 'Hooded exile', short: 'exile', health: 56, mana: 12, veiled: true,
     opening: 'The hooded exile shows almost no mana. A spell gathers behind the veil.' },
   weevil: { name: 'Grain weevil', short: 'weevil', health: 48, mana: 3, veiled: false,
@@ -75,9 +75,9 @@ export const ENEMIES = {
     opening: 'The boar rises from the ashes of his own hearth. His followers close in at his flanks. "Not them," he says. "Me."' },
   // Guardians of keepsakes worth having.
   warden: { name: 'Shrine warden', short: 'warden', health: 70, mana: 14, veiled: false,
-    opening: 'The warden turns from the shrine. Two votive candles flare at its sides, and its robes drink their light. Nothing will touch it while they burn.' },
+    opening: 'The warden turns from the shrine. Two votive candles flare up at its sides. Blows will slide off it while they burn.' },
   leech: { name: 'Mire leech', short: 'leech', health: 96, mana: 3, veiled: false,
-    opening: 'The ford heaves. Something long and black uncoils from the silt and turns its mouth toward the warmest of you.' },
+    opening: 'The ford heaves. Something long and black comes up out of the silt.' },
   swarm: { name: 'Swarm-mother', short: 'swarm-mother', health: 64, mana: 4, veiled: false,
     opening: 'Something the size of a cart unfolds in the dark between the trees. Her brood drops from the branches around her.' },
 } as const satisfies Record<Encounter, unknown>;

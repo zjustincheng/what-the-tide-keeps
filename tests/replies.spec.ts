@@ -41,9 +41,9 @@ test('the hero can answer, by number key or by clicking, and the talk goes on fr
   await expect(replies).toHaveText(["1. No. I don't think so.", '2. They say I did.']);
   await expect(page.getByRole('button', { name: 'Continue' })).toBeHidden();
   await page.keyboard.press('2');
-  await expect(page.locator('#dialogue-text')).toHaveText('They say a lot of things. They say the thorns are a curse.');
+  await expect(page.locator('#dialogue-text')).toHaveText('Mum says.');
   await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.locator('#dialogue-text')).toContainText('I am looking at you anyway');
+  await expect(page.locator('#dialogue-text')).toContainText("There's thorns all over the south road now");
 });
 
 test('once the feast is forgotten, the hero can no longer say he is innocent', async ({ page }) => {
@@ -51,7 +51,7 @@ test('once the feast is forgotten, the hero can no longer say he is innocent', a
   await lamb(page);
   await expect(page.getByRole('group', { name: 'Replies' }).getByRole('button')).toHaveText(["1. I don't remember.", '2. They say I did.']);
   await page.getByRole('button', { name: "1. I don't remember." }).click();
-  await expect(page.locator('#dialogue-text')).toHaveText('Then anyone could have done it. Even you.');
+  await expect(page.locator('#dialogue-text')).toHaveText("That's what everyone says.");
 });
 
 test('the priest can tend wounds', async ({ page }) => {

@@ -79,7 +79,7 @@ test('Millbrook and the border road can each be reached directly from the fields
   await place(page, 'town', 120, 344);
   await expect(page.locator('#prompt')).toContainText('Speak to the innkeeper');
   await page.keyboard.press('e');
-  await expect(page.locator('#dialogue-text')).toHaveText('We are full.');
+  await expect(page.locator('#dialogue-text')).toHaveText("We're full.");
   await page.keyboard.press('Escape');
   await go(page, 'town', 256, 30, 'Return to the fields', 'farmland', { x: 512, y: 736 });
   // The field track skirts the town and joins the border road north of the brambles.

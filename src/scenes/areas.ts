@@ -95,8 +95,8 @@ export const FARMLAND: Area = {
   ],
   fishing: { 'pond-spot': 'pond', 'stream-spot': 'stream' },
   camps: {
-    'camp-fields': { prompt: 'Rest by the fire', lines: ['A shepherd\'s fire ring at the crossroads. You rest until the ache goes out of you.', 'Out in the fields, the things you drove off creep back.'] },
-    'camp-woods': { prompt: 'Rest by the fire', lines: ['You coax the old camp fire back to life and sleep under the grey tent.', 'In the dark between the trees, something that was gone is not gone anymore.'] },
+    'camp-fields': { prompt: 'Rest by the fire', lines: ['The shepherds\' fire ring at the crossroads. You sleep until the ache goes out of you.', 'By morning the fields have filled up again.'] },
+    'camp-woods': { prompt: 'Rest by the fire', lines: ['You get the old fire going again and sleep under the grey tent.', 'Something is moving in the trees again.'] },
   },
   exits: {
     door: { to: 'church', spawn: 'from-road', prompt: 'Return to the church' },
@@ -139,7 +139,7 @@ export const BORDER_ROAD: Area = {
   key: 'border-road', map: 'border-road', tileset: 'border', region: 'THE FARMLAND', place: 'The border road', time: 'Midday',
   dialogue: border, enemies: [{ point: 'follower', encounter: 'acolyte' }],
   npcs: [{ point: 'driver', texture: 'driver' }, { point: 'guard', texture: 'guard' }],
-  camps: { 'camp-border': { prompt: 'Rest by the fire', lines: ['The carters\' fire, banked and waiting. They let you sit by it. Nobody speaks, but nobody leaves either.'] } },
+  camps: { 'camp-border': { prompt: 'Rest by the fire', lines: ['The carters let you sit at their fire. Nobody talks much.'] } },
   props: [
     ...[1, 2, 3, 4, 5, 6, 7, 8].map(i => ({ point: `bramble-${i}`, texture: 'brambles', solid: true, hiddenIf: [{ flag: 'hedge-open' as const }] })),
     { point: 'camp-border', texture: 'campfire', hiddenIf: [] },

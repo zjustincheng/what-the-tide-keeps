@@ -52,11 +52,13 @@ Victory removes the locust until you use **Return to the cot**, which resets the
 
 ## Replies
 
-People speak with a portrait in its own box above the text and their name on a tab beside it, as in Omori. Portraits are cut from each character's sprite and scaled up; objects and places show only a name. Many people can be answered. When a speaker finishes, the hero's possible replies appear under their last line; choose one with **1–4** or by clicking, and the conversation goes on from there. **Escape** walks away. Replies depend on what the hero still remembers and what has happened. While he remembers the feast he can tell the lamb he doesn't think he killed the king; once it is forgotten, that answer is gone and "I don't remember" takes its place. His name is lost before the game begins, so the bear can tell it to him, and it slides off him. The priest can also tend the hero's wounds.
+People speak with a portrait in its own box above the text and their name on a tab beside it, as in Omori. Portraits are cut from each character's sprite and scaled up; objects and places show only a name. Many people can be answered. When a speaker finishes, the hero's possible replies appear under their last line; choose one with **1–4** or by clicking, and the conversation goes on from there. **Escape** walks away. Replies depend on what the hero still remembers and what has happened. While he remembers the feast he can tell the lamb he doesn't think he killed the king; once it is forgotten, that answer is gone and "I don't remember" takes its place. His name is lost before the game begins, so the bear can tell it to him, and it doesn't stay. The priest can also tend the hero's wounds.
 
 ## Tone
 
 The world is drained and cold. Each area's map has a colour grade (desaturated and darkened, with a vignette), set per area in `src/scenes/areas.ts`; the church keeps a little candlelight warmth. Battle and portrait art is toned to match. The fields carry signs of how this society treats appetite: a gibbet at the crossroads marked COVENANT-BREAKER, the bones of another branded convict in the swarm-mother's hollow, stocks in Millbrook's square, and crows over everything.
+
+The writing is deliberately plain. People talk about what is in front of them: the reeve about his carts, the shepherd about his sheep, the fox about the nightly count. The larger story surfaces only where the guideline puts it, and quietly.
 
 ## Wounds and rest
 
@@ -181,7 +183,7 @@ Millbrook is a prosperous herbivore market town. The reeve, the innkeeper, a sta
 
 South of Millbrook, the border road is blocked by a wall of brambles. The lamb in the market square lost her bell in the locust field; it lies in the trampled clearing in the locust field, where it can be grabbed by slipping past the locust or after a fight. Bring it to her and she teaches **Bramble's leave**, a favor spell written into the grimoire. Speak it at the hedge and the brambles draw back. Beyond them, loaded grain carts sit turned around while a highland carter and a farmland guard wait for each other to move first. Further south, one of the boar's hooded followers waits on the road with veiled mana and an unknown spell.
 
-The road ends at the boar's burned farm, where he waits between his followers, a badger and a rat. Every hit aimed at a follower lands on the boar instead, at half strength, and adds fury. Fury raises his damage, and that extra damage drives through guards. Clearing the followers first wipes the party; fighting him directly while the bear guards wins. A notice on the gatepost tells his story. Once he is beaten he stays beaten: his followers speak of "the one with no fur, who listened", a cup from the feast lies where he stood, and the reeve, the inn, the carter, and the guard all change what they say.
+The road ends at the boar's burned farm, where he waits between his followers, a badger and a rat. Every hit aimed at a follower lands on the boar instead, at half strength, and adds fury. Fury raises his damage, and that extra damage drives through guards. Clearing the followers first wipes the party; fighting him directly while the bear guards wins. A notice on the gatepost tells his story. Once he is beaten he stays beaten: his followers mention a stranger with no fur who sat with them and listened, a cup from the feast lies where he stood, and the reeve, the inn, the carter, and the guard all change what they say.
 
 Nothing marks the quest. A carried item is lost on a wipe and returns to where it was found. The opened hedge and learned spells persist, saved in `tide-keeps.world.v1` and the grimoire.
 

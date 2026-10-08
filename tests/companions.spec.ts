@@ -52,7 +52,7 @@ test("clearing the reeve's fields earns the writ that frees the bear", async ({ 
   page.on('pageerror', error => errors.push(error.message));
   await visit(page, 'farmland');
   await talk(page, 'farmland', 104, 258, 'Speak to the bear');
-  await expect(page.locator('#dialogue-text')).toContainText('You look thinner');
+  await expect(page.locator('#dialogue-text')).toContainText("You're thinner every time");
   await page.keyboard.press('Escape');
   await fight(page, 'farmland', 340, 184, 'a', 'Crop locust');
   await win(page);
