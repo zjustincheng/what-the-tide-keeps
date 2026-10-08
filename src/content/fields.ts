@@ -1,0 +1,39 @@
+import type { Dialogue } from './dialogue';
+
+// The open farmland south of the church. Names are placeholders.
+export const fields: Dialogue = {
+  sign: { speaker: 'A WAYMARK', prompt: 'Read the waymark', lines: [
+    'South: Millbrook. West: the mill, over the stream. East: the old shrine, and the field track to the border.',
+    'Someone has carved a crude reptile beneath it, with a noose.',
+  ] },
+  bell: { speaker: 'THE TRAMPLED CLEARING', prompt: 'Pick up the bell', hiddenIf: [{ has: 'bell' }, { flag: 'lamb-thanked' }], lines: [
+    'A small brass bell on a faded ribbon, trodden into the chaff. The kind a lamb wears.',
+    'You take it. It rings once, too loudly, and something in the wheat goes still.',
+  ], then: { give: 'bell' } },
+  scarecrow: { speaker: 'THE SCARECROW', lines: [
+    'Its sack face has been stitched with a snout and long ears, so the locusts know whose field this is.',
+    'The locusts have eaten the wheat right up to its feet.',
+  ] },
+  bear: { speaker: 'THE BEAR', prompt: 'Speak to the bear', lines: [
+    'Hero? Hero! Look at you. You look thinner. Do they feed you at that church, or only bury you?',
+    'They chained me to the millstone. Penal labor, the miller calls it. The miller is frightened of me, so the chain is very short.',
+    'You still know me. Good. Remember the kraken? You took its eye and I took the blame for the smell. Hold on to that one.',
+  ] },
+  miller: { speaker: 'THE MILLER', prompt: 'Speak to the miller', lines: [
+    'Keep back from him. And from me, while we are at it.',
+    'The church sends me a convict, the church takes the flour. Nobody asks the miller. The key stays on my belt.',
+  ] },
+  heron: { speaker: 'A HERON', prompt: 'Speak to the heron', lines: [
+    'Shh. The fish here are small and very suspicious.',
+    'Everyone inland eats fish by church license now. Carted up from the capital in barrels. Not all of the barrels hold fish, mind you.',
+    'I only eat what I catch myself. It is legal, and it keeps me honest.',
+  ] },
+  camp: { speaker: 'AN ABANDONED CAMP', prompt: 'Examine the camp', lines: [
+    'A tent gone grey with rain and a fire long cold. Whoever slept here left in a hurry, and did not come back.',
+    'Scratched into the tent pole: FIVE DAYS TO THE BORDER. DO NOT TAKE THE ROAD.',
+  ] },
+  shrine: { speaker: 'THE OLD SHRINE', prompt: 'Examine the shrine', lines: [
+    'A Covenant shrine older than the church, in a ring of standing stones. Moss has eaten most of the carving.',
+    'What is left reads: HERE NOBODY EATS ANYBODY. Someone has added, in fresh chalk: ANYBODY WHO MATTERS.',
+  ] },
+};

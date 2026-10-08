@@ -40,7 +40,7 @@ npm run test:unit # Pure TypeScript combat and memory rule tests
 
 Build the repeatable loop in miniature before adding the full story. The first playable milestone is a small Tiled map with a moving character, starting with the hero waking in the church. Add the feast opening after the loop works.
 
-The first eight build steps are playable: church exploration, visible encounters, basic combat, a party of three, mana-based magic, death, memory in the world, and one region. Speak to the priest and inspect the ledger and basin. Near the southeast wall, a crop locust shows a small mana signature. Touch it to enter battle. A hooded exile near the northeast wall provides a second encounter with suppressed mana and an unknown spell. The priest gives the farmland mission, and the south door opens onto the farm road. The artwork and dialogue are original placeholders.
+The first eight build steps are playable: church exploration, visible encounters, basic combat, a party of three, mana-based magic, death, memory in the world, and one region. Speak to the priest and inspect the ledger and basin. Near the southeast wall, a crop locust shows a small mana signature. Touch it to enter battle. A hooded exile near the northeast wall provides a second encounter with suppressed mana and an unknown spell. The priest gives the farmland mission, and the south door opens onto the farmland. The artwork and dialogue are original placeholders.
 
 In battle, command the chameleon, bear, and vulture. Each living member acts once in any order; only then does the enemy act and each surviving companion regain 3 mana. Downed members cannot act, and the party only wipes when all three fall. Party members and enemies have health bars and condition descriptions; exact health and damage numbers remain hidden. Mana is numeric. Enemies target the living member with the most visible mana, preferring the bear in a tie.
 
@@ -76,17 +76,26 @@ These are prototype combat encounters in the church, not the final regional plac
 
 ## The farmland
 
-The first part of build step 8 (one region): the farm road south of the church, between wheat fields and a hay yard. Crop pests show their full mana and only strike physically, as the guideline describes. Two crop locusts feed in a trampled clearing and on the road, and a grain weevil waits in the hay yard. The weevil jabs most turns and makes a heavy rolling charge every third round. A waymark and a scarecrow can be examined. The road continues south to Millbrook.
+South of the church lies the open farmland, a scrolling map about four screens across with no set route. A waymark at the crossroads points the way:
+
+- **West, over the stream:** the mill, where the bear is chained to the millstone and the miller keeps the key. The bear still remembers the hero. Freeing him comes with companions in build step 9.
+- **Southwest:** dark woods, entered from the track or across a ford, with an abandoned camp.
+- **The locust field:** a trampled clearing where a locust feeds and something glints.
+- **The meadow:** a pond with a heron who fishes for herself.
+- **East:** an apple orchard with a grain weevil among the rows, a fenced hay yard with another, and an old Covenant shrine in a ring of standing stones, watched by a hooded follower of the boar.
+- **South:** the high road to Millbrook. **Southeast:** a field track that skirts the town and joins the border road north of the brambles.
+
+Crop pests show their full mana and only strike physically, as the guideline describes. The weevil jabs most turns and makes a heavy rolling charge every third round.
 
 Millbrook is a prosperous herbivore market town. The reeve, the innkeeper, a stallholder, a lamb, and the fishmonger live on the west side and around the market square. The carnivore quarter lies east, behind a wall whose gate locks from the herbivore side. Townsfolk react to the hero's species and his brand: the stallholder triples his prices, the inn turns him away, and the notice board still shows his face. The fishmonger's barrel and the shuttered stall behind the tannery are left unexplained. Money, shops, camping, and the night market are not implemented yet, so those beats are dialogue for now.
 
-South of Millbrook, the border road is blocked by a wall of brambles. The lamb in the market square lost her bell in the locust field; it lies in the trampled clearing on the farm road, where it can be grabbed by slipping past the locust or after a fight. Bring it to her and she teaches **Bramble's leave**, a favor spell written into the grimoire. Speak it at the hedge and the brambles draw back. Beyond them, loaded grain carts sit turned around while a highland carter and a farmland guard wait for each other to move first. Further south, one of the boar's hooded followers waits on the road with veiled mana and an unknown spell.
+South of Millbrook, the border road is blocked by a wall of brambles. The lamb in the market square lost her bell in the locust field; it lies in the trampled clearing in the locust field, where it can be grabbed by slipping past the locust or after a fight. Bring it to her and she teaches **Bramble's leave**, a favor spell written into the grimoire. Speak it at the hedge and the brambles draw back. Beyond them, loaded grain carts sit turned around while a highland carter and a farmland guard wait for each other to move first. Further south, one of the boar's hooded followers waits on the road with veiled mana and an unknown spell.
 
 The road ends at the boar's burned farm, where he waits between his followers, a badger and a rat. Every hit aimed at a follower lands on the boar instead, at half strength, and adds fury. Fury raises his damage, and that extra damage drives through guards. Clearing the followers first wipes the party; fighting him directly while the bear guards wins. A notice on the gatepost tells his story. Once he is beaten he stays beaten: his followers speak of "the one with no fur, who listened", a cup from the feast lies where he stood, and the reeve, the inn, the carter, and the guard all change what they say.
 
 Nothing marks the quest. A carried item is lost on a wipe and returns to where it was found. The opened hedge and learned spells persist, saved in `tide-keeps.world.v1` and the grimoire.
 
-Leaving an area and coming back respawns its enemies. A wipe anywhere wakes the party at the church cot, and **Return to the cot** works from any area.
+Every fight is optional except the boar. Leaving an area and coming back respawns its enemies. A wipe anywhere wakes the party at the church cot, and **Return to the cot** works from any area.
 
 ## Death and memory
 
@@ -104,7 +113,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/scenes/AreaScene.ts` — Phaser exploration, collision, input, encounters, and travel, shared by every area.
 - `src/scenes/areas.ts` — each area's map, people, enemies, exits, and decoration.
 - `src/content/dialogue.ts` — dialogue types: variants by memory, items, flags, or spells, and their effects.
-- `src/content/church.ts`, `road.ts`, `town.ts`, `border.ts`, `farm.ts` — prototype dialogue for each area.
+- `src/content/church.ts`, `fields.ts`, `town.ts`, `border.ts`, `farm.ts` — prototype dialogue for each area.
 - `src/scenes/sprites.ts` — generated placeholder sprites for the hero and townsfolk.
 - `src/rules/battle.ts` — immutable, renderer-independent combat state and transitions.
 - `src/rules/memory.ts` — memory loss and Hollow perks, independent of the renderer.
@@ -117,11 +126,11 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/ui/ResurrectionView.ts` — the wake screen where a memory is chosen.
 - `public/maps/church.json` — editable Tiled JSON map with floor, furniture, and named interaction points.
 - `public/assets/church-tiles.svg` — original placeholder tileset.
-- `public/maps/farm-road.json`, `town.json`, `border-road.json`, `boar-farm.json` — the farmland maps, with placeholder tilesets in `public/assets/`.
+- `public/maps/farmland.json`, `town.json`, `border-road.json`, `boar-farm.json` — the farmland maps, with placeholder tilesets in `public/assets/`.
 - `scripts/create-*.mjs` — regenerate each map and tileset; running one replaces manual edits to that map.
 - `tests/church.spec.ts` — browser checks.
 - `tests/battle.spec.ts` — encounter and combat browser checks.
-- `tests/road.spec.ts` — travel, the weevil, Millbrook, and waking after a wipe outside.
+- `tests/road.spec.ts` — the open fields, scrolling, routes between places, and waking after a wipe outside.
 - `tests/quest.spec.ts` — the lamb's bell, the favor spell, and the hedge gate.
 - `tests/boar.spec.ts` — the boar's rule, his defeat, and its aftermath.
 - `tests/death.spec.ts` — wipe, memory choice, and save browser checks.

@@ -31,13 +31,13 @@ test.beforeEach(async ({ page }) => {
 test('the brambles block the border road until the lamb teaches their word', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
-  await go(page, 'church', 256, 330, 'Step outside', 'farm-road');
+  await go(page, 'church', 256, 330, 'Step outside', 'farmland');
   // Skirt the locust along the top of the clearing.
-  await talk(page, 'farm-road', 88, 147, 'Pick up the bell');
+  await talk(page, 'farmland', 280, 150, 'Pick up the bell');
   await expect(page.locator('#dialogue-text')).toContainText('small brass bell');
   await page.keyboard.press('Escape');
   await expect(page.locator('#prompt')).not.toContainText('bell');
-  await go(page, 'farm-road', 256, 360, 'Walk on to Millbrook', 'town');
+  await go(page, 'farmland', 512, 752, 'Walk on to Millbrook', 'town');
   await go(page, 'town', 256, 360, 'Take the border road', 'border-road');
   await talk(page, 'border-road', 256, 116, 'Examine the brambles');
   await expect(page.locator('#dialogue-text')).toContainText('grown straight across the road');
@@ -68,17 +68,17 @@ test('the brambles block the border road until the lamb teaches their word', asy
 });
 
 test('a wipe drops the bell back in the clearing', async ({ page }) => {
-  await go(page, 'church', 256, 330, 'Step outside', 'farm-road');
-  await talk(page, 'farm-road', 88, 147, 'Pick up the bell');
+  await go(page, 'church', 256, 330, 'Step outside', 'farmland');
+  await talk(page, 'farmland', 280, 150, 'Pick up the bell');
   await page.keyboard.press('Escape');
-  await place(page, 'farm-road', 200, 232);
+  await place(page, 'farmland', 456, 280);
   await page.keyboard.down('d');
   await expect(page.getByRole('heading', { name: 'Crop locust' })).toBeVisible();
   await page.keyboard.up('d');
   await lose(page);
   await page.getByRole('radio', { name: /The kraken/ }).check();
   await page.getByRole('button', { name: 'Let it go' }).click();
-  await go(page, 'church', 256, 330, 'Step outside', 'farm-road');
-  await place(page, 'farm-road', 88, 147);
+  await go(page, 'church', 256, 330, 'Step outside', 'farmland');
+  await place(page, 'farmland', 280, 150);
   await expect(page.locator('#prompt')).toContainText('Pick up the bell');
 });

@@ -12,6 +12,7 @@ const VILLAGERS: Record<string, Villager> = {
   fishmonger: { fur: 0x9a9184, muzzle: 0xcfc6b5, cloth: 0x4f6a73, trim: 0x8fa9a8, ears: 'horns' },
   fox: { fur: 0xb8693a, muzzle: 0xeadcc4, cloth: 0x4a4038, trim: 0x8c7049, ears: 'pointed' },
   driver: { fur: 0x7d7f80, muzzle: 0xc9c4b8, cloth: 0x5a4a3a, trim: 0x8f3f32, ears: 'pointed' },
+  miller: { fur: 0x8a6a4a, muzzle: 0xd8c8a8, cloth: 0xd8d0b8, trim: 0x9a8a6a, ears: 'pointed' },
   guard: { fur: 0xd6cdb8, muzzle: 0x9a8a72, cloth: 0x6b7a8a, trim: 0xd8cfae, ears: 'horns' },
 };
 
@@ -55,6 +56,17 @@ export function createSprites(scene: Phaser.Scene) {
   priest.fillStyle(0x2b3b31).fillRect(8,6,1,2).fillRect(12,6,1,2);
   priest.generateTexture('priest',20,26);priest.destroy();
   for (const [key, spec] of Object.entries(VILLAGERS)) villager(scene, key, spec);
+  // A grey heron: long legs, long neck, dagger bill.
+  const heron = scene.make.graphics({ x: 0, y: 0 });
+  heron.fillStyle(0x27382e).fillRect(5, 23, 10, 2);
+  heron.fillStyle(0xd8b04a).fillRect(8, 16, 1, 8).fillRect(11, 16, 1, 8);
+  heron.fillStyle(0x8a9298).fillRect(5, 9, 10, 8);
+  heron.fillStyle(0x5d666c).fillRect(4, 11, 4, 6);
+  heron.fillStyle(0xd8dcd8).fillRect(11, 2, 3, 8);
+  heron.fillStyle(0xe8ece8).fillRect(11, 1, 4, 3);
+  heron.fillStyle(0x1e2a24).fillRect(13, 1, 4, 1).fillRect(13, 2, 1, 1);
+  heron.fillStyle(0xd8b04a).fillRect(15, 2, 4, 1);
+  heron.generateTexture('heron', 20, 26); heron.destroy();
   // A tangle of brambles across the road, and the lamb's lost bell.
   const brambles = scene.make.graphics({ x: 0, y: 0 });
   brambles.fillStyle(0x2c3a24).fillRect(0, 2, 16, 14);

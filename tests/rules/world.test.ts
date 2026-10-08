@@ -23,16 +23,16 @@ test('forgetting a memory changes what the church says, and only that', () => {
 test('the lamb trades a favor spell for her bell, and the spell opens the hedge', async () => {
   const { town } = await import('../../src/content/town.ts');
   const { border } = await import('../../src/content/border.ts');
-  const { road } = await import('../../src/content/road.ts');
+  const { fields } = await import('../../src/content/fields.ts');
   const { apply, BRAMBLES, drop, holds } = await import('../../src/rules/world.ts');
   let context = { world: createWorld(), lost: [] as MemoryId[], studied: [] as string[] };
   assert.match(say(border, 'hedge', context).lines[1], /pull back/);
   assert.equal(say(border, 'hedge', context).then, undefined);
   assert.match(say(town, 'child', context).lines.at(-1)!, /lost my bell/);
-  const found = say(road, 'bell', context);
+  const found = say(fields, 'bell', context);
   context = apply(context, found.then!);
   assert.deepEqual(context.world.carried, ['bell']);
-  assert.ok(road.bell.hiddenIf!.some(condition => holds(context, condition)), 'a bell in hand is no longer on the ground');
+  assert.ok(fields.bell.hiddenIf!.some(condition => holds(context, condition)), 'a bell in hand is no longer on the ground');
   // A wipe drops what is carried, so the bell is back in the clearing.
   assert.deepEqual(drop(context.world).carried, []);
   const thanks = say(town, 'child', context);

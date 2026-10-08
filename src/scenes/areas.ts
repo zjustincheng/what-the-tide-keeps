@@ -3,7 +3,7 @@ import { church } from '../content/church';
 import { farm } from '../content/farm';
 import type { Dialogue } from '../content/dialogue';
 import { border } from '../content/border';
-import { road } from '../content/road';
+import { fields } from '../content/fields';
 import { town } from '../content/town';
 import type { Encounter } from '../rules/battle';
 import type { Condition, Effect } from '../rules/world';
@@ -15,7 +15,8 @@ export type Area = {
   region: string;
   place: string;
   time: string;
-  bounds: [x: number, y: number, width: number, height: number];
+  // Where the hero may walk; the whole map when omitted. Larger maps scroll with the hero.
+  bounds?: [x: number, y: number, width: number, height: number];
   dialogue: Dialogue;
   npcs: { point: string; texture: string }[];
   // Enemies respawn on every visit unless hiddenIf holds; defeat applies once the fight is won.
@@ -34,7 +35,7 @@ export const CHURCH: Area = {
   bounds: [32, 48, 448, 304], dialogue: church,
   npcs: [{ point: 'priest', texture: 'priest' }],
   enemies: [{ point: 'encounter', encounter: 'locust' }, { point: 'exile', encounter: 'acolyte' }],
-  exits: { door: { to: 'farm-road', spawn: 'spawn', prompt: 'Step outside' } },
+  exits: { door: { to: 'farmland', spawn: 'spawn', prompt: 'Step outside' } },
   decorate(scene) {
     // Soft window light, hand placed in the same coordinates as the Tiled room.
     const light = scene.add.graphics().setDepth(2);
@@ -54,19 +55,25 @@ export const CHURCH: Area = {
   },
 };
 
-export const FARM_ROAD: Area = {
-  key: 'farm-road', map: 'farm-road', tileset: 'farm', region: 'THE FARMLAND', place: 'The farm road', time: 'Dawn',
-  bounds: [0, 0, 512, 384], dialogue: road, npcs: [],
-  enemies: [{ point: 'locust', encounter: 'locust' }, { point: 'locust-road', encounter: 'locust' }, { point: 'weevil', encounter: 'weevil' }],
+export const FARMLAND: Area = {
+  key: 'farmland', map: 'farmland', tileset: 'fields', region: 'THE FARMLAND', place: 'The fields', time: 'Dawn',
+  dialogue: fields, assets: ['bear'],
+  npcs: [{ point: 'bear', texture: 'bear' }, { point: 'miller', texture: 'miller' }, { point: 'heron', texture: 'heron' }],
+  enemies: [
+    { point: 'locust', encounter: 'locust' }, { point: 'locust-road', encounter: 'locust' },
+    { point: 'weevil-yard', encounter: 'weevil' }, { point: 'weevil-orchard', encounter: 'weevil' }, { point: 'weevil-woods', encounter: 'weevil' },
+    { point: 'exile', encounter: 'acolyte' },
+  ],
   props: [{ point: 'bell', texture: 'bell', hiddenIf: [{ has: 'bell' }, { flag: 'lamb-thanked' }] }],
   exits: {
     door: { to: 'church', spawn: 'from-road', prompt: 'Return to the church' },
     south: { to: 'town', spawn: 'spawn', prompt: 'Walk on to Millbrook' },
+    east: { to: 'border-road', spawn: 'from-fields', prompt: 'Take the field track to the border' },
   },
   decorate(scene) {
     // A low dawn haze drifting across the fields.
-    for (let i = 0; i < 4; i++) {
-      const haze = scene.add.rectangle(40 + i * 130, 120 + (i % 2) * 140, 150, 26, 0xe6d9a8, 0.05).setDepth(5);
+    for (let i = 0; i < 10; i++) {
+      const haze = scene.add.rectangle(60 + (i * 211) % 960, 90 + (i * 137) % 640, 170, 26, 0xe6d9a8, 0.05).setDepth(5);
       scene.tweens.add({ targets: haze, x: haze.x + 30, alpha: 0.02, duration: 5200 + i * 700, yoyo: true, repeat: -1 });
     }
   },
@@ -74,10 +81,10 @@ export const FARM_ROAD: Area = {
 
 export const TOWN: Area = {
   key: 'town', map: 'town', tileset: 'town', region: 'THE FARMLAND', place: 'Millbrook', time: 'Morning',
-  bounds: [0, 0, 512, 384], dialogue: town, enemies: [],
+  dialogue: town, enemies: [],
   npcs: ['reeve', 'innkeeper', 'shopkeeper', 'child', 'fishmonger', 'fox'].map(name => ({ point: name, texture: name })),
   exits: {
-    north: { to: 'farm-road', spawn: 'from-town', prompt: 'Return to the farm road' },
+    north: { to: 'farmland', spawn: 'from-town', prompt: 'Return to the fields' },
     south: { to: 'border-road', spawn: 'spawn', prompt: 'Take the border road' },
   },
   decorate(scene) {
@@ -91,18 +98,19 @@ export const TOWN: Area = {
 
 export const BORDER_ROAD: Area = {
   key: 'border-road', map: 'border-road', tileset: 'border', region: 'THE FARMLAND', place: 'The border road', time: 'Midday',
-  bounds: [0, 0, 512, 384], dialogue: border, enemies: [{ point: 'follower', encounter: 'acolyte' }],
+  dialogue: border, enemies: [{ point: 'follower', encounter: 'acolyte' }],
   npcs: [{ point: 'driver', texture: 'driver' }, { point: 'guard', texture: 'guard' }],
   props: [1, 2, 3, 4, 5, 6, 7, 8].map(i => ({ point: `bramble-${i}`, texture: 'brambles', solid: true, hiddenIf: [{ flag: 'hedge-open' as const }] })),
   exits: {
     north: { to: 'town', spawn: 'from-border', prompt: 'Return to Millbrook' },
+    east: { to: 'farmland', spawn: 'from-border', prompt: 'Take the field track' },
     south: { to: 'boar-farm', spawn: 'spawn', prompt: 'Follow the smoke' },
   },
 };
 
 export const BOAR_FARM: Area = {
   key: 'boar-farm', map: 'boar-farm', tileset: 'ash', region: 'THE FARMLAND', place: 'The burned farm', time: 'Afternoon',
-  bounds: [0, 0, 512, 384], dialogue: farm, npcs: [], assets: ['badger', 'rat'],
+  dialogue: farm, npcs: [], assets: ['badger', 'rat'],
   enemies: [{ point: 'boar', encounter: 'boar', hiddenIf: [{ flag: 'boar-defeated' }], defeat: { set: 'boar-defeated' } }],
   props: [
     { point: 'badger', texture: 'badger', solid: true, hiddenIf: [] },
@@ -119,4 +127,4 @@ export const BOAR_FARM: Area = {
   },
 };
 
-export const AREAS = [CHURCH, FARM_ROAD, TOWN, BORDER_ROAD, BOAR_FARM];
+export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM];

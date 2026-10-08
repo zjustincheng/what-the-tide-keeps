@@ -69,7 +69,9 @@ export class AreaScene extends Phaser.Scene {
     this.shadow = this.add.ellipse(spawn.x, spawn.y + 3, 14, 6, 0x122b22, 0.6);
     this.player = this.physics.add.sprite(spawn.x, spawn.y, 'hero');
     this.player.setSize(9, 7).setOffset(5, 17).setCollideWorldBounds(true);
-    this.physics.world.setBounds(...this.area.bounds);
+    this.physics.world.setBounds(...this.area.bounds ?? [0, 0, map.widthInPixels, map.heightInPixels]);
+    // Maps larger than the view scroll with the hero.
+    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels).startFollow(this.player, true, 0.15, 0.15);
     this.physics.add.collider(this.player, furniture);
     for (const { point, texture } of this.area.npcs) {
       const at = this.point(point);

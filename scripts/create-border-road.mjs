@@ -26,6 +26,8 @@ fill(floor,0,0,w-1,10,STUBBLE);
 fill(floor,14,0,17,h-1,ROAD);
 // Hedgerows close the road in until it opens onto the cart stand.
 fill(furniture,0,0,13,10,HEDGE);fill(furniture,18,0,w-1,10,HEDGE);
+// A field track joins from the east, north of the brambles.
+fill(furniture,18,4,w-1,5,0);fill(floor,18,4,w-1,5,ROAD);
 fill(furniture,0,11,2,h-1,HEDGE);fill(furniture,w-3,11,w-1,h-1,HEDGE);
 fill(furniture,3,h-1,13,h-1,TREE);fill(furniture,18,h-1,w-4,h-1,TREE);
 // Grain carts turned back toward the farmland, still loaded.
@@ -38,7 +40,7 @@ fill(floor,14,22,17,23,SCORCH);
 const layer=(name,data,id)=>({id,name,type:'tilelayer',width:w,height:h,x:0,y:0,opacity:1,visible:true,data});
 const points=[
   ['spawn',256,40],['north',256,20],['hedge',256,128],['bramble-1',232,152],['bramble-2',248,152],['bramble-3',264,152],['bramble-4',280,152],['bramble-5',232,168],['bramble-6',248,168],['bramble-7',264,168],['bramble-8',280,168],
-  ['driver',152,264],['guard',344,248],['carts',136,232],['marker',312,328],['south',256,372],['from-farm',256,344],['follower',256,296],
+  ['driver',152,264],['guard',344,248],['carts',136,232],['marker',312,328],['south',256,372],['from-farm',256,344],['east',504,80],['from-fields',480,80],['follower',256,296],
 ];
 const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
   layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([name,x,y],i)=>({id:i+1,name,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
