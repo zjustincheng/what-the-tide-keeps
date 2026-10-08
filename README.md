@@ -64,9 +64,11 @@ The shared grimoire survives cot resets, defeats, and reloads in browser local s
 
 These are prototype combat encounters in the church, not the final regional placement or recruitment story. Spellcraft options supplement the original attack/support controls while testing the rules.
 
-## The farm road
+## The farmland
 
-The first part of build step 8 (one region): the farm road south of the church, between wheat fields and a hay yard. Crop pests show their full mana and only strike physically, as the guideline describes. Two crop locusts feed in a trampled clearing and on the road, and a grain weevil waits in the hay yard. The weevil jabs most turns and makes a heavy rolling charge every third round. A waymark and a scarecrow can be examined. The road south toward Millbrook ends at the edge of the prototype; the town comes next.
+The first part of build step 8 (one region): the farm road south of the church, between wheat fields and a hay yard. Crop pests show their full mana and only strike physically, as the guideline describes. Two crop locusts feed in a trampled clearing and on the road, and a grain weevil waits in the hay yard. The weevil jabs most turns and makes a heavy rolling charge every third round. A waymark and a scarecrow can be examined. The road continues south to Millbrook.
+
+Millbrook is a prosperous herbivore market town. The reeve, the innkeeper, a stallholder, a lamb, and the fishmonger live on the west side and around the market square. The carnivore quarter lies east, behind a wall whose gate locks from the herbivore side. Townsfolk react to the hero's species and his brand: the stallholder triples his prices, the inn turns him away, and the notice board still shows his face. The fishmonger's barrel and the shuttered stall behind the tannery are left unexplained. Money, shops, camping, and the night market are not implemented yet, so those beats are dialogue for now. The south gate toward the border road marks the edge of the prototype.
 
 Leaving an area and coming back respawns its enemies. A wipe anywhere wakes the party at the church cot, and **Return to the cot** works from any area.
 
@@ -86,7 +88,8 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/scenes/AreaScene.ts` — Phaser exploration, collision, input, encounters, and travel, shared by every area.
 - `src/scenes/areas.ts` — each area's map, people, enemies, exits, and decoration.
 - `src/content/dialogue.ts` — dialogue lookup, with variants for forgotten memories.
-- `src/content/church.ts`, `src/content/road.ts` — prototype dialogue for each area.
+- `src/content/church.ts`, `src/content/road.ts`, `src/content/town.ts` — prototype dialogue for each area.
+- `src/scenes/sprites.ts` — generated placeholder sprites for the hero and townsfolk.
 - `src/rules/battle.ts` — immutable, renderer-independent combat state and transitions.
 - `src/rules/memory.ts` — memory loss and Hollow perks, independent of the renderer.
 - `src/content/memories.ts` — memory names and what forgetting each costs.
@@ -96,11 +99,11 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/ui/ResurrectionView.ts` — the wake screen where a memory is chosen.
 - `public/maps/church.json` — editable Tiled JSON map with floor, furniture, and named interaction points.
 - `public/assets/church-tiles.svg` — original placeholder tileset.
-- `public/maps/farm-road.json`, `public/assets/farm-tiles.svg` — the farm road map and its placeholder tileset.
-- `scripts/create-church.mjs`, `scripts/create-farm-road.mjs` — regenerate each map and tileset; running one replaces manual edits to that map.
+- `public/maps/farm-road.json`, `public/maps/town.json` — the farm road and Millbrook maps, with placeholder tilesets in `public/assets/`.
+- `scripts/create-church.mjs`, `scripts/create-farm-road.mjs`, `scripts/create-town.mjs` — regenerate each map and tileset; running one replaces manual edits to that map.
 - `tests/church.spec.ts` — browser checks.
 - `tests/battle.spec.ts` — encounter and combat browser checks.
-- `tests/road.spec.ts` — travel, the weevil, and waking after a wipe outside.
+- `tests/road.spec.ts` — travel, the weevil, Millbrook, and waking after a wipe outside.
 - `tests/death.spec.ts` — wipe, memory choice, and save browser checks.
 - `tests/rules/battle.test.ts` — combat tests without a browser.
 - `tests/rules/memory.test.ts` — memory and Hollow perk tests without a browser.

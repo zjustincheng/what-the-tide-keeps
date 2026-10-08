@@ -2,6 +2,7 @@ import type Phaser from 'phaser';
 import { church } from '../content/church';
 import type { Dialogue } from '../content/dialogue';
 import { road } from '../content/road';
+import { town } from '../content/town';
 import type { Encounter } from '../rules/battle';
 
 export type Area = {
@@ -49,7 +50,10 @@ export const FARM_ROAD: Area = {
   key: 'farm-road', map: 'farm-road', tileset: 'farm', region: 'THE FARMLAND', place: 'The farm road', time: 'Dawn',
   bounds: [0, 0, 512, 384], dialogue: road, npcs: [],
   enemies: [{ point: 'locust', encounter: 'locust' }, { point: 'locust-road', encounter: 'locust' }, { point: 'weevil', encounter: 'weevil' }],
-  exits: { door: { to: 'church', spawn: 'from-road', prompt: 'Return to the church' } },
+  exits: {
+    door: { to: 'church', spawn: 'from-road', prompt: 'Return to the church' },
+    south: { to: 'town', spawn: 'spawn', prompt: 'Walk on to Millbrook' },
+  },
   decorate(scene) {
     // A low dawn haze drifting across the fields.
     for (let i = 0; i < 4; i++) {
@@ -59,4 +63,18 @@ export const FARM_ROAD: Area = {
   },
 };
 
-export const AREAS = [CHURCH, FARM_ROAD];
+export const TOWN: Area = {
+  key: 'town', map: 'town', tileset: 'town', region: 'THE FARMLAND', place: 'Millbrook', time: 'Morning',
+  bounds: [0, 0, 512, 384], dialogue: town, enemies: [],
+  npcs: ['reeve', 'innkeeper', 'shopkeeper', 'child', 'fishmonger', 'fox'].map(name => ({ point: name, texture: name })),
+  exits: { north: { to: 'farm-road', spawn: 'from-town', prompt: 'Return to the farm road' } },
+  decorate(scene) {
+    // Smoke from the tannery, drifting over the carnivore quarter.
+    for (let i = 0; i < 3; i++) {
+      const smoke = scene.add.circle(456 + i * 6, 220, 4 + i, 0xbfb8a8, 0.12).setDepth(5);
+      scene.tweens.add({ targets: smoke, y: 180 - i * 8, alpha: 0, scale: 2, duration: 2600 + i * 500, delay: i * 700, repeat: -1 });
+    }
+  },
+};
+
+export const AREAS = [CHURCH, FARM_ROAD, TOWN];

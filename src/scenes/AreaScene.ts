@@ -7,6 +7,7 @@ import { loadMemory, saveMemory } from '../storage/memory';
 import { BattleView } from '../ui/BattleView';
 import { ResurrectionView } from '../ui/ResurrectionView';
 import type { Area } from './areas';
+import { createSprites } from './sprites';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 type Point = { name: string; x: number; y: number };
@@ -58,7 +59,7 @@ export class AreaScene extends Phaser.Scene {
     furniture.setCollisionByProperty({ collides: true });
     this.points = map.getObjectLayer('Points')!.objects.map(p => ({ name: p.name, x: p.x!, y: p.y! }));
     const spawn = this.point(this.arrival);
-    this.createCharacters();
+    createSprites(this);
     this.shadow = this.add.ellipse(spawn.x, spawn.y + 3, 14, 6, 0x122b22, 0.6);
     this.player = this.physics.add.sprite(spawn.x, spawn.y, 'hero');
     this.player.setSize(9, 7).setOffset(5, 17).setCollideWorldBounds(true);
@@ -108,28 +109,6 @@ export class AreaScene extends Phaser.Scene {
     const foe = { encounter, sprite, signature };
     this.foes.push(foe);
     this.physics.add.overlap(this.player, sprite, () => this.beginBattle(foe));
-  }
-
-  private createCharacters() {
-    if (this.textures.exists('hero')) return;
-    const hero = this.make.graphics({ x:0, y:0 });
-    const block=(x:number,y:number,w:number,h:number,c:number)=>hero.fillStyle(c).fillRect(x,y,w,h);
-    // A curled tail, green crest, pale eye and the branded convict's cloak.
-    block(1,16,7,5,0x688a54);block(0,13,3,6,0x688a54);block(2,13,3,2,0x9bad64);
-    block(7,19,3,5,0x35382d);block(13,19,3,5,0x35382d);
-    block(5,10,12,11,0x6e644b);block(7,11,8,9,0xa19766);block(6,18,10,3,0x827653);
-    block(7,3,10,9,0x88a567);block(9,1,6,3,0x9aaf6e);block(15,6,4,5,0x88a567);
-    block(13,4,4,4,0xd7d1a0);block(15,5,2,2,0x213b2e);block(10,12,3,3,0x513a2b);block(11,12,1,3,0xd1a470);
-    hero.generateTexture('hero',20,26);hero.destroy();
-    const priest=this.make.graphics({x:0,y:0});
-    priest.fillStyle(0x27382e).fillRect(3,21,14,3);
-    priest.fillStyle(0x889080).fillRect(4,10,12,13);
-    priest.fillStyle(0xb8b69b).fillRect(7,10,6,13);
-    priest.fillStyle(0xc3b28a).fillRect(8,12,4,3);
-    priest.fillStyle(0x978f78).fillRect(5,3,11,9).fillRect(4,0,3,6).fillRect(14,0,3,6);
-    priest.fillStyle(0xd0c3a0).fillRect(7,5,7,7);
-    priest.fillStyle(0x2b3b31).fillRect(8,6,1,2).fillRect(12,6,1,2);
-    priest.generateTexture('priest',20,26);priest.destroy();
   }
 
   private bindControls() {

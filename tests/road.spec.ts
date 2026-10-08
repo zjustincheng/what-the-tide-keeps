@@ -65,3 +65,26 @@ test('a wipe on the road wakes the hero in the church', async ({ page }) => {
   await expect.poll(() => area(page, 'church')).toEqual({ x: 88, y: 124 });
   await expect(page.locator('#location-region')).toHaveText('THE CAPITAL');
 });
+
+test('the road leads to Millbrook, whose people react to the brand', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await outside(page);
+  await place(page, 'farm-road', 256, 360);
+  await expect(page.locator('#prompt')).toContainText('Walk on to Millbrook');
+  await page.keyboard.press('e');
+  await expect.poll(() => area(page, 'town')).toEqual({ x: 256, y: 40 });
+  await expect(page.locator('#location-place')).toHaveText('/ Millbrook');
+  await place(page, 'town', 120, 344);
+  await expect(page.locator('#prompt')).toContainText('Speak to the innkeeper');
+  await page.keyboard.press('e');
+  await expect(page.locator('#dialogue-text')).toHaveText('We are full.');
+  await page.keyboard.press('Escape');
+  await place(page, 'town', 424, 128);
+  await expect(page.locator('#prompt')).toContainText('Speak to the fox');
+  await place(page, 'town', 256, 30);
+  await expect(page.locator('#prompt')).toContainText('Return to the farm road');
+  await page.keyboard.press('e');
+  await expect.poll(() => area(page, 'farm-road')).toEqual({ x: 256, y: 344 });
+  expect(errors).toEqual([]);
+});
