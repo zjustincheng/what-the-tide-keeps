@@ -95,3 +95,15 @@ export const fields: Dialogue = {
     'Somewhere, someone is counting.',
   ], then: { set: 'squid-freed' } },
 };
+
+fields.bear.choices = [
+  { text: "I'll get you out.", lines: ['I know. You always do, eventually. Usually after something has eaten you.'] },
+  { text: 'Do you remember the feast?', lines: [
+    'Every cup of it. Someone kept filling mine. Hooded. Never said a word.',
+    'I remember thinking his hands were strange. I do not remember why.',
+  ] },
+  { text: 'What is my name?', if: { forgot: 'name' }, lines: [
+    'The bear tells you. You hear it, and then it slides off you like water off a seal.',
+    'He sees it on your face. "I will keep saying it," he says. "As often as you like."',
+  ] },
+];

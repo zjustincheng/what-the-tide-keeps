@@ -28,7 +28,7 @@ test('the lamb trades a favor spell for her bell, and the spell opens the hedge'
   let context = { world: createWorld(), lost: [] as MemoryId[], studied: [] as string[] };
   assert.match(say(border, 'hedge', context).lines[1], /pull back/);
   assert.equal(say(border, 'hedge', context).then, undefined);
-  assert.match(say(town, 'child', context).lines.at(-1)!, /lost my bell/);
+  assert.match(say(town, 'child', context).choices!.at(-1)!.lines.at(-1)!, /lost my bell/);
   const found = say(fields, 'bell', context);
   context = apply(context, found.then!);
   assert.deepEqual(context.world.carried, ['bell']);
@@ -46,3 +46,15 @@ test('the lamb trades a favor spell for her bell, and the spell opens the hedge'
   context = apply(context, hedge.then!);
   assert.deepEqual(drop(context.world).flags, ['lamb-thanked', 'hedge-open'], 'opened shortcuts survive a wipe');
 });
+
+test('what the hero has forgotten, he cannot say', async () => {
+  const { replies } = await import('../../src/rules/world.ts');
+  const { town } = await import('../../src/content/town.ts');
+  const { fields } = await import('../../src/content/fields.ts');
+  const remembering = { world: createWorld(), lost: ['home', 'name'] as MemoryId[], studied: [] };
+  const forgetting = { ...remembering, lost: ['home', 'name', 'feast'] as MemoryId[] };
+  const texts = (context: typeof remembering) => replies(say(town, 'child', context).choices, context).map(choice => choice.text);
+  assert.deepEqual(texts(remembering), ["No. I don't think so.", 'They say I did.']);
+  assert.deepEqual(texts(forgetting), ["I don't remember.", 'They say I did.']);
+  assert.ok(replies(fields.bear.choices, remembering).some(choice => choice.text === 'What is my name?'), 'his name is already gone when the game begins');
+}); 

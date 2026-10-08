@@ -1,4 +1,4 @@
-import type { Dialogue } from './dialogue';
+import type { Choice, Dialogue } from './dialogue';
 
 // Narrative content stays separate from rendering and input.
 export const church: Dialogue = {
@@ -26,3 +26,19 @@ export const church: Dialogue = {
     'Salt has gathered around the rim. The water smells of the sea, and of nothing else.',
   ] }] },
 };
+
+// The priest can be answered; what the hero has forgotten, he cannot say.
+const priestReplies: Choice[] = [
+  { text: 'How many times have I died?', lines: ['The ledger says forty-one. The ledger has been wrong before, but never by less.'] },
+  { text: 'I was framed.', if: { not: { forgot: 'feast' } }, lines: [
+    'Perhaps. The ledger does not say framed. It says sentenced.',
+    'Bring me something that says otherwise, and I will read it as carefully as I read your name.',
+  ] },
+  { text: 'Tend my wounds.', lines: [
+    'He presses a cold, salted cloth to each cut, murmuring the Covenant under his breath. It stings, and then it does not.',
+    'Your wounds close.',
+  ], then: { rest: true } },
+  { text: 'I should go.', lines: ['Go, then. The sea will keep your place.'] },
+];
+church.priest.choices = priestReplies;
+church.priest.variants![0].choices = priestReplies;

@@ -32,3 +32,11 @@ export const border: Dialogue = {
     'Here ends the farmland. Here begins the highlands. Under both, older and deeper: HERE NOBODY EATS ANYBODY.',
   ] },
 };
+
+border.guard.choices = [
+  { text: 'Who gave the order?', lines: ['A rider from the border post. Or a rider who said he was from the border post. He wore no colors I knew.'] },
+  { text: 'Let the carts through.', lines: ['Not without an order. That is the trouble with orders.'] },
+];
+border.driver.choices = [
+  { text: 'Who stopped you?', lines: ['A guard in a church sash. Then this one, who copies whatever the last one did.'] },
+];

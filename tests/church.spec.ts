@@ -56,6 +56,8 @@ test('priest dialogue pauses movement and can be completed', async ({ page }) =>
   await expect(page.locator('#dialogue-text')).toContainText('grain');
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.locator('#dialogue-text')).toContainText('Take the south door');
+  await page.getByRole('button', { name: '4. I should go.' }).click();
+  await expect(page.locator('#dialogue-text')).toHaveText('Go, then. The sea will keep your place.');
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.locator('#dialogue')).toBeHidden();
 });

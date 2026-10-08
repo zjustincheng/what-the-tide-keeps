@@ -1,4 +1,4 @@
-import type { Dialogue } from './dialogue';
+import type { Choice, Dialogue } from './dialogue';
 
 // Millbrook: a prosperous herbivore market town. Names are placeholders.
 export const town: Dialogue = {
@@ -43,9 +43,6 @@ export const town: Dialogue = {
   ] },
   child: { speaker: 'A LAMB', prompt: 'Speak to the lamb', lines: [
     'Are you the one who killed the king?',
-    'Mother says not to look at you. I am looking at you anyway.',
-    'There are thorns growing over the south road. The grown-ups say it is a curse. I think the thorns are only sad.',
-    'I lost my bell in the locust field when they chased me. If you find it, I will teach you the word for thorns. It is only a children\'s spell.',
   ], variants: [
     { if: { flag: 'lamb-thanked' }, lines: [
       'Did the thorns listen? They always listen to me.',
@@ -83,3 +80,40 @@ export const town: Dialogue = {
     'The night market is not built yet.',
   ] },
 };
+
+// Replies. Some are only possible while the hero still remembers, or once he has forgotten.
+const lambGoesOn = [
+  'Mother says not to look at you. I am looking at you anyway.',
+  'There are thorns growing over the south road. The grown-ups say it is a curse. I think the thorns are only sad.',
+  "I lost my bell in the locust field when they chased me. If you find it, I will teach you the word for thorns. It is only a children's spell.",
+];
+town.child.choices = [
+  { text: "No. I don't think so.", if: { not: { forgot: 'feast' } }, lines: ["You don't THINK so? Grown-ups always know things.", ...lambGoesOn] },
+  { text: "I don't remember.", if: { forgot: 'feast' }, lines: ['That is the saddest thing anyone has ever said to me.', ...lambGoesOn] },
+  { text: 'They say I did.', lines: ['They say a lot of things. They say the thorns are a curse.', ...lambGoesOn] },
+];
+const reeveReplies: Choice[] = [
+  { text: 'Who gave the order to turn the carts?', lines: ['If I knew, I would not need a convict. Ask at the border. Ask loudly.'] },
+  { text: 'I did not kill anyone.', if: { not: { forgot: 'trial' } }, lines: ['Every soul in my lockup is innocent. You would be amazed how many.'] },
+  { text: 'Why am I branded?', if: { forgot: 'trial' }, lines: [
+    'You do not know? They say you killed the king. They say it with great confidence.',
+    'A man who does not know his own crime. Either you are very good, or something has been done to you.',
+  ] },
+  { text: 'About the bear.', lines: ['Earn him or buy him. I do not care which, so long as it is quick.'] },
+];
+town.reeve.choices = reeveReplies;
+town.fox.choices = [
+  { text: 'A chameleon. Same as ever.', lines: ['Same as ever. You are the only one who thinks so.'] },
+  { text: "I don't know anymore.", if: { forgot: 'home' }, lines: ['Then you and this quarter have something in common. Welcome.'] },
+  { text: 'Someone who eats insects.', lines: ['Legally. How refreshing. The herbivores will still lock the gate.'] },
+];
+town.innkeeper.choices = [
+  { text: 'Your board says rooms are free.', lines: ['The board is old.'] },
+  { text: 'I can pay.', lines: ['Your coin is not the problem.'] },
+  { text: "Fine. I'll sleep outdoors.", lines: ['There is a fire ring at the crossroads. The shepherds will not mind. Much.'] },
+];
+town.fishmonger.choices = [
+  { text: "What's really in the barrel?", if: { not: { flag: 'barrel-bought' } }, lines: ['Pickles.', 'Large pickles.'] },
+  { text: 'Where do the fish come from?', lines: ['The capital port. The sea. The church licenses every barrel. Where the sea gets them is not my business.'] },
+  { text: 'Show me what you buy.', lines: ['Go on, then.'] },
+];

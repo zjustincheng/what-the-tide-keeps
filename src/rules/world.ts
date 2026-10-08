@@ -1,5 +1,5 @@
 // Pure story state: what the hero carries and what he has changed. No Phaser, DOM, or storage.
-import type { Conversation, Dialogue } from '../content/dialogue';
+import type { Choice, Conversation, Dialogue } from '../content/dialogue';
 import type { MemoryId } from './memory';
 import type { KeepsakeId } from './gear';
 import type { BookId } from './spells';
@@ -28,7 +28,7 @@ export const BRAMBLES = "Bramble's leave";
 export type Context = Readonly<{ world: World; lost: readonly MemoryId[]; studied: readonly string[] }>;
 export type Condition = { forgot: MemoryId } | { has: Item } | { flag: Flag } | { knows: string } | { owns: Found } | { not: Condition } | { all: Condition[] };
 // shop names a shop to open once the conversation ends.
-export type Effect = { give?: Item; take?: Item; set?: Flag; learn?: string; find?: Found; earn?: number; shop?: ShopId };
+export type Effect = { give?: Item; take?: Item; set?: Flag; learn?: string; find?: Found; earn?: number; shop?: ShopId; rest?: true };
 export type ShopId = 'stall' | 'reeve' | 'fishmonger';
 
 export function createWorld(): World {
@@ -54,7 +54,7 @@ export function apply(context: Context, effect: Effect): Context {
       carried: effect.give && !carried.includes(effect.give) ? [...carried, effect.give] : carried,
       flags: effect.set && !world.flags.includes(effect.set) ? [...world.flags, effect.set] : world.flags,
       found: effect.find && !world.found.includes(effect.find) ? [...world.found, effect.find] : world.found,
-      coins: world.coins + (effect.earn ?? 0), supplies: world.supplies, fish: world.fish, wounds: world.wounds,
+      coins: world.coins + (effect.earn ?? 0), supplies: world.supplies, fish: world.fish, wounds: effect.rest ? {} : world.wounds,
     },
     studied: effect.learn && !studied.includes(effect.learn) ? [...studied, effect.learn] : studied,
   };
@@ -79,7 +79,12 @@ export function drop(world: World): World {
 
 // The world remembers what the hero cannot: what he hears depends on what he has forgotten, carries, and has done.
 export function conversation(dialogue: Dialogue, name: string, context: Context): Conversation {
-  const { speaker, lines, then, variants = [] } = dialogue[name];
+  const { speaker, lines, then, choices, variants = [] } = dialogue[name];
   const variant = variants.find(variant => holds(context, variant.if));
-  return variant ? { speaker, lines: variant.lines, then: variant.then } : { speaker, lines, then };
+  return variant ? { speaker, lines: variant.lines, then: variant.then, choices: variant.choices } : { speaker, lines, then, choices };
+}
+
+// The replies the hero can give right now. What he has forgotten, he cannot say.
+export function replies(choices: readonly Choice[] | undefined, context: Context): Choice[] {
+  return (choices ?? []).filter(choice => !choice.if || holds(context, choice.if));
 }

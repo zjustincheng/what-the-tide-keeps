@@ -50,6 +50,10 @@ Prototype tuning: ordinary fights last two or three rounds, and the boar about f
 
 Victory removes the locust until you use **Return to the cot**, which resets the encounter. Defeat wakes you at the cot (see below). Each new fight starts with full mana, but injuries linger (see **Wounds and rest**). Supplies are not implemented yet, and recruitment and travel beyond the church are still ahead. Encounter progress resets on reload; studied spells and memories persist.
 
+## Replies
+
+Many people can be answered. When a speaker finishes, the hero's possible replies appear under their last line; choose one with **1–4** or by clicking, and the conversation goes on from there. **Escape** walks away. Replies depend on what the hero still remembers and what has happened. While he remembers the feast he can tell the lamb he doesn't think he killed the king; once it is forgotten, that answer is gone and "I don't remember" takes its place. His name is lost before the game begins, so the bear can tell it to him, and it slides off him. The priest can also tend the hero's wounds.
+
 ## Wounds and rest
 
 Injuries carry from one fight into the next. A hero who falls in a won fight stays down until revived with smelling salts or rested. The footer under the map shows each hero's health as the next fight will find it.
@@ -185,7 +189,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 
 - `src/scenes/AreaScene.ts` — Phaser exploration, collision, input, encounters, and travel, shared by every area.
 - `src/scenes/areas.ts` — each area's map, people, enemies, exits, and decoration.
-- `src/content/dialogue.ts` — dialogue types: variants by memory, items, flags, or spells, and their effects.
+- `src/content/dialogue.ts` — dialogue types: variants and replies by memory, items, flags, or spells, and their effects.
 - `src/content/church.ts`, `fields.ts`, `town.ts`, `border.ts`, `farm.ts` — prototype dialogue for each area.
 - `src/scenes/sprites.ts` — generated placeholder sprites for the hero and townsfolk.
 - `src/rules/battle.ts` — immutable, renderer-independent combat state and transitions.
@@ -237,7 +241,10 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/companions.spec.ts` — the solo start and freeing the bear, from a fresh game.
 - `tests/rules/companions.test.ts` — the roster, party scaling, and the writ.
 - `tests/full-party.json` — the save most browser checks start from, with the bear and vulture already in the party.
-- `tests/rules/world.test.ts` — dialogue variants and the favor-spell quest.
+- `tests/replies.spec.ts` — choosing replies, replies lost with a memory, and the priest's care.
+- `tests/wounds.spec.ts` — wounds carried between fights and healed at a campfire.
+- `tests/rules/wounds.test.ts` — wounds, the fallen, and rest.
+- `tests/rules/world.test.ts` — dialogue variants, replies, and the favor-spell quest.
 
 Combat rules have no Phaser or DOM imports. Future party and memory rules should preserve that boundary, as specified in the design guideline.
 

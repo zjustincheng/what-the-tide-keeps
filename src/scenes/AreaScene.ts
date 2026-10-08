@@ -2,9 +2,9 @@ import Phaser from 'phaser';
 import { createBattle, enemyMana, ENEMIES, MEMBERS, woundsAfter } from '../rules/battle';
 import type { Encounter } from '../rules/battle';
 import { forget, held, hollow, MEMORY_IDS, wipe } from '../rules/memory';
-import { apply, conversation, drop, holds, rest, roster } from '../rules/world';
+import { apply, conversation, drop, holds, replies, rest, roster } from '../rules/world';
 import type { Condition, Context, Effect, ShopId } from '../rules/world';
-import type { Conversation } from '../content/dialogue';
+import type { Choice, Conversation } from '../content/dialogue';
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
 import { loadMemory, saveMemory } from '../storage/memory';
 import { loadWorld, saveWorld } from '../storage/world';
@@ -42,6 +42,8 @@ export class AreaScene extends Phaser.Scene {
   private nearby?: Point;
   private active?: Conversation;
   private line = 0;
+  // Replies on offer under the speaker's last line.
+  private options: Choice[] = [];
   private cleanup = new AbortController();
   private arrival = 'spawn';
   private leaving = false;
@@ -176,6 +178,9 @@ export class AreaScene extends Phaser.Scene {
       if(event.target instanceof HTMLButtonElement && [' ', 'Enter'].includes(event.key)) return;
       if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(event.key)) event.preventDefault();
       if(['e','E',' ','Enter'].includes(event.key)) this.interact(event);
+      // Number keys pick a reply.
+      const pick=this.options[Number(event.key)-1];
+      if(this.active && pick && !event.repeat) { event.preventDefault(); this.choose(pick); }
       // Escape closes a conversation; with none open, it opens settings.
       if(event.key==='Escape') { if(this.active) this.closeDialogue(); else if(!event.repeat) this.openSettings(); }
       // Tab opens equipment only from the map, so it still moves focus everywhere else on the page.
@@ -205,16 +210,15 @@ export class AreaScene extends Phaser.Scene {
     // Let native buttons handle their own Enter/Space activation once.
     if(event && document.activeElement instanceof HTMLButtonElement && [' ', 'Enter'].includes(event.key)) return;
     if(this.active) {
+      // With replies on offer, the hero must choose one; Escape still walks away.
+      if(this.options.length) return;
       this.line++;
       if(this.line>=this.active.lines.length) this.closeDialogue();
-      else element('dialogue-text').textContent=this.active.lines[this.line];
+      else this.showLine();
     } else if(this.nearby && this.area.camps?.[this.nearby.name]) {
       // Resting is told like a conversation; the rest itself happens when it ends.
-      this.active={ speaker: 'REST', lines: this.area.camps[this.nearby.name].lines };this.line=0;
       this.pendingRest=this.nearby.name;
-      element('speaker').textContent=this.active.speaker;
-      element('dialogue-text').textContent=this.active.lines[0];
-      element('dialogue').hidden=false;
+      this.say({ speaker: 'REST', lines: this.area.camps[this.nearby.name].lines });
       element('prompt').textContent='';
       this.player.setVelocity(0);
     } else if(this.nearby && this.area.fishing?.[this.nearby.name]) {
@@ -222,22 +226,51 @@ export class AreaScene extends Phaser.Scene {
     } else if(this.nearby && this.nearby.name in this.area.exits) {
       this.travel(this.area.exits[this.nearby.name]);
     } else if(this.nearby) {
-      const context=this.context();
-      this.active=conversation(this.area.dialogue, this.nearby.name, context);this.line=0;
+      const said=conversation(this.area.dialogue, this.nearby.name, this.context());
       // Effects land as the conversation opens, so closing it early never loses them.
-      this.pendingShop=this.active.then?.shop;
-      if(this.active.then) {
-        const next=apply(context, this.active.then);
-        saved=saveWorld(next.world)&&saveGrimoire(next.studied);
-        this.refreshProps();
-        this.renderMemory();
-      }
-      element('speaker').textContent=this.active.speaker;
-      element('dialogue-text').textContent=this.active.lines[0];
-      element('dialogue').hidden=false;
+      this.effect(said.then);
+      this.say(said);
       element('prompt').textContent='';
       this.player.setVelocity(0);
     }
+  }
+
+  private say(conversation: Conversation) {
+    this.active=conversation;this.line=0;
+    element('speaker').textContent=conversation.speaker;
+    element('dialogue').hidden=false;
+    this.showLine();
+  }
+
+  // Show the current line; under the last one, offer whatever replies the hero can still give.
+  private showLine() {
+    const active=this.active!;
+    element('dialogue-text').textContent=active.lines[this.line];
+    this.options=this.line===active.lines.length-1 ? replies(active.choices, this.context()) : [];
+    const box=element('choices');
+    box.replaceChildren(...this.options.map((option,index)=>{
+      const button=document.createElement('button');
+      button.type='button';button.textContent=`${index+1}. ${option.text}`;
+      button.addEventListener('click',()=>this.choose(option));
+      return button;
+    }));
+    box.hidden=!this.options.length;
+    element('continue').hidden=this.options.length>0;
+    (box.querySelector('button') as HTMLButtonElement|null)?.focus({preventScroll:true});
+  }
+
+  private choose(option: Choice) {
+    this.effect(option.then);
+    this.say({ speaker: this.active!.speaker, lines: option.lines, choices: option.choices });
+  }
+
+  private effect(then?: Effect) {
+    if(!then) return;
+    if(then.shop) this.pendingShop=then.shop;
+    const next=apply(this.context(), then);
+    saved=saveWorld(next.world)&&saveGrimoire(next.studied);
+    this.refreshProps();
+    this.renderMemory();
   }
 
   private travel({ to, spawn }: { to: string; spawn: string }) {
@@ -251,7 +284,7 @@ export class AreaScene extends Phaser.Scene {
   private closeDialogue() {
     // Focus left on the hidden Continue button would strand the keyboard, so it returns to the map.
     if(element('dialogue').contains(document.activeElement)) element('game').focus({preventScroll:true});
-    this.active=undefined;element('dialogue').hidden=true;
+    this.active=undefined;this.options=[];element('dialogue').hidden=true;element('choices').hidden=true;element('continue').hidden=false;
     const shop=this.pendingShop;this.pendingShop=undefined;
     if(shop) this.openShop(shop);
     const camp=this.pendingRest;this.pendingRest=undefined;

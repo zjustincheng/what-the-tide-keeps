@@ -26,3 +26,8 @@ export const farm: Dialogue = {
     'It smells of wine and salt. It means nothing to you.',
   ] }] },
 };
+
+farm.badger.choices = [
+  { text: 'What did the one with no fur look like?', lines: ['Like nothing. Smooth. A hood up, always. Hands with no claws at all. He held a cup like it was the only thing he owned.'] },
+  { text: 'Where did he go?', lines: ['Toward the sea. Everything leaves toward the sea, in the end.'] },
+];

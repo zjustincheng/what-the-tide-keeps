@@ -28,7 +28,11 @@ async function talkThrough(page: Page, key: string, x: number, y: number, prompt
   await place(page, key, x, y);
   await expect(page.locator('#prompt')).toContainText(prompt);
   await page.keyboard.press('e');
-  while (await page.locator('#dialogue').isVisible()) await page.getByRole('button', { name: 'Continue' }).click();
+  while (await page.locator('#dialogue').isVisible()) {
+    // Walk away from any replies on offer, as a player pressing Escape would.
+    if (await page.locator('#choices').isVisible()) await page.keyboard.press('Escape');
+    else await page.getByRole('button', { name: 'Continue' }).click();
+  }
 }
 
 test('the stallholder overcharges, supplies help in a fight, and a win pays', async ({ page }) => {

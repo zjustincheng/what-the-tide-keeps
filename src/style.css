@@ -621,3 +621,10 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
   .controls td { font-size: 10px; }
 }
 .party-status { margin-left: 8px; color: #c5c997; letter-spacing: .2px; }
+
+/* Replies the hero can choose under the speaker's last line. */
+.choices { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
+.choices[hidden] { display: none; }
+.choices button { text-align: left; padding: 7px 10px; font: 13px Georgia, serif; background: #22372acc; border: 1px solid #5d7253; color: #e8e2c8; }
+.choices button:hover, .choices button:focus-visible { border-color: #d2bd8a; color: #fff; }
+#continue[hidden] { display: none; }

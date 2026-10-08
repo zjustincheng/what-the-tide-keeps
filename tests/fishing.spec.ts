@@ -56,7 +56,11 @@ test('reeling as the marker crosses the gold lands a fish, which sells in Millbr
   await place(page, 'town', 328, 184);
   await expect(page.locator('#prompt')).toContainText('Speak to the fishmonger');
   await page.keyboard.press('e');
-  while (await page.locator('#dialogue').isVisible()) await page.getByRole('button', { name: 'Continue' }).click();
+  while (await page.locator('#dialogue').isVisible()) {
+    // Walk away from any replies on offer, as a player pressing Escape would.
+    if (await page.locator('#choices').isVisible()) await page.keyboard.press('Escape');
+    else await page.getByRole('button', { name: 'Continue' }).click();
+  }
   await page.getByRole('button', { name: 'Sell your catch' }).click();
   await expect(page.getByRole('dialog', { name: 'The fishmonger' })).toContainText(`You carry ${value} coins.`);
   expect(errors).toEqual([]);

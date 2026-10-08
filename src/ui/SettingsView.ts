@@ -3,6 +3,7 @@ import { canFullscreen, toggleFullscreen } from './fullscreen';
 const CONTROLS: [string, string][] = [
   ['Move', 'W A S D or arrow keys'],
   ['Talk, examine, travel', 'E or Space'],
+  ['Choose a reply', '1–4, or click it'],
   ['Equipment', 'Tab'],
   ['Settings', 'Escape'],
   ['Full screen', 'F'],
