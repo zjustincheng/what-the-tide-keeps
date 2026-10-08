@@ -69,7 +69,18 @@ The score is original and synthesised live in the browser with Web Audio, with n
 | The boar, the warden, the leech, the swarm-mother | Faster and darker, with choir, D Phrygian |
 | Waking after a wipe | Choir and bells, C Lydian |
 
-Browsers only allow sound after the player presses or clicks something, so the music starts then. **M** mutes it, and settings hold a volume slider; both are remembered in `tide-keeps.settings.v1`. The compositions are data in `src/audio/themes.ts` (notes, beats, instruments) and the instruments are in `src/audio/music.ts`, so a theme can be rewritten without touching the synthesis.
+Sound effects are synthesised the same way and have their own volume:
+
+- **Talking:** people blip as each line appears, each voice at its own pitch. Objects and places just click, and so does choosing a reply.
+- **Doors and rewards:** doors creak, finding something chimes, coins clink, and resting crackles like a fire.
+- **Fishing:** a whoosh on the cast, a plop on a bite, then a splash, or a splash and a chime for a catch.
+- **Battle:**
+  - Each hero's attack sounds different: the tail lash cracks, the maul thuds, the talons rake.
+  - A blow that lands thuds, a guard or barrier clanks, a dodge whooshes, and a graze scrapes.
+  - Typing a spell ticks, casting shimmers, and a fizzle sputters. Healing, barriers, and gathering have their own tones.
+  - A short cue marks victory or defeat.
+
+Browsers only allow sound after the player presses or clicks something, so sound starts then. **M** mutes the music; settings hold separate music and effects volume sliders. All of it is remembered in `tide-keeps.settings.v1`. The compositions are data in `src/audio/themes.ts` (notes, beats, instruments) and the instruments are in `src/audio/music.ts`, so a theme can be rewritten without touching the synthesis.
 
 ## Tone
 
@@ -101,7 +112,7 @@ Some replies change the world, and the game remembers them:
 
 ## Wounds and rest
 
-Injuries and spent mana carry from one fight into the next. In battle a hero regains only 1 mana a round, less than an attack costs, so spells and attacks run the party dry over a few fights. A hero who falls in a won fight stays down until revived with smelling salts or rested. The top left of the map shows each hero's portrait, health, and mana as the next fight will find them, with a reminder to rest when anyone is hurt or drained.
+Injuries and spent mana carry from one fight into the next. In battle a hero regains only 1 mana a round, less than an attack costs, so spells and attacks run the party dry over a few fights. A hero who falls in a won fight stays down until revived with smelling salts or rested. The top left of the map shows each hero's portrait, health, and mana as the next fight will find them, with a reminder to rest when anyone is hurt or drained. The small arrow on it, or **H**, shrinks it to just portraits with thin bars; the choice is remembered.
 
 Rest to heal every wound and restore every hero's mana: at the shepherd's fire ring by the crossroads, the abandoned camp in the woods, the carters' fire on the border road, or the cot in the church. As the guideline says, resting brings enemies back: the area starts over around the fire. Waking in the church after a wipe also heals the party. Wounds are saved with the rest of the story state.
 
@@ -270,6 +281,8 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/content/shops.ts` — what each shop sells.
 - `src/audio/themes.ts` — the compositions, as notes on beats.
 - `src/audio/music.ts` — the synthesised instruments, reverb, scheduler, and crossfades.
+- `src/audio/effects.ts` — the synthesised sound effects.
+- `src/storage/settings.ts` — volumes, mute, and how the party display is shown.
 - `src/ui/fullscreen.ts` — the full screen button and the F key.
 - `src/ui/SettingsView.ts` — the controls list and menu actions.
 - `public/maps/church.json` — editable Tiled JSON map with floor, furniture, and named interaction points.

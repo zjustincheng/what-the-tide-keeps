@@ -6,6 +6,7 @@ import type { Hollow } from '../rules/memory';
 import { BOOK_IDS, BOOKS, carry, SPELLS, STARTING_BOOKS } from '../rules/spells';
 import type { BookId, Books } from '../rules/spells';
 import type { Found } from '../rules/world';
+import { music } from '../audio/music';
 
 // Between fights: choose each hero's grimoire and put found keepsakes into their slots.
 export class EquipmentView {
@@ -45,6 +46,7 @@ export class EquipmentView {
       if (select.hasAttribute('data-book')) this.carried = carry(this.carried, this.books, member, (select.value || null) as BookId | null);
       else this.gear = equip(this.gear, this.owned, member, Number(select.dataset.slot), (select.value || null) as KeepsakeId | null);
       onChange(this.gear, this.carried); this.render();
+      music.effect('select');
       this.root.querySelector<HTMLSelectElement>(`[data-member="${member}"] ${select.hasAttribute('data-book') ? '[data-book]' : `[data-slot="${select.dataset.slot}"]`}`)?.focus();
     }, { signal });
     this.root.querySelector('#equipment-close')!.addEventListener('click', onClose, { signal });

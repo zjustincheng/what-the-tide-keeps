@@ -21,6 +21,7 @@ import { SHOPS } from '../content/shops';
 import { BOUNTY } from '../rules/economy';
 import { loadGear, saveGear } from '../storage/gear';
 import { loadBooks, saveBooks } from '../storage/books';
+import { loadSettings, saveSettings } from '../storage/settings';
 import type { Area } from './areas';
 import { music } from '../audio/music';
 import { battleTheme } from '../audio/themes';
@@ -48,6 +49,7 @@ export class AreaScene extends Phaser.Scene {
   private active?: Conversation;
   private line = 0;
   private portraitKey?: string;
+  private blips: ReturnType<typeof setTimeout>[] = [];
   // Replies on offer under the speaker's last line.
   private options: Choice[] = [];
   private cleanup = new AbortController();
@@ -202,6 +204,7 @@ export class AreaScene extends Phaser.Scene {
       if(event.target instanceof HTMLButtonElement && [' ', 'Enter'].includes(event.key)) return;
       if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(event.key)) event.preventDefault();
       if(['e','E',' ','Enter'].includes(event.key)) this.interact(event);
+      if(['h','H'].includes(event.key) && !event.repeat && !this.active) this.toggleHud();
       // Number keys pick a reply.
       const pick=this.options[Number(event.key)-1];
       if(this.active && pick && !event.repeat) { event.preventDefault(); this.choose(pick); }
@@ -212,6 +215,7 @@ export class AreaScene extends Phaser.Scene {
       if(event.key==='Tab' && !event.shiftKey && onMap && !this.active && !event.repeat) { event.preventDefault(); this.openEquipment(); }
     },{signal});
     element('settings').addEventListener('click',()=>this.openSettings(),{signal});
+    element('hud').addEventListener('click',event=>{ if((event.target as Element).closest('.hud-toggle')) this.toggleHud(); },{signal});
     element('continue').addEventListener('click',()=>this.interact(),{signal});
     element('touch-interact').addEventListener('click',()=>this.interact(),{signal});
     document.querySelectorAll<HTMLButtonElement>('[data-direction]').forEach(button=>{
@@ -251,7 +255,7 @@ export class AreaScene extends Phaser.Scene {
       const exit=this.area.exits[this.nearby.name];
       // A barred way is explained instead of taken.
       if(exit.requires && !holds(this.context(), exit.requires)) this.say({ speaker: exit.barred?.speaker ?? 'THE WAY', lines: exit.barred?.lines ?? ['It will not open.'] }, undefined);
-      else this.travel(exit);
+      else this.travel(exit, /door|out/.test(this.nearby.name));
     } else if(this.nearby) {
       const said=conversation(this.area.dialogue, this.nearby.name, this.context());
       // Effects land as the conversation opens, so closing it early never loses them.
@@ -279,6 +283,7 @@ export class AreaScene extends Phaser.Scene {
   private showLine() {
     const active=this.active!;
     element('dialogue-text').textContent=active.lines[this.line];
+    this.speak(active.lines[this.line]);
     this.options=this.line===active.lines.length-1 ? replies(active.choices, this.context()) : [];
     const box=element('choices');
     box.replaceChildren(...this.options.map((option,index)=>{
@@ -310,6 +315,7 @@ export class AreaScene extends Phaser.Scene {
   }
 
   private choose(option: Choice) {
+    music.effect('select');
     this.effect(option.then);
     this.say({ speaker: this.active!.speaker, lines: option.lines, choices: option.choices });
   }
@@ -317,13 +323,27 @@ export class AreaScene extends Phaser.Scene {
   private effect(then?: Effect) {
     if(!then) return;
     if(then.shop) this.pendingShop=then.shop;
+    if(then.find || then.learn || then.give) music.effect('find');
+    if(then.earn || then.pay) music.effect('coins');
+    if(then.rest) music.effect('rest');
     const next=apply(this.context(), then);
     saved=saveWorld(next.world)&&saveGrimoire(next.studied);
     this.refreshProps();
     this.renderMemory();
   }
 
-  private travel({ to, spawn }: { to: string; spawn: string }) {
+  // People blip as they talk, a few blips per line, each voice at its own pitch. Objects just click.
+  private speak(text: string) {
+    for(const timer of this.blips) clearTimeout(timer);
+    this.blips=[];
+    if(!this.portraitKey) { music.effect('select'); return; }
+    const voice=[...this.active!.speaker].reduce((sum,letter)=>sum+letter.charCodeAt(0),0)%12-6;
+    const count=Math.min(6,Math.max(2,Math.ceil(text.length/22)));
+    for(let i=0;i<count;i++) this.blips.push(setTimeout(()=>music.effect('blip', voice+[0,2,-1,3,1,-2][i]),i*75));
+  }
+
+  private travel({ to, spawn }: { to: string; spawn: string }, door = false) {
+    if(door) music.effect('door');
     this.leaving = true;
     this.player.setVelocity(0);
     element('prompt').textContent = '';
@@ -339,7 +359,7 @@ export class AreaScene extends Phaser.Scene {
     if(shop) this.openShop(shop);
     const camp=this.pendingRest;this.pendingRest=undefined;
     // Resting heals every wound and brings the area's enemies back, so the area starts over around the fire.
-    if(camp && !this.leaving) { saved=saveWorld(rest(loadWorld())); this.leaving=true; this.cameras.main.fadeOut(400,16,27,24); this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.restart({spawn:camp})); }
+    if(camp && !this.leaving) { music.effect('rest'); saved=saveWorld(rest(loadWorld())); this.leaving=true; this.cameras.main.fadeOut(400,16,27,24); this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.restart({spawn:camp})); }
   }
 
   private setExplorationEnabled(enabled: boolean) {
@@ -395,6 +415,7 @@ export class AreaScene extends Phaser.Scene {
     this.physics.pause();
     element('prompt').textContent = '';
     this.setExplorationEnabled(false);
+    music.effect('open');
     this.overlay = new ShopView(shop, world,
       next => { saved = saveWorld(next); this.renderMemory(); },
       () => { this.overlay?.destroy(); this.overlay = undefined; this.refreshProps(); this.resumeExploration(); });
@@ -421,6 +442,7 @@ export class AreaScene extends Phaser.Scene {
     element('prompt').textContent = '';
     this.setExplorationEnabled(false);
     const close = () => { this.overlay?.destroy(); this.overlay = undefined; this.resumeExploration(); };
+    music.effect('open');
     this.overlay = new SettingsView({
       close,
       equipment: () => { close(); this.openEquipment(); },
@@ -436,6 +458,7 @@ export class AreaScene extends Phaser.Scene {
     this.physics.pause();
     element('prompt').textContent = '';
     this.setExplorationEnabled(false);
+    music.effect('open');
     this.overlay = new EquipmentView(loadGear(), loadBooks(), loadWorld().found, roster(loadWorld()), hollow(loadMemory()), this.textures.getBase64('hero'),
       (gear, books) => { saved = saveGear(gear) && saveBooks(books); },
       () => { this.overlay?.destroy(); this.overlay = undefined; this.renderMemory(); this.resumeExploration(); });
@@ -464,12 +487,21 @@ export class AreaScene extends Phaser.Scene {
     return { hollow: hollow(loadMemory()), gear: loadGear(), books: loadBooks(), roster: roster(world), supplies: world.supplies, wounds: world.wounds, drained: world.drained };
   }
 
+  private toggleHud() {
+    saveSettings({ hud: loadSettings().hud === 'compact' ? 'full' : 'compact' });
+    music.effect('select');
+    this.renderMemory();
+  }
+
   private renderMemory() {
     element('purse').textContent = `${loadWorld().coins} coins`;
     // The party as the next fight will find it.
     const party = createBattle('locust', [], this.partyOptions()).party;
     // Health at the top left of the map: a portrait, a bar, and the numbers for each hero.
-    element('hud').innerHTML = party.map(member => {
+    // Full shows names and numbers; compact shrinks it to portraits with thin bars.
+    const compact = loadSettings().hud === 'compact';
+    element('hud').dataset.mode = compact ? 'compact' : 'full';
+    element('hud').innerHTML = `<button class="hud-toggle" type="button" aria-expanded="${!compact}" aria-label="${compact ? 'Show' : 'Hide'} party details" title="${compact ? 'Show' : 'Hide'} party details (H)">${compact ? '▸' : '▾'}</button>` + party.map(member => {
       const share = member.health / member.maxHealth;
       const level = share <= 0.25 ? 'low' : share <= 0.5 ? 'wounded' : 'healthy';
       return `<div class="hud-member" data-hud-member="${member.id}"><img alt="" src="${this.portrait(member.id === 'chameleon' ? 'hero' : member.id)}" />

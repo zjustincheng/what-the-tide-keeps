@@ -9,6 +9,7 @@ const CONTROLS: [string, string][] = [
   ['Settings', 'Escape'],
   ['Full screen', 'F'],
   ['Mute music', 'M'],
+  ['Hide or show party details', 'H'],
   ['Attack or support', 'Drag a hero onto an enemy or ally, or use the buttons on their card'],
   ['Dodge', 'Space or Enter as the ring closes'],
   ['Cast a spell', 'Type the shown keys 1–4 before the timer empties'],
@@ -32,6 +33,7 @@ export class SettingsView {
       <table class="controls"><caption>Controls</caption><tbody>${CONTROLS.map(([action, keys]) => `<tr><th scope="row">${action}</th><td>${keys}</td></tr>`).join('')}</tbody></table>
       <div class="settings-audio">
         <label>Music <input type="range" min="0" max="100" step="5" value="${Math.round(music.volume * 100)}" aria-label="Music volume" /></label>
+        <label>Effects <input type="range" min="0" max="100" step="5" value="${Math.round(music.effectsVolume * 100)}" aria-label="Sound effects volume" /></label>
         <label><input type="checkbox" ${music.muted ? 'checked' : ''} aria-label="Mute music" /> Mute</label>
       </div>
       <p class="settings-touch">On a touch screen, use the arrows and Interact below the map, and tap buttons in battle.</p>
@@ -49,6 +51,7 @@ export class SettingsView {
       else if (action === 'equipment' || action === 'restart' || action === 'close') actions[action]();
     }, { signal });
     this.root.querySelector<HTMLInputElement>('[aria-label="Music volume"]')!.addEventListener('input', event => music.setVolume(Number((event.target as HTMLInputElement).value) / 100), { signal });
+    this.root.querySelector<HTMLInputElement>('[aria-label="Sound effects volume"]')!.addEventListener('input', event => music.setEffectsVolume(Number((event.target as HTMLInputElement).value) / 100), { signal });
     this.root.querySelector<HTMLInputElement>('[aria-label="Mute music"]')!.addEventListener('change', event => {
       if ((event.target as HTMLInputElement).checked !== music.muted) music.toggleMute();
     }, { signal });

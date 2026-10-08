@@ -1,9 +1,11 @@
-// Plays the game's themes with instruments synthesised in Web Audio: no sound files.
-// A look-ahead scheduler queues each loop a little before it is due, and themes crossfade as places change.
+// Plays the game's themes and sound effects, synthesised in Web Audio: no sound files.
+// A look-ahead scheduler queues notes a little before they are due, and themes crossfade as places change.
 import { frequency, loopBeats, THEMES } from './themes';
 import type { NoteEvent, ThemeId, Voice } from './themes';
+import { playEffect } from './effects';
+import type { Effect } from './effects';
+import { loadSettings, saveSettings } from '../storage/settings';
 
-const SETTINGS = 'tide-keeps.settings.v1';
 const LOOKAHEAD = 0.5; // seconds of music queued ahead of the clock
 const FADE = 1.6; // seconds to crossfade between themes
 
@@ -12,23 +14,18 @@ type Track = { id: ThemeId; gain: GainNode; order: readonly NoteEvent[]; loopSta
 
 class Music {
   private context?: BaseAudioContext;
+  // The music bus; effects have their own, and both feed the master and the hall.
   private output?: GainNode;
+  private effectsBus?: GainNode;
   private room?: ConvolverNode;
   private noise?: AudioBuffer;
   private track?: Track;
   private timer?: ReturnType<typeof setInterval>;
   // The theme the game wants, even before the player has made a sound possible.
   current?: ThemeId;
-  volume = 0.6;
-  muted = false;
-
-  constructor() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(SETTINGS) ?? '{}') as { music?: unknown; muted?: unknown };
-      if (typeof saved.music === 'number' && saved.music >= 0 && saved.music <= 1) this.volume = saved.music;
-      if (typeof saved.muted === 'boolean') this.muted = saved.muted;
-    } catch { /* Unavailable storage just means default volume. */ }
-  }
+  volume = loadSettings().music;
+  effectsVolume = loadSettings().effects;
+  muted = loadSettings().muted;
 
   // Browsers only allow sound after the player has pressed or clicked something.
   unlock() {
@@ -51,32 +48,49 @@ class Music {
 
   setVolume(volume: number) {
     this.volume = Math.max(0, Math.min(1, volume));
-    this.apply(); this.save();
+    this.apply(); saveSettings({ music: this.volume });
   }
 
+  setEffectsVolume(volume: number) {
+    this.effectsVolume = Math.max(0, Math.min(1, volume));
+    this.apply(); saveSettings({ effects: this.effectsVolume });
+  }
+
+  // M mutes the music only; sound effects keep their own volume.
   toggleMute() {
     this.muted = !this.muted;
-    this.apply(); this.save();
+    this.apply(); saveSettings({ muted: this.muted });
   }
+
+  // A sound effect, played now. Before the player has made sound possible, it is simply skipped.
+  effect(name: Effect, pitch = 0) {
+    if (!this.context || !this.effectsBus || this.context.state !== 'running') return;
+    playEffect(this.context, this.effectsBus, this.noise!, name, pitch);
+    this.played.push(name);
+    if (this.played.length > 50) this.played.shift();
+  }
+  // The most recent effects, newest last, for checking what the game has sounded.
+  played: Effect[] = [];
 
   get playing(): ThemeId | undefined { return this.track?.id; }
 
-  private save() {
-    try { localStorage.setItem(SETTINGS, JSON.stringify({ music: this.volume, muted: this.muted })); } catch { /* Not saved; still applies now. */ }
-  }
-
   private apply() {
-    if (!this.context || !this.output) return;
+    if (!this.context || !this.output || !this.effectsBus) return;
     this.output.gain.setTargetAtTime(this.muted ? 0 : this.volume * 0.5, this.context.currentTime, 0.1);
+    this.effectsBus.gain.setTargetAtTime(this.effectsVolume * 1.2, this.context.currentTime, 0.05);
   }
 
   // A compressor, a generated hall reverb, and the master volume.
   private build() {
     const context = this.context!;
-    this.output = context.createGain();
+    const master = context.createGain();
     const compressor = context.createDynamicsCompressor();
     compressor.threshold.value = -18; compressor.ratio.value = 3;
-    this.output.connect(compressor).connect(context.destination);
+    master.connect(compressor).connect(context.destination);
+    this.output = context.createGain();
+    this.output.connect(master);
+    this.effectsBus = context.createGain();
+    this.effectsBus.connect(master);
     this.room = context.createConvolver();
     const length = Math.floor(context.sampleRate * 3.2);
     const impulse = context.createBuffer(2, length, context.sampleRate);
@@ -87,6 +101,9 @@ class Music {
     this.room.buffer = impulse;
     const wet = context.createGain(); wet.gain.value = 0.42;
     this.room.connect(wet).connect(this.output);
+    // Effects get a little of the hall too, so they sit in the same space as the music.
+    const send = context.createGain(); send.gain.value = 0.25;
+    this.effectsBus.connect(send).connect(this.room);
     this.noise = context.createBuffer(1, context.sampleRate, context.sampleRate);
     const data = this.noise.getChannelData(0);
     for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
@@ -232,7 +249,7 @@ class Music {
 
   // Render a theme silently, for checking its levels: the loudest sample and the average loudness.
   async preview(id: ThemeId, seconds: number): Promise<{ peak: number; rms: number }> {
-    const live = { context: this.context, output: this.output, room: this.room, noise: this.noise, track: this.track, volume: this.volume, muted: this.muted };
+    const live = { context: this.context, output: this.output, effectsBus: this.effectsBus, room: this.room, noise: this.noise, track: this.track, volume: this.volume, muted: this.muted };
     const offline = new OfflineAudioContext(2, Math.floor(44100 * seconds), 44100);
     this.context = offline; this.volume = 1; this.muted = false; this.track = undefined;
     this.build();

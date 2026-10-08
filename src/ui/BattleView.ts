@@ -5,6 +5,8 @@ import { BOUNTY, SUPPLIES, SUPPLY_IDS } from '../rules/economy';
 import type { Supplies, SupplyId } from '../rules/economy';
 
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
+import { music } from '../audio/music';
+import type { Effect as Sound } from '../audio/effects';
 
 // How long the dodge ring takes to close on its target, in milliseconds.
 const LEAD = 900;
@@ -168,6 +170,9 @@ export class BattleView {
   private choose(actor: MemberId, action: Action, target: MemberId = actor, foe: Foe = 0) {
     if (this.casting || !canAct(this.state, actor, action, target, foe)) return;
     this.state = act(this.state, actor, action, target, foe);
+    // Each hero strikes with their own sound; spellcraft has its own.
+    const sounds: Record<Action, Sound> = { attack: ({ chameleon: 'lash', bear: 'maul', vulture: 'talons' } as const)[actor], support: actor === 'vulture' ? 'gather' : 'block', suppress: 'open', barrier: 'barrier', analyze: 'key', gather: 'gather' };
+    music.effect(sounds[action]);
     this.afterAction();
   }
 
@@ -179,6 +184,7 @@ export class BattleView {
     const target = SUPPLIES[supply].target === 'fallen' ? fallen?.id ?? chosen : chosen;
     if (!canUse(this.state, actor, supply, target, this.foe())) return;
     this.state = useSupply(this.state, actor, supply, target, this.foe());
+    music.effect(supply === 'firepot' ? 'hit' : 'heal');
     this.afterAction();
   }
 
@@ -202,10 +208,12 @@ export class BattleView {
       this.get('.spell-name').textContent = success ? `${spell.name}!` : `${spell.name} fizzles.`;
       setTimeout(() => { bar.hidden = true; delete bar.dataset.result; }, 600);
       this.state = cast(this.state, actor, success, foe);
+      music.effect(!success ? 'fizzle' : spell.kind === 'heal' ? 'heal' : spell.kind === 'ward' ? 'barrier' : 'spell');
       this.afterAction();
     };
     this.casting = key => {
       typed.push(key); show();
+      music.effect('key', key * 2);
       const result = checkSequence(sequence, typed);
       if (result !== 'typing') finish(result === 'cast');
     };
@@ -215,6 +223,7 @@ export class BattleView {
 
   private afterAction() {
     this.persist(); this.render();
+    this.ended();
     if (this.state.phase === 'enemy') {
       this.root.focus({ preventScroll: true });
       this.timer = setTimeout(() => this.enemyTurn(), 650);
@@ -226,7 +235,14 @@ export class BattleView {
     this.timer = undefined;
     const next = nextStrike(this.state);
     const land = (dodge: Dodge) => {
+      // How the blow lands decides its sound: stopped, dodged, grazed, or taken.
+      const before = next;
       this.state = strike(this.state, dodge); this.persist(); this.render();
+      if (before && before.damage === 0 && !before.move.revive) music.effect('block');
+      else if (before?.dodgeable && dodge === 'perfect') music.effect('dodge');
+      else if (before?.dodgeable && dodge === 'graze') music.effect('graze');
+      else if (before && before.damage > 0) music.effect('hit');
+      this.ended();
       if (this.state.phase === 'enemy') this.timer = setTimeout(() => this.enemyTurn(), 450);
       else if (this.state.phase === 'player') this.focusNext();
     };
@@ -278,6 +294,14 @@ export class BattleView {
     const error = performance.now() - this.prompt.impact;
     // Pressing far too early commits the dodge too soon; it cannot be retried.
     this.prompt.answer(grade(error, nextStrike(this.state)!.move), error < 0);
+  }
+
+  // A short cue when the fight ends, once.
+  private cued = false;
+  private ended() {
+    if (this.cued || (this.state.phase !== 'victory' && this.state.phase !== 'defeat')) return;
+    this.cued = true;
+    music.effect(this.state.phase === 'victory' ? 'victory' : 'defeat');
   }
 
   private persist() {

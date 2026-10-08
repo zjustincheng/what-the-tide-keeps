@@ -3,6 +3,7 @@ import { buy, canBuy, price, SUPPLIES } from '../rules/economy';
 import type { Ware } from '../rules/economy';
 import { FISH, FISH_IDS } from '../rules/fishing';
 import type { ShopId, World } from '../rules/world';
+import { music } from '../audio/music';
 
 const name = (ware: Ware) => 'sellCatch' in ware ? 'Your catch' : 'deed' in ware ? ware.name : SUPPLIES[ware.supply].name;
 const text = (ware: Ware) => 'sellCatch' in ware ? 'Every fish in your pack.' : 'deed' in ware ? ware.text : SUPPLIES[ware.supply].text;
@@ -30,7 +31,9 @@ export class ShopView {
     this.root.addEventListener('click', event => {
       const index = (event.target as HTMLElement).closest<HTMLElement>('[data-buy]')?.dataset.buy;
       if (index === undefined) return;
+      const before = this.world;
       this.world = buy(this.world, SHOPS[shop].wares[Number(index)]);
+      if (this.world !== before) music.effect('coins');
       onBuy(this.world); this.render();
     }, { signal });
     this.root.querySelector('#shop-close')!.addEventListener('click', onClose, { signal });

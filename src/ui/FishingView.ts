@@ -1,5 +1,6 @@
 import { bite, FISH, landed, marker, SPOTS } from '../rules/fishing';
 import type { FishId, SpotId } from '../rules/fishing';
+import { music } from '../audio/music';
 
 // How long the fish fights on the line before it slips the hook, in milliseconds.
 const STRUGGLE = 4000;
@@ -56,6 +57,7 @@ export class FishingView {
     this.stop();
     delete this.root.querySelector<HTMLElement>('.fishing-pond')!.dataset.result;
     this.root.dataset.state = 'waiting';
+    music.effect('cast-line');
     this.status('The line settles. Wait for a bite…');
     this.root.querySelector<HTMLElement>('.fishing-bar')!.hidden = true;
     this.buttons(true);
@@ -67,6 +69,7 @@ export class FishingView {
     const zone = Math.random() * (1 - FISH[fish].zone);
     this.hooked = { fish, zone, since: performance.now() };
     this.root.dataset.state = 'bite';
+    music.effect('plop');
     this.status('A bite! Reel as the marker crosses the gold.');
     const bar = this.root.querySelector<HTMLElement>('.fishing-bar')!;
     bar.hidden = false;
@@ -101,6 +104,7 @@ export class FishingView {
     const leaper = pond.querySelector<HTMLElement>('.fishing-leaper')!;
     leaper.innerHTML = caught ? FISH_ART[caught] : '';
     pond.dataset.result = caught ? 'caught' : 'lost';
+    music.effect(caught ? 'catch' : 'splash');
     if (caught) pond.dataset.fish = caught; else delete pond.dataset.fish;
     this.root.dataset.state = 'done';
     this.status(text);

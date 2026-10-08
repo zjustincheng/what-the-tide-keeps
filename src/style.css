@@ -689,3 +689,13 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
 .settings-audio label { display: flex; gap: 8px; align-items: center; }
 .settings-audio input[type="range"] { width: 160px; accent-color: #d2bd8a; }
 .settings-audio input[type="checkbox"] { accent-color: #d2bd8a; }
+
+/* The party display can shrink to portraits with thin bars. */
+.hud-toggle { pointer-events: auto; align-self: flex-start; width: 22px; height: 18px; padding: 0; font-size: 11px; line-height: 1; background: #0d1412d9; border: 1px solid #4a5a46; color: #c8d0b8; }
+.hud[data-mode="compact"] { flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
+.hud[data-mode="compact"] .hud-member { min-width: 0; padding: 3px; flex-direction: column; gap: 2px; }
+.hud[data-mode="compact"] .hud-member img { width: 22px; height: 22px; }
+.hud[data-mode="compact"] .hud-name, .hud[data-mode="compact"] .hud-numbers, .hud[data-mode="compact"] .hud-hint { display: none; }
+.hud[data-mode="compact"] .health-bar, .hud[data-mode="compact"] .mana-bar { width: 24px; height: 3px; margin: 1px 0 0; }
+.settings-audio { flex-wrap: wrap; }
+.settings-audio input[type="range"] { width: 120px; }
