@@ -57,6 +57,14 @@ export function createSprites(scene: Phaser.Scene) {
   priest.fillStyle(0x2b3b31).fillRect(8,6,1,2).fillRect(12,6,1,2);
   priest.generateTexture('priest',20,26);priest.destroy();
   for (const [key, spec] of Object.entries(VILLAGERS)) villager(scene, key, spec);
+  // A campfire: crossed logs and a low flame.
+  const fire = scene.make.graphics({ x: 0, y: 0 });
+  fire.fillStyle(0x3a3833).fillRect(1, 11, 14, 3);
+  fire.fillStyle(0x5d4630).fillRect(2, 10, 12, 2).fillRect(4, 12, 8, 2);
+  fire.fillStyle(0xd8743a).fillRect(5, 5, 6, 6);
+  fire.fillStyle(0xf0b34a).fillRect(6, 3, 4, 6);
+  fire.fillStyle(0xfff0b2).fillRect(7, 6, 2, 3);
+  fire.generateTexture('campfire', 16, 15); fire.destroy();
   // A stray sheep: a woolly cloud on four short legs.
   const sheep = scene.make.graphics({ x: 0, y: 0 });
   sheep.fillStyle(0x27382e).fillRect(3, 17, 16, 2);

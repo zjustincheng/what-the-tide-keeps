@@ -1,4 +1,4 @@
-import { KEEPSAKE_IDS } from '../rules/gear';
+import { KEEPSAKE_IDS, MEMBER_IDS } from '../rules/gear';
 import { BOOK_IDS } from '../rules/spells';
 import { NO_SUPPLIES, SUPPLY_IDS } from '../rules/economy';
 import { FISH_IDS, NO_CATCH } from '../rules/fishing';
@@ -12,7 +12,7 @@ function parse(raw: string | null): World | undefined {
   if (raw === null) return undefined;
   const saved: unknown = JSON.parse(raw);
   if (typeof saved !== 'object' || saved === null) return undefined;
-  const { flags, carried, found = [], coins = 0, supplies = {}, fish = {} } = saved as Record<string, unknown>;
+  const { flags, carried, found = [], coins = 0, supplies = {}, fish = {}, wounds = {} } = saved as Record<string, unknown>;
   if (!Array.isArray(flags) || !Array.isArray(carried) || !Array.isArray(found)) return undefined;
   return {
     flags: FLAGS.filter((flag): flag is Flag => flags.includes(flag)), carried: ITEMS.filter((item): item is Item => carried.includes(item)),
@@ -26,6 +26,10 @@ function parse(raw: string | null): World | undefined {
       const count = (fish as Record<string, unknown>)?.[id];
       return [id, typeof count === 'number' && count > 0 ? Math.floor(count) : 0];
     })) as typeof NO_CATCH,
+    wounds: Object.fromEntries(MEMBER_IDS.flatMap(id => {
+      const wound = (wounds as Record<string, unknown>)?.[id];
+      return typeof wound === 'number' && wound > 0 ? [[id, Math.floor(wound)]] : [];
+    })),
   };
 }
 

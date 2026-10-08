@@ -7,6 +7,7 @@ import { BOOKS, SPELLS, STARTING_BOOKS } from './spells.ts';
 import type { Books, SpellId } from './spells';
 import { NO_SUPPLIES, SUPPLIES } from './economy.ts';
 import type { Supplies, SupplyId } from './economy';
+import type { Wounds } from './world';
 export type MemberId = 'chameleon' | 'bear' | 'vulture';
 export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze';
 export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm';
@@ -85,11 +86,13 @@ export const UNHOLLOWED: Hollow = { mana: 0, damage: 0, trained: true };
 export const PARTY_SCALE = [0.45, 0.65, 1] as const;
 
 // Hollow perks strengthen only the hero; companions keep their own memories.
-export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], hollow: Hollow = UNHOLLOWED, gear?: Gear, books: Books = STARTING_BOOKS, roster: readonly MemberId[] = MEMBER_IDS, supplies: Supplies = NO_SUPPLIES): Battle {
+export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], hollow: Hollow = UNHOLLOWED, gear?: Gear, books: Books = STARTING_BOOKS, roster: readonly MemberId[] = MEMBER_IDS, supplies: Supplies = NO_SUPPLIES, wounds: Wounds = {}): Battle {
   const member = (id: MemberId, base: number, mana: number): Member => {
     const worn = gear ? mods(gear, id) : NO_MODS;
-    const health = Math.max(1, base + worn.health);
-    return { id, health, maxHealth: health, mana, maxMana: mana, acted: false, guardingFor: null, focused: false, suppressed: false, barrier: false, gear: worn,
+    const maxHealth = Math.max(1, base + worn.health);
+    // Heroes enter hurt if they were hurt before; a hero who fell stays down.
+    const health = Math.max(0, maxHealth - (wounds[id] ?? 0));
+    return { id, health, maxHealth, mana, maxMana: mana, acted: false, guardingFor: null, focused: false, suppressed: false, barrier: false, gear: worn,
       spell: books[id] ? BOOKS[books[id]!].spell : null };
   };
   const size = Math.max(1, Math.min(3, roster.length));
@@ -102,6 +105,11 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
     fury: 0, step: 0, snared: false, supplies,
     log: [ENEMIES[encounter].opening],
   };
+}
+
+// What each hero carries away from a won fight.
+export function woundsAfter(battle: Battle): Wounds {
+  return Object.fromEntries(battle.party.filter(member => member.health < member.maxHealth).map(member => [member.id, member.maxHealth - member.health]));
 }
 
 export function condition(fighter: Fighter): string {

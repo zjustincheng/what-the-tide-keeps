@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 21,
+  "nextobjectid": 22,
   "layers": [
     {
       "id": 1,
@@ -1815,6 +1815,18 @@
         },
         {
           "id": 20,
+          "name": "camp-border",
+          "type": "",
+          "x": 184,
+          "y": 312,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 21,
           "name": "follower",
           "type": "",
           "x": 256,

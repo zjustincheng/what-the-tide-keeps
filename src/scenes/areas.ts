@@ -31,6 +31,8 @@ export type Area = {
   exits: Record<string, { to: string; spawn: string; prompt: string }>;
   // Points where the hero can fish.
   fishing?: Record<string, SpotId>;
+  // Places to rest: resting heals every wound and brings the area's enemies back.
+  camps?: Record<string, { prompt: string; lines: string[] }>;
   decorate?: (scene: Phaser.Scene) => void;
 };
 
@@ -40,6 +42,7 @@ export const CHURCH: Area = {
   npcs: [{ point: 'priest', texture: 'priest' }],
   enemies: [{ point: 'encounter', encounter: 'locust' }, { point: 'exile', encounter: 'acolyte' }],
   exits: { door: { to: 'farmland', spawn: 'spawn', prompt: 'Step outside' } },
+  camps: { spawn: { prompt: 'Rest on the cot', lines: ['You lie down on the cot. The priest\'s candle burns down while you sleep, and you wake whole.'] } },
   decorate(scene) {
     // Soft window light, hand placed in the same coordinates as the Tiled room.
     const light = scene.add.graphics().setDepth(2);
@@ -74,9 +77,15 @@ export const FARMLAND: Area = {
     { point: 'bell', texture: 'bell', hiddenIf: [{ has: 'bell' }, { flag: 'lamb-thanked' }] },
     ...([['camp-cache', 'cracked-mirror'], ['orchard-cache', 'crow-feather'], ['shrine-cache', 'covenant-token'], ['ford-cache', 'yoke-peg']] as const)
       .map(([point, keepsake]) => ({ point, texture: 'cache', hiddenIf: [{ owns: keepsake }] })),
+    { point: 'camp-fields', texture: 'campfire', hiddenIf: [] },
+    { point: 'camp-woods', texture: 'campfire', hiddenIf: [] },
     ...(['woods', 'orchard', 'yard'] as const).map(where => ({ point: `sheep-${where}`, texture: 'sheep', solid: true, hiddenIf: [{ flag: `sheep-${where}` as const }] })),
   ],
   fishing: { 'pond-spot': 'pond', 'stream-spot': 'stream' },
+  camps: {
+    'camp-fields': { prompt: 'Rest by the fire', lines: ['A shepherd\'s fire ring at the crossroads. You rest until the ache goes out of you.', 'Out in the fields, the things you drove off creep back.'] },
+    'camp-woods': { prompt: 'Rest by the fire', lines: ['You coax the old camp fire back to life and sleep under the grey tent.', 'In the dark between the trees, something that was gone is not gone anymore.'] },
+  },
   exits: {
     door: { to: 'church', spawn: 'from-road', prompt: 'Return to the church' },
     south: { to: 'town', spawn: 'spawn', prompt: 'Walk on to Millbrook' },
@@ -112,7 +121,11 @@ export const BORDER_ROAD: Area = {
   key: 'border-road', map: 'border-road', tileset: 'border', region: 'THE FARMLAND', place: 'The border road', time: 'Midday',
   dialogue: border, enemies: [{ point: 'follower', encounter: 'acolyte' }],
   npcs: [{ point: 'driver', texture: 'driver' }, { point: 'guard', texture: 'guard' }],
-  props: [1, 2, 3, 4, 5, 6, 7, 8].map(i => ({ point: `bramble-${i}`, texture: 'brambles', solid: true, hiddenIf: [{ flag: 'hedge-open' as const }] })),
+  camps: { 'camp-border': { prompt: 'Rest by the fire', lines: ['The carters\' fire, banked and waiting. They let you sit by it. Nobody speaks, but nobody leaves either.'] } },
+  props: [
+    ...[1, 2, 3, 4, 5, 6, 7, 8].map(i => ({ point: `bramble-${i}`, texture: 'brambles', solid: true, hiddenIf: [{ flag: 'hedge-open' as const }] })),
+    { point: 'camp-border', texture: 'campfire', hiddenIf: [] },
+  ],
   exits: {
     north: { to: 'town', spawn: 'from-border', prompt: 'Return to Millbrook' },
     east: { to: 'farmland', spawn: 'from-border', prompt: 'Take the field track' },

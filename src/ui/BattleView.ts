@@ -6,6 +6,7 @@ import { checkSequence, SPELLS } from '../rules/spells';
 import type { Books } from '../rules/spells';
 import { BOUNTY, SUPPLIES, SUPPLY_IDS } from '../rules/economy';
 import type { Supplies, SupplyId } from '../rules/economy';
+import type { Wounds } from '../rules/world';
 
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
 
@@ -26,9 +27,9 @@ export class BattleView {
   // Set while a spell is being typed.
   private casting?: (key: number) => void;
 
-  constructor(heroImage: string, onFinish: (won: boolean, state: Battle) => void, encounter: Encounter = 'locust', hollow?: Hollow, gear?: Gear, books?: Books, roster?: readonly MemberId[], supplies?: Supplies) {
+  constructor(heroImage: string, onFinish: (won: boolean, state: Battle) => void, encounter: Encounter = 'locust', hollow?: Hollow, gear?: Gear, books?: Books, roster?: readonly MemberId[], supplies?: Supplies, wounds?: Wounds) {
     this.onFinish = onFinish;
-    this.state = createBattle(encounter, loadGrimoire(), hollow, gear, books, roster, supplies);
+    this.state = createBattle(encounter, loadGrimoire(), hollow, gear, books, roster, supplies, wounds);
     const enemyName = ENEMIES[encounter].name;
     this.root = document.createElement('section');
     this.root.className = 'battle party-battle';
@@ -278,7 +279,7 @@ export class BattleView {
     const done = state.phase === 'victory' || state.phase === 'defeat';
     const remaining = state.party.filter(member => member.health > 0 && !member.acted).length;
     this.root.dataset.phase = state.phase;
-    this.get('#battle-turn').textContent = done ? (state.phase === 'victory' ? `It falls quiet. You find ${BOUNTY[state.encounter]} coins.` : 'The party falls.')
+    this.get('#battle-turn').textContent = done ? (state.phase === 'victory' ? `It falls quiet. You find ${BOUNTY[state.encounter]} coins.${state.party.some(member => member.health < member.maxHealth) ? ' Your wounds will linger until you rest at a fire.' : ''}` : 'The party falls.')
       : `Round ${state.round} · ${state.phase === 'player' ? `${remaining} actions remaining` : 'The enemy moves'}`;
     this.get('#enemy-condition').textContent = condition(state.enemy);
     this.renderHealth(this.get('.enemy-row .health-bar'), state.enemy);

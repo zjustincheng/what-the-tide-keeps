@@ -620,3 +620,4 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
   .controls { font-size: 11px; }
   .controls td { font-size: 10px; }
 }
+.party-status { margin-left: 8px; color: #c5c997; letter-spacing: .2px; }

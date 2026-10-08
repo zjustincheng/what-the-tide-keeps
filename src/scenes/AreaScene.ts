@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
-import { createBattle, enemyMana, ENEMIES } from '../rules/battle';
+import { createBattle, enemyMana, ENEMIES, MEMBERS, woundsAfter } from '../rules/battle';
 import type { Encounter } from '../rules/battle';
 import { forget, held, hollow, MEMORY_IDS, wipe } from '../rules/memory';
-import { apply, conversation, drop, holds, roster } from '../rules/world';
+import { apply, conversation, drop, holds, rest, roster } from '../rules/world';
 import type { Condition, Context, Effect, ShopId } from '../rules/world';
 import type { Conversation } from '../content/dialogue';
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
@@ -51,6 +51,8 @@ export class AreaScene extends Phaser.Scene {
   private overlay?: BattleView | ResurrectionView | EquipmentView | ShopView | FishingView | SettingsView;
   // A shop to open once the current conversation ends.
   private pendingShop?: ShopId;
+  // A campfire to rest at once the current conversation ends.
+  private pendingRest?: string;
 
   constructor(private area: Area) { super(area.key); }
 
@@ -59,7 +61,7 @@ export class AreaScene extends Phaser.Scene {
     this.arrival = data?.spawn ?? 'spawn';
     this.cleanup = new AbortController();
     this.held = new Set(); this.foes = []; this.props = [];
-    this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false; this.pendingShop = undefined;
+    this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false; this.pendingShop = undefined; this.pendingRest = undefined;
   }
 
   preload() {
@@ -118,7 +120,7 @@ export class AreaScene extends Phaser.Scene {
     // A wipe that was not yet paid for, such as one interrupted by a reload, is still owed.
     if (loadMemory().pending) this.wake();
     this.events.once('shutdown', () => {
-      this.pendingShop = undefined;
+      this.pendingShop = undefined; this.pendingRest = undefined;
       this.cleanup.abort();
       this.overlay?.destroy();
       this.setExplorationEnabled(true);
@@ -206,6 +208,15 @@ export class AreaScene extends Phaser.Scene {
       this.line++;
       if(this.line>=this.active.lines.length) this.closeDialogue();
       else element('dialogue-text').textContent=this.active.lines[this.line];
+    } else if(this.nearby && this.area.camps?.[this.nearby.name]) {
+      // Resting is told like a conversation; the rest itself happens when it ends.
+      this.active={ speaker: 'REST', lines: this.area.camps[this.nearby.name].lines };this.line=0;
+      this.pendingRest=this.nearby.name;
+      element('speaker').textContent=this.active.speaker;
+      element('dialogue-text').textContent=this.active.lines[0];
+      element('dialogue').hidden=false;
+      element('prompt').textContent='';
+      this.player.setVelocity(0);
     } else if(this.nearby && this.area.fishing?.[this.nearby.name]) {
       this.openFishing(this.area.fishing[this.nearby.name]);
     } else if(this.nearby && this.nearby.name in this.area.exits) {
@@ -243,6 +254,9 @@ export class AreaScene extends Phaser.Scene {
     this.active=undefined;element('dialogue').hidden=true;
     const shop=this.pendingShop;this.pendingShop=undefined;
     if(shop) this.openShop(shop);
+    const camp=this.pendingRest;this.pendingRest=undefined;
+    // Resting heals every wound and brings the area's enemies back, so the area starts over around the fire.
+    if(camp && !this.leaving) { saved=saveWorld(rest(loadWorld())); this.leaving=true; this.cameras.main.fadeOut(400,16,27,24); this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.restart({spawn:camp})); }
   }
 
   private setExplorationEnabled(enabled: boolean) {
@@ -268,7 +282,7 @@ export class AreaScene extends Phaser.Scene {
         foe.sprite.disableBody(true, true);
         foe.signature.setVisible(false);
         // The spoils, and whatever supplies were not used up.
-        saved = saveWorld({ ...loadWorld(), coins: loadWorld().coins + BOUNTY[foe.encounter], supplies: battle.supplies });
+        saved = saveWorld({ ...loadWorld(), coins: loadWorld().coins + BOUNTY[foe.encounter], supplies: battle.supplies, wounds: woundsAfter(battle) });
         this.renderMemory();
         if(foe.defeat) {
           const next=apply(this.context(), foe.defeat);
@@ -281,7 +295,7 @@ export class AreaScene extends Phaser.Scene {
         saved = saveMemory(wipe(loadMemory())) && saveWorld(drop(loadWorld()));
         this.scene.start('church');
       }
-    }, foe.encounter, hollow(loadMemory()), loadGear(), loadBooks(), roster(loadWorld()), loadWorld().supplies);
+    }, foe.encounter, hollow(loadMemory()), loadGear(), loadBooks(), roster(loadWorld()), loadWorld().supplies, loadWorld().wounds);
   }
 
   // A shop opens after its keeper has spoken, if there is anything left to sell.
@@ -356,6 +370,10 @@ export class AreaScene extends Phaser.Scene {
 
   private renderMemory() {
     element('purse').textContent = `${loadWorld().coins} coins`;
+    // The party as the next fight will find it.
+    const party = createBattle('locust', [], hollow(loadMemory()), loadGear(), loadBooks(), roster(loadWorld()), undefined, loadWorld().wounds).party;
+    element('party-status').textContent = party.map(member => `${MEMBERS[member.id].name} ${member.health}/${member.maxHealth}`).join(' · ')
+      + (party.some(member => member.health < member.maxHealth) ? ' · rest at a fire to heal' : '');
     element('memory-status').textContent = `Some things are already missing · ${held(loadMemory()).length} of ${MEMORY_IDS.length} memories remain${saved ? '' : ' · not saved'}`;
   }
 
@@ -382,10 +400,10 @@ export class AreaScene extends Phaser.Scene {
     // A restrained walking bob, while the physics body stays steady.
     this.player.setOrigin(0.5,0.5+(x||y?Math.sin(time/85)*0.025:0));
     const context=this.context();
-    this.nearby=this.points.filter(p=>p.name in this.area.exits || p.name in (this.area.fishing ?? {}) || (p.name in this.area.dialogue
+    this.nearby=this.points.filter(p=>p.name in this.area.exits || p.name in (this.area.fishing ?? {}) || p.name in (this.area.camps ?? {}) || (p.name in this.area.dialogue
       && !this.area.dialogue[p.name].hiddenIf?.some(condition=>holds(context, condition))))
       .find(p=>Phaser.Math.Distance.Between(this.player.x,this.player.y,p.x,p.y)<29);
     if(!this.active) element('prompt').textContent=this.nearby
-      ? `E · ${this.area.exits[this.nearby.name]?.prompt ?? (this.area.fishing?.[this.nearby.name] ? `Fish ${SPOTS[this.area.fishing[this.nearby.name]].name.replace(/^The /, 'the ')}` : undefined) ?? this.area.dialogue[this.nearby.name].prompt ?? 'Examine '+this.nearby.name}` : '';
+      ? `E · ${this.area.exits[this.nearby.name]?.prompt ?? this.area.camps?.[this.nearby.name]?.prompt ?? (this.area.fishing?.[this.nearby.name] ? `Fish ${SPOTS[this.area.fishing[this.nearby.name]].name.replace(/^The /, 'the ')}` : undefined) ?? this.area.dialogue[this.nearby.name].prompt ?? 'Examine '+this.nearby.name}` : '';
   }
 }
