@@ -1,16 +1,21 @@
-import { act, canAct, condition, COST, createBattle, enemyTarget, intent, MEMBERS, resolveEnemy } from '../rules/battle';
-import type { Action, Battle, Fighter, MemberId } from '../rules/battle';
+import { act, canAct, condition, COST, createBattle, enemyTarget, intent, MEMBERS, resolveEnemy, visibleMana, enemyMana, SPELL } from '../rules/battle';
+import type { Action, Battle, Fighter, MemberId, Encounter } from '../rules/battle';
+
+import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
 
 export class BattleView {
-  private state: Battle = createBattle();
+  private state: Battle;
+  private saved = true;
   private root: HTMLElement;
   private timer?: ReturnType<typeof setTimeout>;
   private cleanup = new AbortController();
   private previousFocus = document.activeElement as HTMLElement | null;
   private onFinish: (won: boolean) => void;
 
-  constructor(heroImage: string, onFinish: (won: boolean) => void) {
+  constructor(heroImage: string, onFinish: (won: boolean) => void, encounter: Encounter = 'locust') {
     this.onFinish = onFinish;
+    this.state = createBattle(encounter, loadGrimoire());
+    const enemyName = encounter === 'locust' ? 'Crop locust' : 'Hooded exile';
     this.root = document.createElement('section');
     this.root.className = 'battle party-battle';
     this.root.setAttribute('role', 'dialog');
@@ -19,21 +24,22 @@ export class BattleView {
     this.root.innerHTML = `
       <div class="battle-heading"><p class="eyebrow">THE CONDEMNED</p><h2 id="battle-title">Stand together.</h2><p id="battle-turn"></p></div>
       <div class="enemy-row">
-        <div class="fighter enemy-fighter"><img src="${import.meta.env.BASE_URL}assets/locust.svg" alt="Crop locust" /></div>
-        <div><h3>Crop locust</h3><div class="health-bar" role="meter" aria-label="Crop locust health" aria-valuemin="0" aria-valuemax="100"><span></span></div><p id="enemy-condition"></p><p class="mana" id="enemy-mana"></p></div>
+        <div class="fighter enemy-fighter"><img src="${import.meta.env.BASE_URL}assets/${encounter}.svg" alt="${enemyName}" /></div>
+        <div><h3>${enemyName}</h3><div class="health-bar" role="meter" aria-label="${enemyName} health" aria-valuemin="0" aria-valuemax="100"><span></span></div><p id="enemy-condition"></p><p class="mana" id="enemy-mana"></p></div>
       </div>
-      <p class="intent" id="enemy-intent"></p>
+      <p class="intent" id="enemy-intent"></p><p class="grimoire-status" aria-live="polite"></p>
       <div class="party-roster">${this.state.party.map(member => {
         const info = MEMBERS[member.id];
         return `<section class="member-card" data-member="${member.id}" aria-label="${info.name}">
           <button class="fighter party-fighter" aria-label="${info.name}: tap for ${info.support.toLowerCase()}, drag to attack or support"><img alt="" /></button>
           <h3>${info.name}</h3><div class="health-bar" role="meter" aria-label="${info.name} health" aria-valuemin="0" aria-valuemax="100"><span></span></div><p class="member-condition"></p><p class="mana member-mana"></p><p class="member-status"></p>
-          ${member.id === 'bear' ? `<label class="protect-label">Protect <select aria-label="Bear protection target">${this.state.party.map(target => `<option value="${target.id}" ${target.id === 'bear' ? 'selected' : ''}>${MEMBERS[target.id].name}</option>`).join('')}</select></label>` : '<div class="target-spacer" aria-hidden="true"></div>'}
+          <label class="protect-label">Ally <select aria-label="${member.id === 'bear' ? 'Bear protection target' : info.name + ' barrier target'}">${this.state.party.map(target => `<option value="${target.id}" ${target.id === member.id ? 'selected' : ''}>${MEMBERS[target.id].name}</option>`).join('')}</select></label>
           <div class="member-actions"><button data-action="attack" aria-label="${info.name} attack">${info.attack}<small>${COST.attack} mana</small></button><button data-action="support" aria-label="${info.name} support">${info.support}<small>No mana</small></button></div>
+          <details class="spellcraft"><summary>Spellcraft</summary><button data-action="suppress" aria-label="${info.name} suppress">Suppress · 1 mana</button><button data-action="barrier" aria-label="${info.name} barrier">Barrier · 5 mana</button><button data-action="analyze" aria-label="${info.name} analyze">Analyze · 2 mana</button></details>
         </section>`;
       }).join('')}</div>
       <div class="battle-log" role="log" aria-live="polite" aria-label="Battle events"></div>
-      <p class="battle-help">Each living companion acts once, in any order. Then the enemy moves.<br />Drag onto the locust to attack; tap yourself to support. Bear can drag onto an ally to protect them.</p>
+      <p class="battle-help">Each living companion acts once. Spellcraft uses that action too.<br />Guard physical blows. Analyze spells before blocking them. Attack while hidden to reveal.</p>
       <button id="battle-finish" hidden></button>`;
     for (const member of this.state.party) {
       this.card(member.id).querySelector<HTMLImageElement>('img')!.src = member.id === 'chameleon' ? heroImage
@@ -43,9 +49,9 @@ export class BattleView {
     const signal = this.cleanup.signal;
     for (const member of this.state.party) {
       const card = this.card(member.id);
-      for (const action of ['attack', 'support'] as const) {
+      for (const action of ['attack', 'support', 'suppress', 'barrier', 'analyze'] as const) {
         card.querySelector(`[data-action="${action}"]`)!.addEventListener('click', () => {
-          const target = member.id === 'bear' && action === 'support' ? this.get<HTMLSelectElement>('select').value as MemberId : member.id;
+          const target = (action === 'barrier' || (member.id === 'bear' && action === 'support')) ? card.querySelector<HTMLSelectElement>('select')!.value as MemberId : member.id;
           this.choose(member.id, action, target);
         }, { signal });
       }
@@ -58,8 +64,8 @@ export class BattleView {
     }, { signal });
     this.root.addEventListener('keydown', event => {
       if (event.key !== 'Tab') return;
-      const controls = Array.from(this.root.querySelectorAll<HTMLElement>('button:not([disabled]):not([hidden]),select:not([disabled])'))
-        .filter(control => !control.closest('[hidden]'));
+      const controls = Array.from(this.root.querySelectorAll<HTMLElement>('button:not([disabled]):not([hidden]),select:not([disabled]),summary'))
+        .filter(control => !control.closest('[hidden]') && (control.tagName === 'SUMMARY' || !control.closest('details:not([open])')));
       event.preventDefault();
       if (!controls.length) { this.root.focus(); return; }
       const index = controls.indexOf(document.activeElement as HTMLElement);
@@ -118,14 +124,18 @@ export class BattleView {
   private choose(actor: MemberId, action: Action, target: MemberId = actor) {
     if (!canAct(this.state, actor, action, target)) return;
     this.state = act(this.state, actor, action, target);
-    this.render();
+    this.persist(); this.render();
     if (this.state.phase === 'enemy') {
       this.root.focus({ preventScroll: true });
       this.timer = setTimeout(() => {
-        this.timer = undefined; this.state = resolveEnemy(this.state); this.render();
+        this.timer = undefined; this.state = resolveEnemy(this.state); this.persist(); this.render();
         if (this.state.phase === 'player') this.focusNext();
       }, 650);
     } else if (this.state.phase === 'player') this.focusNext();
+  }
+
+  private persist() {
+    this.saved = saveGrimoire(this.state.studied);
   }
 
   private render() {
@@ -134,29 +144,31 @@ export class BattleView {
     const remaining = state.party.filter(member => member.health > 0 && !member.acted).length;
     this.root.dataset.phase = state.phase;
     this.get('#battle-turn').textContent = done ? (state.phase === 'victory' ? 'The room falls quiet.' : 'The party falls.')
-      : `Round ${state.round} · ${state.phase === 'player' ? `${remaining} actions remaining` : 'The locust moves'}`;
+      : `Round ${state.round} · ${state.phase === 'player' ? `${remaining} actions remaining` : 'The enemy moves'}`;
     this.get('#enemy-condition').textContent = condition(state.enemy);
     this.renderHealth(this.get('.enemy-row .health-bar'), state.enemy);
-    this.get('#enemy-mana').textContent = `Mana ${state.enemy.mana} / ${state.enemy.maxMana}`;
+    this.get('#enemy-mana').textContent = `Mana ${enemyMana(state)}${state.encounter === 'acolyte' && !state.enemyRevealed ? ' · veiled' : ''}`;
     const target = enemyTarget(state);
-    this.get('#enemy-intent').textContent = done ? '' : `Physical · ${intent(state).tell} ${target ? `Watching ${MEMBERS[target.id].name}.` : ''}`;
+    this.get('#enemy-intent').textContent = done ? '' : `${intent(state).type === 'spell' ? 'Spell' : 'Physical'} · ${intent(state).tell} ${target ? `Watching ${MEMBERS[target.id].name}.` : ''}`;
+    this.get('.grimoire-status').textContent = `Grimoire · ${state.studied.includes(SPELL) ? SPELL + ' — can be blocked' : 'No spells studied'}${this.saved ? '' : ' · kept for this visit; browser save unavailable'}`;
     for (const member of state.party) {
       const card = this.card(member.id);
       card.dataset.acted = String(member.acted);
       card.dataset.downed = String(member.health === 0);
       card.querySelector('.member-condition')!.textContent = condition(member);
       this.renderHealth(card.querySelector<HTMLElement>('.health-bar')!, member);
-      card.querySelector('.member-mana')!.textContent = `Mana ${member.mana} / ${member.maxMana}`;
+      card.querySelector('.member-mana')!.textContent = `Mana ${member.mana} / ${member.maxMana} · showing ${visibleMana(member)}`;
       card.querySelector('.member-status')!.textContent = member.health === 0 ? 'Cannot act'
+        : member.barrier ? 'Barrier raised' : member.suppressed ? 'Hidden · attack to reveal'
         : member.guardingFor ? `Guarding ${MEMBERS[member.guardingFor].name}` : member.focused ? 'Focused'
         : member.acted ? 'Acted' : done ? '' : 'Ready';
-      for (const action of ['attack', 'support'] as const) card.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)!.disabled = !canAct(state, member.id, action);
+      for (const action of ['attack', 'support', 'suppress', 'barrier', 'analyze'] as const) card.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)!.disabled = !canAct(state, member.id, action);
       card.querySelector<HTMLButtonElement>('.party-fighter')!.disabled = !canAct(state, member.id, 'support');
       const select = card.querySelector('select');
       if (select) {
         for (const option of Array.from(select.options)) option.disabled = state.party.find(ally => ally.id === option.value)!.health === 0;
         if (select.selectedOptions[0]?.disabled) select.value = member.id;
-        select.disabled = !canAct(state, member.id, 'support');
+        select.disabled = state.phase !== 'player' || member.acted || member.health === 0;
       }
     }
     const log = this.get('.battle-log');

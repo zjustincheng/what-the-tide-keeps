@@ -40,7 +40,7 @@ test('party acts in any order, locks spent turns, and wins with protection', asy
   await drag(page, '[data-member="vulture"] .party-fighter', '.enemy-fighter');
   await expect(page.locator('#battle-turn')).toHaveText('Round 1 · 2 actions remaining');
   await expect(page.getByRole('button', { name: 'Vulture attack', exact: true })).toBeDisabled();
-  await expect(card(page, 'vulture').locator('.member-mana')).toHaveText('Mana 8 / 10');
+  await expect(card(page, 'vulture').locator('.member-mana')).toHaveText('Mana 8 / 10 · showing 8');
   await expect(card(page, 'bear').locator('.member-condition')).toHaveText('Unhurt');
   await page.getByRole('button', { name: 'Bear support', exact: true }).click();
   await expect(page.locator('#battle-turn')).toHaveText('Round 1 · 1 actions remaining');
@@ -99,7 +99,7 @@ test('downed companions are skipped and only a full party wipe returns to the co
   });
   expect(position).toEqual({ x: 88, y: 124 });
   await enterEncounter(page);
-  await expect(card(page, 'bear').locator('.member-mana')).toHaveText('Mana 12 / 12');
+  await expect(card(page, 'bear').locator('.member-mana')).toHaveText('Mana 12 / 12 · showing 12');
 });
 
 test('mobile party controls, ally selector, and focus remain accessible', async ({ page }) => {

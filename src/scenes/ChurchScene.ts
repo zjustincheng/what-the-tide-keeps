@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { conversations } from '../content/church';
+import type { Encounter } from '../rules/battle';
 import { BattleView } from '../ui/BattleView';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
@@ -19,6 +20,8 @@ export class ChurchScene extends Phaser.Scene {
   private shadow!: Phaser.GameObjects.Ellipse;
   private enemy!: Phaser.Physics.Arcade.Sprite;
   private signature!: Phaser.GameObjects.Container;
+  private exile!: Phaser.Physics.Arcade.Sprite;
+  private exileSignature!: Phaser.GameObjects.Container;
   private battle?: BattleView;
 
   constructor() { super('church'); }
@@ -26,6 +29,7 @@ export class ChurchScene extends Phaser.Scene {
   preload() {
     this.load.svg('church-tiles', `${import.meta.env.BASE_URL}assets/church-tiles.svg`);
     this.load.tilemapTiledJSON('church-map', `${import.meta.env.BASE_URL}maps/church.json`);
+    this.load.svg('acolyte', `${import.meta.env.BASE_URL}assets/acolyte.svg`);
     this.load.svg('locust', `${import.meta.env.BASE_URL}assets/locust.svg`);
   }
 
@@ -55,7 +59,15 @@ export class ChurchScene extends Phaser.Scene {
     const mana = this.add.text(0, -23, '◇ 2', { fontFamily: 'monospace', fontSize: '8px', color: '#dbc58b' }).setOrigin(0.5);
     this.signature = this.add.container(encounter.x, encounter.y, [ring, mana]).setDepth(5);
     this.tweens.add({ targets: ring, alpha: 0.35, duration: 1000, yoyo: true, repeat: -1 });
-    this.physics.add.overlap(this.player, this.enemy, () => this.beginBattle());
+    this.physics.add.overlap(this.player, this.enemy, () => this.beginBattle('locust'));
+    const exilePoint = this.points.find(p => p.name === 'exile')!;
+    this.exile = this.physics.add.staticSprite(exilePoint.x, exilePoint.y, 'acolyte').setDepth(4);
+    this.exile.setSize(20, 20).setOffset(6, 9);
+    const veil = this.add.ellipse(0, 5, 34, 18).setStrokeStyle(1, 0x9dbbb4, 0.65);
+    const hint = this.add.text(0, -24, '◇ 2', { fontFamily: 'monospace', fontSize: '8px', color: '#b7d3c7' }).setOrigin(0.5);
+    this.exileSignature = this.add.container(exilePoint.x, exilePoint.y, [veil, hint]).setDepth(5);
+    this.tweens.add({ targets: veil, alpha: 0.15, duration: 1400, yoyo: true, repeat: -1 });
+    this.physics.add.overlap(this.player, this.exile, () => this.beginBattle('acolyte'));
 
     // Soft window light, hand placed in the same coordinates as the Tiled room.
     const light = this.add.graphics().setDepth(2);
@@ -121,6 +133,9 @@ export class ChurchScene extends Phaser.Scene {
       const encounter = this.points.find(p => p.name === 'encounter')!;
       this.enemy.enableBody(true, encounter.x, encounter.y, true, true);
       this.signature.setVisible(true);
+      const exilePoint = this.points.find(p => p.name === 'exile')!;
+      this.exile.enableBody(true, exilePoint.x, exilePoint.y, true, true);
+      this.exileSignature.setVisible(true);
       element('game').focus({preventScroll:true});
     },{signal});
     document.querySelectorAll<HTMLButtonElement>('[data-direction]').forEach(button=>{
@@ -169,8 +184,10 @@ export class ChurchScene extends Phaser.Scene {
     if(this.input.keyboard) this.input.keyboard.enabled = enabled;
   }
 
-  private beginBattle() {
-    if(this.battle || this.active || !this.enemy.active) return;
+  private beginBattle(encounter: Encounter) {
+    const enemy = encounter === 'locust' ? this.enemy : this.exile;
+    const signature = encounter === 'locust' ? this.signature : this.exileSignature;
+    if(this.battle || this.active || !enemy.active) return;
     this.player.setVelocity(0);
     this.held.clear();
     this.input.keyboard?.resetKeys();
@@ -180,8 +197,8 @@ export class ChurchScene extends Phaser.Scene {
     this.battle = new BattleView(this.textures.getBase64('hero'), won => {
       this.battle = undefined;
       if(won) {
-        this.enemy.disableBody(true, true);
-        this.signature.setVisible(false);
+        enemy.disableBody(true, true);
+        signature.setVisible(false);
       } else {
         this.player.setPosition(this.spawn.x, this.spawn.y);
       }
@@ -190,7 +207,7 @@ export class ChurchScene extends Phaser.Scene {
       this.setExplorationEnabled(true);
       this.physics.resume();
       element('game').focus({preventScroll:true});
-    });
+    }, encounter);
   }
 
   update(time: number) {

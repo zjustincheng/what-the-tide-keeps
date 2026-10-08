@@ -456,3 +456,16 @@ footer span:last-child {
   .protect-label select { font-size: 10px; }
   .party-battle .battle-log { height: 53px; }
 }
+
+.grimoire-status { margin: 3px 0 8px; color: #abbf9b; font: 10px/1.5 ui-monospace, monospace; text-align: center; }
+.spellcraft { margin-top: 8px; text-align: left; font: 11px ui-monospace, monospace; color: #bac8a7; }
+.spellcraft summary { cursor: pointer; padding: 7px 0; }
+.spellcraft button { display: block; width: 100%; margin-top: 5px; padding: 8px 3px; font-size: 10px; }
+.party-battle { justify-content: flex-start; }
+.member-card .member-mana { min-height: 28px; line-height: 1.5; }
+@media(max-width:650px) {
+  .in-battle #game { min-height: 670px; }
+  .grimoire-status { font-size: 9px; }
+  .spellcraft { font-size: 10px; }
+  .spellcraft button { font-size: 9px; min-height: 38px; }
+}
