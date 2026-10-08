@@ -34,7 +34,8 @@ export type Area = {
   // Points where the hero can fish.
   fishing?: Record<string, SpotId>;
   // Places to rest: resting heals every wound and brings the area's enemies back.
-  camps?: Record<string, { prompt: string; lines: string[] }>;
+  // cost: coins for wood and a place by the fire; the church cot is free.
+  camps?: Record<string, { prompt: string; lines: string[]; cost?: number }>;
   decorate?: (scene: Phaser.Scene) => void;
   // The theme that plays here.
   music: ThemeId;
@@ -93,14 +94,17 @@ export const FARMLAND: Area = {
       .map(([point, keepsake]) => ({ point, texture: 'cache', hiddenIf: [{ owns: keepsake }, ...(GUARDED[point] ? [{ not: { flag: GUARDED[point]! } }] : [])] })),
     { point: 'camp-fields', texture: 'campfire', hiddenIf: [] },
     { point: 'gibbet', texture: 'gibbet', solid: true, hiddenIf: [] },
+    // The woods can only be entered across the ford, through the leech.
+    { point: 'log', texture: 'log', solid: true, hiddenIf: [] },
+    ...[1, 2, 3, 4, 5, 6].map(i => ({ point: `water-${i}`, texture: 'dark-water', solid: true, hiddenIf: [{ flag: 'leech-slain' as const }] })),
     { point: 'bones', texture: 'bones', hiddenIf: [] },
     { point: 'camp-woods', texture: 'campfire', hiddenIf: [] },
     ...(['woods', 'orchard', 'yard'] as const).map(where => ({ point: `sheep-${where}`, texture: 'sheep', solid: true, hiddenIf: [{ flag: `sheep-${where}` as const }] })),
   ],
   fishing: { 'pond-spot': 'pond', 'stream-spot': 'stream' },
   camps: {
-    'camp-fields': { prompt: 'Rest by the fire', lines: ['The shepherds\' fire ring at the crossroads. You sleep until the ache goes out of you.', 'By morning the fields have filled up again.'] },
-    'camp-woods': { prompt: 'Rest by the fire', lines: ['You get the old fire going again and sleep under the grey tent.', 'Something is moving in the trees again.'] },
+    'camp-fields': { prompt: 'Rest by the fire', cost: 4, lines: ['The shepherds\' fire ring at the crossroads. You sleep until the ache goes out of you.', 'By morning the fields have filled up again.'] },
+    'camp-woods': { prompt: 'Rest by the fire', cost: 3, lines: ['You get the old fire going again and sleep under the grey tent.', 'Something is moving in the trees again.'] },
   },
   exits: {
     door: { to: 'church', spawn: 'from-road', prompt: 'Return to the church' },
@@ -131,7 +135,7 @@ export const TOWN: Area = {
     north: { to: 'farmland', spawn: 'from-town', prompt: 'Return to the fields' },
     south: { to: 'border-road', spawn: 'spawn', prompt: 'Take the border road' },
     'hall-door': { to: 'hall', spawn: 'spawn', prompt: "Enter the reeve's hall" },
-    'inn-door': { to: 'inn', spawn: 'spawn', prompt: 'Enter the inn', requires: { any: [{ flag: 'inn-room' }, { flag: 'boar-defeated' }] },
+    'inn-door': { to: 'inn', spawn: 'spawn', prompt: 'Enter the inn', requires: { any: [{ flag: 'inn-room' }, { flag: 'boar-defeated' }, { flag: 'reeve-pardon' }] },
       barred: { speaker: 'THE INN', lines: ['The innkeeper is standing in the doorway, and she doesn\'t move.'] } },
     'tannery-door': { to: 'tannery', spawn: 'spawn', prompt: 'Enter the tannery' },
   },
@@ -148,7 +152,7 @@ export const BORDER_ROAD: Area = {
   key: 'border-road', map: 'border-road', tileset: 'border', music: 'wilds', region: 'THE FARMLAND', place: 'The border road', time: 'Midday',
   dialogue: border, enemies: [{ point: 'follower', encounter: 'acolyte' }],
   npcs: [{ point: 'driver', texture: 'driver' }, { point: 'guard', texture: 'guard' }],
-  camps: { 'camp-border': { prompt: 'Rest by the fire', lines: ['The carters let you sit at their fire. Nobody talks much.'] } },
+  camps: { 'camp-border': { prompt: 'Rest by the fire', cost: 4, lines: ['The carters let you sit at their fire. Nobody talks much.'] } },
   props: [
     ...[1, 2, 3, 4, 5, 6, 7, 8].map(i => ({ point: `bramble-${i}`, texture: 'brambles', solid: true, hiddenIf: [{ flag: 'hedge-open' as const }] })),
     { point: 'camp-border', texture: 'campfire', hiddenIf: [] },

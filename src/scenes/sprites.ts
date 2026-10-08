@@ -86,6 +86,19 @@ export function createSprites(scene: Phaser.Scene) {
   const crow = scene.make.graphics({ x: 0, y: 0 });
   crow.fillStyle(0x0e0f10).fillRect(0, 2, 3, 1).fillRect(2, 1, 4, 3).fillRect(5, 2, 3, 1).fillRect(3, 0, 2, 1);
   crow.generateTexture('crow', 8, 4); crow.destroy();
+  // A fallen oak across the woods path, and dark water where the leech waits.
+  const log = scene.make.graphics({ x: 0, y: 0 });
+  log.fillStyle(0x2a1e14).fillRect(0, 4, 32, 10);
+  log.fillStyle(0x4a3a28).fillRect(1, 3, 30, 8);
+  log.fillStyle(0x5d4630).fillRect(2, 4, 26, 2);
+  log.fillStyle(0x6a5236).fillRect(28, 3, 4, 9);
+  log.fillStyle(0x8a6a46).fillRect(29, 5, 2, 5);
+  log.fillStyle(0x2c3a24).fillRect(5, 1, 4, 3).fillRect(16, 0, 3, 4);
+  log.generateTexture('log', 32, 14); log.destroy();
+  const water = scene.make.graphics({ x: 0, y: 0 });
+  water.fillStyle(0x0c1618).fillRect(0, 0, 16, 16);
+  water.fillStyle(0x1a2a2e).fillRect(2, 4, 6, 1).fillRect(9, 10, 5, 1);
+  water.generateTexture('dark-water', 16, 16); water.destroy();
   // A campfire: crossed logs and a low flame.
   const fire = scene.make.graphics({ x: 0, y: 0 });
   fire.fillStyle(0x3a3833).fillRect(1, 11, 14, 3);

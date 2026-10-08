@@ -1,6 +1,6 @@
 // Sound effects, synthesised on the spot: a few oscillators and some noise for each.
 export type Effect =
-  | 'blip' | 'select' | 'open' | 'door' | 'find' | 'coins' | 'rest'
+  | 'blip' | 'select' | 'open' | 'door' | 'find' | 'coins' | 'rest' | 'step'
   | 'cast-line' | 'plop' | 'splash' | 'catch'
   | 'lash' | 'maul' | 'talons' | 'hit' | 'block' | 'barrier' | 'dodge' | 'graze'
   | 'key' | 'spell' | 'fizzle' | 'heal' | 'gather' | 'victory' | 'defeat';
@@ -53,6 +53,8 @@ export function playEffect(context: BaseAudioContext, out: AudioNode, noise: Aud
     // A soft voice blip, one per few letters as someone speaks.
     blip: () => tone('square', 220, 200, 0, 0.05, 0.09, 1400),
     select: () => tone('sine', 880, 660, 0, 0.07, 0.12),
+    // A soft footfall; the pitch alternates left and right.
+    step: () => { hiss('lowpass', 900, 250, 0, 0.07, 0.07); tone('sine', 110, 70, 0, 0.05, 0.04); },
     open: () => { hiss('bandpass', 600, 1800, 0, 0.18, 0.12, 0.8); tone('sine', 330, 330, 0, 0.12, 0.06); },
     door: () => { hiss('bandpass', 380, 140, 0, 0.45, 0.12, 6); tone('sine', 70, 50, 0.35, 0.2, 0.18); },
     find: () => [0, 4, 7, 12].forEach((step, i) => ping(659 * 2 ** (step / 12), i * 0.09, 0.9, 0.1)),

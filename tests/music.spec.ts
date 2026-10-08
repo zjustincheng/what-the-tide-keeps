@@ -115,7 +115,7 @@ test('every sound effect is audible without clipping', async ({ page }) => {
   await expect(page.locator('canvas')).toBeVisible();
   const peaks = await page.evaluate(async () => {
     const { playEffect } = await import('/src/audio/effects.ts');
-    const names = ['blip', 'select', 'open', 'door', 'find', 'coins', 'rest', 'cast-line', 'plop', 'splash', 'catch', 'lash', 'maul', 'talons', 'hit', 'block', 'barrier', 'dodge', 'graze', 'key', 'spell', 'fizzle', 'heal', 'gather', 'victory', 'defeat'] as const;
+    const names = ['blip', 'step', 'select', 'open', 'door', 'find', 'coins', 'rest', 'cast-line', 'plop', 'splash', 'catch', 'lash', 'maul', 'talons', 'hit', 'block', 'barrier', 'dodge', 'graze', 'key', 'spell', 'fizzle', 'heal', 'gather', 'victory', 'defeat'] as const;
     const out: Record<string, number> = {};
     for (const name of names) {
       const context = new OfflineAudioContext(1, 44100 * 2.5, 44100);

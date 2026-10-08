@@ -48,6 +48,8 @@ Drag any member onto the locust to attack, or tap that member for self-support. 
 
 Prototype tuning: ordinary fights last two or three rounds, and the boar about five. All numbers live in `src/rules/battle.ts`. Attacks are physical, so they cost no mana: the chameleon's tail lash, the bear's maul, the vulture's talons. Mana is for spells and spellcraft. Physical guarding and focusing are free, so an empty mana pool cannot stall the turn. Guarding stops physical damage; it is not a spell barrier. Spell barriers cost 5 mana and protect the selected ally until the end of the enemy turn, but only against studied spells. Physical blows pass through them. Enemy health scales with the size of the party: 45% for the chameleon alone, 65% with one companion, full strength with three.
 
+Any fight but the boar can be run from with **Run**, at a price: half the coins you carry scatter behind you, and the enemy gets a free parting blow on whoever it's watching (the wound carries, though it never drops your last standing hero). The enemy stays where it was, and you get a moment's head start.
+
 Victory removes the locust until you use **Return to the cot**, which resets the encounter. Defeat wakes you at the cot (see below). Wounds and spent mana both carry from one fight into the next (see **Wounds and rest**). **Gather**, on every hero's card, spends that hero's action to draw back 3 mana, so a drained hero is never stuck. Supplies are not implemented yet, and recruitment and travel beyond the church are still ahead. Encounter progress resets on reload; studied spells and memories persist.
 
 ## Replies
@@ -71,6 +73,7 @@ The score is original and synthesised live in the browser with Web Audio, with n
 
 Sound effects are synthesised the same way and have their own volume:
 
+- **Walking:** soft footsteps.
 - **Talking:** people blip as each line appears, each voice at its own pitch. Objects and places just click, and so does choosing a reply.
 - **Doors and rewards:** doors creak, finding something chimes, coins clink, and resting crackles like a fire.
 - **Fishing:** a whoosh on the cast, a plop on a bite, then a splash, or a splash and a chime for a catch.
@@ -109,12 +112,15 @@ Some replies change the world, and the game remembers them:
 - **The nightly count.** Standing in the carnivore quarter's line with the fox earns a firepot and a word for the night market to come.
 - **The fishmonger.** Telling him you freed his squid ends his trade with you for good.
 - **The heron** will tell you what happened to her mother.
+- **The reeve's letter.** The brand is the church's to lift, and the reeve says so. Once his carts are moving again he gives a letter of good conduct: Millbrook treats you as a citizen, with board prices at the stall, the inn open, and your face scratched off the wanted poster.
+
+The priest keeps count: asked how many times you have died, he reads the ledger, which starts at forty-one and adds one for every time the party falls.
 
 ## Wounds and rest
 
 Injuries and spent mana carry from one fight into the next. In battle a hero regains only 1 mana a round, less than an attack costs, so spells and attacks run the party dry over a few fights. A hero who falls in a won fight stays down until revived with smelling salts or rested. The top left of the map shows each hero's portrait, health, and mana as the next fight will find them, with a reminder to rest when anyone is hurt or drained. The small arrow on it, or **H**, shrinks it to just portraits with thin bars; the choice is remembered.
 
-Rest to heal every wound and restore every hero's mana: at the shepherd's fire ring by the crossroads, the abandoned camp in the woods, the carters' fire on the border road, or the cot in the church. As the guideline says, resting brings enemies back: the area starts over around the fire. Waking in the church after a wipe also heals the party. Wounds are saved with the rest of the story state.
+Rest to heal every wound and restore every hero's mana. Campfires cost coins for wood and a place by the fire (4 at the crossroads and the border road, 3 at the woods camp); the church cot and the priest are free: at the shepherd's fire ring by the crossroads, the abandoned camp in the woods, the carters' fire on the border road, or the cot in the church. As the guideline says, resting brings enemies back: the area starts over around the fire. Waking in the church after a wipe also heals the party. Wounds are saved with the rest of the story state.
 
 ## Side quests
 
@@ -223,7 +229,7 @@ As in the story, the chameleon sets out alone; his companions are scattered acro
 South of the church lies the open farmland, a scrolling map about four screens across with no set route. A waymark at the crossroads points the way:
 
 - **West, over the stream:** the mill, where the bear is chained to the millstone and the miller keeps the key. The bear still remembers the hero. Freeing him comes with companions in build step 9.
-- **Southwest:** dark woods, entered from the track or across a ford, with an abandoned camp.
+- **Southwest:** dark woods with an abandoned camp. A fallen oak blocks the path from the track, and dark water fills the ford around the Mire leech, so the only way in is through it.
 - **The locust field:** a trampled clearing where a locust feeds and something glints.
 - **The meadow:** a pond with a heron who fishes for herself.
 - **The south meadow:** a shepherd missing three sheep.
@@ -309,6 +315,8 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/buildings.spec.ts` — entering the hall, tannery, and mill.
 - `tests/music.spec.ts` — themes per place and battle, muting, volume, and levels.
 - `tests/rules/themes.test.ts` — every theme fits its loop and range.
+- `tests/running.spec.ts` — running away, campfire costs, the way into the woods, and the death count.
+- `tests/rules/consequences2.test.ts` — fleeing, the ledger, and the reeve's letter.
 - `tests/consequences.spec.ts` — sparing or reporting the boar's followers, and a paid bed.
 - `tests/rules/consequences.test.ts` — every consequential reply and what it changes.
 - `tests/sidequests.spec.ts` — the strays, the barrel, and the swarm-mother's bounty.

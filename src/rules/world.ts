@@ -13,7 +13,7 @@ export type Item = 'bell';
 export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated' | 'pests-field' | 'pests-yard' | 'writ-given' | 'bear-free' | 'vulture-free'
   | 'sheep-woods' | 'sheep-orchard' | 'sheep-yard' | 'sheep-reward' | 'barrel-bought' | 'squid-freed' | 'swarm-slain' | 'bounty-paid'
   | 'warden-slain' | 'leech-slain'
-  | 'followers-spared' | 'followers-reported' | 'followers-paid' | 'fishmonger-angry' | 'stall-cowed' | 'stood-count' | 'inn-room';
+  | 'followers-spared' | 'followers-reported' | 'followers-paid' | 'fishmonger-angry' | 'stall-cowed' | 'stood-count' | 'inn-room' | 'reeve-pardon';
 // Things worth keeping: keepsakes and grimoires. Once found, they are kept through every death; carried items are not.
 export type Found = KeepsakeId | BookId;
 // Coins and supplies, like carried items, are lost on a wipe.
@@ -21,12 +21,13 @@ export type Found = KeepsakeId | BookId;
 export type Wounds = Readonly<Partial<Record<MemberId, number>>>;
 // Drained: mana each hero has spent and not yet recovered. Like wounds, it lasts until rest.
 export type Drained = Readonly<Partial<Record<MemberId, number>>>;
-export type World = Readonly<{ flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained }>;
+// deaths: how many times the party has fallen since the game began; the church keeps count.
+export type World = Readonly<{ flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number }>;
 export const ITEMS: readonly Item[] = ['bell'];
 export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
   'sheep-woods', 'sheep-orchard', 'sheep-yard', 'sheep-reward', 'barrel-bought', 'squid-freed', 'swarm-slain', 'bounty-paid',
   'warden-slain', 'leech-slain',
-  'followers-spared', 'followers-reported', 'followers-paid', 'fishmonger-angry', 'stall-cowed', 'stood-count', 'inn-room'];
+  'followers-spared', 'followers-reported', 'followers-paid', 'fishmonger-angry', 'stall-cowed', 'stood-count', 'inn-room', 'reeve-pardon'];
 // A favor spell: a small everyday spell a villager trades for help. It opens the hedge on the border road.
 export const BRAMBLES = "Bramble's leave";
 
@@ -41,7 +42,7 @@ export type Effect = { give?: Item; take?: Item; set?: Flag; learn?: string; fin
 export type ShopId = 'stall' | 'reeve' | 'fishmonger';
 
 export function createWorld(): World {
-  return { flags: [], carried: [], found: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, wounds: {}, drained: {} };
+  return { flags: [], carried: [], found: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, wounds: {}, drained: {}, deaths: 0 };
 }
 
 export function holds(context: Context, condition: Condition): boolean {
@@ -66,7 +67,7 @@ export function apply(context: Context, effect: Effect): Context {
       flags: effect.set && !world.flags.includes(effect.set) ? [...world.flags, effect.set] : world.flags,
       found: effect.find && !world.found.includes(effect.find) ? [...world.found, effect.find] : world.found,
       coins: Math.max(0, world.coins + (effect.earn ?? 0) - (effect.pay ?? 0)),
-      supplies: effect.supply ? { ...world.supplies, [effect.supply]: world.supplies[effect.supply] + 1 } : world.supplies, fish: world.fish, wounds: effect.rest ? {} : world.wounds, drained: effect.rest ? {} : world.drained,
+      supplies: effect.supply ? { ...world.supplies, [effect.supply]: world.supplies[effect.supply] + 1 } : world.supplies, fish: world.fish, deaths: world.deaths, wounds: effect.rest ? {} : world.wounds, drained: effect.rest ? {} : world.drained,
     },
     studied: effect.learn && !studied.includes(effect.learn) ? [...studied, effect.learn] : studied,
   };
@@ -85,8 +86,30 @@ export function roster(world: World): MemberId[] {
 
 // Things carried, coins, supplies, fish, and wounds gathered since the last death are lost on a wipe. Flags, like opened shortcuts, persist.
 export function drop(world: World): World {
-  // The church sends the party back out whole.
-  return { ...world, carried: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, wounds: {}, drained: {} };
+  // The church sends the party back out whole, and adds a line to the ledger.
+  return { ...world, carried: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, wounds: {}, drained: {}, deaths: world.deaths + 1 };
+}
+
+// Running from a fight drops half the coins carried, rounded in the enemy's favour.
+export function fleeing(world: World): World {
+  return { ...world, coins: Math.floor(world.coins / 2) };
+}
+
+// The ledger already holds forty-one deaths when the game begins.
+export const LEDGER_START = 41;
+const ONES = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+const TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+export function inWords(n: number): string {
+  if (n < 20) return ONES[n] || 'zero';
+  if (n < 100) return TENS[Math.floor(n / 10)] + (n % 10 ? `-${ONES[n % 10]}` : '');
+  if (n < 1000) return `${ONES[Math.floor(n / 100)]} hundred${n % 100 ? ` and ${inWords(n % 100)}` : ''}`;
+  return String(n);
+}
+
+// Lines can mention the death count: {deaths} in words, {Deaths} capitalised.
+export function fill(text: string, context: Context): string {
+  const words = inWords(LEDGER_START + context.world.deaths);
+  return text.replaceAll('{deaths}', words).replaceAll('{Deaths}', words[0].toUpperCase() + words.slice(1));
 }
 
 // The world remembers what the hero cannot: what he hears depends on what he has forgotten, carries, and has done.

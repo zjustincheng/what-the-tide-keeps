@@ -43,7 +43,10 @@ export const town: Dialogue = {
   ], then: { shop: 'stall' } }, { if: { flag: 'stall-cowed' }, lines: [
     'Twice the board price, like we said. Leave the bear outside.',
   ], then: { shop: 'stall' } }] },
-  board: { speaker: 'THE NOTICE BOARD', prompt: 'Read the notice board', lines: [
+  board: { speaker: 'THE NOTICE BOARD', prompt: 'Read the notice board', variants: [{ if: { flag: 'reeve-pardon' }, lines: [
+    'WANTED, by order of the Covenant: the five who murdered the rulers.',
+    'All five faces have been scratched out now. Someone did yours carefully.',
+  ] }], lines: [
     'WANTED, by order of the Covenant: the five who murdered the rulers.',
     'Four of the faces have been scratched out. Yours hasn\'t.',
     'Pinned under it: BOUNTY. The swarm-mother, in the dark woods west of the stream. Twenty-five coins from the reeve.',
@@ -109,9 +112,22 @@ const reeveReplies: Choice[] = [
   { text: 'Why am I branded?', if: { forgot: 'trial' }, lines: [
     'You don\'t know? They say you killed the king.',
   ] },
-  { text: 'About the bear.', lines: ['Earn him or buy him. I don\'t care which.'] },
+  { text: 'About the bear.', if: { not: { flag: 'bear-free' } }, lines: ['Earn him or buy him. I don\'t care which.'] },
+  // The brand is the church's to lift, not his. What the reeve can give is Millbrook's good word.
+  { text: 'I want a pardon.', if: { all: [{ not: { flag: 'boar-defeated' } }, { not: { flag: 'reeve-pardon' } }] }, lines: [
+    'A pardon? The brand is the church\'s, not mine. I couldn\'t lift it if I wanted to.',
+    'But bring my carts back, and I\'ll see what a reeve\'s word is worth in Millbrook.',
+  ] },
+  { text: 'I want a pardon.', ends: true, if: { all: [{ flag: 'boar-defeated' }, { not: { flag: 'reeve-pardon' } }] }, lines: [
+    'The brand stays. That\'s the church\'s business.',
+    'But in Millbrook you\'ll be treated as a citizen. Board prices, a bed when you want one, and nobody\'s face on my wall but the four who earned it.',
+    'You receive the reeve\'s letter of good conduct.',
+  ], then: { set: 'reeve-pardon' } },
+  { text: 'About your letter.', if: { flag: 'reeve-pardon' }, lines: ['It holds in Millbrook. Past the border, it\'s paper.'] },
 ];
 town.reeve.choices = reeveReplies;
+// The reeve can be asked things whatever else is going on.
+for (const variant of town.reeve.variants!) variant.choices ??= reeveReplies;
 town.fox.choices = [
   { text: 'Who counts you?', lines: ['The reeve\'s watch. With a lantern and a list.'] },
   { text: "I'll stand in the count tonight.", lines: [

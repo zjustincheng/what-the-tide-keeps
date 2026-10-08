@@ -12,7 +12,7 @@ export type MemberId = 'chameleon' | 'bear' | 'vulture';
 export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze' | 'gather';
 export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm' | 'warden' | 'leech';
 export const SPELL = 'Salt lance';
-export type Phase = 'player' | 'enemy' | 'victory' | 'defeat';
+export type Phase = 'player' | 'enemy' | 'victory' | 'defeat' | 'fled';
 export type Fighter = Readonly<{ health: number; maxHealth: number; mana: number; maxMana: number }>;
 export type Follower = Fighter & Readonly<{ name: string }>;
 // Who an attack is aimed at: 0 is the main enemy, 1 and up are its followers.
@@ -139,6 +139,28 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
 // The mana each hero has spent and not recovered, carried from a won fight until they rest.
 export function drainedAfter(battle: Battle): Drained {
   return Object.fromEntries(battle.party.filter(member => member.mana < member.maxMana).map(member => [member.id, member.maxMana - member.mana]));
+}
+
+// The party can run from anything but the boar, who stands between them and the road.
+export function canFlee(battle: Battle): boolean {
+  return battle.phase === 'player' && battle.encounter !== 'boar';
+}
+
+// Running costs a free parting blow on whoever the enemy is watching. It wounds, and the wound
+// carries, but it never drops the last hero standing: the point of running is getting away.
+export function flee(battle: Battle): Battle {
+  if (!canFlee(battle)) return battle;
+  const target = enemyTarget(battle)!;
+  const living = battle.followers.find(follower => follower.health > 0);
+  const blow = battle.enemy.health > 0 && intent(battle).damage > 0 ? intent(battle)
+    : { name: living ? `${living.name.toLowerCase()}'s ${FOLLOWERS[battle.encounter]!.find(kind => kind.name === living.name)!.weapon}` : 'parting blow', damage: FOLLOWER_BLOW };
+  const alone = battle.party.filter(member => member.health > 0).length === 1;
+  const health = Math.max(alone ? 1 : 0, target.health - blow.damage);
+  const party = battle.party.map(member => member.id === target.id ? { ...member, health } : member);
+  return {
+    ...battle, party, phase: 'fled',
+    log: [...battle.log, `You run. The ${blow.name.toLowerCase()} catches ${MEMBERS[target.id].name} on the way out.${health === 0 ? ' They are carried off the field.' : ''}`],
+  };
 }
 
 // What each hero carries away from a won fight.

@@ -34,8 +34,12 @@ async function reply(page: Page, key: string, x: number, y: number, prompt: stri
   while (!(await page.locator('#choices').isVisible())) await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('group', { name: 'Replies' }).getByRole('button', { name: text }).click();
 }
+// Read to the end, walking away from any questions on offer.
 async function finish(page: Page) {
-  while (await page.locator('#dialogue').isVisible()) await page.getByRole('button', { name: 'Continue' }).click();
+  while (await page.locator('#dialogue').isVisible()) {
+    if (await page.locator('#choices').isVisible()) await page.keyboard.press('Escape');
+    else await page.getByRole('button', { name: 'Continue' }).click();
+  }
 }
 
 test("sparing the boar's followers sends them away and leaves the hero his tusk", async ({ page }) => {

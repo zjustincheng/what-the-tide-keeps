@@ -30,7 +30,7 @@ export const church: Dialogue = {
 
 // The priest can be answered; what the hero has forgotten, he cannot say.
 const priestReplies: Choice[] = [
-  { text: 'How many times have I died?', lines: ['Forty-one, by the ledger.'] },
+  { text: 'How many times have I died?', lines: ['{Deaths}, by the ledger.'] },
   { text: 'I was framed.', if: { not: { forgot: 'feast' } }, lines: [
     'The ledger says sentenced. Bring me something that says otherwise and I will read it.',
   ] },

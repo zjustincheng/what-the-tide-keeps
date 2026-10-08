@@ -3,7 +3,7 @@ import { createBattle, drainedAfter, enemyMana, ENEMIES, MEMBERS, woundsAfter } 
 import type { BattleOptions } from '../rules/battle';
 import type { Encounter } from '../rules/battle';
 import { forget, held, hollow, MEMORY_IDS, wipe } from '../rules/memory';
-import { apply, conversation, drop, holds, replies, rest, roster } from '../rules/world';
+import { apply, conversation, drop, fill, fleeing, holds, replies, rest, roster } from '../rules/world';
 import type { Condition, Context, Effect, ShopId } from '../rules/world';
 import type { Choice, Conversation } from '../content/dialogue';
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
@@ -30,10 +30,10 @@ import { createSprites } from './sprites';
 type Direction = 'up' | 'down' | 'left' | 'right';
 type Point = { name: string; x: number; y: number };
 type Prop = { sprite: Phaser.Physics.Arcade.Sprite; hiddenIf: Condition[]; shadow?: Phaser.GameObjects.Ellipse };
-type Foe = { encounter: Encounter; defeat?: Effect; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container };
+type Foe = { encounter: Encounter; defeat?: Effect; fledAt?: number; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container };
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 // Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
-const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8], warden: [22, 26, 5, 4], leech: [28, 12, 2, 14] };
+const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8], warden: [22, 26, 5, 4], leech: [28, 24, 2, 4] };
 // Whether the last save succeeded, shared by every area.
 let saved = true;
 // The way out of a conversation, offered whenever the hero comes back to the replies.
@@ -52,6 +52,8 @@ export class AreaScene extends Phaser.Scene {
   private line = 0;
   private portraitKey?: string;
   private blips: ReturnType<typeof setTimeout>[] = [];
+  private lastStep = 0;
+  private foot = 1;
   // Replies on offer under the speaker's last line.
   private options: Choice[] = [];
   // The replies to return to after an answer, and what has been asked in this conversation.
@@ -251,9 +253,14 @@ export class AreaScene extends Phaser.Scene {
       if(this.line>=this.active.lines.length) this.closeDialogue();
       else this.showLine();
     } else if(this.nearby && this.area.camps?.[this.nearby.name]) {
-      // Resting is told like a conversation; the rest itself happens when it ends.
-      this.pendingRest=this.nearby.name;
-      this.say({ speaker: 'REST', lines: this.area.camps[this.nearby.name].lines }, 'hero');
+      // Resting is told like a conversation; the rest itself, and paying for it, happen when it ends.
+      const camp=this.area.camps[this.nearby.name];
+      const coins=loadWorld().coins;
+      if(camp.cost && coins<camp.cost) this.say({ speaker: 'REST', lines: [`Wood and a place by the fire cost ${camp.cost} coins. You have ${coins}.`] }, 'hero');
+      else {
+        this.pendingRest=this.nearby.name;
+        this.say({ speaker: 'REST', lines: [...(camp.cost ? [`You pay ${camp.cost} coins for wood and a place by the fire.`] : []), ...camp.lines] }, 'hero');
+      }
       element('prompt').textContent='';
       this.player.setVelocity(0);
     } else if(this.nearby && this.area.fishing?.[this.nearby.name]) {
@@ -295,8 +302,9 @@ export class AreaScene extends Phaser.Scene {
   // Show the current line; under the last one, offer whatever replies the hero can still give.
   private showLine() {
     const active=this.active!;
-    element('dialogue-text').textContent=active.lines[this.line];
-    this.speak(active.lines[this.line]);
+    const text=fill(active.lines[this.line], this.context());
+    element('dialogue-text').textContent=text;
+    this.speak(text);
     this.options=this.line===active.lines.length-1 ? replies(active.choices, this.context()) : [];
     if(this.options.length) {
       if(!this.returning || !this.menu) this.menu=active.choices;
@@ -383,7 +391,7 @@ export class AreaScene extends Phaser.Scene {
     if(shop) this.openShop(shop);
     const camp=this.pendingRest;this.pendingRest=undefined;
     // Resting heals every wound and brings the area's enemies back, so the area starts over around the fire.
-    if(camp && !this.leaving) { music.effect('rest'); saved=saveWorld(rest(loadWorld())); this.leaving=true; this.cameras.main.fadeOut(400,16,27,24); this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.restart({spawn:camp})); }
+    if(camp && !this.leaving) { music.effect('rest'); const cost=this.area.camps?.[camp]?.cost ?? 0; saved=saveWorld(rest({ ...loadWorld(), coins: Math.max(0, loadWorld().coins-cost) })); this.leaving=true; this.cameras.main.fadeOut(400,16,27,24); this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.restart({spawn:camp})); }
   }
 
   private setExplorationEnabled(enabled: boolean) {
@@ -399,7 +407,8 @@ export class AreaScene extends Phaser.Scene {
   }
 
   private beginBattle(foe: Foe) {
-    if(this.overlay || this.active || this.leaving || !foe.sprite.active) return;
+    // A foe just fled from gives the party a moment to get clear.
+    if(this.overlay || this.active || this.leaving || !foe.sprite.active || (foe.fledAt !== undefined && this.time.now - foe.fledAt < 2500)) return;
     this.player.setVelocity(0);
     this.held.clear();
     this.input.keyboard?.resetKeys();
@@ -421,6 +430,15 @@ export class AreaScene extends Phaser.Scene {
           saved=saveWorld(next.world);
           this.refreshProps();
         }
+        this.resumeExploration();
+      } else if(battle.phase === 'fled') {
+        // A getaway: half the coins dropped, the parting blow's wound kept, and some distance put between them.
+        music.play(this.area.music);
+        saved = saveWorld({ ...fleeing(loadWorld()), supplies: battle.supplies, wounds: woundsAfter(battle), drained: drainedAfter(battle) });
+        const away = new Phaser.Math.Vector2(this.player.x - foe.sprite.x, this.player.y - foe.sprite.y).normalize().scale(36);
+        this.player.setPosition(this.player.x + (away.x || 0), this.player.y + (away.y || 36));
+        foe.fledAt = this.time.now;
+        this.renderMemory();
         this.resumeExploration();
       } else {
         // Every wipe wakes the party at the church, wherever it fell.
@@ -555,6 +573,8 @@ export class AreaScene extends Phaser.Scene {
     if(this.active){x=0;y=0;}
     const motion=new Phaser.Math.Vector2(x,y).normalize().scale(70);
     this.player.setVelocity(motion.x,motion.y);
+    // Footsteps while walking, alternating feet.
+    if((x||y) && time-this.lastStep>290) { this.lastStep=time; this.foot=-this.foot; music.effect('step', this.foot); }
     if(x) this.player.setFlipX(x<0);
     this.player.setDepth(4);
     this.shadow.setPosition(this.player.x,this.player.y+9);
@@ -567,6 +587,6 @@ export class AreaScene extends Phaser.Scene {
       .map(p=>({ p, distance: Phaser.Math.Distance.Between(this.player.x,this.player.y,p.x,p.y) }))
       .filter(({ distance })=>distance<29).sort((a,b)=>a.distance-b.distance)[0]?.p;
     if(!this.active) element('prompt').textContent=this.nearby
-      ? `E · ${this.area.exits[this.nearby.name]?.prompt ?? this.area.camps?.[this.nearby.name]?.prompt ?? (this.area.fishing?.[this.nearby.name] ? `Fish ${SPOTS[this.area.fishing[this.nearby.name]].name.replace(/^The /, 'the ')}` : undefined) ?? this.area.dialogue[this.nearby.name].prompt ?? 'Examine '+this.nearby.name}` : '';
+      ? `E · ${this.area.exits[this.nearby.name]?.prompt ?? (this.area.camps?.[this.nearby.name] ? `${this.area.camps[this.nearby.name].prompt}${this.area.camps[this.nearby.name].cost ? ` (${this.area.camps[this.nearby.name].cost} coins)` : ''}` : undefined) ?? (this.area.fishing?.[this.nearby.name] ? `Fish ${SPOTS[this.area.fishing[this.nearby.name]].name.replace(/^The /, 'the ')}` : undefined) ?? this.area.dialogue[this.nearby.name].prompt ?? 'Examine '+this.nearby.name}` : '';
   }
 }

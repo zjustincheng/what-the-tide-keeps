@@ -707,3 +707,6 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
 .start-over p { margin: 0 0 10px; font-size: 13px; line-height: 1.5; color: #e0c8b8; }
 .start-over button { margin: 4px; padding: 8px 12px; font: 14px Georgia, serif; }
 .start-over [data-action="erase"] { border-color: #bc755e; color: #f0c8b8; }
+.flee { margin-top: 2px; padding: 4px 10px; font: 12px Georgia, serif; background: transparent; border-color: #6a4a3a; color: #d8b8a8; }
+.flee small { margin-left: 6px; font: 9px ui-monospace, monospace; color: #a88878; }
+.flee[hidden] { display: none; }

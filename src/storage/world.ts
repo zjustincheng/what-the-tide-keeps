@@ -20,7 +20,7 @@ function parse(raw: string | null): World | undefined {
   if (raw === null) return undefined;
   const saved: unknown = JSON.parse(raw);
   if (typeof saved !== 'object' || saved === null) return undefined;
-  const { flags, carried, found = [], coins = 0, supplies = {}, fish = {}, wounds = {}, drained = {} } = saved as Record<string, unknown>;
+  const { flags, carried, found = [], coins = 0, supplies = {}, fish = {}, wounds = {}, drained = {}, deaths = 0 } = saved as Record<string, unknown>;
   if (!Array.isArray(flags) || !Array.isArray(carried) || !Array.isArray(found)) return undefined;
   return {
     flags: FLAGS.filter((flag): flag is Flag => flags.includes(flag)), carried: ITEMS.filter((item): item is Item => carried.includes(item)),
@@ -36,6 +36,7 @@ function parse(raw: string | null): World | undefined {
     })) as typeof NO_CATCH,
     wounds: perMember(wounds),
     drained: perMember(drained),
+    deaths: typeof deaths === 'number' && deaths >= 0 ? Math.floor(deaths) : 0,
   };
 }
 

@@ -85,6 +85,10 @@ export const fields: Dialogue = {
   'sheep-yard': { speaker: 'A LOST SHEEP', prompt: 'Call the sheep', hiddenIf: [{ flag: 'sheep-yard' }], lines: [
     'A sheep pressed against the hay yard fence, blood dried in its fleece. Not its own. It goes when you call.',
   ], then: { set: 'sheep-yard' } },
+  log: { speaker: 'A FALLEN OAK', prompt: 'Examine the fallen oak', lines: [
+    'A fallen oak lies across the path into the woods, roots and all. It is too big to climb.',
+    'The only other way in is across the ford.',
+  ] },
   // Free the caught: what the fishmonger keeps in his barrel needs running water.
   'stream-bank': { speaker: 'THE MILL STREAM', prompt: 'Tip the barrel into the stream', hiddenIf: [{ not: { flag: 'barrel-bought' } }, { flag: 'squid-freed' }], lines: [
     'You tip the barrel into the stream. The squid hangs in the current for a moment, then goes, downstream toward the sea.',

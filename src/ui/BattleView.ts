@@ -1,4 +1,4 @@
-import { act, canAct, canCast, canUse, cast, GATHER, useSupply, warded, condition, cost, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
+import { act, canAct, canCast, canFlee, canUse, cast, flee, GATHER, useSupply, warded, condition, cost, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
 import type { Action, Battle, BattleOptions, Dodge, Fighter, Foe, MemberId, Encounter } from '../rules/battle';
 import { checkSequence, SPELLS } from '../rules/spells';
 import { BOUNTY, SUPPLIES, SUPPLY_IDS } from '../rules/economy';
@@ -35,7 +35,7 @@ export class BattleView {
     this.root.setAttribute('aria-modal', 'true');
     this.root.setAttribute('aria-labelledby', 'battle-title');
     this.root.innerHTML = `
-      <div class="battle-heading"><p class="eyebrow">THE CONDEMNED</p><h2 id="battle-title">Stand together.</h2><p id="battle-turn"></p></div>
+      <div class="battle-heading"><p class="eyebrow">THE CONDEMNED</p><h2 id="battle-title">Stand together.</h2><p id="battle-turn"></p><button id="flee" class="flee" type="button">Run <small>drop half your coins, take a parting blow</small></button></div>
       <div class="enemy-row">
         <div class="fighter enemy-fighter" data-foe="0"><img src="${import.meta.env.BASE_URL}assets/${encounter}.svg" alt="${enemyName}" /></div>
         <div><h3>${enemyName}</h3><div class="health-bar" role="meter" aria-label="${enemyName} health" aria-valuemin="0" aria-valuemax="100"><span></span></div><p id="enemy-condition"></p><p class="mana" id="enemy-mana"></p></div>
@@ -98,8 +98,16 @@ export class BattleView {
       event.preventDefault(); this.press();
     }, { signal });
     this.get('#dodge').addEventListener('pointerdown', event => { event.preventDefault(); this.press(); }, { signal });
+    // Running ends the fight on the spot, at a cost.
+    this.get('#flee').addEventListener('click', () => {
+      if (this.casting || !canFlee(this.state)) return;
+      clearTimeout(this.timer);
+      this.state = flee(this.state);
+      music.effect('hit');
+      this.persist(); this.render();
+    }, { signal });
     this.get('#battle-finish').addEventListener('click', () => {
-      if (this.state.phase !== 'victory' && this.state.phase !== 'defeat') return;
+      if (this.state.phase !== 'victory' && this.state.phase !== 'defeat' && this.state.phase !== 'fled') return;
       const won = this.state.phase === 'victory';
       this.destroy(); this.onFinish(won, this.state);
     }, { signal });
@@ -310,10 +318,10 @@ export class BattleView {
 
   private render() {
     const state = this.state;
-    const done = state.phase === 'victory' || state.phase === 'defeat';
+    const done = state.phase === 'victory' || state.phase === 'defeat' || state.phase === 'fled';
     const remaining = state.party.filter(member => member.health > 0 && !member.acted).length;
     this.root.dataset.phase = state.phase;
-    this.get('#battle-turn').textContent = done ? (state.phase === 'victory' ? `It falls quiet. You find ${BOUNTY[state.encounter]} coins.${state.party.some(member => member.health < member.maxHealth) ? ' Your wounds will linger until you rest at a fire.' : ''}` : 'The party falls.')
+    this.get('#battle-turn').textContent = done ? (state.phase === 'fled' ? 'You run. Half your coins scatter behind you.' : state.phase === 'victory' ? `It falls quiet. You find ${BOUNTY[state.encounter]} coins.${state.party.some(member => member.health < member.maxHealth) ? ' Your wounds will linger until you rest at a fire.' : ''}` : 'The party falls.')
       : `Round ${state.round} · ${state.phase === 'player' ? `${remaining} actions remaining` : 'The enemy moves'}`;
     this.get('#enemy-condition').textContent = condition(state.enemy);
     this.renderHealth(this.get('.enemy-row .health-bar'), state.enemy);
@@ -377,7 +385,11 @@ export class BattleView {
     this.get('.battle-help').hidden = done;
     const finish = this.get<HTMLButtonElement>('#battle-finish');
     finish.hidden = !done;
-    finish.textContent = state.phase === 'victory' ? 'Continue' : 'Wake at the cot';
+    finish.textContent = state.phase === 'victory' ? 'Continue' : state.phase === 'fled' ? 'Get away' : 'Wake at the cot';
+    const run = this.get<HTMLButtonElement>('#flee');
+    run.hidden = done;
+    run.disabled = Boolean(this.casting) || !canFlee(state);
+    run.title = state.encounter === 'boar' ? 'The boar stands between you and the road.' : '';
     if (done) finish.focus({ preventScroll: true });
   }
 
