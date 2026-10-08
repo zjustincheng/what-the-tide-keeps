@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { AreaScene } from './scenes/AreaScene';
 import { AREAS } from './scenes/areas';
+import { bindFullscreen } from './ui/fullscreen';
 import './style.css';
 
 export const game = new Phaser.Game({
@@ -15,5 +16,7 @@ export const game = new Phaser.Game({
   physics: { default: 'arcade', arcade: { debug: false } },
   scene: AREAS.map(area => new AreaScene(area)),
 });
+
+bindFullscreen();
 
 if (import.meta.hot) import.meta.hot.dispose(() => game.destroy(true));

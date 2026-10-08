@@ -564,3 +564,11 @@ footer span:last-child {
 @media(max-width:650px) {
   .cast-button { min-height: 38px; font-size: 11px; }
 }
+
+/* Full screen: the map grows to fill the screen; the page's titles step aside. */
+main:fullscreen { max-width: none; width: 100vw; height: 100vh; margin: 0; padding: 8px 12px; display: flex; flex-direction: column; background: #131b1c; box-sizing: border-box; overflow: hidden; }
+main:fullscreen > header, main:fullscreen > .heading, main:fullscreen > footer { display: none; }
+main:fullscreen .game-frame { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+main:fullscreen #game { flex: 1; min-height: 0; aspect-ratio: auto; }
+main:fullscreen .below { margin: 6px 0 0; }
+main:fullscreen .touch-controls { margin: 6px 0 0; }

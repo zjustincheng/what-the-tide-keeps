@@ -25,7 +25,7 @@ npm install
 npm run dev
 ```
 
-Open the local URL printed by Vite. Move with **WASD** or **arrow keys**, and press **E** or **Space** near a person or object to interact. Continue dialogue with **E**, **Space**, **Enter**, or the on-screen button; **Escape** closes it. Touch controls appear on small screens and touch devices.
+Open the local URL printed by Vite. **Full screen** below the map fills the screen with the game; press it again or **Escape** to leave. Move with **WASD** or **arrow keys**, and press **E** or **Space** near a person or object to interact. Continue dialogue with **E**, **Space**, **Enter**, or the on-screen button; **Escape** closes it. Touch controls appear on small screens and touch devices.
 
 ```sh
 npm run build   # Type-check and build to dist/
@@ -156,6 +156,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/ui/BattleView.ts` — accessible combat view, drag input, and turn pacing.
 - `src/ui/ResurrectionView.ts` — the wake screen where a memory is chosen.
 - `src/ui/EquipmentView.ts` — the equipment screen.
+- `src/ui/fullscreen.ts` — the full screen button.
 - `public/maps/church.json` — editable Tiled JSON map with floor, furniture, and named interaction points.
 - `public/assets/church-tiles.svg` — original placeholder tileset.
 - `public/maps/farmland.json`, `town.json`, `border-road.json`, `boar-farm.json` — the farmland maps, with placeholder tilesets in `public/assets/`.
