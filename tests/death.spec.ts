@@ -48,7 +48,7 @@ test('reloading before choosing does not escape the cost', async ({ page }) => {
   await expect(page.getByRole('dialog', { name: 'The tide takes something.' })).toBeVisible();
   await page.reload(); await ready(page);
   await expect(page.getByRole('dialog', { name: 'The tide takes something.' })).toBeVisible();
-  await expect(page.locator('#restart')).toHaveAttribute('inert', '');
+  await expect(page.locator('#settings')).toHaveAttribute('inert', '');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Space');
   await page.keyboard.press('Tab');

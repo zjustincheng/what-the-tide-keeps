@@ -25,7 +25,7 @@ npm install
 npm run dev
 ```
 
-Open the local URL printed by Vite. **Full screen** below the map fills the screen with the game; press it again or **Escape** to leave. Move with **WASD** or **arrow keys**, and press **E** or **Space** near a person or object to interact. Continue dialogue with **E**, **Space**, **Enter**, or the on-screen button; **Escape** closes it. Touch controls appear on small screens and touch devices.
+Open the local URL printed by Vite. The bar above the map shows the place, the time, your coins, a **full screen** button (or press **F**), and a **settings** button (or press **Escape** on the map). Settings lists every control and holds **Equipment** and **Return to the cot**. Move with **WASD** or **arrow keys**, and press **E** or **Space** near a person or object to interact. Continue dialogue with **E**, **Space**, **Enter**, or the on-screen button; **Escape** closes it. Touch controls appear on small screens and touch devices.
 
 ```sh
 npm run build   # Type-check and build to dist/
@@ -60,7 +60,7 @@ None of these are marked. Someone mentions a problem and the player works out th
 
 ## Coins, shops, and supplies
 
-Defeated enemies leave coins: 4 for a locust, 5 for a weevil, 10 for a hooded follower, 12 for the swarm-mother, 30 for the boar. The purse is shown beside **THE CONDEMNED** under the map. As the guideline says, coins and supplies gathered since the last death are lost on a wipe.
+Defeated enemies leave coins: 4 for a locust, 5 for a weevil, 10 for a hooded follower, 12 for the swarm-mother, 30 for the boar. Coins are shown at the top right of the game frame. As the guideline says, coins and supplies gathered since the last death are lost on a wipe.
 
 The stallholder in Millbrook's market square sells supplies at three times the citizen's price because of the brand, and at twice the price once the boar is beaten and the town thaws:
 
@@ -86,7 +86,7 @@ The fishmonger in Millbrook buys the whole catch. Like coins, fish are lost on a
 
 ## Equipment
 
-Press **Tab** while on the map, or use **Equipment** below it, to open the equipment screen; **Escape** or **Done** closes it. Each hero carries a grimoire (see below) and holds two keepsakes, found by exploring off the roads. Keepsakes are kept through every death, and most come with a drawback:
+Press **Tab** while on the map, or choose **Equipment** in settings, to open the equipment screen; **Escape** or **Done** closes it. Each hero carries a grimoire (see below) and holds two keepsakes, found by exploring off the roads. Keepsakes are kept through every death, and most come with a drawback:
 
 | Keepsake | Where | Holder | Effect | Drawback |
 | --- | --- | --- | --- | --- |
@@ -201,7 +201,8 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/ui/ShopView.ts` — a shopkeeper's wares.
 - `src/ui/FishingView.ts` — the fishing screen.
 - `src/content/shops.ts` — what each shop sells.
-- `src/ui/fullscreen.ts` — the full screen button.
+- `src/ui/fullscreen.ts` — the full screen button and the F key.
+- `src/ui/SettingsView.ts` — the controls list and menu actions.
 - `public/maps/church.json` — editable Tiled JSON map with floor, furniture, and named interaction points.
 - `public/assets/church-tiles.svg` — original placeholder tileset.
 - `public/maps/farmland.json`, `town.json`, `border-road.json`, `boar-farm.json` — the farmland maps, with placeholder tilesets in `public/assets/`.

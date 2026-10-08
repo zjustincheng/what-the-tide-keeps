@@ -35,7 +35,7 @@ test('the stallholder overcharges, supplies help in a fight, and a win pays', as
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await start(page, { flags: ['bear-free', 'vulture-free'], carried: [], found: [], coins: 30 });
-  await expect(page.locator('#purse')).toHaveText('· 30 coins');
+  await expect(page.locator('#purse')).toHaveText('30 coins');
   await visit(page, 'town');
   await talkThrough(page, 'town', 168, 184, 'Speak to the stallholder');
   const shop = page.getByRole('dialog', { name: 'The stallholder' });
@@ -44,7 +44,7 @@ test('the stallholder overcharges, supplies help in a fight, and a win pays', as
   await expect(shop).toContainText('You carry 18 coins.');
   await expect(shop).toContainText('In your pack: 1');
   await page.getByRole('button', { name: 'Leave' }).click();
-  await expect(page.locator('#purse')).toHaveText('· 18 coins');
+  await expect(page.locator('#purse')).toHaveText('18 coins');
   await visit(page, 'farmland');
   await place(page, 'farmland', 456, 280);
   await page.keyboard.down('d');
@@ -54,7 +54,7 @@ test('the stallholder overcharges, supplies help in a fight, and a win pays', as
   await page.getByRole('button', { name: 'Vulture use Firepot' }).click();
   await expect(page.getByRole('log')).toContainText('Vulture throws a firepot.');
   await win(page);
-  await expect(page.locator('#purse')).toHaveText('· 22 coins');
+  await expect(page.locator('#purse')).toHaveText('22 coins');
   expect(errors).toEqual([]);
 });
 

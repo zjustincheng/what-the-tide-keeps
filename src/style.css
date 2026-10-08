@@ -599,3 +599,24 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
 .fishing-actions button { min-width: 140px; padding: 10px; font: 16px Georgia, serif; touch-action: manipulation; }
 .fishing-actions button[hidden] { display: none; }
 .fishing-actions small { display: block; margin-top: 3px; font: 9px ui-monospace, monospace; color: #d8cfae; }
+
+/* The top bar: place on the left; time, coins, full screen, and settings on the right. */
+.location .purse-status { margin-left: 4px; padding: 3px 8px; border: 1px solid #6a5a32; color: #e0c98a; font: 11px ui-monospace, monospace; letter-spacing: .5px; }
+.icon-button { display: grid; place-items: center; width: 26px; height: 26px; padding: 0; font-size: 14px; line-height: 1; background: transparent; border: 1px solid #43574b; color: #c8d0b8; }
+.icon-button:hover { border-color: #91a375; }
+.icon-button[hidden] { display: none; }
+.settings { justify-content: flex-start; padding: 20px 6%; }
+.controls { width: 100%; max-width: 560px; border-collapse: collapse; font-size: 13px; }
+.controls caption { margin-bottom: 8px; font: 10px ui-monospace, monospace; letter-spacing: 1.2px; color: #9eb19a; text-transform: uppercase; }
+.controls th, .controls td { padding: 6px 8px; border-bottom: 1px solid #61745644; text-align: left; vertical-align: top; }
+.controls th { width: 38%; font-weight: normal; color: #d7d9c8; }
+.controls td { color: #c5c997; font: 12px ui-monospace, monospace; }
+.settings-touch { margin: 10px 0; font-size: 12px; color: #9aab9a; text-align: center; }
+.settings-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 4px; }
+.settings-actions button { min-width: 150px; padding: 9px; font: 15px Georgia, serif; }
+.settings-actions button[hidden] { display: none; }
+@media(max-width:650px) {
+  .location .purse-status { margin-left: auto; font-size: 9px; padding: 2px 5px; }
+  .controls { font-size: 11px; }
+  .controls td { font-size: 10px; }
+}

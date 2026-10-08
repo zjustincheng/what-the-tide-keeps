@@ -61,6 +61,7 @@ test('party acts in any order, locks spent turns, and wins with protection', asy
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.keyboard.down('d'); await page.waitForTimeout(150); await page.keyboard.up('d');
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Settings' }).click();
   await page.getByRole('button', { name: 'Return to the cot' }).click();
   await enterEncounter(page);
   await expect(card(page, 'bear').locator('.member-condition')).toHaveText('Unhurt');
@@ -109,7 +110,7 @@ test('downed companions are skipped and only a full party wipe returns to the co
 test('mobile party controls, ally selector, and focus remain accessible', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await enterEncounter(page);
-  await expect(page.locator('#restart')).toHaveAttribute('inert', '');
+  await expect(page.locator('#settings')).toHaveAttribute('inert', '');
   for(let i=0;i<12;i++) {
     await page.keyboard.press('Tab');
     expect(await page.evaluate(() => Boolean(document.activeElement?.closest('.battle')))).toBe(true);

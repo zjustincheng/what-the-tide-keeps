@@ -41,7 +41,7 @@ test("the shepherd's three strays are scattered across the fields", async ({ pag
   await place(page, 'farmland', 104, 496);
   await expect(page.locator('#prompt')).not.toContainText('Call the sheep');
   await talk(page, 'farmland', 440, 720, 'Speak to the shepherd');
-  await expect(page.locator('#purse')).toHaveText('· 15 coins');
+  await expect(page.locator('#purse')).toHaveText('15 coins');
   await page.keyboard.press('Tab');
   await expect(page.getByRole('dialog', { name: 'Equipment' })).toContainText('Wool charm');
   expect(errors).toEqual([]);
@@ -76,5 +76,5 @@ test('the swarm-mother waits deep in the woods, and the reeve pays her bounty', 
   await win(page);
   await visit(page, 'town');
   await talk(page, 'town', 88, 124, 'Speak to the reeve');
-  await expect(page.locator('#purse')).toHaveText('· 37 coins');
+  await expect(page.locator('#purse')).toHaveText('37 coins');
 });

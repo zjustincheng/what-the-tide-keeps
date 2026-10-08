@@ -38,7 +38,8 @@ test('a keepsake found off the road can be equipped and changes the fight', asyn
   await expect(page.locator('#dialogue-text')).toContainText('cracked straight across');
   await page.keyboard.press('Escape');
   await expect(page.locator('#prompt')).not.toContainText('Search the bundle');
-  await page.getByRole('button', { name: /Equipment/ }).click();
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByRole('button', { name: 'Equipment' }).click();
   const screen = page.getByRole('dialog', { name: 'Equipment' });
   await expect(page.getByRole('combobox', { name: 'Bear keepsake 1' })).toBeDisabled();
   await page.getByRole('combobox', { name: 'Chameleon keepsake 1' }).selectOption({ label: 'Cracked mirror' });
@@ -62,7 +63,8 @@ test('the equipment screen fits a phone', async ({ page }) => {
   await page.evaluate(() => localStorage.setItem('tide-keeps.world.v1', JSON.stringify({ flags: ['bear-free', 'vulture-free'], carried: [], found: ['covenant-token', 'yoke-peg'] })));
   await page.reload();
   await expect.poll(() => at(page, 'church')).not.toBeNull();
-  await page.getByRole('button', { name: /Equipment/ }).click();
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByRole('button', { name: 'Equipment' }).click();
   await page.getByRole('combobox', { name: 'Bear keepsake 1' }).selectOption({ label: 'Yoke peg' });
   await page.getByRole('combobox', { name: 'Bear keepsake 2' }).selectOption({ label: 'Covenant token' });
   await expect(page.locator('[data-member="bear"] .equipment-stats')).toHaveText('Health 44 · Mana 12 · Damage 5');

@@ -13,6 +13,7 @@ import { ResurrectionView } from '../ui/ResurrectionView';
 import { EquipmentView } from '../ui/EquipmentView';
 import { ShopView } from '../ui/ShopView';
 import { FishingView } from '../ui/FishingView';
+import { SettingsView } from '../ui/SettingsView';
 import { addCatch, SPOTS } from '../rules/fishing';
 import type { SpotId } from '../rules/fishing';
 import { SHOPS } from '../content/shops';
@@ -47,7 +48,7 @@ export class AreaScene extends Phaser.Scene {
   private shadow!: Phaser.GameObjects.Ellipse;
   private foes: Foe[] = [];
   private props: Prop[] = [];
-  private overlay?: BattleView | ResurrectionView | EquipmentView | ShopView | FishingView;
+  private overlay?: BattleView | ResurrectionView | EquipmentView | ShopView | FishingView | SettingsView;
   // A shop to open once the current conversation ends.
   private pendingShop?: ShopId;
 
@@ -168,24 +169,20 @@ export class AreaScene extends Phaser.Scene {
   private bindControls() {
     const signal=this.cleanup.signal;
     window.addEventListener('keydown',event=>{
-      if(this.overlay) return;
+      // Keys pressed inside a panel belong to it, even once that press has closed it.
+      if(this.overlay || (event.target instanceof Element && event.target.closest('.battle'))) return;
       if(event.target instanceof HTMLButtonElement && [' ', 'Enter'].includes(event.key)) return;
       if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(event.key)) event.preventDefault();
       if(['e','E',' ','Enter'].includes(event.key)) this.interact(event);
-      if(event.key==='Escape') this.closeDialogue();
+      // Escape closes a conversation; with none open, it opens settings.
+      if(event.key==='Escape') { if(this.active) this.closeDialogue(); else if(!event.repeat) this.openSettings(); }
       // Tab opens equipment only from the map, so it still moves focus everywhere else on the page.
       const onMap=[element('game'),document.body].includes(document.activeElement as HTMLElement);
       if(event.key==='Tab' && !event.shiftKey && onMap && !this.active && !event.repeat) { event.preventDefault(); this.openEquipment(); }
     },{signal});
-    element('equipment').addEventListener('click',()=>this.openEquipment(),{signal});
+    element('settings').addEventListener('click',()=>this.openSettings(),{signal});
     element('continue').addEventListener('click',()=>this.interact(),{signal});
     element('touch-interact').addEventListener('click',()=>this.interact(),{signal});
-    // Returning to the cot always restarts the church, which also resets its encounters.
-    element('restart').addEventListener('click',()=>{
-      if(this.overlay) return;
-      this.scene.start('church');
-      element('game').focus({preventScroll:true});
-    },{signal});
     document.querySelectorAll<HTMLButtonElement>('[data-direction]').forEach(button=>{
       const direction=button.dataset.direction as Direction;
       button.addEventListener('pointerdown',event=>{
@@ -252,8 +249,7 @@ export class AreaScene extends Phaser.Scene {
     document.querySelector('.game-frame')!.classList.toggle('in-battle', !enabled);
     element('game').inert = !enabled;
     element('dialogue').inert = !enabled;
-    element('restart').inert = !enabled;
-    element('equipment').inert = !enabled;
+    element('settings').inert = !enabled;
     document.querySelector<HTMLElement>('.touch-controls')!.inert = !enabled;
     if(this.input.keyboard) this.input.keyboard.enabled = enabled;
   }
@@ -314,6 +310,23 @@ export class AreaScene extends Phaser.Scene {
       () => { this.overlay?.destroy(); this.overlay = undefined; this.resumeExploration(); });
   }
 
+  private openSettings() {
+    if(this.overlay || this.leaving) return;
+    this.closeDialogue();
+    this.player.setVelocity(0);
+    this.held.clear();
+    this.physics.pause();
+    element('prompt').textContent = '';
+    this.setExplorationEnabled(false);
+    const close = () => { this.overlay?.destroy(); this.overlay = undefined; this.resumeExploration(); };
+    this.overlay = new SettingsView({
+      close,
+      equipment: () => { close(); this.openEquipment(); },
+      // Returning to the cot always restarts the church, which also resets its encounters.
+      restart: () => { close(); this.scene.start('church'); },
+    });
+  }
+
   private openEquipment() {
     if(this.overlay || this.leaving) return;
     this.player.setVelocity(0);
@@ -342,7 +355,7 @@ export class AreaScene extends Phaser.Scene {
   }
 
   private renderMemory() {
-    element('purse').textContent = `· ${loadWorld().coins} coins`;
+    element('purse').textContent = `${loadWorld().coins} coins`;
     element('memory-status').textContent = `Some things are already missing · ${held(loadMemory()).length} of ${MEMORY_IDS.length} memories remain${saved ? '' : ' · not saved'}`;
   }
 

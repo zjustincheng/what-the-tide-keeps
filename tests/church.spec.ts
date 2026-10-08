@@ -29,6 +29,7 @@ test('loads without errors, walks, and stops at the church wall', async ({ page 
   await page.waitForTimeout(150);
   expect((await position(page)).x).toBeCloseTo(stopped.x, 1);
   expect(errors).toEqual([]);
+  await page.getByRole('button', { name: 'Settings' }).click();
   await page.getByRole('button', { name: 'Return to the cot' }).click();
   await expect.poll(async () => (await position(page)).x).toBe(88);
 });
