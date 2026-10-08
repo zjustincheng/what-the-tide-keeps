@@ -38,7 +38,7 @@ test('the lamb trades a favor spell for her bell, and the spell opens the hedge'
   const thanks = say(town, 'child', context);
   assert.match(thanks.lines[0], /My bell/);
   context = apply(context, thanks.then!);
-  assert.deepEqual(context.world, { flags: ['lamb-thanked'], carried: [], keepsakes: [] });
+  assert.deepEqual(context.world, { flags: ['lamb-thanked'], carried: [], found: [] });
   assert.deepEqual(context.studied, [BRAMBLES]);
   assert.match(say(town, 'child', context).lines[0], /Did the thorns listen/);
   const hedge = say(border, 'hedge', context);

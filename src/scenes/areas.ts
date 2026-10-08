@@ -120,6 +120,7 @@ export const BOAR_FARM: Area = {
     { point: 'badger', texture: 'badger', solid: true, hiddenIf: [] },
     { point: 'rat', texture: 'rat', solid: true, hiddenIf: [] },
     { point: 'cup', texture: 'cup', hiddenIf: [{ not: { flag: 'boar-defeated' } }] },
+    { point: 'ruin-cache', texture: 'cache', hiddenIf: [{ owns: 'snare-primer' }] },
   ],
   exits: { north: { to: 'border-road', spawn: 'from-farm', prompt: 'Return to the border road' } },
   decorate(scene) {

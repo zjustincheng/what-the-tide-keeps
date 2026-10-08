@@ -52,7 +52,7 @@ Victory removes the locust until you use **Return to the cot**, which resets the
 
 ## Equipment
 
-Press **I** or use **Equipment** below the map to open the equipment screen. Each hero holds two keepsakes, found by exploring off the roads. Keepsakes are kept through every death, and most come with a drawback:
+Press **I** or use **Equipment** below the map to open the equipment screen. Each hero carries a grimoire (see below) and holds two keepsakes, found by exploring off the roads. Keepsakes are kept through every death, and most come with a drawback:
 
 | Keepsake | Where | Holder | Effect | Drawback |
 | --- | --- | --- | --- | --- |
@@ -61,7 +61,21 @@ Press **I** or use **Equipment** below the map to open the equipment screen. Eac
 | Covenant token | Behind the old shrine | Anyone | 6 more health | Shows 2 more mana, drawing attacks |
 | Yoke peg | The reeds below the ford | Bear | 8 more health | Attacks cost 3 mana |
 
-Equipping a keepsake another hero holds moves it. The screen previews each hero's health, mana, and damage as the next fight will build them. Found keepsakes are saved in `tide-keeps.world.v1` and equipped ones in `tide-keeps.gear.v1`.
+Equipping a keepsake another hero holds moves it. The screen previews each hero's health, mana, and damage as the next fight will build them. Found keepsakes and grimoires are saved in `tide-keeps.world.v1` and equipped ones in `tide-keeps.gear.v1`.
+
+## Grimoires and sequence spells
+
+Each hero carries one grimoire, chosen on the equipment screen, which sets their spell. In battle the spell is its own button under the hero's attack and support. Casting shows a random sequence of the keys **1–4**; type it (or tap the on-screen keys) before the timer empties. One wrong key, or running out of time, fizzles the spell: the turn and the mana are still spent. Stronger spells are longer.
+
+| Grimoire | Where | Spell | Cost | Keys / time | Effect |
+| --- | --- | --- | --- | --- | --- |
+| Thornwork | Chameleon's own | Thorn volley | 4 | 5 in 3s | 12 damage to one enemy |
+| Riverstone | Bear's own | Stone ward | 4 | 4 in 2.6s | Every standing hero guards against physical blows this enemy turn |
+| Windward | Vulture's own | Gale quill | 5 | 6 in 3.2s | 16 damage to one enemy |
+| Pond-keeper's primer | The heron by the pond | Still water | 4 | 5 in 3s | Every standing hero recovers 8 health |
+| Hedge-witch's primer | The burned farmhouse | Bramble snare | 5 | 6 in 3.2s | The main enemy loses its next move; followers still act |
+
+Any hero can carry any grimoire, which is how the guideline's "the grimoire is the class" begins: giving the bear the primer makes him the healer. Damage spells follow the same targeting as attacks, so the boar still shields his followers from them. Which hero carries which grimoire is saved in `tide-keeps.books.v1`. These carried grimoires are separate from the shared grimoire of studied enemy spells.
 
 ## Dodging
 
@@ -130,6 +144,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/scenes/sprites.ts` — generated placeholder sprites for the hero and townsfolk.
 - `src/rules/battle.ts` — immutable, renderer-independent combat state and transitions.
 - `src/rules/memory.ts` — memory loss and Hollow perks, independent of the renderer.
+- `src/rules/spells.ts` — grimoires, their spells, and sequence checking.
 - `src/rules/gear.ts` — keepsakes, slots, and what they change in battle.
 - `src/rules/world.ts` — story flags, carried items, favor spells, and which dialogue variant applies.
 - `src/content/memories.ts` — memory names and what forgetting each costs.
@@ -137,6 +152,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/storage/memory.ts` — versioned browser storage for lost memories and an unpaid wipe.
 - `src/storage/world.ts` — versioned browser storage for story flags, carried items, and found keepsakes.
 - `src/storage/gear.ts` — versioned browser storage for equipped keepsakes.
+- `src/storage/books.ts` — versioned browser storage for which grimoire each hero carries.
 - `src/ui/BattleView.ts` — accessible combat view, drag input, and turn pacing.
 - `src/ui/ResurrectionView.ts` — the wake screen where a memory is chosen.
 - `src/ui/EquipmentView.ts` — the equipment screen.
@@ -154,6 +170,8 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/rules/memory.test.ts` — memory and Hollow perk tests without a browser.
 - `tests/equipment.spec.ts` — finding, equipping, and fighting with a keepsake.
 - `tests/rules/gear.test.ts` — slots, restrictions, and keepsake effects.
+- `tests/spells.spec.ts` — casting, fizzling, phone keys, and swapping grimoires.
+- `tests/rules/spells.test.ts` — spell effects, fizzles, and carrying grimoires.
 - `tests/dodge.spec.ts` — dodge timing in the browser.
 - `tests/rules/dodge.test.ts` — dodge grading and the stepwise enemy turn.
 - `tests/rules/boar.test.ts` — the boar's shielding, fury, and both strategies.

@@ -27,7 +27,12 @@ export const fields: Dialogue = {
     'Shh. The fish here are small and very suspicious.',
     'Everyone inland eats fish by church license now. Carted up from the capital in barrels. Not all of the barrels hold fish, mind you.',
     'I only eat what I catch myself. It is legal, and it keeps me honest.',
-  ] },
+    'You have the look of someone who gets hurt a great deal. Here. My mother\'s primer. It teaches water to be still, and wounds to close.',
+    "Pond-keeper's primer is yours. Give it to anyone from the Equipment screen; whoever carries it can cast Still water.",
+  ], then: { find: 'pond-primer' }, variants: [{ if: { owns: 'pond-primer' }, lines: [
+    'Shh. The fish here are small and very suspicious.',
+    'Did the primer help? Type the water slowly. It does not like to be rushed, but it likes waiting less.',
+  ] }] },
   camp: { speaker: 'AN ABANDONED CAMP', prompt: 'Examine the camp', lines: [
     'A tent gone grey with rain and a fire long cold. Whoever slept here left in a hurry, and did not come back.',
     'Scratched into the tent pole: FIVE DAYS TO THE BORDER. DO NOT TAKE THE ROAD.',

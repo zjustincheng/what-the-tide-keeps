@@ -1,4 +1,5 @@
 import { KEEPSAKE_IDS } from '../rules/gear';
+import { BOOK_IDS } from '../rules/spells';
 import { createWorld, FLAGS, ITEMS } from '../rules/world';
 import type { Flag, Item, World } from '../rules/world';
 
@@ -9,11 +10,11 @@ function parse(raw: string | null): World | undefined {
   if (raw === null) return undefined;
   const saved: unknown = JSON.parse(raw);
   if (typeof saved !== 'object' || saved === null) return undefined;
-  const { flags, carried, keepsakes = [] } = saved as Record<string, unknown>;
-  if (!Array.isArray(flags) || !Array.isArray(carried) || !Array.isArray(keepsakes)) return undefined;
+  const { flags, carried, found = [] } = saved as Record<string, unknown>;
+  if (!Array.isArray(flags) || !Array.isArray(carried) || !Array.isArray(found)) return undefined;
   return {
     flags: FLAGS.filter((flag): flag is Flag => flags.includes(flag)), carried: ITEMS.filter((item): item is Item => carried.includes(item)),
-    keepsakes: KEEPSAKE_IDS.filter(id => keepsakes.includes(id)),
+    found: [...KEEPSAKE_IDS, ...BOOK_IDS].filter(id => found.includes(id)),
   };
 }
 

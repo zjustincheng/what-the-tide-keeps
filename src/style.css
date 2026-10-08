@@ -543,3 +543,24 @@ footer span:last-child {
   .keepsake-slot select { font-size: 10px; }
   .keepsake-slot small { font-size: 9px; }
 }
+
+/* Sequence spells: type the shown keys before the timer empties. */
+.cast-button { display: block; width: 100%; margin-top: 5px; padding: 7px 2px; font: 12px Georgia, serif; border-color: #8a9ec0; background: #26324a; }
+.cast-button small { display: block; margin-top: 4px; font: 8px ui-monospace, monospace; color: #b8c4dc; }
+.spell-bar { position: fixed; left: 50%; bottom: 16px; z-index: 20; transform: translateX(-50%); width: min(380px, calc(100vw - 32px)); padding: 8px 10px 10px; text-align: center; background: #161c2af2; border: 1px solid #8a9ec0; box-shadow: 0 6px 24px #000a; }
+.spell-bar[hidden] { display: none; }
+.spell-bar[data-result="cast"] { border-color: #9bad72; }
+.spell-bar[data-result="fizzle"] { border-color: #bc755e; }
+.spell-name { margin: 0 0 6px; color: #dce4f4; font-size: 14px; }
+.spell-keys { display: flex; justify-content: center; gap: 6px; margin-bottom: 8px; }
+.spell-keys span { display: grid; place-items: center; width: 34px; height: 38px; border: 1px solid #5a6a8a; font: 20px ui-monospace, monospace; color: #8a96ae; }
+.spell-keys span[data-state="next"] { border-color: #dce4f4; color: #fff; box-shadow: 0 0 8px #8a9ec088; }
+.spell-keys span[data-state="done"] { border-color: #9bad72; color: #9bad72; }
+.spell-timer { height: 4px; margin-bottom: 8px; background: #26324a; }
+.spell-timer span { display: block; height: 100%; width: 100%; background: #8a9ec0; transform-origin: left; }
+@keyframes spell-time { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.spell-pad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.spell-pad button { padding: 10px 0; font: 18px ui-monospace, monospace; background: #26324a; border-color: #5a6a8a; touch-action: manipulation; }
+@media(max-width:650px) {
+  .cast-button { min-height: 38px; font-size: 11px; }
+}

@@ -12,6 +12,7 @@ import { BattleView } from '../ui/BattleView';
 import { ResurrectionView } from '../ui/ResurrectionView';
 import { EquipmentView } from '../ui/EquipmentView';
 import { loadGear, saveGear } from '../storage/gear';
+import { loadBooks, saveBooks } from '../storage/books';
 import type { Area } from './areas';
 import { createSprites } from './sprites';
 
@@ -259,7 +260,7 @@ export class AreaScene extends Phaser.Scene {
         saved = saveMemory(wipe(loadMemory())) && saveWorld(drop(loadWorld()));
         this.scene.start('church');
       }
-    }, foe.encounter, hollow(loadMemory()), loadGear());
+    }, foe.encounter, hollow(loadMemory()), loadGear(), loadBooks());
   }
 
   private openEquipment() {
@@ -269,8 +270,8 @@ export class AreaScene extends Phaser.Scene {
     this.physics.pause();
     element('prompt').textContent = '';
     this.setExplorationEnabled(false);
-    this.overlay = new EquipmentView(loadGear(), loadWorld().keepsakes, hollow(loadMemory()), this.textures.getBase64('hero'),
-      gear => { saved = saveGear(gear); },
+    this.overlay = new EquipmentView(loadGear(), loadBooks(), loadWorld().found, hollow(loadMemory()), this.textures.getBase64('hero'),
+      (gear, books) => { saved = saveGear(gear) && saveBooks(books); },
       () => { this.overlay?.destroy(); this.overlay = undefined; this.renderMemory(); this.resumeExploration(); });
   }
 

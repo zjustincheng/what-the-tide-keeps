@@ -59,7 +59,7 @@ test('a keepsake found off the road can be equipped and changes the fight', asyn
 
 test('the equipment screen fits a phone', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.evaluate(() => localStorage.setItem('tide-keeps.world.v1', JSON.stringify({ flags: [], carried: [], keepsakes: ['covenant-token', 'yoke-peg'] })));
+  await page.evaluate(() => localStorage.setItem('tide-keeps.world.v1', JSON.stringify({ flags: [], carried: [], found: ['covenant-token', 'yoke-peg'] })));
   await page.reload();
   await expect.poll(() => at(page, 'church')).not.toBeNull();
   await page.getByRole('button', { name: /Equipment/ }).click();

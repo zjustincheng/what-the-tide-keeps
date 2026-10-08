@@ -3,13 +3,22 @@ import type { MemberId } from '../rules/battle';
 import { canEquip, equip, KEEPSAKES, MEMBER_IDS, SLOTS } from '../rules/gear';
 import type { Gear, KeepsakeId } from '../rules/gear';
 import type { Hollow } from '../rules/memory';
+import { BOOK_IDS, BOOKS, carry, SPELLS, STARTING_BOOKS } from '../rules/spells';
+import type { BookId, Books } from '../rules/spells';
+import type { Found } from '../rules/world';
 
-// Between fights: put found keepsakes into each hero's slots.
+// Between fights: choose each hero's grimoire and put found keepsakes into their slots.
 export class EquipmentView {
   private root: HTMLElement;
   private cleanup = new AbortController();
 
-  constructor(private gear: Gear, private owned: readonly KeepsakeId[], private hollow: Hollow, heroImage: string, onChange: (gear: Gear) => void, onClose: () => void) {
+  private owned: KeepsakeId[];
+  private books: BookId[];
+
+  constructor(private gear: Gear, private carried: Books, found: readonly Found[], private hollow: Hollow, heroImage: string, onChange: (gear: Gear, books: Books) => void, onClose: () => void) {
+    this.owned = found.filter((id): id is KeepsakeId => id in KEEPSAKES);
+    // Each hero's own grimoire is always theirs to carry; others must be found.
+    this.books = BOOK_IDS.filter(id => Object.values(STARTING_BOOKS).includes(id) || found.includes(id));
     this.root = document.createElement('section');
     this.root.className = 'battle equipment';
     this.root.setAttribute('role', 'dialog');
@@ -18,10 +27,11 @@ export class EquipmentView {
     this.root.tabIndex = -1;
     this.root.innerHTML = `
       <div class="battle-heading"><p class="eyebrow">THE CONDEMNED</p><h2 id="equipment-title">Equipment</h2>
-      <p class="equipment-intro">Each hero holds ${SLOTS} keepsakes. Keepsakes are kept through every death. Most come with a drawback.</p></div>
+      <p class="equipment-intro">A grimoire sets a hero's spell. Each hero also holds ${SLOTS} keepsakes, kept through every death, most with a drawback.</p></div>
       <div class="party-roster">${MEMBER_IDS.map(id => `<section class="member-card" data-member="${id}" aria-label="${MEMBERS[id].name}">
         <div class="fighter"><img alt="" src="${id === 'chameleon' ? heroImage : `${import.meta.env.BASE_URL}assets/${id}.svg`}" /></div>
         <h3>${MEMBERS[id].name}</h3><p class="equipment-stats"></p>
+        <label class="keepsake-slot">Grimoire<select data-book aria-label="${MEMBERS[id].name} grimoire"></select><small></small></label>
         ${Array.from({ length: SLOTS }, (_, slot) => `<label class="keepsake-slot">Keepsake ${slot + 1}
           <select data-slot="${slot}" aria-label="${MEMBERS[id].name} keepsake ${slot + 1}"></select><small></small></label>`).join('')}
       </section>`).join('')}</div>
@@ -32,9 +42,10 @@ export class EquipmentView {
     this.root.addEventListener('change', event => {
       const select = event.target as HTMLSelectElement;
       const member = select.closest<HTMLElement>('[data-member]')!.dataset.member as MemberId;
-      this.gear = equip(this.gear, this.owned, member, Number(select.dataset.slot), (select.value || null) as KeepsakeId | null);
-      onChange(this.gear); this.render();
-      this.root.querySelector<HTMLSelectElement>(`[data-member="${member}"] [data-slot="${select.dataset.slot}"]`)?.focus();
+      if (select.hasAttribute('data-book')) this.carried = carry(this.carried, this.books, member, (select.value || null) as BookId | null);
+      else this.gear = equip(this.gear, this.owned, member, Number(select.dataset.slot), (select.value || null) as KeepsakeId | null);
+      onChange(this.gear, this.carried); this.render();
+      this.root.querySelector<HTMLSelectElement>(`[data-member="${member}"] ${select.hasAttribute('data-book') ? '[data-book]' : `[data-slot="${select.dataset.slot}"]`}`)?.focus();
     }, { signal });
     this.root.querySelector('#equipment-close')!.addEventListener('click', onClose, { signal });
     this.root.addEventListener('keydown', event => {
@@ -51,12 +62,18 @@ export class EquipmentView {
 
   private render() {
     // Preview the party exactly as the next fight will build it.
-    const party = createBattle('locust', [], this.hollow, this.gear).party;
+    const party = createBattle('locust', [], this.hollow, this.gear, this.carried).party;
     for (const id of MEMBER_IDS) {
       const card = this.root.querySelector<HTMLElement>(`[data-member="${id}"]`)!;
       const member = party.find(member => member.id === id)!;
       card.querySelector('.equipment-stats')!.textContent = `Health ${member.maxHealth} · Mana ${member.maxMana} · Damage ${MEMBERS[id].damage + member.gear.damage}`;
-      card.querySelectorAll<HTMLSelectElement>('select').forEach(select => {
+      const book = card.querySelector<HTMLSelectElement>('[data-book]')!;
+      const carrying = this.carried[id];
+      const holder = (other: BookId) => MEMBER_IDS.find(member => member !== id && this.carried[member] === other);
+      book.innerHTML = `<option value="">— none —</option>${this.books.map(other => `<option value="${other}" ${other === carrying ? 'selected' : ''}>${BOOKS[other].name}${holder(other) ? ` (from ${MEMBERS[holder(other)!].name})` : ''}</option>`).join('')}`;
+      const spell = carrying && SPELLS[BOOKS[carrying].spell];
+      book.nextElementSibling!.textContent = spell ? `${spell.name} · ${spell.cost} mana · ${spell.length} keys in ${spell.seconds}s. ${spell.text}` : 'No spell.';
+      card.querySelectorAll<HTMLSelectElement>('[data-slot]').forEach(select => {
         const slot = Number(select.dataset.slot);
         const held = this.gear[id][slot];
         const fits = this.owned.filter(keepsake => canEquip(this.owned, id, keepsake));
@@ -68,7 +85,7 @@ export class EquipmentView {
       });
     }
     this.root.querySelector('.found-keepsakes')!.textContent = this.owned.length
-      ? `Found · ${this.owned.map(id => `${KEEPSAKES[id].name}${KEEPSAKES[id].holder ? ` (${MEMBERS[KEEPSAKES[id].holder!].name} only)` : ''}`).join(' · ')}`
+      ? `Keepsakes found · ${this.owned.map(id => `${KEEPSAKES[id].name}${KEEPSAKES[id].holder ? ` (${MEMBERS[KEEPSAKES[id].holder!].name} only)` : ''}`).join(' · ')}`
       : 'Nothing found yet. Keepsakes are hidden off the roads.';
   }
 

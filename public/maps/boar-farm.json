@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 8,
+  "nextobjectid": 9,
   "layers": [
     {
       "id": 1,
@@ -1663,6 +1663,18 @@
           "type": "",
           "x": 256,
           "y": 236,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 8,
+          "name": "ruin-cache",
+          "type": "",
+          "x": 104,
+          "y": 88,
           "width": 0,
           "height": 0,
           "rotation": 0,

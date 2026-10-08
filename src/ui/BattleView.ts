@@ -1,7 +1,9 @@
-import { act, canAct, condition, cost, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
+import { act, canAct, canCast, cast, condition, cost, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
 import type { Action, Battle, Dodge, Fighter, Foe, MemberId, Encounter } from '../rules/battle';
 import type { Hollow } from '../rules/memory';
 import type { Gear } from '../rules/gear';
+import { checkSequence, SPELLS } from '../rules/spells';
+import type { Books } from '../rules/spells';
 
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
 
@@ -19,10 +21,12 @@ export class BattleView {
   // Set while a dodge prompt is open: when the blow lands, and how to answer it.
   private prompts = 0;
   private prompt?: { impact: number; answer: (dodge: Dodge, early?: boolean) => void };
+  // Set while a spell is being typed.
+  private casting?: (key: number) => void;
 
-  constructor(heroImage: string, onFinish: (won: boolean) => void, encounter: Encounter = 'locust', hollow?: Hollow, gear?: Gear) {
+  constructor(heroImage: string, onFinish: (won: boolean) => void, encounter: Encounter = 'locust', hollow?: Hollow, gear?: Gear, books?: Books) {
     this.onFinish = onFinish;
-    this.state = createBattle(encounter, loadGrimoire(), hollow, gear);
+    this.state = createBattle(encounter, loadGrimoire(), hollow, gear, books);
     const enemyName = ENEMIES[encounter].name;
     this.root = document.createElement('section');
     this.root.className = 'battle party-battle';
@@ -48,10 +52,13 @@ export class BattleView {
           <h3>${info.name}</h3><div class="health-bar" role="meter" aria-label="${info.name} health" aria-valuemin="0" aria-valuemax="100"><span></span></div><p class="member-condition"></p><p class="mana member-mana"></p><p class="member-status"></p>
           <label class="protect-label">Ally <select aria-label="${member.id === 'bear' ? 'Bear protection target' : info.name + ' barrier target'}">${this.state.party.map(target => `<option value="${target.id}" ${target.id === member.id ? 'selected' : ''}>${MEMBERS[target.id].name}</option>`).join('')}</select></label>
           <div class="member-actions"><button data-action="attack" aria-label="${info.name} attack">${info.attack}<small>${cost(member, 'attack')} mana</small></button><button data-action="support" aria-label="${info.name} support">${info.support}<small>No mana</small></button></div>
+          ${member.spell ? `<button class="cast-button" data-cast aria-label="${info.name} cast ${SPELLS[member.spell].name}">${SPELLS[member.spell].name}<small>${SPELLS[member.spell].cost} mana · ${SPELLS[member.spell].length} keys</small></button>` : ''}
           <details class="spellcraft"><summary>Spellcraft</summary><button data-action="suppress" aria-label="${info.name} suppress">Suppress · ${cost(member, 'suppress')} mana</button><button data-action="barrier" aria-label="${info.name} barrier">Barrier · 5 mana</button><button data-action="analyze" aria-label="${info.name} analyze">Analyze · 2 mana</button></details>
         </section>`;
       }).join('')}</div>
       <div class="battle-log" role="log" aria-live="polite" aria-label="Battle events"></div>
+      <div class="spell-bar" hidden><p class="spell-name"></p><div class="spell-keys" aria-live="polite"></div><div class="spell-timer"><span></span></div>
+        <div class="spell-pad">${[1, 2, 3, 4].map(key => `<button type="button" data-key="${key}">${key}</button>`).join('')}</div></div>
       <div class="dodge-bar" hidden><p class="dodge-call" aria-live="assertive"></p><button id="dodge" type="button">Dodge <small>Space or tap · as the ring closes</small></button></div>
       <p class="battle-help">Each living companion acts once. Spellcraft uses that action too.<br />Guard physical blows. Analyze spells before blocking them. Attack while hidden to reveal.<br />When a blow comes, press Space as the ring closes to dodge. Unknown spells cannot be dodged.</p>
       <button id="battle-finish" hidden></button>`;
@@ -72,6 +79,14 @@ export class BattleView {
       this.bindDrag(member.id);
     }
     this.root.querySelector('#strike-target')?.addEventListener('change', () => this.render(), { signal });
+    for (const member of this.state.party) this.card(member.id).querySelector('[data-cast]')?.addEventListener('click', () => this.beginCast(member.id), { signal });
+    this.root.addEventListener('keydown', event => {
+      if (!this.casting || !['1', '2', '3', '4'].includes(event.key) || event.repeat) return;
+      event.preventDefault(); this.casting(Number(event.key));
+    }, { signal });
+    this.root.querySelectorAll<HTMLButtonElement>('[data-key]').forEach(button => button.addEventListener('pointerdown', event => {
+      event.preventDefault(); this.casting?.(Number(button.dataset.key));
+    }, { signal }));
     // Dodges answer on press, not release: keydown and pointerdown keep the timing honest.
     this.root.addEventListener('keydown', event => {
       if (!this.prompt || ![' ', 'Enter'].includes(event.key) || event.repeat) return;
@@ -148,8 +163,43 @@ export class BattleView {
   }
 
   private choose(actor: MemberId, action: Action, target: MemberId = actor, foe: Foe = 0) {
-    if (!canAct(this.state, actor, action, target, foe)) return;
+    if (this.casting || !canAct(this.state, actor, action, target, foe)) return;
     this.state = act(this.state, actor, action, target, foe);
+    this.afterAction();
+  }
+
+  // Type the shown sequence of 1–4 before time runs out. One wrong key and the spell fizzles.
+  private beginCast(actor: MemberId) {
+    const foe = this.foe();
+    if (this.casting || !canCast(this.state, actor, foe)) return;
+    const spell = SPELLS[this.state.party.find(member => member.id === actor)!.spell!];
+    const sequence = Array.from({ length: spell.length }, () => 1 + Math.floor(Math.random() * 4));
+    const typed: number[] = [];
+    const bar = this.get('.spell-bar'), keys = this.get('.spell-keys');
+    bar.hidden = false; bar.dataset.sequence = sequence.join('');
+    this.get('.spell-name').textContent = `${MEMBERS[actor].name} · ${spell.name} — type the keys`;
+    const show = () => { keys.innerHTML = sequence.map((key, index) => `<span data-state="${index < typed.length ? 'done' : index === typed.length ? 'next' : 'todo'}">${key}</span>`).join(''); };
+    show();
+    const timer = this.get('.spell-timer span');
+    timer.style.animation = 'none'; void timer.offsetWidth; timer.style.animation = `spell-time ${spell.seconds}s linear forwards`;
+    const finish = (success: boolean) => {
+      clearTimeout(this.timer); this.casting = undefined;
+      bar.dataset.result = success ? 'cast' : 'fizzle';
+      this.get('.spell-name').textContent = success ? `${spell.name}!` : `${spell.name} fizzles.`;
+      setTimeout(() => { bar.hidden = true; delete bar.dataset.result; }, 600);
+      this.state = cast(this.state, actor, success, foe);
+      this.afterAction();
+    };
+    this.casting = key => {
+      typed.push(key); show();
+      const result = checkSequence(sequence, typed);
+      if (result !== 'typing') finish(result === 'cast');
+    };
+    this.timer = setTimeout(() => finish(false), spell.seconds * 1000);
+    this.render(); this.root.focus({ preventScroll: true });
+  }
+
+  private afterAction() {
     this.persist(); this.render();
     if (this.state.phase === 'enemy') {
       this.root.focus({ preventScroll: true });
@@ -228,7 +278,8 @@ export class BattleView {
     }
     this.get('#enemy-mana').textContent = `Mana ${enemyMana(state)}${ENEMIES[state.encounter].veiled && !state.enemyRevealed ? ' · veiled' : ''}${state.fury ? ` · Fury ${state.fury}` : ''}`;
     const target = enemyTarget(state);
-    this.get('#enemy-intent').textContent = done ? '' : `${intent(state).type === 'spell' ? 'Spell' : 'Physical'} · ${intent(state).tell} ${target ? `Watching ${MEMBERS[target.id].name}.` : ''}`;
+    this.get('#enemy-intent').textContent = done ? '' : state.snared ? 'Snared · thorns hold it. It cannot move this turn.'
+      : `${intent(state).type === 'spell' ? 'Spell' : 'Physical'} · ${intent(state).tell} ${target ? `Watching ${MEMBERS[target.id].name}.` : ''}`;
     this.get('.grimoire-status').textContent = `Grimoire · ${state.studied.includes(SPELL) ? SPELL + ' — can be blocked' : 'No spells studied'}${this.saved ? '' : ' · kept for this visit; browser save unavailable'}`;
     for (const member of state.party) {
       const card = this.card(member.id);
@@ -241,7 +292,9 @@ export class BattleView {
         : member.barrier ? 'Barrier raised' : member.suppressed ? 'Hidden · attack to reveal'
         : member.guardingFor ? `Guarding ${MEMBERS[member.guardingFor].name}` : member.focused ? 'Focused'
         : member.acted ? 'Acted' : done ? '' : 'Ready';
-      for (const action of ['attack', 'support', 'suppress', 'barrier', 'analyze'] as const) card.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)!.disabled = !canAct(state, member.id, action, member.id, action === 'attack' ? this.foe() : 0);
+      for (const action of ['attack', 'support', 'suppress', 'barrier', 'analyze'] as const) card.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)!.disabled = Boolean(this.casting) || !canAct(state, member.id, action, member.id, action === 'attack' ? this.foe() : 0);
+      const castButton = card.querySelector<HTMLButtonElement>('[data-cast]');
+      if (castButton) castButton.disabled = Boolean(this.casting) || !canCast(state, member.id, this.foe());
       card.querySelector<HTMLButtonElement>('.party-fighter')!.disabled = !canAct(state, member.id, 'support');
       const select = card.querySelector('select');
       if (select) {

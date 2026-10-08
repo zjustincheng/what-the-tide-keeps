@@ -3,6 +3,8 @@
 import type { Hollow } from './memory';
 import { mods, NO_MODS } from './gear.ts';
 import type { Gear, Mods } from './gear';
+import { BOOKS, SPELLS, STARTING_BOOKS } from './spells.ts';
+import type { Books, SpellId } from './spells';
 export type MemberId = 'chameleon' | 'bear' | 'vulture';
 export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze';
 export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar';
@@ -22,6 +24,8 @@ export type Member = Fighter & Readonly<{
   barrier: boolean;
   // What equipped keepsakes change for this member.
   gear: Mods;
+  // The spell taught by the grimoire this member carries.
+  spell: SpellId | null;
 }>;
 export type Battle = Readonly<{
   round: number;
@@ -37,6 +41,8 @@ export type Battle = Readonly<{
   fury: number;
   // How many enemy blows have landed this enemy turn.
   step: number;
+  // A snared main enemy loses its next move.
+  snared: boolean;
   log: readonly string[];
 }>;
 export type Dodge = 'perfect' | 'graze' | 'miss';
@@ -68,18 +74,19 @@ export const MANA_REGEN = 3;
 export const UNHOLLOWED: Hollow = { mana: 0, damage: 0, trained: true };
 
 // Hollow perks strengthen only the hero; companions keep their own memories.
-export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], hollow: Hollow = UNHOLLOWED, gear?: Gear): Battle {
+export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], hollow: Hollow = UNHOLLOWED, gear?: Gear, books: Books = STARTING_BOOKS): Battle {
   const member = (id: MemberId, base: number, mana: number): Member => {
     const worn = gear ? mods(gear, id) : NO_MODS;
     const health = Math.max(1, base + worn.health);
-    return { id, health, maxHealth: health, mana, maxMana: mana, acted: false, guardingFor: null, focused: false, suppressed: false, barrier: false, gear: worn };
+    return { id, health, maxHealth: health, mana, maxMana: mana, acted: false, guardingFor: null, focused: false, suppressed: false, barrier: false, gear: worn,
+      spell: books[id] ? BOOKS[books[id]!].spell : null };
   };
   return {
     round: 1, phase: 'player', encounter, studied: studied.includes(SPELL) ? [SPELL] : [], hollow, enemyRevealed: false,
     party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10)],
     enemy: { health: ENEMIES[encounter].health, maxHealth: ENEMIES[encounter].health, mana: ENEMIES[encounter].mana, maxMana: ENEMIES[encounter].mana },
     followers: (FOLLOWERS[encounter] ?? []).map(({ name, health }) => ({ name, health, maxHealth: health, mana: 4, maxMana: 4 })),
-    fury: 0, step: 0,
+    fury: 0, step: 0, snared: false,
     log: [ENEMIES[encounter].opening],
   };
 }
@@ -151,6 +158,53 @@ export function canAct(battle: Battle, actor: MemberId, action: Action, target: 
   return true;
 }
 
+// Damage aimed at an enemy. The boar takes every hit aimed at his followers, at half strength, and each one makes him stronger.
+function land(battle: Battle, damage: number, foe: Foe) {
+  const shielded = foe > 0 && battle.encounter === 'boar';
+  const enemy = foe === 0 || shielded ? { ...battle.enemy, health: Math.max(0, battle.enemy.health - (shielded ? Math.floor(damage / 2) : damage)) } : battle.enemy;
+  const followers = foe > 0 && !shielded
+    ? battle.followers.map((follower, index) => index === foe - 1 ? { ...follower, health: Math.max(0, follower.health - damage) } : follower)
+    : battle.followers;
+  return { enemy, followers, fury: battle.fury + (shielded ? FURY_PER_HIT : 0), shielded };
+}
+
+export function canCast(battle: Battle, actor: MemberId, foe: Foe = 0): boolean {
+  const member = battle.party.find(member => member.id === actor);
+  if (battle.phase !== 'player' || !member?.spell || member.health <= 0 || member.acted || member.mana < SPELLS[member.spell].cost) return false;
+  return foe === 0 || battle.followers[foe - 1]?.health > 0;
+}
+
+// Cast the actor's spell. The sequence is typed in the battle view; a fizzle still spends the turn and the mana.
+export function cast(battle: Battle, actor: MemberId, success: boolean, foe: Foe = 0): Battle {
+  if (!canCast(battle, actor, foe)) return battle;
+  const member = battle.party.find(member => member.id === actor)!;
+  const spell = SPELLS[member.spell!];
+  const hit = success && spell.kind === 'damage' ? land(battle, spell.power, foe) : undefined;
+  const party = battle.party.map(current => {
+    const spent = current.id === actor ? { acted: true, mana: current.mana - spell.cost } : {};
+    if (!success || current.health <= 0) return { ...current, ...spent };
+    if (spell.kind === 'heal') return { ...current, ...spent, health: Math.min(current.maxHealth, current.health + spell.power) };
+    if (spell.kind === 'ward') return { ...current, ...spent, guardingFor: current.guardingFor ?? current.id };
+    return { ...current, ...spent };
+  });
+  const enemy = hit?.enemy ?? battle.enemy;
+  const victory = enemy.health === 0;
+  const target = foe > 0 ? battle.followers[foe - 1].name.toLowerCase() : ENEMIES[battle.encounter].short;
+  const message = !success ? `${MEMBERS[actor].name}'s ${spell.name.toLowerCase()} unravels half-spoken. The mana is gone.`
+    : hit?.shielded ? `The boar throws himself in front of the ${target}. ${spell.name} strikes him instead, and his fury grows.`
+    : spell.kind === 'damage' ? `${MEMBERS[actor].name} casts ${spell.name}. It tears into the ${target}.`
+    : spell.kind === 'heal' ? `${MEMBERS[actor].name} casts ${spell.name}. Wounds close across the party.`
+    : spell.kind === 'ward' ? `${MEMBERS[actor].name} casts ${spell.name}. Stone settles over everyone still standing.`
+    : `${MEMBERS[actor].name} casts ${spell.name}. Thorns bind the ${ENEMIES[battle.encounter].short} where it stands.`;
+  const allActed = party.every(member => member.health <= 0 || member.acted);
+  return {
+    ...battle, party, enemy, followers: hit?.followers ?? battle.followers, fury: hit?.fury ?? battle.fury,
+    snared: battle.snared || (success && spell.kind === 'snare'),
+    phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
+    log: [...battle.log, message, ...(victory ? ['The signature flickers out. It is quiet again.'] : [])],
+  };
+}
+
 export function act(battle: Battle, actor: MemberId, action: Action, target: MemberId = actor, foe: Foe = 0): Battle {
   if (!canAct(battle, actor, action, target, foe)) return battle;
   const member = battle.party.find(member => member.id === actor)!;
@@ -158,15 +212,8 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
   // Forgetting his training leaves the hero with an ordinary reveal.
   const reveal = (actor === 'chameleon' && battle.hollow.trained ? 4 : 2) + member.gear.reveal;
   const damage = definition.damage + member.gear.damage + (actor === 'chameleon' ? battle.hollow.damage : 0) + (member.focused ? 3 : 0) + (member.suppressed ? reveal : 0);
-  // The boar takes every hit aimed at his followers, and each one makes him stronger.
-  const shielded = action === 'attack' && foe > 0 && battle.encounter === 'boar';
-  const hitsMain = action === 'attack' && (foe === 0 || shielded);
-  // Hits he takes for his followers glance off his hide at half strength.
-  const enemy = hitsMain ? { ...battle.enemy, health: Math.max(0, battle.enemy.health - (shielded ? Math.floor(damage / 2) : damage)) } : battle.enemy;
-  const followers = action === 'attack' && foe > 0 && !shielded
-    ? battle.followers.map((follower, index) => index === foe - 1 ? { ...follower, health: Math.max(0, follower.health - damage) } : follower)
-    : battle.followers;
-  const fury = battle.fury + (shielded ? FURY_PER_HIT : 0);
+  const { enemy, followers, fury, shielded } = action === 'attack' ? land(battle, damage, foe)
+    : { enemy: battle.enemy, followers: battle.followers, fury: battle.fury, shielded: false };
   const party = battle.party.map(current => ({
     ...current,
     ...(current.id === actor ? {
@@ -205,7 +252,7 @@ export function grade(errorMs: number, move: Move): Dodge {
 
 // The main enemy moves first, then each standing follower.
 function enemyMoves(battle: Battle): Move[] {
-  return [intent(battle), ...battle.followers.filter(follower => follower.health > 0)
+  return [...(battle.snared ? [] : [intent(battle)]), ...battle.followers.filter(follower => follower.health > 0)
     .map(follower => ({ name: `${follower.name.toLowerCase()}'s cudgel`, type: 'physical' as const, damage: FOLLOWER_BLOW }))];
 }
 
@@ -253,14 +300,14 @@ function enemyTurnEnds(battle: Battle): Battle {
     ...member, guardingFor: null, barrier: false, acted: false,
     mana: !defeat && member.health > 0 ? Math.min(member.maxMana, member.mana + MANA_REGEN) : member.mana,
   }));
-  const spell = intent(battle).type === 'spell';
+  const spell = !battle.snared && intent(battle).type === 'spell';
   return {
-    ...battle, party, step: 0,
+    ...battle, party, step: 0, snared: false,
     studied: spell && !defeat ? [SPELL] : battle.studied,
     enemyRevealed: battle.enemyRevealed || spell,
     enemy: { ...battle.enemy, mana: Math.min(battle.enemy.maxMana, battle.enemy.mana - (spell ? 5 : 0) + MANA_REGEN) },
     phase: defeat ? 'defeat' : 'player', round: defeat ? battle.round : battle.round + 1,
-    log: [...battle.log, ...(spell && !defeat && !battle.studied.includes(SPELL) ? [`Surviving the spell reveals its structure. ${SPELL} joins the grimoire.`] : []), ...(defeat ? ['The last of you falls. Then, the familiar smell of salt.'] : [])],
+    log: [...battle.log, ...(battle.snared ? [`The ${ENEMIES[battle.encounter].short} strains against the thorns and cannot move.`] : []), ...(spell && !defeat && !battle.studied.includes(SPELL) ? [`Surviving the spell reveals its structure. ${SPELL} joins the grimoire.`] : []), ...(defeat ? ['The last of you falls. Then, the familiar smell of salt.'] : [])],
   };
 }
 

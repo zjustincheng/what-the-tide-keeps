@@ -44,5 +44,5 @@ test('found keepsakes are kept through a wipe', () => {
   assert.equal(holds(context, { owns: 'yoke-peg' }), false);
   context = apply(context, { find: 'yoke-peg', give: 'bell' });
   assert.equal(holds(context, { owns: 'yoke-peg' }), true);
-  assert.deepEqual(drop(context.world), { flags: [], carried: [], keepsakes: ['yoke-peg'] });
+  assert.deepEqual(drop(context.world), { flags: [], carried: [], found: ['yoke-peg'] });
 });
