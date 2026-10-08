@@ -685,3 +685,7 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
   .fishing-pond[data-result="caught"] .fishing-leaper { animation: none; opacity: 1; transform: translate(30px, -28px); }
   .fishing-pond[data-result] .fishing-splash { animation-duration: .01s; }
 }
+.settings-audio { display: flex; gap: 18px; align-items: center; justify-content: center; margin: 12px 0 2px; font: 12px ui-monospace, monospace; color: #c5c997; }
+.settings-audio label { display: flex; gap: 8px; align-items: center; }
+.settings-audio input[type="range"] { width: 160px; accent-color: #d2bd8a; }
+.settings-audio input[type="checkbox"] { accent-color: #d2bd8a; }

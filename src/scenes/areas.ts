@@ -9,6 +9,7 @@ import { hall, inn, millInside, tannery } from '../content/interiors';
 import type { Encounter } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
+import type { ThemeId } from '../audio/themes';
 
 export type Area = {
   key: string;
@@ -35,12 +36,14 @@ export type Area = {
   // Places to rest: resting heals every wound and brings the area's enemies back.
   camps?: Record<string, { prompt: string; lines: string[] }>;
   decorate?: (scene: Phaser.Scene) => void;
+  // The theme that plays here.
+  music: ThemeId;
   // The colour grade over the map: saturation shift, brightness multiplier, and vignette strength.
   grade?: { saturation?: number; brightness?: number; vignette?: number };
 };
 
 export const CHURCH: Area = {
-  key: 'church', map: 'church', tileset: 'church', region: 'THE CAPITAL', place: 'Church of the Covenant', time: 'Before dawn',
+  key: 'church', map: 'church', tileset: 'church', music: 'church', region: 'THE CAPITAL', place: 'Church of the Covenant', time: 'Before dawn',
   bounds: [32, 48, 448, 304], dialogue: church,
   // Candlelight keeps a little warmth in the church; everywhere else is colder.
   grade: { saturation: -0.35, brightness: 0.78, vignette: 0.5 },
@@ -71,7 +74,7 @@ export const CHURCH: Area = {
 const GUARDED: Partial<Record<string, Flag>> = { 'shrine-cache': 'warden-slain', 'ford-cache': 'leech-slain' };
 
 export const FARMLAND: Area = {
-  key: 'farmland', map: 'farmland', tileset: 'fields', region: 'THE FARMLAND', place: 'The fields', time: 'Dawn',
+  key: 'farmland', map: 'farmland', tileset: 'fields', music: 'fields', region: 'THE FARMLAND', place: 'The fields', time: 'Dawn',
   dialogue: fields, assets: ['bear', 'nymph', 'votive'],
   npcs: [{ point: 'bear', texture: 'bear', hiddenIf: [{ flag: 'bear-free' }] }, { point: 'miller', texture: 'miller' }, { point: 'heron', texture: 'heron' }, { point: 'shepherd', texture: 'shepherd' }],
   enemies: [
@@ -120,7 +123,7 @@ export const FARMLAND: Area = {
 };
 
 export const TOWN: Area = {
-  key: 'town', map: 'town', tileset: 'town', region: 'THE FARMLAND', place: 'Millbrook', time: 'Morning',
+  key: 'town', map: 'town', tileset: 'town', music: 'town', region: 'THE FARMLAND', place: 'Millbrook', time: 'Morning',
   dialogue: town, enemies: [],
   npcs: ['reeve', 'innkeeper', 'shopkeeper', 'child', 'fishmonger', 'fox'].map(name => ({ point: name, texture: name })),
   props: [{ point: 'stocks', texture: 'stocks', solid: true, hiddenIf: [] }],
@@ -142,7 +145,7 @@ export const TOWN: Area = {
 };
 
 export const BORDER_ROAD: Area = {
-  key: 'border-road', map: 'border-road', tileset: 'border', region: 'THE FARMLAND', place: 'The border road', time: 'Midday',
+  key: 'border-road', map: 'border-road', tileset: 'border', music: 'wilds', region: 'THE FARMLAND', place: 'The border road', time: 'Midday',
   dialogue: border, enemies: [{ point: 'follower', encounter: 'acolyte' }],
   npcs: [{ point: 'driver', texture: 'driver' }, { point: 'guard', texture: 'guard' }],
   camps: { 'camp-border': { prompt: 'Rest by the fire', lines: ['The carters let you sit at their fire. Nobody talks much.'] } },
@@ -158,7 +161,7 @@ export const BORDER_ROAD: Area = {
 };
 
 export const BOAR_FARM: Area = {
-  key: 'boar-farm', map: 'boar-farm', tileset: 'ash', region: 'THE FARMLAND', place: 'The burned farm', time: 'Afternoon',
+  key: 'boar-farm', map: 'boar-farm', tileset: 'ash', music: 'wilds', region: 'THE FARMLAND', place: 'The burned farm', time: 'Afternoon',
   dialogue: farm, npcs: [], assets: ['badger', 'rat'],
   enemies: [{ point: 'boar', encounter: 'boar', hiddenIf: [{ flag: 'boar-defeated' }], defeat: { set: 'boar-defeated' } }],
   props: [
@@ -180,7 +183,7 @@ export const BOAR_FARM: Area = {
 };
 
 // Building interiors: small rooms in the dark, lit warmer than the fields outside.
-const INDOORS: Pick<Area, 'region' | 'tileset' | 'grade' | 'enemies'> = { region: 'THE FARMLAND', tileset: 'interior', grade: { saturation: -0.3, brightness: 0.74, vignette: 0.55 }, enemies: [] };
+const INDOORS: Pick<Area, 'region' | 'tileset' | 'grade' | 'enemies' | 'music'> = { region: 'THE FARMLAND', tileset: 'interior', music: 'hearth', grade: { saturation: -0.3, brightness: 0.74, vignette: 0.55 }, enemies: [] };
 export const INN: Area = { ...INDOORS, key: 'inn', map: 'inn', place: 'Millbrook · The inn', time: 'Morning', dialogue: inn,
   npcs: [{ point: 'drinker', texture: 'drinker' }, { point: 'patron', texture: 'patron' }],
   camps: { bed: { prompt: 'Sleep in the bed', lines: ['You sleep in a real bed for the first time you can remember. Your wounds close and your mana returns.'] } },

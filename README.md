@@ -54,6 +54,23 @@ Victory removes the locust until you use **Return to the cot**, which resets the
 
 People speak with a portrait in its own box above the text and their name on a tab beside it, as in Omori. Portraits are cut from each character's sprite and scaled up; objects and places show only a name. Many people can be answered. When a speaker finishes, the hero's possible replies appear under their last line; choose one with **1–4** or by clicking, and the conversation goes on from there. **Escape** walks away. Replies depend on what the hero still remembers and what has happened. While he remembers the feast he can tell the lamb he doesn't think he killed the king; once it is forgotten, that answer is gone and "I don't remember" takes its place. His name is lost before the game begins, so the bear can tell it to him, and it doesn't stay. The priest can also tend the hero's wounds.
 
+## Music
+
+The score is original and synthesised live in the browser with Web Audio, with no sound files: harp, plucked strings, flute, string pads, organ, bells, celesta, choir, bass, and drums, in a generated reverb hall. It aims for the spirit of the Frieren and Made in Abyss soundtracks (wistful folk-orchestral warmth, and something vast and uneasy underneath) without borrowing from them. Each place has its own theme, and themes crossfade as you move:
+
+| Where | Theme |
+| --- | --- |
+| The church | Slow organ and bells, A minor |
+| The fields | Harp arpeggios and a flute over strings, 3/4, D Dorian |
+| Millbrook | A plucked folk tune, E minor |
+| The border road and the burned farm | A drone, a distant choir, a harp note now and then |
+| Inside buildings | A music-box lullaby, F major |
+| Battle | A string ostinato over drums, A minor |
+| The boar, the warden, the leech, the swarm-mother | Faster and darker, with choir, D Phrygian |
+| Waking after a wipe | Choir and bells, C Lydian |
+
+Browsers only allow sound after the player presses or clicks something, so the music starts then. **M** mutes it, and settings hold a volume slider; both are remembered in `tide-keeps.settings.v1`. The compositions are data in `src/audio/themes.ts` (notes, beats, instruments) and the instruments are in `src/audio/music.ts`, so a theme can be rewritten without touching the synthesis.
+
 ## Tone
 
 The world is drained and cold. Each area's map has a colour grade (desaturated and darkened, with a vignette), set per area in `src/scenes/areas.ts`; the church keeps a little candlelight warmth. Battle and portrait art is toned to match. The fields carry signs of how this society treats appetite: a gibbet at the crossroads marked COVENANT-BREAKER, the bones of another branded convict in the swarm-mother's hollow, stocks in Millbrook's square, and crows over everything.
@@ -251,6 +268,8 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/ui/ShopView.ts` — a shopkeeper's wares.
 - `src/ui/FishingView.ts` — the fishing screen.
 - `src/content/shops.ts` — what each shop sells.
+- `src/audio/themes.ts` — the compositions, as notes on beats.
+- `src/audio/music.ts` — the synthesised instruments, reverb, scheduler, and crossfades.
 - `src/ui/fullscreen.ts` — the full screen button and the F key.
 - `src/ui/SettingsView.ts` — the controls list and menu actions.
 - `public/maps/church.json` — editable Tiled JSON map with floor, furniture, and named interaction points.
@@ -274,6 +293,8 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/elites.spec.ts` — the guardians of the Covenant token and the yoke peg.
 - `tests/rules/elites.test.ts` — the warden's ward and the leech's drain.
 - `tests/buildings.spec.ts` — entering the hall, tannery, and mill.
+- `tests/music.spec.ts` — themes per place and battle, muting, volume, and levels.
+- `tests/rules/themes.test.ts` — every theme fits its loop and range.
 - `tests/consequences.spec.ts` — sparing or reporting the boar's followers, and a paid bed.
 - `tests/rules/consequences.test.ts` — every consequential reply and what it changes.
 - `tests/sidequests.spec.ts` — the strays, the barrel, and the swarm-mother's bounty.

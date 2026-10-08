@@ -22,6 +22,8 @@ import { BOUNTY } from '../rules/economy';
 import { loadGear, saveGear } from '../storage/gear';
 import { loadBooks, saveBooks } from '../storage/books';
 import type { Area } from './areas';
+import { music } from '../audio/music';
+import { battleTheme } from '../audio/themes';
 import { createSprites } from './sprites';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
@@ -124,6 +126,7 @@ export class AreaScene extends Phaser.Scene {
     element('location-time').textContent = this.area.time;
     element('game').setAttribute('aria-label', `${this.area.place} map. Move with WASD or arrow keys. Press E or Space to interact.`);
     this.cameras.main.fadeIn(650, 16, 27, 24);
+    music.play(this.area.music);
     this.renderMemory();
     // A wipe that was not yet paid for, such as one interrupted by a reload, is still owed.
     if (loadMemory().pending) this.wake();
@@ -359,11 +362,13 @@ export class AreaScene extends Phaser.Scene {
     this.physics.pause();
     element('prompt').textContent = '';
     this.setExplorationEnabled(false);
+    music.play(battleTheme(foe.encounter));
     this.overlay = new BattleView(this.textures.getBase64('hero'), (won, battle) => {
       this.overlay = undefined;
       if(won) {
         foe.sprite.disableBody(true, true);
         foe.signature.setVisible(false);
+        music.play(this.area.music);
         // The spoils, and whatever supplies were not used up.
         saved = saveWorld({ ...loadWorld(), coins: loadWorld().coins + BOUNTY[foe.encounter], supplies: battle.supplies, wounds: woundsAfter(battle), drained: drainedAfter(battle) });
         this.renderMemory();
@@ -441,12 +446,14 @@ export class AreaScene extends Phaser.Scene {
     this.physics.pause();
     element('prompt').textContent = '';
     this.setExplorationEnabled(false);
+    music.play('wake');
     this.overlay = new ResurrectionView(loadMemory(), id => {
       this.overlay?.destroy();
       this.overlay = undefined;
       saved = saveMemory(forget(loadMemory(), id));
       this.renderMemory();
       this.cameras.main.fadeIn(900, 16, 27, 24);
+      music.play(this.area.music);
       this.resumeExploration();
     });
   }

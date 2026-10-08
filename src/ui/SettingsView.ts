@@ -1,4 +1,5 @@
 import { canFullscreen, toggleFullscreen } from './fullscreen';
+import { music } from '../audio/music';
 
 const CONTROLS: [string, string][] = [
   ['Move', 'W A S D or arrow keys'],
@@ -7,6 +8,7 @@ const CONTROLS: [string, string][] = [
   ['Equipment', 'Tab'],
   ['Settings', 'Escape'],
   ['Full screen', 'F'],
+  ['Mute music', 'M'],
   ['Attack or support', 'Drag a hero onto an enemy or ally, or use the buttons on their card'],
   ['Dodge', 'Space or Enter as the ring closes'],
   ['Cast a spell', 'Type the shown keys 1–4 before the timer empties'],
@@ -28,6 +30,10 @@ export class SettingsView {
     this.root.innerHTML = `
       <div class="battle-heading"><p class="eyebrow">THE CONDEMNED</p><h2 id="settings-title">Settings</h2></div>
       <table class="controls"><caption>Controls</caption><tbody>${CONTROLS.map(([action, keys]) => `<tr><th scope="row">${action}</th><td>${keys}</td></tr>`).join('')}</tbody></table>
+      <div class="settings-audio">
+        <label>Music <input type="range" min="0" max="100" step="5" value="${Math.round(music.volume * 100)}" aria-label="Music volume" /></label>
+        <label><input type="checkbox" ${music.muted ? 'checked' : ''} aria-label="Mute music" /> Mute</label>
+      </div>
       <p class="settings-touch">On a touch screen, use the arrows and Interact below the map, and tap buttons in battle.</p>
       <div class="settings-actions">
         <button type="button" data-action="fullscreen" ${canFullscreen() ? '' : 'hidden'}>${document.fullscreenElement ? 'Exit full screen' : 'Full screen'}</button>
@@ -42,10 +48,14 @@ export class SettingsView {
       if (action === 'fullscreen') { toggleFullscreen(); actions.close(); }
       else if (action === 'equipment' || action === 'restart' || action === 'close') actions[action]();
     }, { signal });
+    this.root.querySelector<HTMLInputElement>('[aria-label="Music volume"]')!.addEventListener('input', event => music.setVolume(Number((event.target as HTMLInputElement).value) / 100), { signal });
+    this.root.querySelector<HTMLInputElement>('[aria-label="Mute music"]')!.addEventListener('change', event => {
+      if ((event.target as HTMLInputElement).checked !== music.muted) music.toggleMute();
+    }, { signal });
     this.root.addEventListener('keydown', event => {
       if (event.key === 'Escape') { event.preventDefault(); actions.close(); return; }
       if (event.key !== 'Tab') return;
-      const controls = Array.from(this.root.querySelectorAll<HTMLElement>('button:not([hidden])'));
+      const controls = Array.from(this.root.querySelectorAll<HTMLElement>('input, button:not([hidden])'));
       event.preventDefault();
       const index = controls.indexOf(document.activeElement as HTMLElement);
       controls[(index + (event.shiftKey ? -1 : 1) + controls.length) % controls.length].focus();
