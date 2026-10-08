@@ -338,7 +338,7 @@ export class BattleView {
     this.get('.battle-help').hidden = done;
     const finish = this.get<HTMLButtonElement>('#battle-finish');
     finish.hidden = !done;
-    finish.textContent = state.phase === 'victory' ? 'Return to the church' : 'Wake at the cot';
+    finish.textContent = state.phase === 'victory' ? 'Continue' : 'Wake at the cot';
     if (done) finish.focus({ preventScroll: true });
   }
 

@@ -57,7 +57,7 @@ test('party acts in any order, locks spent turns, and wins with protection', asy
     await page.getByRole('button', { name: 'Vulture attack', exact: true }).click();
   }
   await expect(page.locator('.battle')).toHaveAttribute('data-phase', 'victory');
-  await page.getByRole('button', { name: 'Return to the church' }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.keyboard.down('d'); await page.waitForTimeout(150); await page.keyboard.up('d');
   await expect(page.getByRole('dialog')).toHaveCount(0);

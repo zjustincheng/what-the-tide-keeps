@@ -20,7 +20,7 @@ export async function win(page: Page) {
     view.render();
   });
   await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
-  await page.getByRole('button', { name: 'Return to the church' }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
 }
 
 // Everyone attacks; each enemy turn downs the member showing the most mana until the party wipes.

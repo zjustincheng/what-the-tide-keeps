@@ -60,7 +60,7 @@ The world is drained and cold. Each area's map has a colour grade (desaturated a
 
 ## Wounds and rest
 
-Injuries carry from one fight into the next. A hero who falls in a won fight stays down until revived with smelling salts or rested. The footer under the map shows each hero's health as the next fight will find it.
+Injuries carry from one fight into the next. A hero who falls in a won fight stays down until revived with smelling salts or rested. The top left of the map shows each hero's portrait and health bar as the next fight will find them, with a reminder to rest when anyone is hurt.
 
 Rest to heal every wound: at the shepherd's fire ring by the crossroads, the abandoned camp in the woods, the carters' fire on the border road, or the cot in the church. As the guideline says, resting brings enemies back: the area starts over around the fire. Waking in the church after a wipe also heals the party. Wounds are saved with the rest of the story state.
 

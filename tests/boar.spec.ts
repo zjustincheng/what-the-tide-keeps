@@ -55,7 +55,7 @@ test('fighting the boar directly frees the grain and changes the farmland', asyn
     await expect(page.locator('.battle')).not.toHaveAttribute('data-phase', 'enemy');
   }
   await expect(page.locator('.battle')).toHaveAttribute('data-phase', 'victory');
-  await page.getByRole('button', { name: 'Return to the church' }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
   await place(page, 'boar-farm', 256, 212);
   await expect(page.locator('#prompt')).toContainText('Examine the cup');
   await page.keyboard.press('e');

@@ -620,7 +620,6 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
   .controls { font-size: 11px; }
   .controls td { font-size: 10px; }
 }
-.party-status { margin-left: 8px; color: #c5c997; letter-spacing: .2px; }
 
 /* Replies the hero can choose under the speaker's last line. */
 .choices { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
@@ -645,4 +644,20 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
   .portrait img { max-width: 70px; max-height: 62px; }
   .dialogue.with-portrait .speaker { left: 82px; }
   .speaker { font-size: 8px; padding: 3px 8px; }
+}
+
+/* Party health at the top left of the map. */
+.game-frame { position: relative; }
+.hud { position: absolute; top: 49px; left: 12px; z-index: 5; display: flex; flex-direction: column; gap: 4px; pointer-events: none; }
+.hud-member { display: flex; gap: 7px; align-items: center; padding: 4px 8px 4px 4px; background: #0d1412d9; border: 1px solid #4a5a46; min-width: 150px; }
+.hud-member img { width: 28px; height: 28px; object-fit: contain; image-rendering: pixelated; border: 1px solid #3a4a3a; background: #0c1311; filter: saturate(.55) brightness(.86); }
+.hud-member > div { flex: 1; }
+.hud-name { font: 9px ui-monospace, monospace; letter-spacing: 1px; color: #d7d9c8; text-transform: uppercase; }
+.hud .health-bar { margin: 3px 0 2px; height: 6px; }
+.hud-numbers { font: 9px ui-monospace, monospace; color: #b8c0a8; }
+.hud-hint { margin: 0; padding: 2px 8px; background: #0d1412d9; font: italic 10px Georgia, serif; color: #d2a46a; }
+@media(max-width:650px) {
+  .hud { top: 44px; left: 8px; }
+  .hud-member { min-width: 118px; padding: 3px 6px 3px 3px; }
+  .hud-member img { width: 20px; height: 20px; }
 }

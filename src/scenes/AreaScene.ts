@@ -73,7 +73,8 @@ export class AreaScene extends Phaser.Scene {
     const base = import.meta.env.BASE_URL;
     this.load.svg(`${this.area.tileset}-tiles`, `${base}assets/${this.area.tileset}-tiles.svg`);
     this.load.tilemapTiledJSON(`${this.area.map}-map`, `${base}maps/${this.area.map}.json`);
-    for (const key of [...this.area.enemies.map(enemy => enemy.encounter), ...this.area.assets ?? []]) if (!this.textures.exists(key)) this.load.svg(key, `${base}assets/${key}.svg`);
+    // Companions' art is needed everywhere, for their portraits in the health display.
+    for (const key of [...this.area.enemies.map(enemy => enemy.encounter), ...this.area.assets ?? [], 'bear', 'vulture']) if (!this.textures.exists(key)) this.load.svg(key, `${base}assets/${key}.svg`);
   }
 
   create() {
@@ -447,8 +448,15 @@ export class AreaScene extends Phaser.Scene {
     element('purse').textContent = `${loadWorld().coins} coins`;
     // The party as the next fight will find it.
     const party = createBattle('locust', [], hollow(loadMemory()), loadGear(), loadBooks(), roster(loadWorld()), undefined, loadWorld().wounds).party;
-    element('party-status').textContent = party.map(member => `${MEMBERS[member.id].name} ${member.health}/${member.maxHealth}`).join(' · ')
-      + (party.some(member => member.health < member.maxHealth) ? ' · rest at a fire to heal' : '');
+    // Health at the top left of the map: a portrait, a bar, and the numbers for each hero.
+    element('hud').innerHTML = party.map(member => {
+      const share = member.health / member.maxHealth;
+      const level = share <= 0.25 ? 'low' : share <= 0.5 ? 'wounded' : 'healthy';
+      return `<div class="hud-member" data-hud-member="${member.id}"><img alt="" src="${this.portrait(member.id === 'chameleon' ? 'hero' : member.id)}" />
+        <div><span class="hud-name">${MEMBERS[member.id].name}</span>
+        <div class="health-bar" role="meter" aria-label="${MEMBERS[member.id].name}" aria-valuemin="0" aria-valuemax="${member.maxHealth}" aria-valuenow="${member.health}" aria-valuetext="${member.health} of ${member.maxHealth}" data-level="${level}" style="--health:${share * 100}%"><span></span></div>
+        <span class="hud-numbers">${member.health} / ${member.maxHealth}</span></div></div>`;
+    }).join('') + (party.some(member => member.health < member.maxHealth) ? '<p class="hud-hint">Rest at a fire to heal</p>' : '');
     element('memory-status').textContent = `Some things are already missing · ${held(loadMemory()).length} of ${MEMORY_IDS.length} memories remain${saved ? '' : ' · not saved'}`;
   }
 

@@ -56,13 +56,13 @@ test('once the feast is forgotten, the hero can no longer say he is innocent', a
 
 test('the priest can tend wounds', async ({ page }) => {
   await start(page, undefined, { flags: [], carried: [], found: [], coins: 0, wounds: { chameleon: 12 } });
-  await expect(page.locator('#party-status')).toHaveText('Chameleon 8/20 · rest at a fire to heal');
+  await expect(page.getByRole('group', { name: 'Party' }).getByRole('meter', { name: 'Chameleon' })).toHaveAttribute('aria-valuetext', '8 of 20');
   await place(page, 'church', 248, 148);
   await expect(page.locator('#prompt')).toContainText('Speak to the priest');
   await page.keyboard.press('e');
   for (let i = 0; i < 3; i++) await page.keyboard.press('e');
   await page.getByRole('button', { name: '3. Tend my wounds.' }).click();
-  await expect(page.locator('#party-status')).toHaveText('Chameleon 20/20');
+  await expect(page.getByRole('group', { name: 'Party' }).getByRole('meter', { name: 'Chameleon' })).toHaveAttribute('aria-valuetext', '20 of 20');
 });
 
 test('people speak with a portrait above the text; objects show only a name', async ({ page }) => {

@@ -18,7 +18,8 @@ test('wounds linger after a won fight until the hero rests at a campfire', async
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
   await expect.poll(() => at(page, 'church')).not.toBeNull();
-  await expect(page.locator('#party-status')).toHaveText('Chameleon 20/20');
+  await expect(page.getByRole('group', { name: 'Party' }).getByRole('meter', { name: 'Chameleon' })).toHaveAttribute('aria-valuetext', '20 of 20');
+  await expect(page.locator('.hud-hint')).toHaveCount(0);
   await page.evaluate(async () => {
     const { game } = await import('/src/main.ts');
     game.scene.getScene('church').scene.start('farmland', { spawn: 'spawn' });
@@ -38,8 +39,9 @@ test('wounds linger after a won fight until the hero rests at a campfire', async
   });
   await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
   await expect(page.locator('#battle-turn')).toContainText('Your wounds will linger until you rest at a fire.');
-  await page.getByRole('button', { name: 'Return to the church' }).click();
-  await expect(page.locator('#party-status')).toHaveText('Chameleon 7/20 · rest at a fire to heal');
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await expect(page.getByRole('group', { name: 'Party' }).getByRole('meter', { name: 'Chameleon' })).toHaveAttribute('aria-valuetext', '7 of 20');
+  await expect(page.locator('.hud-hint')).toHaveText('Rest at a fire to heal');
   // The next fight finds him as hurt as he was.
   await place(page, 'farmland', 312, 152);
   await page.keyboard.down('s');
@@ -53,14 +55,15 @@ test('wounds linger after a won fight until the hero rests at a campfire', async
     view.render();
   });
   await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
-  await page.getByRole('button', { name: 'Return to the church' }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
   // Rest at the crossroads fire.
   await place(page, 'farmland', 600, 410);
   await expect(page.locator('#prompt')).toContainText('Rest by the fire');
   await page.keyboard.press('e');
   await expect(page.locator('#dialogue-text')).toContainText('You rest until the ache goes out of you.');
   await page.keyboard.press('Escape');
-  await expect(page.locator('#party-status')).toHaveText('Chameleon 20/20');
+  await expect(page.getByRole('group', { name: 'Party' }).getByRole('meter', { name: 'Chameleon' })).toHaveAttribute('aria-valuetext', '20 of 20');
+  await expect(page.locator('.hud-hint')).toHaveCount(0);
   await expect.poll(() => at(page, 'farmland')).toEqual({ x: 600, y: 392 });
   expect(errors).toEqual([]);
 });
