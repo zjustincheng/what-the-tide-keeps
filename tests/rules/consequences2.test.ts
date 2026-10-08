@@ -37,7 +37,10 @@ test("the reeve can't lift the brand, but once the carts move his letter makes t
   assert.match(pardon().lines.join(' '), /bring my carts back/);
   assert.equal(pardon().then, undefined);
   context = apply(context, { set: 'boar-defeated' });
-  context = apply(context, pardon().then!);
+  // His thanks, once the carts are moving, is the letter itself.
+  const thanks = conversation(town, 'reeve', context);
+  assert.match(thanks.lines.join(' '), /So, here\. He hands you a folded letter/);
+  context = apply(context, thanks.then!);
   assert.ok(context.world.flags.includes('reeve-pardon'));
   assert.equal(price(context.world, { supply: 'firepot' }), 4, 'board price');
   assert.match(conversation(town, 'board', context).lines[1], /All five faces/);

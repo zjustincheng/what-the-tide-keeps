@@ -112,7 +112,7 @@ Some replies change the world, and the game remembers them:
 - **The nightly count.** Standing in the carnivore quarter's line with the fox earns a firepot and a word for the night market to come.
 - **The fishmonger.** Telling him you freed his squid ends his trade with you for good.
 - **The heron** will tell you what happened to her mother.
-- **The reeve's letter.** The brand is the church's to lift, and the reeve says so. Once his carts are moving again he gives a letter of good conduct: Millbrook treats you as a citizen, with board prices at the stall, the inn open, and your face scratched off the wanted poster.
+- **The reeve's letter.** The brand is the church's to lift, and the reeve says so. Once his carts are moving again, his grudging thanks comes with a letter of good conduct: Millbrook treats you as a citizen, with board prices at the stall, the inn open, and your face scratched off the wanted poster.
 
 The priest keeps count: asked how many times you have died, he reads the ledger, which starts at forty-one and adds one for every time the party falls.
 

@@ -20,10 +20,15 @@ export const town: Dialogue = {
     'The wheat is standing and the hay yard is quiet.',
     'Here. A writ releasing the bear into your custody. Show it to the miller.',
     'And keep him out of my square.',
-  ], then: { set: 'writ-given' } }, { if: { flag: 'boar-defeated' }, lines: [
+  ], then: { set: 'writ-given' } }, { if: { all: [{ flag: 'boar-defeated' }, { not: { flag: 'reeve-pardon' } }] }, lines: [
     'The carts went through at dawn.',
     'The boar. We burned him out over a kid who turned up alive three weeks later. I signed the order.',
     'I won\'t thank a convict in the square. So, here.',
+    'He hands you a folded letter with the reeve\'s seal on it. Good conduct, it says, for the bearer, in Millbrook.',
+    'The brand stays. That\'s the church\'s business. But here you\'ll be treated as a citizen.',
+    'You receive the reeve\'s letter of good conduct.',
+  ], then: { set: 'reeve-pardon' } }, { if: { flag: 'boar-defeated' }, lines: [
+    'The carts went through at dawn. Keep that letter on you.',
   ] }, { if: { all: [{ flag: 'writ-given' }, { not: { flag: 'bear-free' } }] }, lines: [
     'You have the writ. Go and show the miller.',
   ] }] },
@@ -118,12 +123,10 @@ const reeveReplies: Choice[] = [
     'A pardon? The brand is the church\'s, not mine. I couldn\'t lift it if I wanted to.',
     'But bring my carts back, and I\'ll see what a reeve\'s word is worth in Millbrook.',
   ] },
-  { text: 'I want a pardon.', ends: true, if: { all: [{ flag: 'boar-defeated' }, { not: { flag: 'reeve-pardon' } }] }, lines: [
-    'The brand stays. That\'s the church\'s business.',
-    'But in Millbrook you\'ll be treated as a citizen. Board prices, a bed when you want one, and nobody\'s face on my wall but the four who earned it.',
-    'You receive the reeve\'s letter of good conduct.',
-  ], then: { set: 'reeve-pardon' } },
-  { text: 'About your letter.', if: { flag: 'reeve-pardon' }, lines: ['It holds in Millbrook. Past the border, it\'s paper.'] },
+  { text: 'About your letter.', if: { flag: 'reeve-pardon' }, lines: [
+    'Board prices at the stall, a bed when you want one, and nobody\'s face on my wall but the four who earned it.',
+    'It holds in Millbrook. Past the border, it\'s paper.',
+  ] },
 ];
 town.reeve.choices = reeveReplies;
 // The reeve can be asked things whatever else is going on.
