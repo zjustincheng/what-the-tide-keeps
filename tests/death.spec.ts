@@ -77,3 +77,16 @@ test('the memory choice fits a phone screen', async ({ page }) => {
   await page.getByRole('button', { name: 'Let it go' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
+
+test('a forgotten memory changes what the church says', async ({ page }) => {
+  await page.evaluate(() => localStorage.setItem('tide-keeps.memory.v1', JSON.stringify({ lost: ['home', 'name', 'feast'], pending: false })));
+  await page.reload(); await ready(page);
+  await page.evaluate(async () => {
+    const { game } = await import('/src/main.ts');
+    game.scene.getScene('church').player.setPosition(248, 148);
+  });
+  await page.locator('#game').focus();
+  await page.keyboard.press('e');
+  await page.keyboard.press('e');
+  await expect(page.locator('#dialogue-text')).toContainText('You have stopped saying it.');
+});

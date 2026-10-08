@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { conversations } from '../content/church';
+import { conversation, conversations } from '../content/church';
 import type { Encounter } from '../rules/battle';
 import { forget, held, hollow, MEMORY_IDS, wipe } from '../rules/memory';
 import { loadMemory, saveMemory } from '../storage/memory';
@@ -169,7 +169,7 @@ export class ChurchScene extends Phaser.Scene {
       if(this.line>=this.active.lines.length) this.closeDialogue();
       else element('dialogue-text').textContent=this.active.lines[this.line];
     } else if(this.nearby) {
-      this.active=conversations[this.nearby.name];this.line=0;
+      this.active=conversation(this.nearby.name, loadMemory().lost);this.line=0;
       element('speaker').textContent=this.active.speaker;
       element('dialogue-text').textContent=this.active.lines[0];
       element('dialogue').hidden=false;

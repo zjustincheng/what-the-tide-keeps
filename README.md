@@ -40,7 +40,7 @@ npm run test:unit # Pure TypeScript combat and memory rule tests
 
 Build the repeatable loop in miniature before adding the full story. The first playable milestone is a small Tiled map with a moving character, starting with the hero waking in the church. Add the feast opening after the loop works.
 
-The first six build steps are playable: church exploration, visible encounters, basic combat, a party of three, mana-based magic, and death. Speak to the priest and inspect the ledger and basin. Near the southeast wall, a crop locust shows a small mana signature. Touch it to enter battle. A hooded exile near the northeast wall provides a second encounter with suppressed mana and an unknown spell. The south door still marks the edge of the prototype. The artwork and dialogue are original placeholders.
+The first seven build steps are playable: church exploration, visible encounters, basic combat, a party of three, mana-based magic, death, and memory in the world. Speak to the priest and inspect the ledger and basin. Near the southeast wall, a crop locust shows a small mana signature. Touch it to enter battle. A hooded exile near the northeast wall provides a second encounter with suppressed mana and an unknown spell. The south door still marks the edge of the prototype. The artwork and dialogue are original placeholders.
 
 In battle, command the chameleon, bear, and vulture. Each living member acts once in any order; only then does the locust act and each surviving companion regain 3 mana. Downed members cannot act, and the party only wipes when all three fall. Party members and enemies have health bars and condition descriptions; exact health and damage numbers remain hidden. Mana is numeric. Enemies target the living member with the most visible mana, preferring the bear in a tie.
 
@@ -71,14 +71,14 @@ The hero begins with eight of his ten memories; his home and his name were lost 
 - **+2 mana** for the chameleon. A larger pool also shows more mana, so enemies target him more often.
 - **+1 damage** on every chameleon attack.
 
-Forgetting **His training** also reduces his reveal bonus from +4 to the +2 every companion gets. The other memory costs are shown but take effect in later build steps. When no memories remain, a wipe takes nothing. Only the hero loses memories for now; companion memories are still an open design question. Perks from the two memories lost before the game are already part of his starting stats.
+Forgetting **His training** also reduces his reveal bonus from +4 to the +2 every companion gets. Forgetting **The feast** changes what the priest says and what the tidal basin evokes, and forgetting **The trial** changes the resurrection ledger. Because his name is already lost, the game never shows it. The other memory costs are shown but take effect in later build steps. When no memories remain, a wipe takes nothing. Only the hero loses memories for now; companion memories are still an open design question. Perks from the two memories lost before the game are already part of his starting stats.
 
 Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is saved before the choice is shown, so reloading the page brings the choice back instead of skipping it. The footer shows how many memories remain.
 
 ## Project layout
 
 - `src/scenes/ChurchScene.ts` — Phaser exploration, collision, and input.
-- `src/content/church.ts` — prototype dialogue.
+- `src/content/church.ts` — prototype dialogue, with variants for forgotten memories.
 - `src/rules/battle.ts` — immutable, renderer-independent combat state and transitions.
 - `src/rules/memory.ts` — memory loss and Hollow perks, independent of the renderer.
 - `src/content/memories.ts` — memory names and what forgetting each costs.
@@ -94,6 +94,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/death.spec.ts` — wipe, memory choice, and save browser checks.
 - `tests/rules/battle.test.ts` — combat tests without a browser.
 - `tests/rules/memory.test.ts` — memory and Hollow perk tests without a browser.
+- `tests/rules/world.test.ts` — dialogue changes from forgotten memories.
 
 Combat rules have no Phaser or DOM imports. Future party and memory rules should preserve that boundary, as specified in the design guideline.
 
