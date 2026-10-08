@@ -3,7 +3,7 @@ import { createBattle, enemyMana, ENEMIES } from '../rules/battle';
 import type { Encounter } from '../rules/battle';
 import { forget, held, hollow, MEMORY_IDS, wipe } from '../rules/memory';
 import { apply, conversation, drop, holds, roster } from '../rules/world';
-import type { Condition, Context, Effect } from '../rules/world';
+import type { Condition, Context, Effect, ShopId } from '../rules/world';
 import type { Conversation } from '../content/dialogue';
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
 import { loadMemory, saveMemory } from '../storage/memory';
@@ -11,6 +11,9 @@ import { loadWorld, saveWorld } from '../storage/world';
 import { BattleView } from '../ui/BattleView';
 import { ResurrectionView } from '../ui/ResurrectionView';
 import { EquipmentView } from '../ui/EquipmentView';
+import { ShopView } from '../ui/ShopView';
+import { SHOPS } from '../content/shops';
+import { BOUNTY } from '../rules/economy';
 import { loadGear, saveGear } from '../storage/gear';
 import { loadBooks, saveBooks } from '../storage/books';
 import type { Area } from './areas';
@@ -41,7 +44,9 @@ export class AreaScene extends Phaser.Scene {
   private shadow!: Phaser.GameObjects.Ellipse;
   private foes: Foe[] = [];
   private props: Prop[] = [];
-  private overlay?: BattleView | ResurrectionView | EquipmentView;
+  private overlay?: BattleView | ResurrectionView | EquipmentView | ShopView;
+  // A shop to open once the current conversation ends.
+  private pendingShop?: ShopId;
 
   constructor(private area: Area) { super(area.key); }
 
@@ -50,7 +55,7 @@ export class AreaScene extends Phaser.Scene {
     this.arrival = data?.spawn ?? 'spawn';
     this.cleanup = new AbortController();
     this.held = new Set(); this.foes = []; this.props = [];
-    this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false;
+    this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false; this.pendingShop = undefined;
   }
 
   preload() {
@@ -109,6 +114,7 @@ export class AreaScene extends Phaser.Scene {
     // A wipe that was not yet paid for, such as one interrupted by a reload, is still owed.
     if (loadMemory().pending) this.wake();
     this.events.once('shutdown', () => {
+      this.pendingShop = undefined;
       this.cleanup.abort();
       this.overlay?.destroy();
       this.setExplorationEnabled(true);
@@ -206,6 +212,7 @@ export class AreaScene extends Phaser.Scene {
       const context=this.context();
       this.active=conversation(this.area.dialogue, this.nearby.name, context);this.line=0;
       // Effects land as the conversation opens, so closing it early never loses them.
+      this.pendingShop=this.active.then?.shop;
       if(this.active.then) {
         const next=apply(context, this.active.then);
         saved=saveWorld(next.world)&&saveGrimoire(next.studied);
@@ -229,6 +236,8 @@ export class AreaScene extends Phaser.Scene {
 
   private closeDialogue() {
     this.active=undefined;element('dialogue').hidden=true;
+    const shop=this.pendingShop;this.pendingShop=undefined;
+    if(shop) this.openShop(shop);
   }
 
   private setExplorationEnabled(enabled: boolean) {
@@ -249,11 +258,14 @@ export class AreaScene extends Phaser.Scene {
     this.physics.pause();
     element('prompt').textContent = '';
     this.setExplorationEnabled(false);
-    this.overlay = new BattleView(this.textures.getBase64('hero'), won => {
+    this.overlay = new BattleView(this.textures.getBase64('hero'), (won, battle) => {
       this.overlay = undefined;
       if(won) {
         foe.sprite.disableBody(true, true);
         foe.signature.setVisible(false);
+        // The spoils, and whatever supplies were not used up.
+        saved = saveWorld({ ...loadWorld(), coins: loadWorld().coins + BOUNTY[foe.encounter], supplies: battle.supplies });
+        this.renderMemory();
         if(foe.defeat) {
           const next=apply(this.context(), foe.defeat);
           saved=saveWorld(next.world);
@@ -265,7 +277,21 @@ export class AreaScene extends Phaser.Scene {
         saved = saveMemory(wipe(loadMemory())) && saveWorld(drop(loadWorld()));
         this.scene.start('church');
       }
-    }, foe.encounter, hollow(loadMemory()), loadGear(), loadBooks(), roster(loadWorld()));
+    }, foe.encounter, hollow(loadMemory()), loadGear(), loadBooks(), roster(loadWorld()), loadWorld().supplies);
+  }
+
+  // A shop opens after its keeper has spoken, if there is anything left to sell.
+  private openShop(shop: ShopId) {
+    const world = loadWorld();
+    if(this.overlay || this.leaving || SHOPS[shop].wares.every(ware => 'deed' in ware && world.flags.includes(ware.deed))) return;
+    this.player.setVelocity(0);
+    this.held.clear();
+    this.physics.pause();
+    element('prompt').textContent = '';
+    this.setExplorationEnabled(false);
+    this.overlay = new ShopView(shop, world,
+      next => { saved = saveWorld(next); this.renderMemory(); },
+      () => { this.overlay?.destroy(); this.overlay = undefined; this.refreshProps(); this.resumeExploration(); });
   }
 
   private openEquipment() {
@@ -296,6 +322,7 @@ export class AreaScene extends Phaser.Scene {
   }
 
   private renderMemory() {
+    element('purse').textContent = `· ${loadWorld().coins} coins`;
     element('memory-status').textContent = `Some things are already missing · ${held(loadMemory()).length} of ${MEMORY_IDS.length} memories remain${saved ? '' : ' · not saved'}`;
   }
 

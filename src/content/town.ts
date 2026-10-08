@@ -7,7 +7,8 @@ export const town: Dialogue = {
     'Grain carts leave here for the highlands every morning. For six days, every one has come back. The drivers say they were turned at the border.',
     'Nobody gave the order. Everybody has heard it. Find out who is turning my carts, and I may find a use for a convict.',
     'The bear at the mill is yours, I suppose. If you want him, earn him. Clear the pests from my fields, the locust in the wheat and the weevil in the hay yard, and I will sign a writ.',
-  ], variants: [{ if: { all: [{ flag: 'pests-field' }, { flag: 'pests-yard' }, { not: { flag: 'writ-given' } }] }, lines: [
+    'Or pay his fine. Sixty coins. The town could use them more than it could use a bear.',
+  ], then: { shop: 'reeve' }, variants: [{ if: { all: [{ flag: 'pests-field' }, { flag: 'pests-yard' }, { not: { flag: 'writ-given' } }] }, lines: [
     'The wheat is standing and the hay yard is quiet. You did that.',
     'Here. A writ releasing the bear into the custody of the church\'s convict. Into yours. Not into mine.',
     'Show it to the miller. And keep that bear out of my square.',
@@ -25,10 +26,11 @@ export const town: Dialogue = {
     'A room has come free. Do not make me regret it.',
   ] }] },
   shopkeeper: { speaker: 'THE STALLHOLDER', prompt: 'Speak to the stallholder', lines: [
-    'Smoked fish, bandages, lamp oil. For citizens, four coppers a piece.',
-    'For you, let us say twelve. The road is dangerous, and so, I hear, are you.',
-    'You have nothing on you anyway. The church takes everything at the door.',
-  ] },
+    'Smoked fish, smelling salts, firepots. For citizens, the price on the board.',
+    'For you, three times that. The road is dangerous, and so, I hear, are you.',
+  ], then: { shop: 'stall' }, variants: [{ if: { flag: 'boar-defeated' }, lines: [
+    'The carts are moving again. Twice the board price, then, not three times. Do not spread it about.',
+  ], then: { shop: 'stall' } }] },
   board: { speaker: 'THE NOTICE BOARD', prompt: 'Read the notice board', lines: [
     'WANTED, by order of the Covenant: the five who murdered the rulers.',
     'Four of the faces have been scratched out by hooves. Yours has not, though it is a poor likeness.',

@@ -50,6 +50,20 @@ Prototype tuning: ordinary fights last two or three rounds, and the boar about f
 
 Victory removes the locust until you use **Return to the cot**, which resets the encounter. Defeat wakes you at the cot (see below). Each new fight starts with full health and mana. Supplies are not implemented yet, and recruitment and travel beyond the church are still ahead. Encounter progress resets on reload; studied spells and memories persist.
 
+## Coins, shops, and supplies
+
+Defeated enemies leave coins: 4 for a locust, 5 for a weevil, 10 for a hooded follower, 30 for the boar. The purse is shown beside **THE CONDEMNED** under the map. As the guideline says, coins and supplies gathered since the last death are lost on a wipe.
+
+The stallholder in Millbrook's market square sells supplies at three times the citizen's price because of the brand, and at twice the price once the boar is beaten and the town thaws:
+
+| Supply | Price (thawed) | Use in battle |
+| --- | --- | --- |
+| Smoked fish | 9 (6) | One standing ally recovers 10 health |
+| Smelling salts | 15 (10) | A fallen ally gets back up with 8 health |
+| Firepot | 12 (8) | 10 damage to one enemy, aimed like an attack |
+
+In battle, supplies appear in a **Supplies** menu on each hero's card, and using one is that hero's action. Food goes to the ally chosen on the card. The reeve will also sell the bear's writ for 60 coins, the guideline's second way to free him.
+
 ## Equipment
 
 Press **Tab** while on the map, or use **Equipment** below it, to open the equipment screen; **Escape** or **Done** closes it. Each hero carries a grimoire (see below) and holds two keepsakes, found by exploring off the roads. Keepsakes are kept through every death, and most come with a drawback:
@@ -148,6 +162,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/scenes/sprites.ts` — generated placeholder sprites for the hero and townsfolk.
 - `src/rules/battle.ts` — immutable, renderer-independent combat state and transitions.
 - `src/rules/memory.ts` — memory loss and Hollow perks, independent of the renderer.
+- `src/rules/economy.ts` — coins, prices, supplies, and bounties.
 - `src/rules/spells.ts` — grimoires, their spells, and sequence checking.
 - `src/rules/gear.ts` — keepsakes, slots, and what they change in battle.
 - `src/rules/world.ts` — story flags, carried items, favor spells, and which dialogue variant applies.
@@ -160,6 +175,8 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/ui/BattleView.ts` — accessible combat view, drag input, and turn pacing.
 - `src/ui/ResurrectionView.ts` — the wake screen where a memory is chosen.
 - `src/ui/EquipmentView.ts` — the equipment screen.
+- `src/ui/ShopView.ts` — a shopkeeper's wares.
+- `src/content/shops.ts` — what each shop sells.
 - `src/ui/fullscreen.ts` — the full screen button.
 - `public/maps/church.json` — editable Tiled JSON map with floor, furniture, and named interaction points.
 - `public/assets/church-tiles.svg` — original placeholder tileset.
@@ -175,6 +192,8 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/rules/memory.test.ts` — memory and Hollow perk tests without a browser.
 - `tests/equipment.spec.ts` — finding, equipping, and fighting with a keepsake.
 - `tests/rules/gear.test.ts` — slots, restrictions, and keepsake effects.
+- `tests/shop.spec.ts` — buying, using supplies, earning coins, and buying the writ.
+- `tests/rules/economy.test.ts` — prices, the thaw, wipes, and supply effects.
 - `tests/spells.spec.ts` — casting, fizzling, phone keys, and swapping grimoires.
 - `tests/rules/spells.test.ts` — spell effects, fizzles, and carrying grimoires.
 - `tests/dodge.spec.ts` — dodge timing in the browser.

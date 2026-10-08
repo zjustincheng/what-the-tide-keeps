@@ -1,9 +1,11 @@
-import { act, canAct, canCast, cast, condition, cost, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
+import { act, canAct, canCast, canUse, cast, useSupply, condition, cost, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
 import type { Action, Battle, Dodge, Fighter, Foe, MemberId, Encounter } from '../rules/battle';
 import type { Hollow } from '../rules/memory';
 import type { Gear } from '../rules/gear';
 import { checkSequence, SPELLS } from '../rules/spells';
 import type { Books } from '../rules/spells';
+import { BOUNTY, SUPPLIES, SUPPLY_IDS } from '../rules/economy';
+import type { Supplies, SupplyId } from '../rules/economy';
 
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
 
@@ -17,16 +19,16 @@ export class BattleView {
   private timer?: ReturnType<typeof setTimeout>;
   private cleanup = new AbortController();
   private previousFocus = document.activeElement as HTMLElement | null;
-  private onFinish: (won: boolean) => void;
+  private onFinish: (won: boolean, state: Battle) => void;
   // Set while a dodge prompt is open: when the blow lands, and how to answer it.
   private prompts = 0;
   private prompt?: { impact: number; answer: (dodge: Dodge, early?: boolean) => void };
   // Set while a spell is being typed.
   private casting?: (key: number) => void;
 
-  constructor(heroImage: string, onFinish: (won: boolean) => void, encounter: Encounter = 'locust', hollow?: Hollow, gear?: Gear, books?: Books, roster?: readonly MemberId[]) {
+  constructor(heroImage: string, onFinish: (won: boolean, state: Battle) => void, encounter: Encounter = 'locust', hollow?: Hollow, gear?: Gear, books?: Books, roster?: readonly MemberId[], supplies?: Supplies) {
     this.onFinish = onFinish;
-    this.state = createBattle(encounter, loadGrimoire(), hollow, gear, books, roster);
+    this.state = createBattle(encounter, loadGrimoire(), hollow, gear, books, roster, supplies);
     const enemyName = ENEMIES[encounter].name;
     this.root = document.createElement('section');
     this.root.className = 'battle party-battle';
@@ -54,6 +56,7 @@ export class BattleView {
           <div class="member-actions"><button data-action="attack" aria-label="${info.name} attack">${info.attack}<small>${cost(member, 'attack')} mana</small></button><button data-action="support" aria-label="${info.name} support">${info.support}<small>No mana</small></button></div>
           ${member.spell ? `<button class="cast-button" data-cast aria-label="${info.name} cast ${SPELLS[member.spell].name}">${SPELLS[member.spell].name}<small>${SPELLS[member.spell].cost} mana · ${SPELLS[member.spell].length} keys</small></button>` : ''}
           <details class="spellcraft"><summary>Spellcraft</summary><button data-action="suppress" aria-label="${info.name} suppress">Suppress · ${cost(member, 'suppress')} mana</button><button data-action="barrier" aria-label="${info.name} barrier">Barrier · 5 mana</button><button data-action="analyze" aria-label="${info.name} analyze">Analyze · 2 mana</button></details>
+          ${SUPPLY_IDS.some(id => this.state.supplies[id] > 0) ? `<details class="spellcraft supplies-menu"><summary>Supplies</summary>${SUPPLY_IDS.map(id => `<button data-supply="${id}" aria-label="${info.name} use ${SUPPLIES[id].name}"></button>`).join('')}</details>` : ''}
         </section>`;
       }).join('')}</div>
       <div class="battle-log" role="log" aria-live="polite" aria-label="Battle events"></div>
@@ -78,8 +81,11 @@ export class BattleView {
       }
       this.bindDrag(member.id);
     }
-    this.root.querySelector('#strike-target')?.addEventListener('change', () => this.render(), { signal });
-    for (const member of this.state.party) this.card(member.id).querySelector('[data-cast]')?.addEventListener('click', () => this.beginCast(member.id), { signal });
+    this.root.querySelectorAll('#strike-target, .protect-label select').forEach(select => select.addEventListener('change', () => this.render(), { signal }));
+    for (const member of this.state.party) {
+      this.card(member.id).querySelector('[data-cast]')?.addEventListener('click', () => this.beginCast(member.id), { signal });
+      this.card(member.id).querySelectorAll<HTMLButtonElement>('[data-supply]').forEach(button => button.addEventListener('click', () => this.supply(member.id, button.dataset.supply as SupplyId), { signal }));
+    }
     this.root.addEventListener('keydown', event => {
       if (!this.casting || !['1', '2', '3', '4'].includes(event.key) || event.repeat) return;
       event.preventDefault(); this.casting(Number(event.key));
@@ -96,7 +102,7 @@ export class BattleView {
     this.get('#battle-finish').addEventListener('click', () => {
       if (this.state.phase !== 'victory' && this.state.phase !== 'defeat') return;
       const won = this.state.phase === 'victory';
-      this.destroy(); this.onFinish(won);
+      this.destroy(); this.onFinish(won, this.state);
     }, { signal });
     this.root.addEventListener('keydown', event => {
       if (event.key !== 'Tab') return;
@@ -165,6 +171,17 @@ export class BattleView {
   private choose(actor: MemberId, action: Action, target: MemberId = actor, foe: Foe = 0) {
     if (this.casting || !canAct(this.state, actor, action, target, foe)) return;
     this.state = act(this.state, actor, action, target, foe);
+    this.afterAction();
+  }
+
+  // Food and salts go to the ally chosen on the card; salts find the fallen if that ally is standing. Firepots go where attacks go.
+  private supply(actor: MemberId, supply: SupplyId) {
+    if (this.casting) return;
+    const chosen = this.card(actor).querySelector<HTMLSelectElement>('select')?.value as MemberId | undefined ?? actor;
+    const fallen = this.state.party.find(member => member.id === chosen && member.health === 0) ?? this.state.party.find(member => member.health === 0);
+    const target = SUPPLIES[supply].target === 'fallen' ? fallen?.id ?? chosen : chosen;
+    if (!canUse(this.state, actor, supply, target, this.foe())) return;
+    this.state = useSupply(this.state, actor, supply, target, this.foe());
     this.afterAction();
   }
 
@@ -261,7 +278,7 @@ export class BattleView {
     const done = state.phase === 'victory' || state.phase === 'defeat';
     const remaining = state.party.filter(member => member.health > 0 && !member.acted).length;
     this.root.dataset.phase = state.phase;
-    this.get('#battle-turn').textContent = done ? (state.phase === 'victory' ? 'It falls quiet.' : 'The party falls.')
+    this.get('#battle-turn').textContent = done ? (state.phase === 'victory' ? `It falls quiet. You find ${BOUNTY[state.encounter]} coins.` : 'The party falls.')
       : `Round ${state.round} · ${state.phase === 'player' ? `${remaining} actions remaining` : 'The enemy moves'}`;
     this.get('#enemy-condition').textContent = condition(state.enemy);
     this.renderHealth(this.get('.enemy-row .health-bar'), state.enemy);
@@ -293,6 +310,13 @@ export class BattleView {
         : member.guardingFor ? `Guarding ${MEMBERS[member.guardingFor].name}` : member.focused ? 'Focused'
         : member.acted ? 'Acted' : done ? '' : 'Ready';
       for (const action of ['attack', 'support', 'suppress', 'barrier', 'analyze'] as const) card.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)!.disabled = Boolean(this.casting) || !canAct(state, member.id, action, member.id, action === 'attack' ? this.foe() : 0);
+      card.querySelectorAll<HTMLButtonElement>('[data-supply]').forEach(button => {
+        const supply = button.dataset.supply as SupplyId;
+        button.textContent = `${SUPPLIES[supply].name} · ${state.supplies[supply]} left`;
+        const fallen = state.party.find(ally => ally.health === 0)?.id;
+        const target = SUPPLIES[supply].target === 'fallen' ? fallen ?? member.id : card.querySelector<HTMLSelectElement>('select')?.value as MemberId ?? member.id;
+        button.disabled = Boolean(this.casting) || !canUse(state, member.id, supply, target, this.foe());
+      });
       const castButton = card.querySelector<HTMLButtonElement>('[data-cast]');
       if (castButton) castButton.disabled = Boolean(this.casting) || !canCast(state, member.id, this.foe());
       card.querySelector<HTMLButtonElement>('.party-fighter')!.disabled = !canAct(state, member.id, 'support');

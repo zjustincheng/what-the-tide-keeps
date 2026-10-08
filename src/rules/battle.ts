@@ -5,6 +5,8 @@ import { MEMBER_IDS, mods, NO_MODS } from './gear.ts';
 import type { Gear, Mods } from './gear';
 import { BOOKS, SPELLS, STARTING_BOOKS } from './spells.ts';
 import type { Books, SpellId } from './spells';
+import { NO_SUPPLIES, SUPPLIES } from './economy.ts';
+import type { Supplies, SupplyId } from './economy';
 export type MemberId = 'chameleon' | 'bear' | 'vulture';
 export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze';
 export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar';
@@ -43,6 +45,8 @@ export type Battle = Readonly<{
   step: number;
   // A snared main enemy loses its next move.
   snared: boolean;
+  // Supplies brought into the fight; whatever is left goes back into the pack.
+  supplies: Supplies;
   log: readonly string[];
 }>;
 export type Dodge = 'perfect' | 'graze' | 'miss';
@@ -76,7 +80,7 @@ export const UNHOLLOWED: Hollow = { mana: 0, damage: 0, trained: true };
 export const PARTY_SCALE = [0.45, 0.65, 1] as const;
 
 // Hollow perks strengthen only the hero; companions keep their own memories.
-export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], hollow: Hollow = UNHOLLOWED, gear?: Gear, books: Books = STARTING_BOOKS, roster: readonly MemberId[] = MEMBER_IDS): Battle {
+export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], hollow: Hollow = UNHOLLOWED, gear?: Gear, books: Books = STARTING_BOOKS, roster: readonly MemberId[] = MEMBER_IDS, supplies: Supplies = NO_SUPPLIES): Battle {
   const member = (id: MemberId, base: number, mana: number): Member => {
     const worn = gear ? mods(gear, id) : NO_MODS;
     const health = Math.max(1, base + worn.health);
@@ -90,7 +94,7 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
     party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10)].filter(member => roster.includes(member.id)),
     enemy: { health: scaled(ENEMIES[encounter].health), maxHealth: scaled(ENEMIES[encounter].health), mana: ENEMIES[encounter].mana, maxMana: ENEMIES[encounter].mana },
     followers: (FOLLOWERS[encounter] ?? []).map(({ name, health }) => ({ name, health: scaled(health), maxHealth: scaled(health), mana: 4, maxMana: 4 })),
-    fury: 0, step: 0, snared: false,
+    fury: 0, step: 0, snared: false, supplies,
     log: [ENEMIES[encounter].opening],
   };
 }
@@ -170,6 +174,43 @@ function land(battle: Battle, damage: number, foe: Foe) {
     ? battle.followers.map((follower, index) => index === foe - 1 ? { ...follower, health: Math.max(0, follower.health - damage) } : follower)
     : battle.followers;
   return { enemy, followers, fury: battle.fury + (shielded ? FURY_PER_HIT : 0), shielded };
+}
+
+export function canUse(battle: Battle, actor: MemberId, supply: SupplyId, target: MemberId = actor, foe: Foe = 0): boolean {
+  const member = battle.party.find(member => member.id === actor);
+  if (battle.phase !== 'player' || !member || member.health <= 0 || member.acted || battle.supplies[supply] <= 0) return false;
+  const ally = battle.party.find(member => member.id === target);
+  const kind = SUPPLIES[supply].target;
+  if (kind === 'ally') return Boolean(ally && ally.health > 0);
+  if (kind === 'fallen') return Boolean(ally && ally.health === 0);
+  return foe === 0 || battle.followers[foe - 1]?.health > 0;
+}
+
+// Using a supply is the actor's action for the round.
+export function useSupply(battle: Battle, actor: MemberId, supply: SupplyId, target: MemberId = actor, foe: Foe = 0): Battle {
+  if (!canUse(battle, actor, supply, target, foe)) return battle;
+  const { name, power, target: kind } = SUPPLIES[supply];
+  const hit = kind === 'enemy' ? land(battle, power, foe) : undefined;
+  const party = battle.party.map(member => ({
+    ...member,
+    ...(member.id === actor ? { acted: true } : {}),
+    ...(member.id === target && kind === 'ally' ? { health: Math.min(member.maxHealth, member.health + power) } : {}),
+    ...(member.id === target && kind === 'fallen' ? { health: power } : {}),
+  }));
+  const enemy = hit?.enemy ?? battle.enemy;
+  const victory = enemy.health === 0;
+  const allActed = party.every(member => member.health <= 0 || member.acted);
+  const aimed = foe > 0 ? battle.followers[foe - 1].name.toLowerCase() : ENEMIES[battle.encounter].short;
+  const message = kind === 'ally' ? `${MEMBERS[actor].name} shares the ${name.toLowerCase()}${target !== actor ? ` with ${MEMBERS[target].name}` : ''}.`
+    : kind === 'fallen' ? `${MEMBERS[actor].name} holds the smelling salts under ${MEMBERS[target].name}'s nose. They get back up.`
+    : hit?.shielded ? `The boar throws himself in front of the ${aimed}. The firepot bursts against him instead, and his fury grows.`
+    : `${MEMBERS[actor].name} throws a firepot. It bursts across the ${aimed}.`;
+  return {
+    ...battle, party, enemy, followers: hit?.followers ?? battle.followers, fury: hit?.fury ?? battle.fury,
+    supplies: { ...battle.supplies, [supply]: battle.supplies[supply] - 1 },
+    phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
+    log: [...battle.log, message, ...(victory ? ['The signature flickers out. It is quiet again.'] : [])],
+  };
 }
 
 export function canCast(battle: Battle, actor: MemberId, foe: Foe = 0): boolean {

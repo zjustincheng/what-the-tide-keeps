@@ -576,3 +576,14 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
 /* Smaller parties, before every companion has been found. */
 .party-roster[data-size="1"] { grid-template-columns: minmax(0, 300px); justify-content: center; }
 .party-roster[data-size="2"] { grid-template-columns: repeat(2, minmax(0, 300px)); justify-content: center; }
+
+.shop { justify-content: flex-start; padding: 20px 6%; }
+.purse { margin: 6px 0 0; font: 12px ui-monospace, monospace; color: #e0c98a; }
+.wares { list-style: none; width: 100%; max-width: 560px; margin: 10px 0; padding: 0; }
+.wares li { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 9px 12px; margin-bottom: 6px; border: 1px solid #6b7c5866; background: #17271e66; }
+.wares strong { display: block; font-weight: normal; font-size: 15px; }
+.wares small { display: block; margin-top: 3px; font-size: 11px; color: #aab8a1; }
+.wares .owned { color: #c5c997; font: 10px ui-monospace, monospace; }
+.wares button { flex-shrink: 0; min-width: 96px; padding: 8px; font: 13px Georgia, serif; }
+#shop-close { margin-top: 6px; min-width: 160px; font: 16px Georgia, serif; padding: 9px; }
+.purse-status { margin-left: 6px; color: #e0c98a; }
