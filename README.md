@@ -25,7 +25,7 @@ npm install
 npm run dev
 ```
 
-Open the local URL printed by Vite. The bar above the map shows the place, the time, your coins, a **full screen** button (or press **F**), and a **settings** button (or press **Escape** on the map). Settings lists every control and holds **Equipment** and **Return to the cot**. Move with **WASD** or **arrow keys**, and press **E** or **Space** near a person or object to interact. Continue dialogue with **E**, **Space**, **Enter**, or the on-screen button; **Escape** closes it. Touch controls appear on small screens and touch devices.
+Open the local URL printed by Vite. The bar above the map shows the place, the time, your coins, a **full screen** button (or press **F**), and a **settings** button (or press **Escape** on the map). Settings lists every control and holds **Equipment**, **Return to the cot**, and **Start over…**, which (after asking) erases all saved progress and begins a new game while keeping volume and display preferences. Move with **WASD** or **arrow keys**, and press **E** or **Space** near a person or object to interact. Continue dialogue with **E**, **Space**, **Enter**, or the on-screen button; **Escape** closes it. Touch controls appear on small screens and touch devices.
 
 ```sh
 npm run build   # Type-check and build to dist/
@@ -283,6 +283,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/audio/music.ts` — the synthesised instruments, reverb, scheduler, and crossfades.
 - `src/audio/effects.ts` — the synthesised sound effects.
 - `src/storage/settings.ts` — volumes, mute, and how the party display is shown.
+- `src/storage/progress.ts` — erasing a playthrough to start over.
 - `src/ui/fullscreen.ts` — the full screen button and the F key.
 - `src/ui/SettingsView.ts` — the controls list and menu actions.
 - `public/maps/church.json` — editable Tiled JSON map with floor, furniture, and named interaction points.

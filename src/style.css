@@ -702,3 +702,8 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
 /* The music button: struck through while the music is muted. */
 #sound.muted { color: #bc755e; border-color: #7a4a3a; text-decoration: line-through; }
 .choices button[data-asked="true"] { color: #8a948a; border-color: #3a4a3e; }
+.start-over { max-width: 480px; margin-top: 12px; padding: 12px 14px; text-align: center; border: 1px solid #7a4a3a; background: #2a1a16cc; }
+.start-over[hidden] { display: none; }
+.start-over p { margin: 0 0 10px; font-size: 13px; line-height: 1.5; color: #e0c8b8; }
+.start-over button { margin: 4px; padding: 8px 12px; font: 14px Georgia, serif; }
+.start-over [data-action="erase"] { border-color: #bc755e; color: #f0c8b8; }

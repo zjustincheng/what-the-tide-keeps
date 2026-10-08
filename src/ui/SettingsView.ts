@@ -1,5 +1,6 @@
 import { canFullscreen, toggleFullscreen } from './fullscreen';
 import { music } from '../audio/music';
+import { eraseProgress } from '../storage/progress';
 
 const CONTROLS: [string, string][] = [
   ['Move', 'W A S D or arrow keys'],
@@ -41,13 +42,26 @@ export class SettingsView {
         <button type="button" data-action="fullscreen" ${canFullscreen() ? '' : 'hidden'}>${document.fullscreenElement ? 'Exit full screen' : 'Full screen'}</button>
         <button type="button" data-action="equipment">Equipment</button>
         <button type="button" data-action="restart">Return to the cot ↺</button>
+        <button type="button" data-action="start-over">Start over…</button>
         <button type="button" data-action="close">Close</button>
+      </div>
+      <div class="start-over" hidden>
+        <p>Start a new game? This erases your memories, companions, keepsakes, grimoires, coins, and every choice you have made. Volume and display settings are kept. It cannot be undone.</p>
+        <button type="button" data-action="erase">Erase and start over</button>
+        <button type="button" data-action="keep">Keep playing</button>
       </div>`;
     document.querySelector('.game-frame')!.append(this.root);
     const signal = this.cleanup.signal;
     this.root.addEventListener('click', event => {
       const action = (event.target as HTMLElement).closest<HTMLElement>('[data-action]')?.dataset.action;
       if (action === 'fullscreen') { toggleFullscreen(); actions.close(); }
+      // Starting over asks once more before anything is erased.
+      else if (action === 'start-over' || action === 'keep') {
+        const ask = action === 'start-over';
+        this.root.querySelector<HTMLElement>('.start-over')!.hidden = !ask;
+        this.root.querySelector<HTMLElement>(ask ? '[data-action="keep"]' : '[data-action="start-over"]')!.focus();
+      }
+      else if (action === 'erase') { if (eraseProgress()) location.reload(); }
       else if (action === 'equipment' || action === 'restart' || action === 'close') actions[action]();
     }, { signal });
     this.root.querySelector<HTMLInputElement>('[aria-label="Music volume"]')!.addEventListener('input', event => music.setVolume(Number((event.target as HTMLInputElement).value) / 100), { signal });
@@ -58,7 +72,7 @@ export class SettingsView {
     this.root.addEventListener('keydown', event => {
       if (event.key === 'Escape') { event.preventDefault(); actions.close(); return; }
       if (event.key !== 'Tab') return;
-      const controls = Array.from(this.root.querySelectorAll<HTMLElement>('input, button:not([hidden])'));
+      const controls = Array.from(this.root.querySelectorAll<HTMLElement>('input, button:not([hidden])')).filter(control => !control.closest('[hidden]'));
       event.preventDefault();
       const index = controls.indexOf(document.activeElement as HTMLElement);
       controls[(index + (event.shiftKey ? -1 : 1) + controls.length) % controls.length].focus();
