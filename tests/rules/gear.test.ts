@@ -29,7 +29,7 @@ test('keepsakes change their holder in battle, drawbacks included', () => {
   const [hero, bear, vulture] = battle.party;
   assert.equal(bear.maxHealth, plain.party[1].maxHealth + 6 + 8);
   assert.equal(visibleMana(bear), bear.mana + 2, 'the token makes the bear easy to see');
-  assert.equal(cost(bear, 'attack'), 3);
+  assert.equal(act(battle, 'bear', 'attack').enemy.health, battle.enemy.health - (MEMBERS.bear.damage - 2), 'the peg slows his attacks');
   assert.equal(vulture.maxHealth, plain.party[2].maxHealth - 4);
   assert.equal(act(battle, 'vulture', 'attack').enemy.health, battle.enemy.health - (MEMBERS.vulture.damage + 3));
   assert.equal(cost(hero, 'suppress'), 2);

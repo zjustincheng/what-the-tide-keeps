@@ -46,7 +46,7 @@ In battle, command the chameleon and whichever companions have joined him (see *
 
 Drag any member onto the locust to attack, or tap that member for self-support. Per-member action buttons offer keyboard and touch access. Chameleon guards himself. Bear can guard himself or protect another companion: drag him onto that ally, or choose a target with his **Protect** selector before using the **Protect** button. Vulture focuses to strengthen her next shot; focus does not stack. Guards last for one enemy turn. Bear also blocks attacks aimed at himself while protecting another companion.
 
-Prototype tuning: ordinary fights last two or three rounds, and the boar about five. All numbers live in `src/rules/battle.ts`. Attacks cost 2 mana. Physical guarding and focusing are free, so an empty mana pool cannot stall the turn. Guarding stops physical damage; it is not a spell barrier. Spell barriers cost 5 mana and protect the selected ally until the end of the enemy turn, but only against studied spells. Physical blows pass through them. Enemy health scales with the size of the party: 45% for the chameleon alone, 65% with one companion, full strength with three.
+Prototype tuning: ordinary fights last two or three rounds, and the boar about five. All numbers live in `src/rules/battle.ts`. Attacks are physical and cost no mana: the chameleon's tail lash, the bear's maul, the vulture's talons. Mana is for spells and spellcraft. Physical guarding and focusing are free, so an empty mana pool cannot stall the turn. Guarding stops physical damage; it is not a spell barrier. Spell barriers cost 5 mana and protect the selected ally until the end of the enemy turn, but only against studied spells. Physical blows pass through them. Enemy health scales with the size of the party: 45% for the chameleon alone, 65% with one companion, full strength with three.
 
 Victory removes the locust until you use **Return to the cot**, which resets the encounter. Defeat wakes you at the cot (see below). Wounds and spent mana both carry from one fight into the next (see **Wounds and rest**). **Gather**, on every hero's card, spends that hero's action to draw back 3 mana, so a drained hero is never stuck. Supplies are not implemented yet, and recruitment and travel beyond the church are still ahead. Encounter progress resets on reload; studied spells and memories persist.
 
@@ -108,7 +108,7 @@ Press **Tab** while on the map, or choose **Equipment** in settings, to open the
 | Crow's feather | The last row of the orchard | Vulture | Attacks hit 3 harder | 4 less health |
 | Covenant token | Behind the old shrine, guarded by the Shrine warden | Anyone | 6 more health | Shows 2 more mana, drawing attacks |
 | Wool charm | The shepherd, for his strays | Anyone | 5 more health | Shows 1 more mana |
-| Yoke peg | The reeds below the ford, guarded by the Mire leech | Bear | 8 more health | Attacks cost 3 mana |
+| Yoke peg | The reeds below the ford, guarded by the Mire leech | Bear | 8 more health | Attacks hit 2 softer |
 
 Two keepsakes are guarded, and their caches appear only once the guardian is dead:
 

@@ -68,7 +68,7 @@ test('survive an unknown spell, then conceal and reveal mana on mobile', async (
   await expect(page.locator('#battle-turn')).toHaveText('Round 4 · 3 actions remaining');
   await page.getByRole('button', { name: 'Bear attack', exact: true }).click();
   await expect(page.getByRole('log')).toContainText('burst of revealed mana');
-  await expect(page.locator('[data-member="bear"] .member-mana')).toContainText('showing 10');
+  await expect(page.locator('[data-member="bear"] .member-mana')).toContainText('showing 12');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: 'test-results/magic-mobile.png', fullPage: true });
 });

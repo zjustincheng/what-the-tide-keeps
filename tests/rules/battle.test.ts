@@ -12,8 +12,8 @@ test('all three act once in any order before the enemy; inputs remain immutable'
   const initial = createBattle();
   let next = act(initial, 'vulture', 'attack');
   assert.equal(next.phase, 'player');
-  assert.equal(member(next, 'vulture').mana, 8);
-  assert.equal(member(initial, 'vulture').mana, 10);
+  assert.equal(member(next, 'vulture').acted, true);
+  assert.equal(member(initial, 'vulture').acted, false);
   assert.equal(act(next, 'vulture', 'attack'), next);
   assert.equal(resolveEnemy(next), next);
   next = act(next, 'chameleon', 'attack');
@@ -25,15 +25,16 @@ test('all three act once in any order before the enemy; inputs remain immutable'
   assert.equal(next.round, 2);
   assert.equal(next.phase, 'player');
   assert.ok(next.party.every(member => !member.acted));
-  assert.deepEqual(next.party.map(member => member.mana), [10 - COST.attack + MANA_REGEN, 12, 10 - COST.attack + MANA_REGEN], 'attacks cost more than a round gives back');
+  assert.ok(next.party.every(member => member.mana === member.maxMana), 'attacks are physical and cost no mana');
   assert.equal(resolveEnemy(next), next);
 });
 
-test('low mana prevents attacks but always permits a support action', () => {
+test('an empty mana pool stops spellcraft but never a physical attack or support', () => {
   const initial = createBattle();
   const low = { ...initial, party: initial.party.map(member => ({ ...member, mana: 0 })) };
-  assert.equal(canAct(low, 'chameleon', 'attack'), false);
-  assert.equal(act(low, 'chameleon', 'attack'), low);
+  assert.equal(canAct(low, 'chameleon', 'suppress'), false);
+  assert.equal(canAct(low, 'chameleon', 'barrier'), false);
+  assert.equal(canAct(low, 'chameleon', 'attack'), true);
   assert.equal(canAct(low, 'chameleon', 'support'), true);
   let next = act(act(act(low, 'chameleon', 'support'), 'bear', 'support'), 'vulture', 'support');
   next = resolveEnemy(next);
@@ -117,12 +118,15 @@ test('health descriptions use words at each threshold', () => {
 
 test('mana spent in one fight stays spent in the next, and gathering draws it back', () => {
   let battle = createBattle();
-  battle = resolveEnemy(act(act(act(battle, 'vulture', 'attack'), 'bear', 'support'), 'chameleon', 'attack'));
+  battle = resolveEnemy(act(act(act(battle, 'vulture', 'attack'), 'bear', 'support'), 'chameleon', 'suppress'));
   const drained = drainedAfter(battle);
-  assert.deepEqual(drained, { chameleon: COST.attack - MANA_REGEN, vulture: COST.attack - MANA_REGEN });
+  assert.deepEqual(drained, {}, 'one point of hiding is back by the end of the round');
+  battle = resolveEnemy(act(act(act(battle, 'vulture', 'barrier', 'bear'), 'bear', 'support'), 'chameleon', 'attack'));
+  assert.deepEqual(drainedAfter(battle), { vulture: COST.barrier - MANA_REGEN });
   const next = createBattle('locust', [], { drained: { chameleon: 9 } });
   assert.equal(next.party[0].mana, 1);
-  assert.equal(canAct(next, 'chameleon', 'attack'), false, 'too drained to attack');
+  assert.equal(canAct(next, 'chameleon', 'suppress'), true);
+  assert.equal(canAct(next, 'chameleon', 'barrier'), false, 'too drained for a barrier');
   const gathered = act(next, 'chameleon', 'gather');
   assert.equal(gathered.party[0].mana, 1 + GATHER);
   assert.equal(gathered.party[0].acted, true, 'gathering is the hero\'s action');

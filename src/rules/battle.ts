@@ -58,9 +58,10 @@ export type Battle = Readonly<{
 export type Dodge = 'perfect' | 'graze' | 'miss';
 
 export const MEMBERS = {
-  chameleon: { name: 'Chameleon', attack: 'Thorn', support: 'Guard', damage: 7 },
-  bear: { name: 'Bear', attack: 'Stone fist', support: 'Protect', damage: 5 },
-  vulture: { name: 'Vulture', attack: 'Quill', support: 'Focus', damage: 9 },
+  // Attacks are physical and cost nothing; mana is for spells and spellcraft.
+  chameleon: { name: 'Chameleon', attack: 'Tail lash', support: 'Guard', damage: 7 },
+  bear: { name: 'Bear', attack: 'Maul', support: 'Protect', damage: 5 },
+  vulture: { name: 'Vulture', attack: 'Talons', support: 'Focus', damage: 9 },
 } as const;
 // Crop pests hide nothing and only strike physically; the exile veils its mana and casts.
 export const ENEMIES = {
@@ -92,7 +93,7 @@ export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; healt
 export const YIELDING: Partial<Record<Encounter, true>> = { boar: true };
 export const FURY_PER_HIT = 3;
 export const FOLLOWER_BLOW = 2;
-export const COST = { attack: 2, support: 0, suppress: 1, barrier: 5, analyze: 2, gather: 0 } as const;
+export const COST = { attack: 0, support: 0, suppress: 1, barrier: 5, analyze: 2, gather: 0 } as const;
 // Heroes recover mana slowly in a fight, and not at all between fights until they rest.
 // Gathering trades a hero's action for a larger draw. Enemies recover at their own pace.
 export const MANA_REGEN = 1;
@@ -157,7 +158,7 @@ export function visibleMana(member: Member): number {
 
 // What an action costs this member, after keepsakes.
 export function cost(member: Member, action: Action): number {
-  return COST[action] + (action === 'attack' ? member.gear.attackCost : action === 'suppress' ? member.gear.suppressCost : 0);
+  return COST[action] + (action === 'suppress' ? member.gear.suppressCost : 0);
 }
 
 export function enemyMana(battle: Battle): number {

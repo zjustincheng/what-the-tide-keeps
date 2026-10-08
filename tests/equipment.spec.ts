@@ -67,7 +67,7 @@ test('the equipment screen fits a phone', async ({ page }) => {
   await page.getByRole('button', { name: 'Equipment' }).click();
   await page.getByRole('combobox', { name: 'Bear keepsake 1' }).selectOption({ label: 'Yoke peg' });
   await page.getByRole('combobox', { name: 'Bear keepsake 2' }).selectOption({ label: 'Covenant token' });
-  await expect(page.locator('[data-member="bear"] .equipment-stats')).toHaveText('Health 44 · Mana 12 · Damage 5');
+  await expect(page.locator('[data-member="bear"] .equipment-stats')).toHaveText('Health 44 · Mana 12 · Damage 3');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: 'test-results/equipment-mobile.png', fullPage: true });
 });

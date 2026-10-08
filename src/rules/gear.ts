@@ -3,10 +3,10 @@ import type { MemberId } from './battle';
 
 export type KeepsakeId = 'cracked-mirror' | 'crow-feather' | 'covenant-token' | 'yoke-peg' | 'wool-charm';
 // What a keepsake changes about its holder in battle.
-export type Mods = Readonly<{ health: number; damage: number; reveal: number; suppressCost: number; attackCost: number; shown: number }>;
+export type Mods = Readonly<{ health: number; damage: number; reveal: number; suppressCost: number; shown: number }>;
 export type Gear = Readonly<Record<MemberId, readonly KeepsakeId[]>>;
 
-export const NO_MODS: Mods = { health: 0, damage: 0, reveal: 0, suppressCost: 0, attackCost: 0, shown: 0 };
+export const NO_MODS: Mods = { health: 0, damage: 0, reveal: 0, suppressCost: 0, shown: 0 };
 export const SLOTS = 2;
 export const MEMBER_IDS: readonly MemberId[] = ['chameleon', 'bear', 'vulture'];
 
@@ -19,7 +19,7 @@ export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; ef
   'covenant-token': { name: 'Covenant token',
     effect: '6 more health.', drawback: 'Shows 2 more mana, so enemies watch the holder.', mods: { health: 6, shown: 2 } },
   'yoke-peg': { name: 'Yoke peg', holder: 'bear',
-    effect: '8 more health.', drawback: 'Attacks cost 3 mana instead of 2.', mods: { health: 8, attackCost: 1 } },
+    effect: '8 more health.', drawback: 'Attacks hit 2 softer.', mods: { health: 8, damage: -2 } },
   'wool-charm': { name: 'Wool charm',
     effect: '5 more health.', drawback: 'Shows 1 more mana.', mods: { health: 5, shown: 1 } },
 };

@@ -41,7 +41,7 @@ test('party acts in any order, locks spent turns, and wins with protection', asy
   await drag(page, '[data-member="vulture"] .party-fighter', '.enemy-fighter');
   await expect(page.locator('#battle-turn')).toHaveText('Round 1 · 2 actions remaining');
   await expect(page.getByRole('button', { name: 'Vulture attack', exact: true })).toBeDisabled();
-  await expect(card(page, 'vulture').locator('.member-mana')).toHaveText('Mana 8 / 10 · showing 8');
+  await expect(card(page, 'vulture').locator('.member-mana')).toHaveText('Mana 10 / 10 · showing 10');
   await expect(card(page, 'bear').locator('.member-condition')).toHaveText('Unhurt');
   await page.getByRole('button', { name: 'Bear support', exact: true }).click();
   await expect(page.locator('#battle-turn')).toHaveText('Round 1 · 1 actions remaining');
