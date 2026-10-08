@@ -1,4 +1,4 @@
-import { act, canAct, condition, COST, createBattle, enemyTarget, intent, MEMBERS, resolveEnemy, visibleMana, enemyMana, SPELL } from '../rules/battle';
+import { act, canAct, condition, COST, ENEMIES, createBattle, enemyTarget, intent, MEMBERS, resolveEnemy, visibleMana, enemyMana, SPELL } from '../rules/battle';
 import type { Action, Battle, Fighter, MemberId, Encounter } from '../rules/battle';
 import type { Hollow } from '../rules/memory';
 
@@ -16,7 +16,7 @@ export class BattleView {
   constructor(heroImage: string, onFinish: (won: boolean) => void, encounter: Encounter = 'locust', hollow?: Hollow) {
     this.onFinish = onFinish;
     this.state = createBattle(encounter, loadGrimoire(), hollow);
-    const enemyName = encounter === 'locust' ? 'Crop locust' : 'Hooded exile';
+    const enemyName = ENEMIES[encounter].name;
     this.root = document.createElement('section');
     this.root.className = 'battle party-battle';
     this.root.setAttribute('role', 'dialog');
@@ -144,11 +144,11 @@ export class BattleView {
     const done = state.phase === 'victory' || state.phase === 'defeat';
     const remaining = state.party.filter(member => member.health > 0 && !member.acted).length;
     this.root.dataset.phase = state.phase;
-    this.get('#battle-turn').textContent = done ? (state.phase === 'victory' ? 'The room falls quiet.' : 'The party falls.')
+    this.get('#battle-turn').textContent = done ? (state.phase === 'victory' ? 'It falls quiet.' : 'The party falls.')
       : `Round ${state.round} · ${state.phase === 'player' ? `${remaining} actions remaining` : 'The enemy moves'}`;
     this.get('#enemy-condition').textContent = condition(state.enemy);
     this.renderHealth(this.get('.enemy-row .health-bar'), state.enemy);
-    this.get('#enemy-mana').textContent = `Mana ${enemyMana(state)}${state.encounter === 'acolyte' && !state.enemyRevealed ? ' · veiled' : ''}`;
+    this.get('#enemy-mana').textContent = `Mana ${enemyMana(state)}${ENEMIES[state.encounter].veiled && !state.enemyRevealed ? ' · veiled' : ''}`;
     const target = enemyTarget(state);
     this.get('#enemy-intent').textContent = done ? '' : `${intent(state).type === 'spell' ? 'Spell' : 'Physical'} · ${intent(state).tell} ${target ? `Watching ${MEMBERS[target.id].name}.` : ''}`;
     this.get('.grimoire-status').textContent = `Grimoire · ${state.studied.includes(SPELL) ? SPELL + ' — can be blocked' : 'No spells studied'}${this.saved ? '' : ' · kept for this visit; browser save unavailable'}`;

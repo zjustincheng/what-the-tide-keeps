@@ -1,16 +1,24 @@
 import Phaser from 'phaser';
-import { conversation, conversations } from '../content/church';
+import { conversation } from '../content/dialogue';
+import { createBattle, enemyMana, ENEMIES } from '../rules/battle';
 import type { Encounter } from '../rules/battle';
 import { forget, held, hollow, MEMORY_IDS, wipe } from '../rules/memory';
 import { loadMemory, saveMemory } from '../storage/memory';
 import { BattleView } from '../ui/BattleView';
 import { ResurrectionView } from '../ui/ResurrectionView';
+import type { Area } from './areas';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 type Point = { name: string; x: number; y: number };
+type Foe = { encounter: Encounter; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container };
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+// Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
+const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10] };
+// Whether the last save succeeded, shared by every area.
+let saved = true;
 
-export class ChurchScene extends Phaser.Scene {
+// One explorable map: the church, a route, or a town. Areas differ only in their data.
+export class AreaScene extends Phaser.Scene {
   player!: Phaser.Physics.Arcade.Sprite;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   private points: Point[] = [];
@@ -19,81 +27,62 @@ export class ChurchScene extends Phaser.Scene {
   private active?: { speaker: string; lines: string[] };
   private line = 0;
   private cleanup = new AbortController();
-  private spawn = { x: 88, y: 124 };
-  private saved = true;
+  private arrival = 'spawn';
+  private leaving = false;
   private shadow!: Phaser.GameObjects.Ellipse;
-  private enemy!: Phaser.Physics.Arcade.Sprite;
-  private signature!: Phaser.GameObjects.Container;
-  private exile!: Phaser.Physics.Arcade.Sprite;
-  private exileSignature!: Phaser.GameObjects.Container;
+  private foes: Foe[] = [];
   private overlay?: BattleView | ResurrectionView;
 
-  constructor() { super('church'); }
+  constructor(private area: Area) { super(area.key); }
+
+  init(data: { spawn?: string }) {
+    // Scene instances are reused, so every visit starts from a clean slate.
+    this.arrival = data?.spawn ?? 'spawn';
+    this.cleanup = new AbortController();
+    this.held = new Set(); this.foes = [];
+    this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false;
+  }
 
   preload() {
-    this.load.svg('church-tiles', `${import.meta.env.BASE_URL}assets/church-tiles.svg`);
-    this.load.tilemapTiledJSON('church-map', `${import.meta.env.BASE_URL}maps/church.json`);
-    this.load.svg('acolyte', `${import.meta.env.BASE_URL}assets/acolyte.svg`);
-    this.load.svg('locust', `${import.meta.env.BASE_URL}assets/locust.svg`);
+    const base = import.meta.env.BASE_URL;
+    this.load.svg(`${this.area.tileset}-tiles`, `${base}assets/${this.area.tileset}-tiles.svg`);
+    this.load.tilemapTiledJSON(`${this.area.map}-map`, `${base}maps/${this.area.map}.json`);
+    for (const { encounter } of this.area.enemies) if (!this.textures.exists(encounter)) this.load.svg(encounter, `${base}assets/${encounter}.svg`);
   }
 
   create() {
-    const map = this.make.tilemap({ key: 'church-map' });
-    const tiles = map.addTilesetImage('church', 'church-tiles')!;
+    const map = this.make.tilemap({ key: `${this.area.map}-map` });
+    const tiles = map.addTilesetImage(this.area.tileset, `${this.area.tileset}-tiles`)!;
     map.createLayer('Floor', tiles);
     const furniture = map.createLayer('Furniture', tiles)!;
     furniture.setCollisionByProperty({ collides: true });
     this.points = map.getObjectLayer('Points')!.objects.map(p => ({ name: p.name, x: p.x!, y: p.y! }));
-    this.spawn = this.points.find(p => p.name === 'spawn')!;
+    const spawn = this.point(this.arrival);
     this.createCharacters();
-    this.shadow = this.add.ellipse(this.spawn.x, this.spawn.y + 3, 14, 6, 0x122b22, 0.6);
-    this.player = this.physics.add.sprite(this.spawn.x, this.spawn.y, 'hero');
+    this.shadow = this.add.ellipse(spawn.x, spawn.y + 3, 14, 6, 0x122b22, 0.6);
+    this.player = this.physics.add.sprite(spawn.x, spawn.y, 'hero');
     this.player.setSize(9, 7).setOffset(5, 17).setCollideWorldBounds(true);
-    this.physics.world.setBounds(32, 48, 448, 304);
+    this.physics.world.setBounds(...this.area.bounds);
     this.physics.add.collider(this.player, furniture);
-    const priest = this.points.find(p => p.name === 'priest')!;
-    this.add.ellipse(priest.x, priest.y + 4, 15, 6, 0x142a23, 0.6);
-    const npc = this.physics.add.staticSprite(priest.x, priest.y, 'priest');
-    npc.setSize(10, 8).setOffset(5, 16);
-    this.physics.add.collider(this.player, npc);
-    const encounter = this.points.find(p => p.name === 'encounter')!;
-    this.enemy = this.physics.add.staticSprite(encounter.x, encounter.y, 'locust').setDepth(4);
-    this.enemy.setSize(22, 20).setOffset(5, 8);
-    const ring = this.add.ellipse(0, 4, 37, 20).setStrokeStyle(1, 0xd2b675, 0.7);
-    const mana = this.add.text(0, -23, '◇ 2', { fontFamily: 'monospace', fontSize: '8px', color: '#dbc58b' }).setOrigin(0.5);
-    this.signature = this.add.container(encounter.x, encounter.y, [ring, mana]).setDepth(5);
-    this.tweens.add({ targets: ring, alpha: 0.35, duration: 1000, yoyo: true, repeat: -1 });
-    this.physics.add.overlap(this.player, this.enemy, () => this.beginBattle('locust'));
-    const exilePoint = this.points.find(p => p.name === 'exile')!;
-    this.exile = this.physics.add.staticSprite(exilePoint.x, exilePoint.y, 'acolyte').setDepth(4);
-    this.exile.setSize(20, 20).setOffset(6, 9);
-    const veil = this.add.ellipse(0, 5, 34, 18).setStrokeStyle(1, 0x9dbbb4, 0.65);
-    const hint = this.add.text(0, -24, '◇ 2', { fontFamily: 'monospace', fontSize: '8px', color: '#b7d3c7' }).setOrigin(0.5);
-    this.exileSignature = this.add.container(exilePoint.x, exilePoint.y, [veil, hint]).setDepth(5);
-    this.tweens.add({ targets: veil, alpha: 0.15, duration: 1400, yoyo: true, repeat: -1 });
-    this.physics.add.overlap(this.player, this.exile, () => this.beginBattle('acolyte'));
-
-    // Soft window light, hand placed in the same coordinates as the Tiled room.
-    const light = this.add.graphics().setDepth(2);
-    for (const x of [88,168,344,424]) {
-      light.fillStyle(0xc2d1a0, 0.055);
-      light.fillPoints([{ x:x-5,y:48 },{ x:x+6,y:48 },{ x:x+62,y:175 },{ x:x+24,y:175 }],true);
+    for (const { point, texture } of this.area.npcs) {
+      const at = this.point(point);
+      this.add.ellipse(at.x, at.y + 4, 15, 6, 0x142a23, 0.6);
+      const npc = this.physics.add.staticSprite(at.x, at.y, texture);
+      npc.setSize(10, 8).setOffset(5, 16);
+      this.physics.add.collider(this.player, npc);
     }
-    for (const [x,y] of [[200,88],[312,88],[88,72],[424,72],[200,296],[312,296]]) {
-      const glow = this.add.circle(x,y,15,0xf6c77a,0.06).setDepth(3);
-      this.tweens.add({targets:glow,alpha:0.035,duration:1100+(x%5)*130,yoyo:true,repeat:-1});
-    }
-    // Slow, deterministic dust motes avoid random changes to the playable map.
-    for(let i=0;i<18;i++) {
-      const mote=this.add.rectangle(70+(i*71)%370,65+(i*37)%240,1,1,0xd2d0a2,0.25).setDepth(5);
-      this.tweens.add({targets:mote,y:mote.y-12,alpha:0.05,duration:3200+i*130,yoyo:true,repeat:-1});
-    }
+    for (const { point, encounter } of this.area.enemies) this.createFoe(this.point(point), encounter);
+    this.area.decorate?.(this);
     this.keys = this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT', false) as typeof this.keys;
     this.bindControls();
+    element('location-region').textContent = this.area.region;
+    element('location-place').textContent = `/ ${this.area.place}`;
+    element('location-time').textContent = this.area.time;
+    element('game').setAttribute('aria-label', `${this.area.place} map. Move with WASD or arrow keys. Press E or Space to interact.`);
     this.cameras.main.fadeIn(650, 16, 27, 24);
     this.renderMemory();
     // A wipe that was not yet paid for, such as one interrupted by a reload, is still owed.
-    if(loadMemory().pending) this.wake();
+    if (loadMemory().pending) this.wake();
     this.events.once('shutdown', () => {
       this.cleanup.abort();
       this.overlay?.destroy();
@@ -102,7 +91,27 @@ export class ChurchScene extends Phaser.Scene {
     });
   }
 
+  private point(name: string): Point {
+    return this.points.find(p => p.name === name)!;
+  }
+
+  private createFoe(at: Point, encounter: Encounter) {
+    const [width, height, x, y] = BODY[encounter];
+    const sprite = this.physics.add.staticSprite(at.x, at.y, encounter).setDepth(4);
+    sprite.setSize(width, height).setOffset(x, y);
+    // Veiled mana reads as a faint, cool shimmer; open mana as a warm ring.
+    const veiled = ENEMIES[encounter].veiled;
+    const ring = this.add.ellipse(0, veiled ? 5 : 4, veiled ? 34 : 37, veiled ? 18 : 20).setStrokeStyle(1, veiled ? 0x9dbbb4 : 0xd2b675, veiled ? 0.65 : 0.7);
+    const mana = this.add.text(0, veiled ? -24 : -23, `◇ ${enemyMana(createBattle(encounter))}`, { fontFamily: 'monospace', fontSize: '8px', color: veiled ? '#b7d3c7' : '#dbc58b' }).setOrigin(0.5);
+    const signature = this.add.container(at.x, at.y, [ring, mana]).setDepth(5);
+    this.tweens.add({ targets: ring, alpha: veiled ? 0.15 : 0.35, duration: veiled ? 1400 : 1000, yoyo: true, repeat: -1 });
+    const foe = { encounter, sprite, signature };
+    this.foes.push(foe);
+    this.physics.add.overlap(this.player, sprite, () => this.beginBattle(foe));
+  }
+
   private createCharacters() {
+    if (this.textures.exists('hero')) return;
     const hero = this.make.graphics({ x:0, y:0 });
     const block=(x:number,y:number,w:number,h:number,c:number)=>hero.fillStyle(c).fillRect(x,y,w,h);
     // A curled tail, green crest, pale eye and the branded convict's cloak.
@@ -134,15 +143,10 @@ export class ChurchScene extends Phaser.Scene {
     },{signal});
     element('continue').addEventListener('click',()=>this.interact(),{signal});
     element('touch-interact').addEventListener('click',()=>this.interact(),{signal});
+    // Returning to the cot always restarts the church, which also resets its encounters.
     element('restart').addEventListener('click',()=>{
       if(this.overlay) return;
-      this.closeDialogue();this.held.clear();this.player.setVelocity(0);this.player.setPosition(this.spawn.x,this.spawn.y);
-      const encounter = this.points.find(p => p.name === 'encounter')!;
-      this.enemy.enableBody(true, encounter.x, encounter.y, true, true);
-      this.signature.setVisible(true);
-      const exilePoint = this.points.find(p => p.name === 'exile')!;
-      this.exile.enableBody(true, exilePoint.x, exilePoint.y, true, true);
-      this.exileSignature.setVisible(true);
+      this.scene.start('church');
       element('game').focus({preventScroll:true});
     },{signal});
     document.querySelectorAll<HTMLButtonElement>('[data-direction]').forEach(button=>{
@@ -160,7 +164,7 @@ export class ChurchScene extends Phaser.Scene {
   }
 
   private interact(event?: KeyboardEvent) {
-    if(this.overlay) return;
+    if(this.overlay || this.leaving) return;
     if(event?.repeat) return;
     // Let native buttons handle their own Enter/Space activation once.
     if(event && document.activeElement instanceof HTMLButtonElement && [' ', 'Enter'].includes(event.key)) return;
@@ -168,14 +172,24 @@ export class ChurchScene extends Phaser.Scene {
       this.line++;
       if(this.line>=this.active.lines.length) this.closeDialogue();
       else element('dialogue-text').textContent=this.active.lines[this.line];
+    } else if(this.nearby && this.nearby.name in this.area.exits) {
+      this.travel(this.area.exits[this.nearby.name]);
     } else if(this.nearby) {
-      this.active=conversation(this.nearby.name, loadMemory().lost);this.line=0;
+      this.active=conversation(this.area.dialogue, this.nearby.name, loadMemory().lost);this.line=0;
       element('speaker').textContent=this.active.speaker;
       element('dialogue-text').textContent=this.active.lines[0];
       element('dialogue').hidden=false;
       element('prompt').textContent='';
       this.player.setVelocity(0);
     }
+  }
+
+  private travel({ to, spawn }: { to: string; spawn: string }) {
+    this.leaving = true;
+    this.player.setVelocity(0);
+    element('prompt').textContent = '';
+    this.cameras.main.fadeOut(250, 16, 27, 24);
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(to, { spawn }));
   }
 
   private closeDialogue() {
@@ -191,10 +205,8 @@ export class ChurchScene extends Phaser.Scene {
     if(this.input.keyboard) this.input.keyboard.enabled = enabled;
   }
 
-  private beginBattle(encounter: Encounter) {
-    const enemy = encounter === 'locust' ? this.enemy : this.exile;
-    const signature = encounter === 'locust' ? this.signature : this.exileSignature;
-    if(this.overlay || this.active || !enemy.active) return;
+  private beginBattle(foe: Foe) {
+    if(this.overlay || this.active || this.leaving || !foe.sprite.active) return;
     this.player.setVelocity(0);
     this.held.clear();
     this.input.keyboard?.resetKeys();
@@ -204,15 +216,15 @@ export class ChurchScene extends Phaser.Scene {
     this.overlay = new BattleView(this.textures.getBase64('hero'), won => {
       this.overlay = undefined;
       if(won) {
-        enemy.disableBody(true, true);
-        signature.setVisible(false);
+        foe.sprite.disableBody(true, true);
+        foe.signature.setVisible(false);
         this.resumeExploration();
       } else {
-        this.player.setPosition(this.spawn.x, this.spawn.y);
-        this.saved = saveMemory(wipe(loadMemory()));
-        if(loadMemory().pending) this.wake(); else this.resumeExploration();
+        // Every wipe wakes the party at the church, wherever it fell.
+        saved = saveMemory(wipe(loadMemory()));
+        this.scene.start('church');
       }
-    }, encounter, hollow(loadMemory()));
+    }, foe.encounter, hollow(loadMemory()));
   }
 
   private wake() {
@@ -223,7 +235,7 @@ export class ChurchScene extends Phaser.Scene {
     this.overlay = new ResurrectionView(loadMemory(), id => {
       this.overlay?.destroy();
       this.overlay = undefined;
-      this.saved = saveMemory(forget(loadMemory(), id));
+      saved = saveMemory(forget(loadMemory(), id));
       this.renderMemory();
       this.cameras.main.fadeIn(900, 16, 27, 24);
       this.resumeExploration();
@@ -231,7 +243,7 @@ export class ChurchScene extends Phaser.Scene {
   }
 
   private renderMemory() {
-    element('memory-status').textContent = `Some things are already missing · ${held(loadMemory()).length} of ${MEMORY_IDS.length} memories remain${this.saved ? '' : ' · not saved'}`;
+    element('memory-status').textContent = `Some things are already missing · ${held(loadMemory()).length} of ${MEMORY_IDS.length} memories remain${saved ? '' : ' · not saved'}`;
   }
 
   private resumeExploration() {
@@ -244,7 +256,7 @@ export class ChurchScene extends Phaser.Scene {
 
   update(time: number) {
     if(!this.player) return;
-    if(this.overlay) return;
+    if(this.overlay || this.leaving) { this.player.setVelocity(0); return; }
     const pressed=(direction:Direction,...keys:string[])=>this.held.has(direction)||keys.some(key=>this.keys[key].isDown);
     let x=Number(pressed('right','D','RIGHT'))-Number(pressed('left','A','LEFT'));
     let y=Number(pressed('down','S','DOWN'))-Number(pressed('up','W','UP'));
@@ -256,9 +268,9 @@ export class ChurchScene extends Phaser.Scene {
     this.shadow.setPosition(this.player.x,this.player.y+9);
     // A restrained walking bob, while the physics body stays steady.
     this.player.setOrigin(0.5,0.5+(x||y?Math.sin(time/85)*0.025:0));
-    this.nearby=this.points.filter(p=>p.name in conversations)
+    this.nearby=this.points.filter(p=>p.name in this.area.dialogue || p.name in this.area.exits)
       .find(p=>Phaser.Math.Distance.Between(this.player.x,this.player.y,p.x,p.y)<29);
     if(!this.active) element('prompt').textContent=this.nearby
-      ? `E · ${this.nearby.name==='priest'?'Speak to the priest':this.nearby.name==='door'?'Look outside':'Examine '+this.nearby.name}` : '';
+      ? `E · ${this.area.exits[this.nearby.name]?.prompt ?? this.area.dialogue[this.nearby.name].prompt ?? 'Examine '+this.nearby.name}` : '';
   }
 }

@@ -1,17 +1,17 @@
-import type { MemoryId } from '../rules/memory';
-
-type Conversation = { speaker: string; lines: string[] };
+import type { Dialogue } from './dialogue';
 
 // Narrative content stays separate from rendering and input.
-export const conversations: Record<string, Conversation & { forgotten?: Partial<Record<MemoryId, string[]>> }> = {
-  priest: { speaker: 'THE PRIEST', lines: [
+export const church: Dialogue = {
+  priest: { speaker: 'THE PRIEST', prompt: 'Speak to the priest', lines: [
     'Easy, hero. The sea has given you back to us again.',
     'You asked me to remember something for you. I am sorry. You never told me what it was.',
     'There is a veiled stranger by the east wall. A small signature can hide a great deal. Something came in with the last grain sacks. A small signature, by the south wall. Watch its legs before you strike.',
+    'The church has work for its heroes. Grain has stopped reaching the highlands. Take the south door, follow the farm road, and find out why.',
   ], forgotten: { feast: [
     'Easy, hero. The sea has given you back to us again.',
     'Every time you woke, you told me you were framed. You have stopped saying it. I find I miss it.',
     'There is a veiled stranger by the east wall. A small signature can hide a great deal. Something came in with the last grain sacks. A small signature, by the south wall. Watch its legs before you strike.',
+    'The church has work for its heroes. Grain has stopped reaching the highlands. Take the south door, follow the farm road, and find out why.',
   ] } },
   ledger: { speaker: 'THE RESURRECTION LEDGER', lines: [
     'Five names. Five sentences. Beneath yours, a column of dates runs into the margin.',
@@ -25,15 +25,4 @@ export const conversations: Record<string, Conversation & { forgotten?: Partial<
   ], forgotten: { feast: [
     'Salt has gathered around the rim. The water smells of the sea, and of nothing else.',
   ] } },
-  door: { speaker: 'THE CAPITAL', lines: [
-    'Beyond the doors, a bell calls the city awake. The road to the farmland waits.',
-    'Your journey beyond the church is not built yet. For now, there is only this room, and what remains of you.',
-  ] },
 };
-
-// The world remembers what the hero cannot: a forgotten memory changes what he hears.
-export function conversation(name: string, lost: readonly MemoryId[]): Conversation {
-  const { speaker, lines, forgotten = {} } = conversations[name];
-  const memory = lost.find(id => id in forgotten);
-  return { speaker, lines: memory ? forgotten[memory]! : lines };
-}

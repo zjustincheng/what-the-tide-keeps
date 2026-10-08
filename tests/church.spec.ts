@@ -54,10 +54,12 @@ test('priest dialogue pauses movement and can be completed', async ({ page }) =>
   await page.getByRole('button', { name: 'Continue' }).press('Enter');
   await expect(page.locator('#dialogue-text')).toContainText('grain');
   await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.locator('#dialogue-text')).toContainText('Take the south door');
+  await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.locator('#dialogue')).toBeHidden();
 });
 
-test('furniture blocks walking and door describes the milestone boundary', async ({ page }) => {
+test('furniture blocks walking and the south door leads outside', async ({ page }) => {
   await page.evaluate(async () => {
     const path='/src/main.ts'; const {game}=await import(/* @vite-ignore */ path);
     game.scene.getScene('church').player.setPosition(120, 187);
@@ -71,11 +73,9 @@ test('furniture blocks walking and door describes the milestone boundary', async
     const path='/src/main.ts'; const {game}=await import(/* @vite-ignore */ path);
     game.scene.getScene('church').player.setPosition(256, 330);
   });
-  await expect(page.locator('#prompt')).toContainText('Look outside');
+  await expect(page.locator('#prompt')).toContainText('Step outside');
   await page.keyboard.press('e');
-  await expect(page.locator('#speaker')).toHaveText('THE CAPITAL');
-  await page.keyboard.press('e');
-  await expect(page.locator('#dialogue-text')).toContainText('not built yet');
+  await expect(page.locator('#location-region')).toHaveText('THE FARMLAND');
 });
 
 test('mobile controls move and release without page overflow', async ({ page }) => {

@@ -2,7 +2,7 @@
 import type { Hollow } from './memory';
 export type MemberId = 'chameleon' | 'bear' | 'vulture';
 export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze';
-export type Encounter = 'locust' | 'acolyte';
+export type Encounter = 'locust' | 'acolyte' | 'weevil';
 export const SPELL = 'Salt lance';
 export type Phase = 'player' | 'enemy' | 'victory' | 'defeat';
 export type Fighter = Readonly<{ health: number; maxHealth: number; mana: number; maxMana: number }>;
@@ -31,6 +31,15 @@ export const MEMBERS = {
   bear: { name: 'Bear', attack: 'Stone fist', support: 'Protect', damage: 3 },
   vulture: { name: 'Vulture', attack: 'Quill', support: 'Focus', damage: 6 },
 } as const;
+// Crop pests hide nothing and only strike physically; the exile veils its mana and casts.
+export const ENEMIES = {
+  locust: { name: 'Crop locust', short: 'locust', health: 72, mana: 2, veiled: false,
+    opening: 'A crop locust has followed the grain sacks inside. The three of you take your places.' },
+  acolyte: { name: 'Hooded exile', short: 'exile', health: 72, mana: 12, veiled: true,
+    opening: 'The hooded exile shows almost no mana. A spell gathers behind the veil.' },
+  weevil: { name: 'Grain weevil', short: 'weevil', health: 60, mana: 3, veiled: false,
+    opening: 'A grain weevil the size of a handcart shoulders out of the wheat.' },
+} as const satisfies Record<Encounter, unknown>;
 export const COST = { attack: 2, support: 0, suppress: 1, barrier: 5, analyze: 2 } as const;
 export const MANA_REGEN = 3;
 export const UNHOLLOWED: Hollow = { mana: 0, damage: 0, trained: true };
@@ -44,8 +53,8 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
   return {
     round: 1, phase: 'player', encounter, studied: studied.includes(SPELL) ? [SPELL] : [], hollow, enemyRevealed: false,
     party: [member('chameleon', 16, 10 + hollow.mana), member('bear', 24, 12), member('vulture', 12, 10)],
-    enemy: { health: 72, maxHealth: 72, mana: encounter === 'acolyte' ? 12 : 2, maxMana: encounter === 'acolyte' ? 12 : 2 },
-    log: [encounter === 'locust' ? 'A crop locust has followed the grain sacks inside. The three of you take your places.' : 'The hooded exile shows almost no mana. A spell gathers behind the veil.'],
+    enemy: { health: ENEMIES[encounter].health, maxHealth: ENEMIES[encounter].health, mana: ENEMIES[encounter].mana, maxMana: ENEMIES[encounter].mana },
+    log: [ENEMIES[encounter].opening],
   };
 }
 
@@ -62,7 +71,7 @@ export function visibleMana(member: Member): number {
 }
 
 export function enemyMana(battle: Battle): number {
-  return battle.encounter === 'acolyte' && !battle.enemyRevealed ? Math.min(2, battle.enemy.mana) : battle.enemy.mana;
+  return ENEMIES[battle.encounter].veiled && !battle.enemyRevealed ? Math.min(2, battle.enemy.mana) : battle.enemy.mana;
 }
 
 export function intent(battle: Battle) {
@@ -75,6 +84,9 @@ export function intent(battle: Battle) {
       damage: casting ? 18 : 5,
     };
   }
+  if (battle.encounter === 'weevil') return battle.round % 3 === 0
+    ? { name: 'Rolling charge', type: 'physical' as const, tell: 'It tucks its snout and rocks back. A rolling charge is coming.', damage: 12 }
+    : { name: 'Snout jab', type: 'physical' as const, tell: 'Its snout lowers. It will jab.', damage: 5 };
   return battle.round % 2 === 0
     ? { name: 'Crushing leap', type: 'physical' as const, tell: 'Its hind legs draw tight. A crushing leap is coming.', damage: 14 }
     : { name: 'Mandible strike', type: 'physical' as const, tell: 'Its mandibles part. It will strike.', damage: 6 };
@@ -124,13 +136,13 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
   const message = action === 'suppress' ? `${definition.name} conceals their mana.`
     : action === 'barrier' ? `${definition.name} raises a spell barrier around ${MEMBERS[target].name}.`
     : action === 'analyze' ? `${definition.name} studies the gathering spell. ${SPELL} is written into the grimoire.`
-    : action === 'attack' ? `${definition.name}'s ${definition.attack.toLowerCase()} strikes the ${battle.encounter === 'locust' ? 'locust' : 'exile'}${member.suppressed ? ' in a burst of revealed mana' : ''}${member.focused ? ' with focused force' : ''}.`
+    : action === 'attack' ? `${definition.name}'s ${definition.attack.toLowerCase()} strikes the ${ENEMIES[battle.encounter].short}${member.suppressed ? ' in a burst of revealed mana' : ''}${member.focused ? ' with focused force' : ''}.`
     : actor === 'vulture' ? 'Vulture steadies her aim. Her next attack will strike harder.'
     : actor === 'bear' && target !== actor ? `Bear steps in front of ${MEMBERS[target].name}.`
     : `${definition.name} plants their feet and guards.`;
   return {
     ...battle, party, enemy, studied: action === 'analyze' ? [SPELL] : battle.studied, phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
-    log: [...battle.log, message, ...(victory ? ['The signature flickers out. The room is quiet again.'] : [])],
+    log: [...battle.log, message, ...(victory ? ['The signature flickers out. It is quiet again.'] : [])],
   };
 }
 

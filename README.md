@@ -40,9 +40,9 @@ npm run test:unit # Pure TypeScript combat and memory rule tests
 
 Build the repeatable loop in miniature before adding the full story. The first playable milestone is a small Tiled map with a moving character, starting with the hero waking in the church. Add the feast opening after the loop works.
 
-The first seven build steps are playable: church exploration, visible encounters, basic combat, a party of three, mana-based magic, death, and memory in the world. Speak to the priest and inspect the ledger and basin. Near the southeast wall, a crop locust shows a small mana signature. Touch it to enter battle. A hooded exile near the northeast wall provides a second encounter with suppressed mana and an unknown spell. The south door still marks the edge of the prototype. The artwork and dialogue are original placeholders.
+The first seven build steps are playable: church exploration, visible encounters, basic combat, a party of three, mana-based magic, death, and memory in the world. Speak to the priest and inspect the ledger and basin. Near the southeast wall, a crop locust shows a small mana signature. Touch it to enter battle. A hooded exile near the northeast wall provides a second encounter with suppressed mana and an unknown spell. The priest gives the farmland mission, and the south door opens onto the farm road. The artwork and dialogue are original placeholders.
 
-In battle, command the chameleon, bear, and vulture. Each living member acts once in any order; only then does the locust act and each surviving companion regain 3 mana. Downed members cannot act, and the party only wipes when all three fall. Party members and enemies have health bars and condition descriptions; exact health and damage numbers remain hidden. Mana is numeric. Enemies target the living member with the most visible mana, preferring the bear in a tie.
+In battle, command the chameleon, bear, and vulture. Each living member acts once in any order; only then does the enemy act and each surviving companion regain 3 mana. Downed members cannot act, and the party only wipes when all three fall. Party members and enemies have health bars and condition descriptions; exact health and damage numbers remain hidden. Mana is numeric. Enemies target the living member with the most visible mana, preferring the bear in a tie.
 
 Drag any member onto the locust to attack, or tap that member for self-support. Per-member action buttons offer keyboard and touch access. Chameleon guards himself. Bear can guard himself or protect another companion: drag him onto that ally, or choose a target with his **Protect** selector before using the **Protect** button. Vulture focuses to strengthen her next shot; focus does not stack. Guards last for one enemy turn. Bear also blocks attacks aimed at himself while protecting another companion.
 
@@ -64,6 +64,12 @@ The shared grimoire survives cot resets, defeats, and reloads in browser local s
 
 These are prototype combat encounters in the church, not the final regional placement or recruitment story. Spellcraft options supplement the original attack/support controls while testing the rules.
 
+## The farm road
+
+The first part of build step 8 (one region): the farm road south of the church, between wheat fields and a hay yard. Crop pests show their full mana and only strike physically, as the guideline describes. Two crop locusts feed in a trampled clearing and on the road, and a grain weevil waits in the hay yard. The weevil jabs most turns and makes a heavy rolling charge every third round. A waymark and a scarecrow can be examined. The road south toward Millbrook ends at the edge of the prototype; the town comes next.
+
+Leaving an area and coming back respawns its enemies. A wipe anywhere wakes the party at the church cot, and **Return to the cot** works from any area.
+
 ## Death and memory
 
 The hero begins with eight of his ten memories; his home and his name were lost before the game starts. A party wipe wakes him at the cot, where he must choose one held memory to forget before he can move. Each memory shows what forgetting it costs and the Hollow perk that replaces it:
@@ -77,8 +83,10 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 
 ## Project layout
 
-- `src/scenes/ChurchScene.ts` — Phaser exploration, collision, and input.
-- `src/content/church.ts` — prototype dialogue, with variants for forgotten memories.
+- `src/scenes/AreaScene.ts` — Phaser exploration, collision, input, encounters, and travel, shared by every area.
+- `src/scenes/areas.ts` — each area's map, people, enemies, exits, and decoration.
+- `src/content/dialogue.ts` — dialogue lookup, with variants for forgotten memories.
+- `src/content/church.ts`, `src/content/road.ts` — prototype dialogue for each area.
 - `src/rules/battle.ts` — immutable, renderer-independent combat state and transitions.
 - `src/rules/memory.ts` — memory loss and Hollow perks, independent of the renderer.
 - `src/content/memories.ts` — memory names and what forgetting each costs.
@@ -88,9 +96,11 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/ui/ResurrectionView.ts` — the wake screen where a memory is chosen.
 - `public/maps/church.json` — editable Tiled JSON map with floor, furniture, and named interaction points.
 - `public/assets/church-tiles.svg` — original placeholder tileset.
-- `scripts/create-church.mjs` — regenerates the starter map and tileset; running it replaces manual map edits.
+- `public/maps/farm-road.json`, `public/assets/farm-tiles.svg` — the farm road map and its placeholder tileset.
+- `scripts/create-church.mjs`, `scripts/create-farm-road.mjs` — regenerate each map and tileset; running one replaces manual edits to that map.
 - `tests/church.spec.ts` — browser checks.
 - `tests/battle.spec.ts` — encounter and combat browser checks.
+- `tests/road.spec.ts` — travel, the weevil, and waking after a wipe outside.
 - `tests/death.spec.ts` — wipe, memory choice, and save browser checks.
 - `tests/rules/battle.test.ts` — combat tests without a browser.
 - `tests/rules/memory.test.ts` — memory and Hollow perk tests without a browser.

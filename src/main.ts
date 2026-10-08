@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { ChurchScene } from './scenes/ChurchScene';
+import { AreaScene } from './scenes/AreaScene';
+import { AREAS } from './scenes/areas';
 import './style.css';
 
 export const game = new Phaser.Game({
@@ -12,7 +13,7 @@ export const game = new Phaser.Game({
   roundPixels: true,
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   physics: { default: 'arcade', arcade: { debug: false } },
-  scene: [ChurchScene],
+  scene: AREAS.map(area => new AreaScene(area)),
 });
 
 if (import.meta.hot) import.meta.hot.dispose(() => game.destroy(true));

@@ -1,7 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { conversation } from '../../src/content/church.ts';
+import { church } from '../../src/content/church.ts';
+import { conversation as say } from '../../src/content/dialogue.ts';
 import { createMemory, forget, wipe } from '../../src/rules/memory.ts';
+
+const conversation = (name: string, lost: Parameters<typeof say>[2]) => say(church, name, lost);
 
 test('forgetting a memory changes what the church says, and only that', () => {
   const start = createMemory();
@@ -13,5 +16,5 @@ test('forgetting a memory changes what the church says, and only that', () => {
   assert.match(conversation('ledger', noFeast.lost).lines[0], /column of dates/);
   const noTrial = forget(wipe(start), 'trial');
   assert.match(conversation('ledger', noTrial.lost).lines[1], /do not know what you did/);
-  assert.equal(conversation('door', noTrial.lost).speaker, 'THE CAPITAL');
+  assert.equal(conversation('basin', noTrial.lost).speaker, 'THE TIDAL BASIN');
 });
