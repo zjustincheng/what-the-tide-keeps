@@ -32,7 +32,7 @@ test('a writ can be bought once, and coins and supplies are lost on a wipe', () 
 
 test("supplies heal, revive, and burn as a hero's action, and are used up", () => {
   const supplies = { 'smoked-fish': 1, 'smelling-salts': 1, firepot: 1 };
-  const start = createBattle('locust', [], UNHOLLOWED, undefined, STARTING_BOOKS, undefined, supplies);
+  const start = createBattle('locust', [], { supplies });
   const hurt: Battle = { ...start, party: start.party.map(member => ({ ...member, health: member.id === 'vulture' ? 0 : 5 })) };
   let battle = useSupply(hurt, 'chameleon', 'smoked-fish', 'bear');
   assert.equal(battle.party[1].health, 15);

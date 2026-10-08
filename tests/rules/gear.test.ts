@@ -25,7 +25,7 @@ test('keepsakes change their holder in battle, drawbacks included', () => {
   gear = equip(gear, KEEPSAKE_IDS, 'bear', 0, 'covenant-token');
   gear = equip(gear, KEEPSAKE_IDS, 'bear', 1, 'yoke-peg');
   const plain = createBattle();
-  const battle = createBattle('locust', [], UNHOLLOWED, gear);
+  const battle = createBattle('locust', [], { gear });
   const [hero, bear, vulture] = battle.party;
   assert.equal(bear.maxHealth, plain.party[1].maxHealth + 6 + 8);
   assert.equal(visibleMana(bear), bear.mana + 2, 'the token makes the bear easy to see');

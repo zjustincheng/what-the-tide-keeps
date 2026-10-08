@@ -62,7 +62,7 @@ export class EquipmentView {
 
   private render() {
     // Preview the party exactly as the next fight will build it.
-    const party = createBattle('locust', [], this.hollow, this.gear, this.carried, this.party).party;
+    const party = createBattle('locust', [], { hollow: this.hollow, gear: this.gear, books: this.carried, roster: this.party }).party;
     for (const id of this.party) {
       const card = this.root.querySelector<HTMLElement>(`[data-member="${id}"]`)!;
       const member = party.find(member => member.id === id)!;

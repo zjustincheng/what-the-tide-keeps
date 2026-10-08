@@ -35,13 +35,13 @@ test('with every memory gone, a wipe takes nothing', () => {
 
 test('Hollow perks strengthen the hero in battle, and forgetting his training dulls his reveal', () => {
   const memory = forget(wipe(forget(wipe(createMemory()), 'training')), 'feast');
-  const battle = createBattle('locust', [], hollow(memory));
+  const battle = createBattle('locust', [], { hollow: hollow(memory) });
   assert.equal(battle.party[0].maxMana, 12);
   assert.equal(battle.party[1].maxMana, 12, 'companions are unchanged');
   let fight = act(battle, 'chameleon', 'suppress');
   fight = resolveEnemy(act(act(fight, 'bear', 'support'), 'vulture', 'support'));
   fight = act(fight, 'chameleon', 'attack');
   assert.equal(fight.enemy.health, ENEMIES.locust.health - (MEMBERS.chameleon.damage + PERK_BONUS.force + 2), 'base, Hollow force, and an untrained reveal');
-  const trained = act(createBattle('locust', [], hollow(forget(wipe(createMemory()), 'feast'))), 'chameleon', 'attack');
+  const trained = act(createBattle('locust', [], { hollow: hollow(forget(wipe(createMemory()), 'feast')) }), 'chameleon', 'attack');
   assert.equal(trained.enemy.health, ENEMIES.locust.health - (MEMBERS.chameleon.damage + PERK_BONUS.force));
 });

@@ -9,10 +9,10 @@ import { fields } from '../../src/content/fields.ts';
 
 test('the hero starts alone and enemies are scaled to the party that faces them', () => {
   assert.deepEqual(roster(createWorld()), ['chameleon']);
-  const solo = createBattle('locust', [], UNHOLLOWED, undefined, STARTING_BOOKS, ['chameleon']);
+  const solo = createBattle('locust', [], { roster: ['chameleon'] });
   assert.deepEqual(solo.party.map(member => member.id), ['chameleon']);
   assert.equal(solo.enemy.maxHealth, Math.round(ENEMIES.locust.health * PARTY_SCALE[0]));
-  const pair = createBattle('boar', [], UNHOLLOWED, undefined, STARTING_BOOKS, ['chameleon', 'bear']);
+  const pair = createBattle('boar', [], { roster: ['chameleon', 'bear'] });
   assert.equal(pair.enemy.maxHealth, Math.round(ENEMIES.boar.health * PARTY_SCALE[1]));
   assert.equal(pair.followers[0].maxHealth, Math.round(FOLLOWERS.boar![0].health * PARTY_SCALE[1]));
   assert.equal(createBattle().enemy.maxHealth, ENEMIES.locust.health, 'a full party meets full strength');

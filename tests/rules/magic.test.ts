@@ -73,7 +73,8 @@ test('barriers cost five, cannot target the fallen, and spells are not learned o
 test('studying, guarding physical blows, and shielding the mana target can win the exile encounter', () => {
   let battle = createBattle('acolyte');
   while (battle.phase === 'player') {
-    battle = act(battle, 'chameleon', battle.round === 1 ? 'analyze' : battle.round % 2 === 0 ? 'barrier' : 'attack', 'bear');
+    // The chameleon studies the spell, shields the bear when it falls due, and gathers mana in between.
+    battle = act(battle, 'chameleon', battle.round === 1 ? 'analyze' : battle.round % 2 === 0 ? 'barrier' : 'gather', 'bear');
     battle = act(battle, 'bear', battle.round % 2 === 0 ? 'attack' : 'support');
     battle = act(battle, 'vulture', 'attack');
     battle = resolveEnemy(battle);

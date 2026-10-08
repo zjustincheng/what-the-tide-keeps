@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { createBattle, enemyMana, ENEMIES, MEMBERS, woundsAfter } from '../rules/battle';
+import { createBattle, drainedAfter, enemyMana, ENEMIES, MEMBERS, woundsAfter } from '../rules/battle';
+import type { BattleOptions } from '../rules/battle';
 import type { Encounter } from '../rules/battle';
 import { forget, held, hollow, MEMORY_IDS, wipe } from '../rules/memory';
 import { apply, conversation, drop, holds, replies, rest, roster } from '../rules/world';
@@ -340,6 +341,9 @@ export class AreaScene extends Phaser.Scene {
     element('game').inert = !enabled;
     element('dialogue').inert = !enabled;
     element('settings').inert = !enabled;
+    // The health display sits under battles and menus, so it steps out of the way for screen readers too.
+    element('hud').inert = !enabled;
+    element('hud').setAttribute('aria-hidden', String(!enabled));
     document.querySelector<HTMLElement>('.touch-controls')!.inert = !enabled;
     if(this.input.keyboard) this.input.keyboard.enabled = enabled;
   }
@@ -358,7 +362,7 @@ export class AreaScene extends Phaser.Scene {
         foe.sprite.disableBody(true, true);
         foe.signature.setVisible(false);
         // The spoils, and whatever supplies were not used up.
-        saved = saveWorld({ ...loadWorld(), coins: loadWorld().coins + BOUNTY[foe.encounter], supplies: battle.supplies, wounds: woundsAfter(battle) });
+        saved = saveWorld({ ...loadWorld(), coins: loadWorld().coins + BOUNTY[foe.encounter], supplies: battle.supplies, wounds: woundsAfter(battle), drained: drainedAfter(battle) });
         this.renderMemory();
         if(foe.defeat) {
           const next=apply(this.context(), foe.defeat);
@@ -371,7 +375,7 @@ export class AreaScene extends Phaser.Scene {
         saved = saveMemory(wipe(loadMemory())) && saveWorld(drop(loadWorld()));
         this.scene.start('church');
       }
-    }, foe.encounter, hollow(loadMemory()), loadGear(), loadBooks(), roster(loadWorld()), loadWorld().supplies, loadWorld().wounds);
+    }, foe.encounter, this.partyOptions());
   }
 
   // A shop opens after its keeper has spoken, if there is anything left to sell.
@@ -444,19 +448,27 @@ export class AreaScene extends Phaser.Scene {
     });
   }
 
+  // The party as it stands: memories, keepsakes, grimoires, companions, supplies, wounds, and spent mana.
+  private partyOptions(): BattleOptions {
+    const world = loadWorld();
+    return { hollow: hollow(loadMemory()), gear: loadGear(), books: loadBooks(), roster: roster(world), supplies: world.supplies, wounds: world.wounds, drained: world.drained };
+  }
+
   private renderMemory() {
     element('purse').textContent = `${loadWorld().coins} coins`;
     // The party as the next fight will find it.
-    const party = createBattle('locust', [], hollow(loadMemory()), loadGear(), loadBooks(), roster(loadWorld()), undefined, loadWorld().wounds).party;
+    const party = createBattle('locust', [], this.partyOptions()).party;
     // Health at the top left of the map: a portrait, a bar, and the numbers for each hero.
     element('hud').innerHTML = party.map(member => {
       const share = member.health / member.maxHealth;
       const level = share <= 0.25 ? 'low' : share <= 0.5 ? 'wounded' : 'healthy';
       return `<div class="hud-member" data-hud-member="${member.id}"><img alt="" src="${this.portrait(member.id === 'chameleon' ? 'hero' : member.id)}" />
         <div><span class="hud-name">${MEMBERS[member.id].name}</span>
-        <div class="health-bar" role="meter" aria-label="${MEMBERS[member.id].name}" aria-valuemin="0" aria-valuemax="${member.maxHealth}" aria-valuenow="${member.health}" aria-valuetext="${member.health} of ${member.maxHealth}" data-level="${level}" style="--health:${share * 100}%"><span></span></div>
-        <span class="hud-numbers">${member.health} / ${member.maxHealth}</span></div></div>`;
-    }).join('') + (party.some(member => member.health < member.maxHealth) ? '<p class="hud-hint">Rest at a fire to heal</p>' : '');
+        <div class="health-bar" role="meter" aria-label="${MEMBERS[member.id].name} health" aria-valuemin="0" aria-valuemax="${member.maxHealth}" aria-valuenow="${member.health}" aria-valuetext="${member.health} of ${member.maxHealth}" data-level="${level}" style="--health:${share * 100}%"><span></span></div>
+        <span class="hud-numbers">${member.health} / ${member.maxHealth}</span>
+        <div class="mana-bar" role="meter" aria-label="${MEMBERS[member.id].name} mana" aria-valuemin="0" aria-valuemax="${member.maxMana}" aria-valuenow="${member.mana}" aria-valuetext="${member.mana} of ${member.maxMana} mana" style="--mana:${member.mana / member.maxMana * 100}%"><span></span></div>
+        <span class="hud-numbers">◇ ${member.mana} / ${member.maxMana}</span></div></div>`;
+    }).join('') + (party.some(member => member.health < member.maxHealth || member.mana < member.maxMana) ? '<p class="hud-hint">Rest at a fire to heal and recover mana</p>' : '');
     element('memory-status').textContent = `Some things are already missing · ${held(loadMemory()).length} of ${MEMORY_IDS.length} memories remain${saved ? '' : ' · not saved'}`;
   }
 

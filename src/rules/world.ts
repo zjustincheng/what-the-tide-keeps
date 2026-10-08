@@ -18,7 +18,9 @@ export type Found = KeepsakeId | BookId;
 // Coins and supplies, like carried items, are lost on a wipe.
 // Wounds: damage each hero still carries from earlier fights, healed by resting at a campfire or waking in the church.
 export type Wounds = Readonly<Partial<Record<MemberId, number>>>;
-export type World = Readonly<{ flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds }>;
+// Drained: mana each hero has spent and not yet recovered. Like wounds, it lasts until rest.
+export type Drained = Readonly<Partial<Record<MemberId, number>>>;
+export type World = Readonly<{ flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained }>;
 export const ITEMS: readonly Item[] = ['bell'];
 export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
   'sheep-woods', 'sheep-orchard', 'sheep-yard', 'sheep-reward', 'barrel-bought', 'squid-freed', 'swarm-slain', 'bounty-paid',
@@ -34,7 +36,7 @@ export type Effect = { give?: Item; take?: Item; set?: Flag; learn?: string; fin
 export type ShopId = 'stall' | 'reeve' | 'fishmonger';
 
 export function createWorld(): World {
-  return { flags: [], carried: [], found: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, wounds: {} };
+  return { flags: [], carried: [], found: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, wounds: {}, drained: {} };
 }
 
 export function holds(context: Context, condition: Condition): boolean {
@@ -56,15 +58,15 @@ export function apply(context: Context, effect: Effect): Context {
       carried: effect.give && !carried.includes(effect.give) ? [...carried, effect.give] : carried,
       flags: effect.set && !world.flags.includes(effect.set) ? [...world.flags, effect.set] : world.flags,
       found: effect.find && !world.found.includes(effect.find) ? [...world.found, effect.find] : world.found,
-      coins: world.coins + (effect.earn ?? 0), supplies: world.supplies, fish: world.fish, wounds: effect.rest ? {} : world.wounds,
+      coins: world.coins + (effect.earn ?? 0), supplies: world.supplies, fish: world.fish, wounds: effect.rest ? {} : world.wounds, drained: effect.rest ? {} : world.drained,
     },
     studied: effect.learn && !studied.includes(effect.learn) ? [...studied, effect.learn] : studied,
   };
 }
 
-// Resting at a campfire closes every wound.
+// Resting at a campfire closes every wound and restores every hero's mana.
 export function rest(world: World): World {
-  return { ...world, wounds: {} };
+  return { ...world, wounds: {}, drained: {} };
 }
 
 // The hero sets out alone. Companions join as they are found and freed, in the order of the story.
@@ -76,7 +78,7 @@ export function roster(world: World): MemberId[] {
 // Things carried, coins, supplies, fish, and wounds gathered since the last death are lost on a wipe. Flags, like opened shortcuts, persist.
 export function drop(world: World): World {
   // The church sends the party back out whole.
-  return { ...world, carried: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, wounds: {} };
+  return { ...world, carried: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, wounds: {}, drained: {} };
 }
 
 // The world remembers what the hero cannot: what he hears depends on what he has forgotten, carries, and has done.

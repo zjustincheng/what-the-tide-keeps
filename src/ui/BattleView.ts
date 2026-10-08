@@ -1,12 +1,8 @@
-import { act, canAct, canCast, canUse, cast, useSupply, warded, condition, cost, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
-import type { Action, Battle, Dodge, Fighter, Foe, MemberId, Encounter } from '../rules/battle';
-import type { Hollow } from '../rules/memory';
-import type { Gear } from '../rules/gear';
+import { act, canAct, canCast, canUse, cast, GATHER, useSupply, warded, condition, cost, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
+import type { Action, Battle, BattleOptions, Dodge, Fighter, Foe, MemberId, Encounter } from '../rules/battle';
 import { checkSequence, SPELLS } from '../rules/spells';
-import type { Books } from '../rules/spells';
 import { BOUNTY, SUPPLIES, SUPPLY_IDS } from '../rules/economy';
 import type { Supplies, SupplyId } from '../rules/economy';
-import type { Wounds } from '../rules/world';
 
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
 
@@ -27,9 +23,9 @@ export class BattleView {
   // Set while a spell is being typed.
   private casting?: (key: number) => void;
 
-  constructor(heroImage: string, onFinish: (won: boolean, state: Battle) => void, encounter: Encounter = 'locust', hollow?: Hollow, gear?: Gear, books?: Books, roster?: readonly MemberId[], supplies?: Supplies, wounds?: Wounds) {
+  constructor(heroImage: string, onFinish: (won: boolean, state: Battle) => void, encounter: Encounter = 'locust', options: BattleOptions = {}) {
     this.onFinish = onFinish;
-    this.state = createBattle(encounter, loadGrimoire(), hollow, gear, books, roster, supplies, wounds);
+    this.state = createBattle(encounter, loadGrimoire(), options);
     const enemyName = ENEMIES[encounter].name;
     this.root = document.createElement('section');
     this.root.className = 'battle party-battle';
@@ -54,7 +50,7 @@ export class BattleView {
           <button class="fighter party-fighter" aria-label="${info.name}: tap for ${info.support.toLowerCase()}, drag to attack or support"><img alt="" /></button>
           <h3>${info.name}</h3><div class="health-bar" role="meter" aria-label="${info.name} health" aria-valuemin="0" aria-valuemax="100"><span></span></div><p class="member-condition"></p><p class="mana member-mana"></p><p class="member-status"></p>
           <label class="protect-label">Ally <select aria-label="${member.id === 'bear' ? 'Bear protection target' : info.name + ' barrier target'}">${this.state.party.map(target => `<option value="${target.id}" ${target.id === member.id ? 'selected' : ''}>${MEMBERS[target.id].name}</option>`).join('')}</select></label>
-          <div class="member-actions"><button data-action="attack" aria-label="${info.name} attack">${info.attack}<small>${cost(member, 'attack')} mana</small></button><button data-action="support" aria-label="${info.name} support">${info.support}<small>No mana</small></button></div>
+          <div class="member-actions"><button data-action="attack" aria-label="${info.name} attack">${info.attack}<small>${cost(member, 'attack')} mana</small></button><button data-action="support" aria-label="${info.name} support">${info.support}<small>No mana</small></button><button data-action="gather" aria-label="${info.name} gather">Gather<small>+${GATHER} mana</small></button></div>
           ${member.spell ? `<button class="cast-button" data-cast aria-label="${info.name} cast ${SPELLS[member.spell].name}">${SPELLS[member.spell].name}<small>${SPELLS[member.spell].cost} mana · ${SPELLS[member.spell].length} keys</small></button>` : ''}
           <details class="spellcraft"><summary>Spellcraft</summary><button data-action="suppress" aria-label="${info.name} suppress">Suppress · ${cost(member, 'suppress')} mana</button><button data-action="barrier" aria-label="${info.name} barrier">Barrier · 5 mana</button><button data-action="analyze" aria-label="${info.name} analyze">Analyze · 2 mana</button></details>
           ${SUPPLY_IDS.some(id => this.state.supplies[id] > 0) ? `<details class="spellcraft supplies-menu"><summary>Supplies</summary>${SUPPLY_IDS.map(id => `<button data-supply="${id}" aria-label="${info.name} use ${SUPPLIES[id].name}"></button>`).join('')}</details>` : ''}
@@ -64,7 +60,7 @@ export class BattleView {
       <div class="spell-bar" hidden><p class="spell-name"></p><div class="spell-keys" aria-live="polite"></div><div class="spell-timer"><span></span></div>
         <div class="spell-pad">${[1, 2, 3, 4].map(key => `<button type="button" data-key="${key}">${key}</button>`).join('')}</div></div>
       <div class="dodge-bar" hidden><p class="dodge-call" aria-live="assertive"></p><button id="dodge" type="button">Dodge <small>Space or tap · as the ring closes</small></button></div>
-      <p class="battle-help">Each living companion acts once. Spellcraft uses that action too.<br />Guard physical blows. Analyze spells before blocking them. Attack while hidden to reveal.<br />When a blow comes, press Space as the ring closes to dodge. Unknown spells cannot be dodged.</p>
+      <p class="battle-help">Each living companion acts once. Spellcraft uses that action too.<br />Guard physical blows. Analyze spells before blocking them. Attack while hidden to reveal.<br />Mana returns slowly: 1 a round, or Gather to draw back more. Spent mana stays spent until you rest.<br />When a blow comes, press Space as the ring closes to dodge. Unknown spells cannot be dodged.</p>
       <button id="battle-finish" hidden></button>`;
     for (const member of this.state.party) {
       this.card(member.id).querySelector<HTMLImageElement>('img')!.src = member.id === 'chameleon' ? heroImage
@@ -74,7 +70,7 @@ export class BattleView {
     const signal = this.cleanup.signal;
     for (const member of this.state.party) {
       const card = this.card(member.id);
-      for (const action of ['attack', 'support', 'suppress', 'barrier', 'analyze'] as const) {
+      for (const action of ['attack', 'support', 'gather', 'suppress', 'barrier', 'analyze'] as const) {
         card.querySelector(`[data-action="${action}"]`)!.addEventListener('click', () => {
           const target = (action === 'barrier' || (member.id === 'bear' && action === 'support')) ? card.querySelector<HTMLSelectElement>('select')!.value as MemberId : member.id;
           this.choose(member.id, action, target, action === 'attack' ? this.foe() : 0);
@@ -312,7 +308,7 @@ export class BattleView {
         : member.barrier ? 'Barrier raised' : member.suppressed ? 'Hidden · attack to reveal'
         : member.guardingFor ? `Guarding ${MEMBERS[member.guardingFor].name}` : member.focused ? 'Focused'
         : member.acted ? 'Acted' : done ? '' : 'Ready';
-      for (const action of ['attack', 'support', 'suppress', 'barrier', 'analyze'] as const) card.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)!.disabled = Boolean(this.casting) || !canAct(state, member.id, action, member.id, action === 'attack' ? this.foe() : 0);
+      for (const action of ['attack', 'support', 'gather', 'suppress', 'barrier', 'analyze'] as const) card.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)!.disabled = Boolean(this.casting) || !canAct(state, member.id, action, member.id, action === 'attack' ? this.foe() : 0);
       card.querySelectorAll<HTMLButtonElement>('[data-supply]').forEach(button => {
         const supply = button.dataset.supply as SupplyId;
         button.textContent = `${SUPPLIES[supply].name} · ${state.supplies[supply]} left`;

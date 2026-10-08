@@ -28,13 +28,13 @@ test('stone ward guards everyone, still water heals, and a snare costs the enemy
   let battle = cast(createBattle(), 'bear', true);
   battle = act(act(battle, 'chameleon', 'attack'), 'vulture', 'attack');
   assert.equal(nextStrike(battle)!.dodgeable, false, 'the ward turns the blow aside');
-  const healer = createBattle('locust', [], UNHOLLOWED, undefined, carry(STARTING_BOOKS, ['pond-primer'], 'chameleon', 'pond-primer'));
+  const healer = createBattle('locust', [], { books: carry(STARTING_BOOKS, ['pond-primer'], 'chameleon', 'pond-primer') });
   assert.equal(healer.party[0].spell, 'still-water');
   const wounded = { ...healer, party: healer.party.map(member => ({ ...member, health: member.id === 'vulture' ? 0 : 5 })) };
   const mended = cast(wounded, 'chameleon', true);
   assert.deepEqual(mended.party.map(member => member.health), [5 + 8, 5 + 8, 0], 'the fallen stay down');
   const snareBooks = carry(STARTING_BOOKS, ['snare-primer'], 'vulture', 'snare-primer');
-  let boar = createBattle('boar', [], UNHOLLOWED, undefined, snareBooks);
+  let boar = createBattle('boar', [], { books: snareBooks });
   boar = cast(boar, 'vulture', true);
   boar = act(act(boar, 'chameleon', 'attack'), 'bear', 'attack');
   assert.match(nextStrike(boar)!.move.name, /badger's cudgel/, 'the boar himself does not move');
@@ -48,5 +48,5 @@ test('a grimoire is carried by one hero at a time, and only once found', () => {
   assert.equal(carry(STARTING_BOOKS, [], 'bear', 'pond-primer'), STARTING_BOOKS);
   const swapped = carry(STARTING_BOOKS, ['thornwork'], 'bear', 'thornwork');
   assert.deepEqual(swapped, { chameleon: null, bear: 'thornwork', vulture: 'windward' });
-  assert.equal(createBattle('locust', [], UNHOLLOWED, undefined, swapped).party[0].spell, null);
+  assert.equal(createBattle('locust', [], { books: swapped }).party[0].spell, null);
 });

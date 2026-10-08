@@ -8,11 +8,19 @@ import type { Flag, Item, World } from '../rules/world';
 const KEY = 'tide-keeps.world.v1';
 let session: World | undefined;
 
+// A saved count per hero, such as wounds or spent mana, keeping only sensible values.
+function perMember(saved: unknown) {
+  return Object.fromEntries(MEMBER_IDS.flatMap(id => {
+    const value = (saved as Record<string, unknown>)?.[id];
+    return typeof value === 'number' && value > 0 ? [[id, Math.floor(value)]] : [];
+  }));
+}
+
 function parse(raw: string | null): World | undefined {
   if (raw === null) return undefined;
   const saved: unknown = JSON.parse(raw);
   if (typeof saved !== 'object' || saved === null) return undefined;
-  const { flags, carried, found = [], coins = 0, supplies = {}, fish = {}, wounds = {} } = saved as Record<string, unknown>;
+  const { flags, carried, found = [], coins = 0, supplies = {}, fish = {}, wounds = {}, drained = {} } = saved as Record<string, unknown>;
   if (!Array.isArray(flags) || !Array.isArray(carried) || !Array.isArray(found)) return undefined;
   return {
     flags: FLAGS.filter((flag): flag is Flag => flags.includes(flag)), carried: ITEMS.filter((item): item is Item => carried.includes(item)),
@@ -26,10 +34,8 @@ function parse(raw: string | null): World | undefined {
       const count = (fish as Record<string, unknown>)?.[id];
       return [id, typeof count === 'number' && count > 0 ? Math.floor(count) : 0];
     })) as typeof NO_CATCH,
-    wounds: Object.fromEntries(MEMBER_IDS.flatMap(id => {
-      const wound = (wounds as Record<string, unknown>)?.[id];
-      return typeof wound === 'number' && wound > 0 ? [[id, Math.floor(wound)]] : [];
-    })),
+    wounds: perMember(wounds),
+    drained: perMember(drained),
   };
 }
 

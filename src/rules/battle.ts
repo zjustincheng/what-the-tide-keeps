@@ -7,9 +7,9 @@ import { BOOKS, SPELLS, STARTING_BOOKS } from './spells.ts';
 import type { Books, SpellId } from './spells';
 import { NO_SUPPLIES, SUPPLIES } from './economy.ts';
 import type { Supplies, SupplyId } from './economy';
-import type { Wounds } from './world';
+import type { Drained, Wounds } from './world';
 export type MemberId = 'chameleon' | 'bear' | 'vulture';
-export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze';
+export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze' | 'gather';
 export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm' | 'warden' | 'leech';
 export const SPELL = 'Salt lance';
 export type Phase = 'player' | 'enemy' | 'victory' | 'defeat';
@@ -88,20 +88,31 @@ export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; healt
 export const YIELDING: Partial<Record<Encounter, true>> = { boar: true };
 export const FURY_PER_HIT = 3;
 export const FOLLOWER_BLOW = 2;
-export const COST = { attack: 2, support: 0, suppress: 1, barrier: 5, analyze: 2 } as const;
-export const MANA_REGEN = 3;
+export const COST = { attack: 2, support: 0, suppress: 1, barrier: 5, analyze: 2, gather: 0 } as const;
+// Heroes recover mana slowly in a fight, and not at all between fights until they rest.
+// Gathering trades a hero's action for a larger draw. Enemies recover at their own pace.
+export const MANA_REGEN = 1;
+export const GATHER = 3;
+export const ENEMY_REGEN = 3;
 export const UNHOLLOWED: Hollow = { mana: 0, damage: 0, trained: true };
 // Enemy health for a party of one, two, or three, so a smaller party is not simply outmatched.
 export const PARTY_SCALE = [0.45, 0.65, 1] as const;
 
 // Hollow perks strengthen only the hero; companions keep their own memories.
-export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], hollow: Hollow = UNHOLLOWED, gear?: Gear, books: Books = STARTING_BOOKS, roster: readonly MemberId[] = MEMBER_IDS, supplies: Supplies = NO_SUPPLIES, wounds: Wounds = {}): Battle {
+// What a fight starts from, beyond the enemy and the shared grimoire. Everything defaults to a fresh, full party.
+export type BattleOptions = Readonly<{
+  hollow?: Hollow; gear?: Gear; books?: Books; roster?: readonly MemberId[]; supplies?: Supplies;
+  // Damage and spent mana carried in from earlier fights, until the party rests.
+  wounds?: Wounds; drained?: Drained;
+}>;
+export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], options: BattleOptions = {}): Battle {
+  const { hollow = UNHOLLOWED, gear, books = STARTING_BOOKS, roster = MEMBER_IDS, supplies = NO_SUPPLIES, wounds = {}, drained = {} } = options;
   const member = (id: MemberId, base: number, mana: number): Member => {
     const worn = gear ? mods(gear, id) : NO_MODS;
     const maxHealth = Math.max(1, base + worn.health);
     // Heroes enter hurt if they were hurt before; a hero who fell stays down.
     const health = Math.max(0, maxHealth - (wounds[id] ?? 0));
-    return { id, health, maxHealth, mana, maxMana: mana, acted: false, guardingFor: null, focused: false, suppressed: false, barrier: false, gear: worn,
+    return { id, health, maxHealth, mana: Math.max(0, mana - (drained[id] ?? 0)), maxMana: mana, acted: false, guardingFor: null, focused: false, suppressed: false, barrier: false, gear: worn,
       spell: books[id] ? BOOKS[books[id]!].spell : null };
   };
   const size = Math.max(1, Math.min(3, roster.length));
@@ -114,6 +125,11 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
     fury: 0, step: 0, snared: false, supplies,
     log: [ENEMIES[encounter].opening],
   };
+}
+
+// The mana each hero has spent and not recovered, carried from a won fight until they rest.
+export function drainedAfter(battle: Battle): Drained {
+  return Object.fromEntries(battle.party.filter(member => member.mana < member.maxMana).map(member => [member.id, member.maxMana - member.mana]));
 }
 
 // What each hero carries away from a won fight.
@@ -213,6 +229,7 @@ export function canAct(battle: Battle, actor: MemberId, action: Action, target: 
   if (battle.phase !== 'player' || !member || member.health <= 0 || member.acted || member.mana < cost(member, action)) return false;
   if (action === 'attack' && !standing(battle, foe)) return false;
   if (action === 'suppress' && member.suppressed) return false;
+  if (action === 'gather' && member.mana >= member.maxMana) return false;
   if (action === 'analyze' && (battle.encounter !== 'acolyte' || battle.studied.includes(SPELL))) return false;
   if (action === 'barrier' && !battle.party.some(ally => ally.id === target && ally.health > 0)) return false;
   if (action === 'support') {
@@ -325,7 +342,7 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
   const party = battle.party.map(current => ({
     ...current,
     ...(current.id === actor ? {
-      acted: true, mana: current.mana - cost(current, action),
+      acted: true, mana: action === 'gather' ? Math.min(current.maxMana, current.mana + GATHER) : current.mana - cost(current, action),
       focused: action === 'attack' ? false : (action === 'support' && actor === 'vulture') || current.focused,
       suppressed: action === 'suppress' ? true : action === 'attack' ? false : current.suppressed,
       guardingFor: action === 'support' && actor !== 'vulture' ? target : current.guardingFor,
@@ -335,7 +352,8 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
   const after = { encounter: battle.encounter, enemy, followers };
   const victory = won(after);
   const allActed = party.every(member => member.health <= 0 || member.acted);
-  const message = action === 'suppress' ? `${definition.name} conceals their mana.`
+  const message = action === 'gather' ? `${definition.name} goes still and gathers their mana.`
+    : action === 'suppress' ? `${definition.name} conceals their mana.`
     : action === 'barrier' ? `${definition.name} raises a spell barrier around ${MEMBERS[target].name}.`
     : action === 'analyze' ? `${definition.name} studies the gathering spell. ${SPELL} is written into the grimoire.`
     : blocked ? `${definition.name}'s ${definition.attack.toLowerCase()} breaks on the candlelight. The warden is untouched while its votives burn.`
@@ -425,7 +443,7 @@ function enemyTurnEnds(battle: Battle): Battle {
     ...battle, party, step: 0, snared: false,
     studied: spell && !defeat ? [SPELL] : battle.studied,
     enemyRevealed: battle.enemyRevealed || spell,
-    enemy: { ...battle.enemy, mana: Math.min(battle.enemy.maxMana, battle.enemy.mana - (spell ? 5 : 0) + MANA_REGEN) },
+    enemy: { ...battle.enemy, mana: Math.min(battle.enemy.maxMana, battle.enemy.mana - (spell ? 5 : 0) + ENEMY_REGEN) },
     phase: defeat ? 'defeat' : 'player', round: defeat ? battle.round : battle.round + 1,
     log: [...battle.log, ...(battle.snared && battle.enemy.health > 0 ? [`The ${ENEMIES[battle.encounter].short} strains against the thorns and cannot move.`] : []), ...(spell && !defeat && !battle.studied.includes(SPELL) ? [`Surviving the spell reveals its structure. ${SPELL} joins the grimoire.`] : []), ...(defeat ? ['The last of you falls. Then, the familiar smell of salt.'] : [])],
   };

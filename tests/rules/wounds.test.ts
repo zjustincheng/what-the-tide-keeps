@@ -4,7 +4,7 @@ import { act, canAct, createBattle, enemyTarget, UNHOLLOWED, woundsAfter } from 
 import { STARTING_BOOKS } from '../../src/rules/spells.ts';
 import { createWorld, drop, rest } from '../../src/rules/world.ts';
 
-const start = (wounds = {}) => createBattle('locust', [], UNHOLLOWED, undefined, STARTING_BOOKS, undefined, undefined, wounds);
+const start = (wounds = {}) => createBattle('locust', [], { wounds });
 
 test('wounds carry from one fight into the next, and the fallen stay down', () => {
   const won = { ...start(), party: start().party.map(member => ({ ...member, health: member.id === 'bear' ? 0 : member.id === 'chameleon' ? 12 : member.maxHealth })) };
@@ -19,7 +19,7 @@ test('wounds carry from one fight into the next, and the fallen stay down', () =
 
 test('resting at a fire or waking in the church heals every wound', () => {
   const world = { ...createWorld(), wounds: { chameleon: 8 }, coins: 5 };
-  assert.deepEqual(rest(world).wounds, {});
+  assert.deepEqual([rest({ ...world, drained: { chameleon: 6 } }).wounds, rest({ ...world, drained: { chameleon: 6 } }).drained], [{}, {}], 'rest restores mana too');
   assert.equal(rest(world).coins, 5, 'resting costs nothing');
   assert.deepEqual(drop(world).wounds, {});
 });
