@@ -10,13 +10,15 @@ import { NO_CATCH } from './fishing.ts';
 import type { Catch } from './fishing';
 
 export type Item = 'bell';
-export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated' | 'pests-field' | 'pests-yard' | 'writ-given' | 'bear-free' | 'vulture-free';
+export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated' | 'pests-field' | 'pests-yard' | 'writ-given' | 'bear-free' | 'vulture-free'
+  | 'sheep-woods' | 'sheep-orchard' | 'sheep-yard' | 'sheep-reward' | 'barrel-bought' | 'squid-freed' | 'swarm-slain' | 'bounty-paid';
 // Things worth keeping: keepsakes and grimoires. Once found, they are kept through every death; carried items are not.
 export type Found = KeepsakeId | BookId;
 // Coins and supplies, like carried items, are lost on a wipe.
 export type World = Readonly<{ flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch }>;
 export const ITEMS: readonly Item[] = ['bell'];
-export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free'];
+export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
+  'sheep-woods', 'sheep-orchard', 'sheep-yard', 'sheep-reward', 'barrel-bought', 'squid-freed', 'swarm-slain', 'bounty-paid'];
 // A favor spell: a small everyday spell a villager trades for help. It opens the hedge on the border road.
 export const BRAMBLES = "Bramble's leave";
 

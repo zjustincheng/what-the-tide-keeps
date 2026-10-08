@@ -11,7 +11,7 @@ export const SHOPS: Record<ShopId, { title: string; note: string; wares: Ware[] 
   fishmonger: {
     title: 'The fishmonger',
     note: 'He buys local catch at a local price. He does not ask where you fished, and you do not ask about the barrel.',
-    wares: [{ sellCatch: true }],
+    wares: [{ sellCatch: true }, { deed: 'barrel-bought', name: 'The barrel', text: 'Whatever is pickling inside. No questions asked, none answered.', price: 25 }],
   },
   reeve: {
     title: 'The reeve',

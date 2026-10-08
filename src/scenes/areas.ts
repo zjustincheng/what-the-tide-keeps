@@ -61,18 +61,20 @@ export const CHURCH: Area = {
 
 export const FARMLAND: Area = {
   key: 'farmland', map: 'farmland', tileset: 'fields', region: 'THE FARMLAND', place: 'The fields', time: 'Dawn',
-  dialogue: fields, assets: ['bear'],
-  npcs: [{ point: 'bear', texture: 'bear', hiddenIf: [{ flag: 'bear-free' }] }, { point: 'miller', texture: 'miller' }, { point: 'heron', texture: 'heron' }],
+  dialogue: fields, assets: ['bear', 'nymph'],
+  npcs: [{ point: 'bear', texture: 'bear', hiddenIf: [{ flag: 'bear-free' }] }, { point: 'miller', texture: 'miller' }, { point: 'heron', texture: 'heron' }, { point: 'shepherd', texture: 'shepherd' }],
   enemies: [
     // The reeve's fields: clearing both earns the writ that frees the bear.
     { point: 'locust', encounter: 'locust', defeat: { set: 'pests-field' } }, { point: 'locust-road', encounter: 'locust' },
     { point: 'weevil-yard', encounter: 'weevil', defeat: { set: 'pests-yard' } }, { point: 'weevil-orchard', encounter: 'weevil' }, { point: 'weevil-woods', encounter: 'weevil' },
     { point: 'exile', encounter: 'acolyte' },
+    { point: 'swarm', encounter: 'swarm', hiddenIf: [{ flag: 'swarm-slain' }], defeat: { set: 'swarm-slain' } },
   ],
   props: [
     { point: 'bell', texture: 'bell', hiddenIf: [{ has: 'bell' }, { flag: 'lamb-thanked' }] },
     ...([['camp-cache', 'cracked-mirror'], ['orchard-cache', 'crow-feather'], ['shrine-cache', 'covenant-token'], ['ford-cache', 'yoke-peg']] as const)
       .map(([point, keepsake]) => ({ point, texture: 'cache', hiddenIf: [{ owns: keepsake }] })),
+    ...(['woods', 'orchard', 'yard'] as const).map(where => ({ point: `sheep-${where}`, texture: 'sheep', solid: true, hiddenIf: [{ flag: `sheep-${where}` as const }] })),
   ],
   fishing: { 'pond-spot': 'pond', 'stream-spot': 'stream' },
   exits: {

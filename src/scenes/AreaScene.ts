@@ -28,7 +28,7 @@ type Prop = { sprite: Phaser.Physics.Arcade.Sprite; hiddenIf: Condition[]; shado
 type Foe = { encounter: Encounter; defeat?: Effect; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container };
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 // Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
-const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10] };
+const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8] };
 // Whether the last save succeeded, shared by every area.
 let saved = true;
 
@@ -222,6 +222,7 @@ export class AreaScene extends Phaser.Scene {
         const next=apply(context, this.active.then);
         saved=saveWorld(next.world)&&saveGrimoire(next.studied);
         this.refreshProps();
+        this.renderMemory();
       }
       element('speaker').textContent=this.active.speaker;
       element('dialogue-text').textContent=this.active.lines[0];
@@ -240,6 +241,8 @@ export class AreaScene extends Phaser.Scene {
   }
 
   private closeDialogue() {
+    // Focus left on the hidden Continue button would strand the keyboard, so it returns to the map.
+    if(element('dialogue').contains(document.activeElement)) element('game').focus({preventScroll:true});
     this.active=undefined;element('dialogue').hidden=true;
     const shop=this.pendingShop;this.pendingShop=undefined;
     if(shop) this.openShop(shop);

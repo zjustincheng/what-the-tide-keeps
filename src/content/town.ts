@@ -8,7 +8,11 @@ export const town: Dialogue = {
     'Nobody gave the order. Everybody has heard it. Find out who is turning my carts, and I may find a use for a convict.',
     'The bear at the mill is yours, I suppose. If you want him, earn him. Clear the pests from my fields, the locust in the wheat and the weevil in the hay yard, and I will sign a writ.',
     'Or pay his fine. Sixty coins. The town could use them more than it could use a bear.',
-  ], then: { shop: 'reeve' }, variants: [{ if: { all: [{ flag: 'pests-field' }, { flag: 'pests-yard' }, { not: { flag: 'writ-given' } }] }, lines: [
+  ], then: { shop: 'reeve' }, variants: [{ if: { all: [{ flag: 'swarm-slain' }, { not: { flag: 'bounty-paid' } }] }, lines: [
+    'The swarm-mother. In the woods. You.',
+    'Twenty-five coins, as posted. The board will say PAID by tonight.',
+    'You receive 25 coins.',
+  ], then: { earn: 25, set: 'bounty-paid' } }, { if: { all: [{ flag: 'pests-field' }, { flag: 'pests-yard' }, { not: { flag: 'writ-given' } }] }, lines: [
     'The wheat is standing and the hay yard is quiet. You did that.',
     'Here. A writ releasing the bear into the custody of the church\'s convict. Into yours. Not into mine.',
     'Show it to the miller. And keep that bear out of my square.',
@@ -35,6 +39,7 @@ export const town: Dialogue = {
     'WANTED, by order of the Covenant: the five who murdered the rulers.',
     'Four of the faces have been scratched out by hooves. Yours has not, though it is a poor likeness.',
     'Pinned beneath it: ROOMS FREE. ASK WITHIN.',
+    'And newer: BOUNTY. The swarm-mother, in the dark woods west of the stream. Twenty-five coins from the reeve.',
   ] },
   child: { speaker: 'A LAMB', prompt: 'Speak to the lamb', lines: [
     'Are you the one who killed the king?',
@@ -60,6 +65,12 @@ export const town: Dialogue = {
   barrel: { speaker: 'THE BARREL', lines: [
     'Something inside knocks twice against the staves, then stops.',
     'The fishmonger sets a hoof on the lid and does not look at you.',
+  ], variants: [
+    { if: { flag: 'squid-freed' }, lines: ['Empty, and smelling of brine. The fishmonger has not refilled it. Yet.'] },
+    { if: { flag: 'barrel-bought' }, lines: [
+      'You pry the lid. Inside, in brine too shallow for it, a young squid folds and unfolds its arms. It is not food. It is a child of the sea.',
+      'It needs running water. The mill stream runs to the sea.',
+    ] },
   ] },
   fox: { speaker: 'A FOX ON A DOORSTEP', prompt: 'Speak to the fox', lines: [
     'Herbivores built that wall and call the far side ours. The gate locks from their side.',

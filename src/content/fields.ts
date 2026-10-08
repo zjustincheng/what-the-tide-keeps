@@ -66,4 +66,32 @@ export const fields: Dialogue = {
     'Washed up in the reeds below the ford: a heavy oak yoke peg, worn smooth by some great shoulder.',
     'It is too big for anyone but the bear.',
   ], then: { find: 'yoke-peg' } },
+  // The shepherd's strays: three sheep scattered by the locusts, sent home one by one.
+  shepherd: { speaker: 'THE SHEPHERD', prompt: 'Speak to the shepherd', lines: [
+    'Three of my flock bolted when the locusts came. One into the dark woods, one into the orchard, one off toward the hay yard.',
+    'I would go myself, but the woods are no place for a ram. Send them home, would you? Sheep come if you call them kindly.',
+    'A reptile calling sheep. Now I have seen everything.',
+  ], variants: [
+    { if: { flag: 'sheep-reward' }, lines: ['The flock is whole. I counted twice. I will count again tonight, but that is my nature, not your fault.'] },
+    { if: { all: [{ flag: 'sheep-woods' }, { flag: 'sheep-orchard' }, { flag: 'sheep-yard' }] }, lines: [
+      'All three, home and grazing. You called them kindly, then.',
+      'Fifteen coins, and this: a charm my daughter knots from the first shearing. It keeps you warm, and easy to find.',
+      'You receive 15 coins and the Wool charm, a keepsake.',
+    ], then: { earn: 15, find: 'wool-charm', set: 'sheep-reward' } },
+  ] },
+  'sheep-woods': { speaker: 'A LOST SHEEP', prompt: 'Call the sheep', hiddenIf: [{ flag: 'sheep-woods' }], lines: [
+    'A sheep, burrs in its wool, trembling in the dark between the trees. You call it kindly. It considers you for a long moment, then trots off toward the meadow.',
+  ], then: { set: 'sheep-woods' } },
+  'sheep-orchard': { speaker: 'A LOST SHEEP', prompt: 'Call the sheep', hiddenIf: [{ flag: 'sheep-orchard' }], lines: [
+    'A sheep with its face deep in the windfalls. It has had too many apples. You call it kindly, and it wobbles home.',
+  ], then: { set: 'sheep-orchard' } },
+  'sheep-yard': { speaker: 'A LOST SHEEP', prompt: 'Call the sheep', hiddenIf: [{ flag: 'sheep-yard' }], lines: [
+    'A sheep pressed against the hay yard fence, hoping the hay will come to it. You call it kindly. It goes, eventually.',
+  ], then: { set: 'sheep-yard' } },
+  // Free the caught: what the fishmonger keeps in his barrel needs running water.
+  'stream-bank': { speaker: 'THE MILL STREAM', prompt: 'Tip the barrel into the stream', hiddenIf: [{ not: { flag: 'barrel-bought' } }, { flag: 'squid-freed' }], lines: [
+    'You tip the barrel into the stream. For a moment the young squid hangs in the current, as if it has forgotten how.',
+    'Then it touches your claw with one arm, the way you might touch a door you mean to remember, and is gone downstream, toward the sea.',
+    'Somewhere, someone is counting.',
+  ], then: { set: 'squid-freed' } },
 };

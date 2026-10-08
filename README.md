@@ -50,9 +50,17 @@ Prototype tuning: ordinary fights last two or three rounds, and the boar about f
 
 Victory removes the locust until you use **Return to the cot**, which resets the encounter. Defeat wakes you at the cot (see below). Each new fight starts with full health and mana. Supplies are not implemented yet, and recruitment and travel beyond the church are still ahead. Encounter progress resets on reload; studied spells and memories persist.
 
+## Side quests
+
+None of these are marked. Someone mentions a problem and the player works out the rest.
+
+- **The shepherd's strays.** A ram in the south meadow lost three sheep to the locusts: one on the path into the dark woods, one in the orchard, one by the hay yard. Call each home, then return to him for 15 coins and the **Wool charm** keepsake (5 more health; shows 1 more mana).
+- **Free the caught.** The fishmonger will sell his barrel for 25 coins. Inside is a young squid, a child of the sea. Tip the barrel into the mill stream south of the bridge. This is the first of the guideline's "free the caught" encounters; the sea elder who rewards them comes with the ocean.
+- **The swarm-mother.** The notice board posts a 25-coin bounty, paid by the reeve. She nests in a hollow deep in the dark woods with two nymphs. The nymphs can be killed, but every third round her brood call raises them again, so the fight rewards striking her hard and fast. She stays dead once beaten.
+
 ## Coins, shops, and supplies
 
-Defeated enemies leave coins: 4 for a locust, 5 for a weevil, 10 for a hooded follower, 30 for the boar. The purse is shown beside **THE CONDEMNED** under the map. As the guideline says, coins and supplies gathered since the last death are lost on a wipe.
+Defeated enemies leave coins: 4 for a locust, 5 for a weevil, 10 for a hooded follower, 12 for the swarm-mother, 30 for the boar. The purse is shown beside **THE CONDEMNED** under the map. As the guideline says, coins and supplies gathered since the last death are lost on a wipe.
 
 The stallholder in Millbrook's market square sells supplies at three times the citizen's price because of the brand, and at twice the price once the boar is beaten and the town thaws:
 
@@ -85,6 +93,7 @@ Press **Tab** while on the map, or use **Equipment** below it, to open the equip
 | Cracked mirror | The abandoned camp in the woods | Chameleon | Reveal hits 3 harder | Hiding costs 2 mana |
 | Crow's feather | The last row of the orchard | Vulture | Attacks hit 3 harder | 4 less health |
 | Covenant token | Behind the old shrine | Anyone | 6 more health | Shows 2 more mana, drawing attacks |
+| Wool charm | The shepherd, for his strays | Anyone | 5 more health | Shows 1 more mana |
 | Yoke peg | The reeds below the ford | Bear | 8 more health | Attacks cost 3 mana |
 
 Equipping a keepsake another hero holds moves it. The screen previews each hero's health, mana, and damage as the next fight will build them. Found keepsakes and grimoires are saved in `tide-keeps.world.v1` and equipped ones in `tide-keeps.gear.v1`.
@@ -139,6 +148,7 @@ South of the church lies the open farmland, a scrolling map about four screens a
 - **Southwest:** dark woods, entered from the track or across a ford, with an abandoned camp.
 - **The locust field:** a trampled clearing where a locust feeds and something glints.
 - **The meadow:** a pond with a heron who fishes for herself.
+- **The south meadow:** a shepherd missing three sheep.
 - **East:** an apple orchard with a grain weevil among the rows, a fenced hay yard with another, and an old Covenant shrine in a ring of standing stones, watched by a hooded follower of the boar.
 - **South:** the high road to Millbrook. **Southeast:** a field track that skirts the town and joins the border road north of the brambles.
 
@@ -210,6 +220,8 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/rules/economy.test.ts` — prices, the thaw, wipes, and supply effects.
 - `tests/fishing.spec.ts` — landing, scaring off, and selling a catch.
 - `tests/rules/fishing.test.ts` — the marker, the zone, bites, and the catch's value.
+- `tests/sidequests.spec.ts` — the strays, the barrel, and the swarm-mother's bounty.
+- `tests/rules/quests.test.ts` — the brood call and each quest's dialogue and rewards.
 - `tests/spells.spec.ts` — casting, fizzling, phone keys, and swapping grimoires.
 - `tests/rules/spells.test.ts` — spell effects, fizzles, and carrying grimoires.
 - `tests/dodge.spec.ts` — dodge timing in the browser.

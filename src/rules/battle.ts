@@ -9,14 +9,15 @@ import { NO_SUPPLIES, SUPPLIES } from './economy.ts';
 import type { Supplies, SupplyId } from './economy';
 export type MemberId = 'chameleon' | 'bear' | 'vulture';
 export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze';
-export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar';
+export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm';
 export const SPELL = 'Salt lance';
 export type Phase = 'player' | 'enemy' | 'victory' | 'defeat';
 export type Fighter = Readonly<{ health: number; maxHealth: number; mana: number; maxMana: number }>;
 export type Follower = Fighter & Readonly<{ name: string }>;
 // Who an attack is aimed at: 0 is the main enemy, 1 and up are its followers.
 export type Foe = number;
-type Move = { name: string; type: 'physical' | 'spell'; damage: number; piercing?: number };
+// revive: the move raises fallen followers instead of striking.
+type Move = { name: string; type: 'physical' | 'spell'; damage: number; piercing?: number; revive?: boolean };
 export type Member = Fighter & Readonly<{
   id: MemberId;
   acted: boolean;
@@ -66,10 +67,14 @@ export const ENEMIES = {
     opening: 'A grain weevil the size of a handcart shoulders out of the wheat.' },
   boar: { name: 'The boar', short: 'boar', health: 72, mana: 6, veiled: false,
     opening: 'The boar rises from the ashes of his own hearth. His followers close in at his flanks. "Not them," he says. "Me."' },
+  swarm: { name: 'Swarm-mother', short: 'swarm-mother', health: 64, mana: 4, veiled: false,
+    opening: 'Something the size of a cart unfolds in the dark between the trees. Her brood drops from the branches around her.' },
 } as const satisfies Record<Encounter, unknown>;
 // Outcast omnivores who follow the boar. They hide their mana; he shields them with his own body.
-export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; health: number }[]>> = {
-  boar: [{ name: 'Badger', health: 16 }, { name: 'Rat', health: 12 }],
+export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; health: number; weapon: string }[]>> = {
+  boar: [{ name: 'Badger', health: 16, weapon: 'cudgel' }, { name: 'Rat', health: 12, weapon: 'cudgel' }],
+  // The swarm-mother's brood can be killed, but she calls them back.
+  swarm: [{ name: 'Nymph', health: 10, weapon: 'bite' }, { name: 'Nymph', health: 10, weapon: 'bite' }],
 };
 export const FURY_PER_HIT = 3;
 export const FOLLOWER_BLOW = 2;
@@ -136,6 +141,9 @@ export function intent(battle: Battle): Move & { tell: string } {
       ? { name: 'Tusk charge', type: 'physical', tell: `He lowers his tusks and paws the ash. A charge is coming.${fury}`, damage: 10 + battle.fury, piercing: battle.fury }
       : { name: 'Shoulder blow', type: 'physical', tell: `He squares his shoulders.${fury}`, damage: 4 + battle.fury, piercing: battle.fury };
   }
+  if (battle.encounter === 'swarm') return battle.round % 3 === 0
+    ? { name: 'Brood call', type: 'physical', tell: 'She shrills, and the brood answers. Fallen nymphs will rise again.', damage: 0, revive: true }
+    : { name: 'Wing buffet', type: 'physical', tell: 'Her wings rattle. A buffet is coming.', damage: 5 };
   if (battle.encounter === 'weevil') return battle.round % 3 === 0
     ? { name: 'Rolling charge', type: 'physical' as const, tell: 'It tucks its snout and rocks back. A rolling charge is coming.', damage: 9 }
     : { name: 'Snout jab', type: 'physical' as const, tell: 'Its snout lowers. It will jab.', damage: 3 };
@@ -298,7 +306,7 @@ export function grade(errorMs: number, move: Move): Dodge {
 // The main enemy moves first, then each standing follower.
 function enemyMoves(battle: Battle): Move[] {
   return [...(battle.snared ? [] : [intent(battle)]), ...battle.followers.filter(follower => follower.health > 0)
-    .map(follower => ({ name: `${follower.name.toLowerCase()}'s cudgel`, type: 'physical' as const, damage: FOLLOWER_BLOW }))];
+    .map(follower => ({ name: `${follower.name.toLowerCase()}'s ${FOLLOWERS[battle.encounter]!.find(kind => kind.name === follower.name)!.weapon}`, type: 'physical' as const, damage: FOLLOWER_BLOW }))];
 }
 
 // The next blow of the enemy turn: who it will hit, for how much, and whether it can be dodged.
@@ -323,6 +331,12 @@ export function strike(battle: Battle, dodge: Dodge = 'miss'): Battle {
   if (battle.phase !== 'enemy') return battle;
   const next = nextStrike(battle);
   if (!next) return enemyTurnEnds(battle);
+  if (next.move.revive) {
+    const followers = battle.followers.map(follower => follower.health > 0 ? follower : { ...follower, health: follower.maxHealth });
+    const risen = followers.length - battle.followers.filter(follower => follower.health > 0).length;
+    const after = { ...battle, followers, step: battle.step + 1, log: [...battle.log, risen ? `The ${ENEMIES[battle.encounter].short} shrills. ${risen === 1 ? 'A fallen nymph rises' : 'Her fallen brood rises'} again.` : `The ${ENEMIES[battle.encounter].short} shrills, but her brood is already standing.`] };
+    return enemyMoves(after)[after.step] ? after : enemyTurnEnds(after);
+  }
   const { move, target, guarded, blocked } = next;
   const avoided = next.dodgeable ? dodge : 'miss';
   const damage = avoided === 'perfect' ? 0 : avoided === 'graze' ? Math.ceil(next.damage / 2) : next.damage;
