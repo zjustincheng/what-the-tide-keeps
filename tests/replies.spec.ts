@@ -51,7 +51,7 @@ test('once the feast is forgotten, the hero can no longer say he is innocent', a
   await lamb(page);
   await expect(page.getByRole('group', { name: 'Replies' }).getByRole('button')).toHaveText(["1. I don't remember.", '2. They say I did.']);
   await page.getByRole('button', { name: "1. I don't remember." }).click();
-  await expect(page.locator('#dialogue-text')).toHaveText('That is the saddest thing anyone has ever said to me.');
+  await expect(page.locator('#dialogue-text')).toHaveText('Then anyone could have done it. Even you.');
 });
 
 test('the priest can tend wounds', async ({ page }) => {
