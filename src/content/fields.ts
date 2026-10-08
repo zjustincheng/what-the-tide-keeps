@@ -11,13 +11,13 @@ export const fields: Dialogue = {
     'You take it. It rings once, too loudly, and something in the wheat goes still.',
   ], then: { give: 'bell' } },
   scarecrow: { speaker: 'THE SCARECROW', lines: [
-    'Its sack face has been stitched with a snout and long ears, so the locusts know whose field this is.',
-    'The locusts have eaten the wheat right up to its feet.',
+    'A sack face stitched with a snout and long ears. Someone has nailed a shed reptile skin to its outstretched arm.',
+    'A warning to the crows, perhaps. The crows do not seem warned. The locusts have eaten the wheat right up to its feet.'
   ] },
   bear: { speaker: 'THE BEAR', prompt: 'Speak to the bear', hiddenIf: [{ flag: 'bear-free' }], lines: [
     'Hero? Hero! Look at you. You look thinner. Do they feed you at that church, or only bury you?',
     'They chained me to the millstone. Penal labor, the miller calls it. The miller is frightened of me, so the chain is very short.',
-    'You still know me. Good. Remember the kraken? You took its eye and I took the blame for the smell. Hold on to that one.',
+    'You still know me. Good. Remember the kraken? Its blood on the deck, and the whole sea gone quiet after. Hold on to that one.',
     'The miller only answers to paper. Get the reeve in Millbrook to sign a writ, and I am yours.',
   ] },
   miller: { speaker: 'THE MILLER', prompt: 'Speak to the miller', lines: [
@@ -32,14 +32,14 @@ export const fields: Dialogue = {
     '"Right," says the bear. "Where are we going?" The bear joins you.',
   ], then: { set: 'bear-free' } }] },
   heron: { speaker: 'A HERON', prompt: 'Speak to the heron', lines: [
-    'Shh. The fish here are small and very suspicious.',
+    'Quiet. The fish here have learned to fear a shadow on the water. So has everyone else.',
     'Everyone inland eats fish by church license now. Carted up from the capital in barrels. Not all of the barrels hold fish, mind you.',
     'I only eat what I catch myself. It is legal, and it keeps me honest.',
     'You have the look of someone who gets hurt a great deal. Here. My mother\'s primer. It teaches water to be still, and wounds to close.',
     "Pond-keeper's primer is yours. Give it to anyone from the Equipment screen; whoever carries it can cast Still water.",
   ], then: { find: 'pond-primer' }, variants: [{ if: { owns: 'pond-primer' }, lines: [
-    'Shh. The fish here are small and very suspicious.',
-    'Did the primer help? Type the water slowly. It does not like to be rushed, but it likes waiting less.',
+    'Quiet. The fish here have learned to fear a shadow on the water. So has everyone else.',
+    'The primer was my mother\'s. They took her for poaching a pike that was never anyone\'s to own. Use it well.',
   ] }] },
   camp: { speaker: 'AN ABANDONED CAMP', prompt: 'Examine the camp', lines: [
     'A tent gone grey with rain and a fire long cold. Whoever slept here left in a hurry, and did not come back.',
@@ -70,23 +70,23 @@ export const fields: Dialogue = {
   shepherd: { speaker: 'THE SHEPHERD', prompt: 'Speak to the shepherd', lines: [
     'Three of my flock bolted when the locusts came. One into the dark woods, one into the orchard, one off toward the hay yard.',
     'I would go myself, but the woods are no place for a ram. Send them home, would you? Sheep come if you call them kindly.',
-    'A reptile calling sheep. Now I have seen everything.',
+    'Strange, a branded reptile calling sheep home. Stranger if they come.',
   ], variants: [
     { if: { flag: 'sheep-reward' }, lines: ['The flock is whole. I counted twice. I will count again tonight, but that is my nature, not your fault.'] },
     { if: { all: [{ flag: 'sheep-woods' }, { flag: 'sheep-orchard' }, { flag: 'sheep-yard' }] }, lines: [
       'All three, home and grazing. You called them kindly, then.',
-      'Fifteen coins, and this: a charm my daughter knots from the first shearing. It keeps you warm, and easy to find.',
+      'Fifteen coins, and this: a charm my daughter knotted from the first shearing, before the fever. It keeps you warm. It makes you easy to find.',
       'You receive 15 coins and the Wool charm, a keepsake.',
     ], then: { earn: 15, find: 'wool-charm', set: 'sheep-reward' } },
   ] },
   'sheep-woods': { speaker: 'A LOST SHEEP', prompt: 'Call the sheep', hiddenIf: [{ flag: 'sheep-woods' }], lines: [
-    'A sheep, burrs in its wool, trembling in the dark between the trees. You call it kindly. It considers you for a long moment, then trots off toward the meadow.',
+    'A sheep, burrs in its wool, trembling in the dark between the trees. You call it softly. It looks at you the way prey looks at anything with your eyes, then goes.',
   ], then: { set: 'sheep-woods' } },
   'sheep-orchard': { speaker: 'A LOST SHEEP', prompt: 'Call the sheep', hiddenIf: [{ flag: 'sheep-orchard' }], lines: [
-    'A sheep with its face deep in the windfalls. It has had too many apples. You call it kindly, and it wobbles home.',
+    'A sheep in the windfalls, belly swollen on rotten apples, flies at its eyes. It follows when you call, without a sound.',
   ], then: { set: 'sheep-orchard' } },
   'sheep-yard': { speaker: 'A LOST SHEEP', prompt: 'Call the sheep', hiddenIf: [{ flag: 'sheep-yard' }], lines: [
-    'A sheep pressed against the hay yard fence, hoping the hay will come to it. You call it kindly. It goes, eventually.',
+    'A sheep pressed against the hay yard fence. Its fleece is matted with blood that is not its own. It goes when you call, and does not look back.',
   ], then: { set: 'sheep-yard' } },
   // Free the caught: what the fishmonger keeps in his barrel needs running water.
   'stream-bank': { speaker: 'THE MILL STREAM', prompt: 'Tip the barrel into the stream', hiddenIf: [{ not: { flag: 'barrel-bought' } }, { flag: 'squid-freed' }], lines: [
@@ -94,6 +94,14 @@ export const fields: Dialogue = {
     'Then it touches your claw with one arm, the way you might touch a door you mean to remember, and is gone downstream, toward the sea.',
     'Somewhere, someone is counting.',
   ], then: { set: 'squid-freed' } },
+  gibbet: { speaker: 'THE GIBBET', prompt: 'Examine the gibbet', lines: [
+    'An iron cage on a post at the crossroads, where everyone passing must see it. The crows have taken what was inside, a little at a time.',
+    'A plaque, freshly painted: COVENANT-BREAKER. Beneath it, scratched into the post by someone who had time: I WAS HUNGRY.',
+  ] },
+  bones: { speaker: 'IN THE HOLLOW', prompt: 'Examine the bones', lines: [
+    'Bones, picked white by the brood. One long arm bone still wears a scrap of sleeve, and on the sleeve, a church brand like yours.',
+    'Another convict, sent out on some errand and never resurrected. Or resurrected so many times there was nothing left to send.',
+  ] },
 };
 
 fields.bear.choices = [

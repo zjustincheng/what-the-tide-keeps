@@ -54,6 +54,10 @@ Victory removes the locust until you use **Return to the cot**, which resets the
 
 Many people can be answered. When a speaker finishes, the hero's possible replies appear under their last line; choose one with **1–4** or by clicking, and the conversation goes on from there. **Escape** walks away. Replies depend on what the hero still remembers and what has happened. While he remembers the feast he can tell the lamb he doesn't think he killed the king; once it is forgotten, that answer is gone and "I don't remember" takes its place. His name is lost before the game begins, so the bear can tell it to him, and it slides off him. The priest can also tend the hero's wounds.
 
+## Tone
+
+The world is drained and cold. Each area's map has a colour grade (desaturated and darkened, with a vignette), set per area in `src/scenes/areas.ts`; the church keeps a little candlelight warmth. Battle and portrait art is toned to match. The fields carry signs of how this society treats appetite: a gibbet at the crossroads marked COVENANT-BREAKER, the bones of another branded convict in the swarm-mother's hollow, stocks in Millbrook's square, and crows over everything.
+
 ## Wounds and rest
 
 Injuries carry from one fight into the next. A hero who falls in a won fight stays down until revived with smelling salts or rested. The footer under the map shows each hero's health as the next fight will find it.

@@ -45,8 +45,8 @@ export const town: Dialogue = {
     'Are you the one who killed the king?',
   ], variants: [
     { if: { flag: 'lamb-thanked' }, lines: [
-      'Did the thorns listen? They always listen to me.',
-      'Mother says you are dangerous. I told her you found my bell.',
+      'Did the thorns let go? They let go for me. They never let go for the grown-ups.',
+      'Mother says you are dangerous. She says the dangerous ones are always kind to children first.',
     ] },
     { if: { has: 'bell' }, lines: [
       'My bell! You went into the locust field for it?',
@@ -74,6 +74,10 @@ export const town: Dialogue = {
     'Nobody here has eaten a neighbor in thirty years. They still count us at night.',
     'You, though. Even our side looks at you twice. What are you, under the brand?',
   ] },
+  stocks: { speaker: 'THE STOCKS', prompt: 'Examine the stocks', lines: [
+    'Stocks in the middle of the market, where the whole square can watch. The wood is worn dark where hands have gripped it.',
+    'A board above: FOR THE CORRECTION OF APPETITES. Below it, the stones are stained, and nobody has scrubbed them.',
+  ] },
   stall: { speaker: 'A SHUTTERED STALL', prompt: 'Examine the stall', lines: [
     'A stall behind the tannery, shuttered tight. Chalked on the boards: AFTER DARK.',
     'Beneath it, smaller and in another hand: ASK FOR THE SALT CUT.',
@@ -84,12 +88,12 @@ export const town: Dialogue = {
 // Replies. Some are only possible while the hero still remembers, or once he has forgotten.
 const lambGoesOn = [
   'Mother says not to look at you. I am looking at you anyway.',
-  'There are thorns growing over the south road. The grown-ups say it is a curse. I think the thorns are only sad.',
+  'There are thorns growing over the south road. The grown-ups say it is a curse. I think something is buried under them.',
   "I lost my bell in the locust field when they chased me. If you find it, I will teach you the word for thorns. It is only a children's spell.",
 ];
 town.child.choices = [
-  { text: "No. I don't think so.", if: { not: { forgot: 'feast' } }, lines: ["You don't THINK so? Grown-ups always know things.", ...lambGoesOn] },
-  { text: "I don't remember.", if: { forgot: 'feast' }, lines: ['That is the saddest thing anyone has ever said to me.', ...lambGoesOn] },
+  { text: "No. I don't think so.", if: { not: { forgot: 'feast' } }, lines: ["You don't know? Then how do you know you didn't?", ...lambGoesOn] },
+  { text: "I don't remember.", if: { forgot: 'feast' }, lines: ['Then anyone could have done it. Even you.', ...lambGoesOn] },
   { text: 'They say I did.', lines: ['They say a lot of things. They say the thorns are a curse.', ...lambGoesOn] },
 ];
 const reeveReplies: Choice[] = [
@@ -105,7 +109,7 @@ town.reeve.choices = reeveReplies;
 town.fox.choices = [
   { text: 'A chameleon. Same as ever.', lines: ['Same as ever. You are the only one who thinks so.'] },
   { text: "I don't know anymore.", if: { forgot: 'home' }, lines: ['Then you and this quarter have something in common. Welcome.'] },
-  { text: 'Someone who eats insects.', lines: ['Legally. How refreshing. The herbivores will still lock the gate.'] },
+  { text: 'Someone who eats insects.', lines: ['Legally. For now. The herbivores will still lock the gate.'] },
 ];
 town.innkeeper.choices = [
   { text: 'Your board says rooms are free.', lines: ['The board is old.'] },
@@ -113,7 +117,7 @@ town.innkeeper.choices = [
   { text: "Fine. I'll sleep outdoors.", lines: ['There is a fire ring at the crossroads. The shepherds will not mind. Much.'] },
 ];
 town.fishmonger.choices = [
-  { text: "What's really in the barrel?", if: { not: { flag: 'barrel-bought' } }, lines: ['Pickles.', 'Large pickles.'] },
+  { text: "What's really in the barrel?", if: { not: { flag: 'barrel-bought' } }, lines: ['Pickling.', 'Ask again and you can climb in with it.'] },
   { text: 'Where do the fish come from?', lines: ['The capital port. The sea. The church licenses every barrel. Where the sea gets them is not my business.'] },
   { text: 'Show me what you buy.', lines: ['Go on, then.'] },
 ];

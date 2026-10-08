@@ -628,3 +628,6 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
 .choices button { text-align: left; padding: 7px 10px; font: 13px Georgia, serif; background: #22372acc; border: 1px solid #5d7253; color: #e8e2c8; }
 .choices button:hover, .choices button:focus-visible { border-color: #d2bd8a; color: #fff; }
 #continue[hidden] { display: none; }
+
+/* Character art outside the map gets the same drained grade as the world. */
+.fighter img, .portrait img { filter: saturate(.55) brightness(.86) contrast(1.06); }

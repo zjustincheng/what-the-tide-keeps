@@ -111,6 +111,7 @@ export class AreaScene extends Phaser.Scene {
     }
     this.refreshProps(true);
     this.area.decorate?.(this);
+    this.grade();
     this.keys = this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT', false) as typeof this.keys;
     this.bindControls();
     element('location-region').textContent = this.area.region;
@@ -128,6 +129,21 @@ export class AreaScene extends Phaser.Scene {
       this.setExplorationEnabled(true);
       this.closeDialogue();
     });
+  }
+
+  // The world is drained and cold: a desaturating, darkening grade with a heavy vignette.
+  // Without WebGL, a dark wash over the view stands in for it.
+  private grade() {
+    const { saturation = -0.5, brightness = 0.72, vignette = 0.45 } = this.area.grade ?? {};
+    const camera = this.cameras.main;
+    if (this.renderer.type === Phaser.WEBGL && camera.postFX) {
+      const color = camera.postFX.addColorMatrix();
+      color.saturate(saturation);
+      color.brightness(brightness, true);
+      camera.postFX.addVignette(0.5, 0.5, 0.82, vignette);
+    } else {
+      this.add.rectangle(0, 0, camera.width, camera.height, 0x05090a, 0.38).setOrigin(0).setScrollFactor(0).setDepth(50);
+    }
   }
 
   private context(): Context {

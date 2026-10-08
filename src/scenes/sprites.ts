@@ -57,6 +57,30 @@ export function createSprites(scene: Phaser.Scene) {
   priest.fillStyle(0x2b3b31).fillRect(8,6,1,2).fillRect(12,6,1,2);
   priest.generateTexture('priest',20,26);priest.destroy();
   for (const [key, spec] of Object.entries(VILLAGERS)) villager(scene, key, spec);
+  // A gibbet: a post, an arm, and an iron cage that has not been emptied by anyone but the crows.
+  const gibbet = scene.make.graphics({ x: 0, y: 0 });
+  gibbet.fillStyle(0x2a221c).fillRect(3, 2, 3, 34).fillRect(3, 2, 14, 3).fillRect(1, 34, 7, 2);
+  gibbet.fillStyle(0x3a3a38).fillRect(13, 5, 1, 4);
+  gibbet.fillStyle(0x4a4a46).fillRect(10, 9, 8, 1).fillRect(10, 22, 8, 1).fillRect(10, 9, 1, 14).fillRect(13, 9, 1, 14).fillRect(17, 9, 1, 14);
+  gibbet.fillStyle(0xb8b0a0).fillRect(12, 18, 3, 2).fillRect(14, 15, 2, 2);
+  gibbet.generateTexture('gibbet', 19, 36); gibbet.destroy();
+  // Bones, picked clean.
+  const bones = scene.make.graphics({ x: 0, y: 0 });
+  bones.fillStyle(0xc8c0ae).fillRect(1, 6, 9, 2).fillRect(4, 3, 2, 8).fillRect(9, 9, 5, 4);
+  bones.fillStyle(0x2a2620).fillRect(10, 10, 1, 1).fillRect(12, 10, 1, 1);
+  bones.fillStyle(0x7b3a2e).fillRect(11, 12, 2, 1);
+  bones.generateTexture('bones', 15, 14); bones.destroy();
+  // The stocks: two posts and a board with three holes.
+  const stocks = scene.make.graphics({ x: 0, y: 0 });
+  stocks.fillStyle(0x2a221c).fillRect(2, 6, 2, 12).fillRect(16, 6, 2, 12);
+  stocks.fillStyle(0x4a3828).fillRect(0, 6, 20, 5);
+  stocks.fillStyle(0x161210).fillRect(3, 8, 3, 2).fillRect(9, 7, 3, 3).fillRect(14, 8, 3, 2);
+  stocks.fillStyle(0x5a2a22).fillRect(9, 11, 2, 2);
+  stocks.generateTexture('stocks', 20, 18); stocks.destroy();
+  // A crow.
+  const crow = scene.make.graphics({ x: 0, y: 0 });
+  crow.fillStyle(0x0e0f10).fillRect(0, 2, 3, 1).fillRect(2, 1, 4, 3).fillRect(5, 2, 3, 1).fillRect(3, 0, 2, 1);
+  crow.generateTexture('crow', 8, 4); crow.destroy();
   // A campfire: crossed logs and a low flame.
   const fire = scene.make.graphics({ x: 0, y: 0 });
   fire.fillStyle(0x3a3833).fillRect(1, 11, 14, 3);

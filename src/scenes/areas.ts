@@ -34,11 +34,15 @@ export type Area = {
   // Places to rest: resting heals every wound and brings the area's enemies back.
   camps?: Record<string, { prompt: string; lines: string[] }>;
   decorate?: (scene: Phaser.Scene) => void;
+  // The colour grade over the map: saturation shift, brightness multiplier, and vignette strength.
+  grade?: { saturation?: number; brightness?: number; vignette?: number };
 };
 
 export const CHURCH: Area = {
   key: 'church', map: 'church', tileset: 'church', region: 'THE CAPITAL', place: 'Church of the Covenant', time: 'Before dawn',
   bounds: [32, 48, 448, 304], dialogue: church,
+  // Candlelight keeps a little warmth in the church; everywhere else is colder.
+  grade: { saturation: -0.35, brightness: 0.78, vignette: 0.5 },
   npcs: [{ point: 'priest', texture: 'priest' }],
   enemies: [{ point: 'encounter', encounter: 'locust' }, { point: 'exile', encounter: 'acolyte' }],
   exits: { door: { to: 'farmland', spawn: 'spawn', prompt: 'Step outside' } },
@@ -78,6 +82,8 @@ export const FARMLAND: Area = {
     ...([['camp-cache', 'cracked-mirror'], ['orchard-cache', 'crow-feather'], ['shrine-cache', 'covenant-token'], ['ford-cache', 'yoke-peg']] as const)
       .map(([point, keepsake]) => ({ point, texture: 'cache', hiddenIf: [{ owns: keepsake }] })),
     { point: 'camp-fields', texture: 'campfire', hiddenIf: [] },
+    { point: 'gibbet', texture: 'gibbet', solid: true, hiddenIf: [] },
+    { point: 'bones', texture: 'bones', hiddenIf: [] },
     { point: 'camp-woods', texture: 'campfire', hiddenIf: [] },
     ...(['woods', 'orchard', 'yard'] as const).map(where => ({ point: `sheep-${where}`, texture: 'sheep', solid: true, hiddenIf: [{ flag: `sheep-${where}` as const }] })),
   ],
@@ -92,10 +98,15 @@ export const FARMLAND: Area = {
     east: { to: 'border-road', spawn: 'from-fields', prompt: 'Take the field track to the border' },
   },
   decorate(scene) {
-    // A low dawn haze drifting across the fields.
-    for (let i = 0; i < 10; i++) {
-      const haze = scene.add.rectangle(60 + (i * 211) % 960, 90 + (i * 137) % 640, 170, 26, 0xe6d9a8, 0.05).setDepth(5);
-      scene.tweens.add({ targets: haze, x: haze.x + 30, alpha: 0.02, duration: 5200 + i * 700, yoyo: true, repeat: -1 });
+    // A grey ground fog over the fields.
+    for (let i = 0; i < 12; i++) {
+      const haze = scene.add.rectangle(60 + (i * 211) % 960, 90 + (i * 137) % 640, 190, 28, 0xb8c0c4, 0.07).setDepth(5);
+      scene.tweens.add({ targets: haze, x: haze.x + 40, alpha: 0.03, duration: 6200 + i * 700, yoyo: true, repeat: -1 });
+    }
+    // Crows working the wheat and circling the gibbet.
+    for (let i = 0; i < 7; i++) {
+      const crow = scene.add.image(240 + (i * 97) % 300, 90 + (i * 53) % 220, 'crow').setDepth(6).setAlpha(0.85);
+      scene.tweens.add({ targets: crow, x: crow.x + 40 - (i % 3) * 30, y: crow.y + 18 - (i % 2) * 36, duration: 3800 + i * 450, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
   },
 };
@@ -104,6 +115,7 @@ export const TOWN: Area = {
   key: 'town', map: 'town', tileset: 'town', region: 'THE FARMLAND', place: 'Millbrook', time: 'Morning',
   dialogue: town, enemies: [],
   npcs: ['reeve', 'innkeeper', 'shopkeeper', 'child', 'fishmonger', 'fox'].map(name => ({ point: name, texture: name })),
+  props: [{ point: 'stocks', texture: 'stocks', solid: true, hiddenIf: [] }],
   exits: {
     north: { to: 'farmland', spawn: 'from-town', prompt: 'Return to the fields' },
     south: { to: 'border-road', spawn: 'spawn', prompt: 'Take the border road' },
