@@ -48,6 +48,9 @@ test('reeling as the marker crosses the gold lands a fish, which sells in Millbr
   await expect(page.getByRole('dialog', { name: 'The pond' })).toContainText('Wait for a bite');
   await reelInZone(page);
   await expect(page.locator('.fishing-status')).toContainText('You land a');
+  // The fish leaps out of the water.
+  await expect(page.locator('.fishing-pond')).toHaveAttribute('data-result', 'caught');
+  await expect(page.locator('.fishing-leaper svg')).toHaveCount(1);
   await page.getByRole('button', { name: 'Done' }).click();
   const caught = await page.evaluate(() => JSON.parse(localStorage.getItem('tide-keeps.world.v1')!).fish);
   const value = caught.minnow * 2 + caught.perch * 3 + caught.eel * 6;
@@ -73,6 +76,7 @@ test('reeling before the bite scares the fish off', async ({ page }) => {
   await page.keyboard.press('e');
   await page.keyboard.press('Space');
   await expect(page.locator('.fishing-status')).toHaveText('Too soon. Whatever was down there is gone.');
+  await expect(page.locator('.fishing-pond')).toHaveAttribute('data-result', 'lost');
   await page.getByRole('button', { name: 'Cast again' }).click();
   await expect(page.locator('.fishing-status')).toContainText('Wait for a bite');
 });

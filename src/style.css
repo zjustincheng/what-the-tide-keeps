@@ -664,3 +664,24 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
 .mana-bar { height: 4px; margin: 3px 0 1px; background: #101c22; border: 1px solid #3a5a6a; }
 .mana-bar span { display: block; width: var(--mana, 100%); height: 100%; background: #7a9ec0; }
 .member-actions button[data-action="gather"] { border-color: #5a7a8a; }
+
+/* The pond above the reel bar: a bobber that bobs, dips on a bite, and a fish that leaps when landed. */
+.fishing-pond { position: relative; width: 100%; max-width: 460px; height: 96px; margin-bottom: 12px; overflow: hidden; background: linear-gradient(#3a4448 0 46%, #1a2c34 46% 100%); border: 1px solid #3a5a6a; }
+.fishing-pond::after { content: ''; position: absolute; left: 0; right: 0; top: 46%; height: 1px; background: #4a6a7a; }
+.fishing-line { position: absolute; left: 50%; top: 0; height: 46%; width: 1px; background: #8a9a9a88; }
+.fishing-bobber { position: absolute; left: calc(50% - 4px); top: calc(46% - 6px); width: 8px; height: 9px; background: linear-gradient(#b84a3a 0 50%, #d8d0b8 50%); animation: bob 1.6s ease-in-out infinite; }
+.fishing[data-state="bite"] .fishing-bobber { animation: tug .32s ease-in-out infinite; }
+.fishing-leaper { position: absolute; left: calc(50% - 28px); top: 56%; width: 56px; display: grid; place-items: center; opacity: 0; image-rendering: pixelated; filter: drop-shadow(0 0 1px #e8f0f0) drop-shadow(0 2px 2px #0008); }
+.fishing-pond[data-result="caught"] .fishing-bobber, .fishing-pond[data-result="caught"] .fishing-line { opacity: 0; }
+.fishing-pond[data-result="caught"] .fishing-leaper { animation: leap 1.1s cubic-bezier(.3,.6,.4,1) forwards; }
+.fishing-splash { position: absolute; left: calc(50% - 16px); top: calc(46% - 8px); width: 32px; height: 10px; border-radius: 50%; border: 2px solid #c8dce4; opacity: 0; }
+.fishing-pond[data-result] .fishing-splash { animation: splash .6s ease-out forwards; }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(2px); } }
+@keyframes tug { 0%, 100% { transform: translateY(1px); } 50% { transform: translateY(7px); } }
+@keyframes leap { 0% { opacity: 1; transform: translate(0, 0) rotate(-30deg); } 45% { opacity: 1; transform: translate(10px, -40px) rotate(10deg); } 75% { opacity: 1; transform: translate(24px, -32px) rotate(35deg); } 100% { opacity: 1; transform: translate(30px, -28px) rotate(20deg); } }
+@keyframes splash { 0% { opacity: .9; transform: scale(.4); } 100% { opacity: 0; transform: scale(1.8); } }
+@media(prefers-reduced-motion:reduce) {
+  .fishing-bobber, .fishing[data-state="bite"] .fishing-bobber { animation: none; }
+  .fishing-pond[data-result="caught"] .fishing-leaper { animation: none; opacity: 1; transform: translate(30px, -28px); }
+  .fishing-pond[data-result] .fishing-splash { animation-duration: .01s; }
+}

@@ -4,6 +4,13 @@ import type { FishId, SpotId } from '../rules/fishing';
 // How long the fish fights on the line before it slips the hook, in milliseconds.
 const STRUGGLE = 4000;
 
+// Each fish, drawn small enough to leap out of the water.
+const FISH_ART: Record<FishId, string> = {
+  minnow: '<svg viewBox="0 0 16 8" width="32" height="16" shape-rendering="crispEdges"><path fill="#9aa6a8" d="M3 2h8v4H3z"/><path fill="#c8d0d0" d="M4 2h6v2H4z"/><path fill="#7a8688" d="M0 1h3v6H0z"/><path fill="#141414" d="M9 3h1v1H9z"/></svg>',
+  perch: '<svg viewBox="0 0 20 10" width="40" height="20" shape-rendering="crispEdges"><path fill="#8a8a4a" d="M4 2h12v6H4z"/><path fill="#b8a85a" d="M5 6h10v2H5z"/><path fill="#4a4a2a" d="M7 2h1v4H7zM10 2h1v4h-1zM13 2h1v4h-1z"/><path fill="#a85a3a" d="M0 1h4v8H0zM7 0h5v2H7z"/><path fill="#141414" d="M14 4h1v1h-1z"/></svg>',
+  eel: '<svg viewBox="0 0 28 8" width="56" height="16" shape-rendering="crispEdges"><path fill="#2a3428" d="M2 3h22v3H2z"/><path fill="#3e4a38" d="M4 3h18v1H4z"/><path fill="#2a3428" d="M22 2h5v4h-5zM0 4h3v1H0z"/><path fill="#c8b870" d="M25 3h1v1h-1z"/></svg>',
+};
+
 // Cast, wait for a bite, then reel as the sweeping marker crosses the gold. Reeling early scares the fish off.
 export class FishingView {
   private root: HTMLElement;
@@ -21,6 +28,7 @@ export class FishingView {
     this.root.tabIndex = -1;
     this.root.innerHTML = `
       <div class="battle-heading"><p class="eyebrow">FISHING</p><h2 id="fishing-title">${SPOTS[spot].name}</h2></div>
+      <div class="fishing-pond" aria-hidden="true"><span class="fishing-line"></span><span class="fishing-bobber"></span><span class="fishing-leaper"></span><span class="fishing-splash"></span></div>
       <p class="fishing-status" aria-live="assertive"></p>
       <div class="fishing-bar"><span class="fishing-zone"></span><span class="fishing-marker"></span></div>
       <div class="fishing-actions"><button id="reel" type="button">Reel <small>Space or tap</small></button><button id="recast" type="button">Cast again</button><button id="fishing-close" type="button">Done</button></div>`;
@@ -46,6 +54,7 @@ export class FishingView {
 
   private cast() {
     this.stop();
+    delete this.root.querySelector<HTMLElement>('.fishing-pond')!.dataset.result;
     this.root.dataset.state = 'waiting';
     this.status('The line settles. Wait for a bite…');
     this.root.querySelector<HTMLElement>('.fishing-bar')!.hidden = true;
@@ -81,12 +90,18 @@ export class FishingView {
     const { fish, zone, since } = this.hooked;
     if (landed(marker((performance.now() - since) / 1000, fish), zone, fish)) {
       this.onCatch(fish);
-      this.finish(`You land a ${FISH[fish].name.toLowerCase()}. It goes in your pack.`);
+      this.finish(`You land a ${FISH[fish].name.toLowerCase()}. It goes in your pack.`, fish);
     } else this.finish('The line goes slack. It got away.');
   }
 
-  private finish(text: string) {
+  // A landed fish leaps clear of the water; anything else just splashes.
+  private finish(text: string, caught?: FishId) {
     this.stop();
+    const pond = this.root.querySelector<HTMLElement>('.fishing-pond')!;
+    const leaper = pond.querySelector<HTMLElement>('.fishing-leaper')!;
+    leaper.innerHTML = caught ? FISH_ART[caught] : '';
+    pond.dataset.result = caught ? 'caught' : 'lost';
+    if (caught) pond.dataset.fish = caught; else delete pond.dataset.fish;
     this.root.dataset.state = 'done';
     this.status(text);
     this.buttons(false);
