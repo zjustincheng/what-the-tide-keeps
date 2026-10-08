@@ -31,28 +31,37 @@ Open the local URL printed by Vite. Move with **WASD** or **arrow keys**, and pr
 npm run build   # Type-check and build to dist/
 npm run preview # Serve the production build locally
 npm test        # Browser checks using an installed Google Chrome
+npm run test:unit # Pure TypeScript combat rule tests
 ```
 
-The browser tests cover movement, wall and furniture collisions, dialogue, and mobile controls. On machines without Google Chrome, install it or change the Playwright channel in `playwright.config.ts` to use an installed browser.
+`npm test` runs rule tests and browser checks. The browser checks cover exploration, encounters, drag and button actions, turn locking, victory, defeat, and mobile controls. On machines without Google Chrome, install it or change the Playwright channel in `playwright.config.ts` to use an installed browser. Rule tests require Node.js 22.18+ or 24.
 
 ## Current milestone
 
 Build the repeatable loop in miniature before adding the full story. The first playable milestone is a small Tiled map with a moving character, starting with the hero waking in the church. Add the feast opening after the loop works.
 
-The first milestone is playable: walk through the church, speak to the priest, and inspect the resurrection ledger and tidal basin. Walls and furniture block movement. The south door marks the edge of the prototype. The artwork and dialogue are original placeholders for this first build.
+The first three build steps are playable: church exploration, a visible encounter, and a one-on-one fight. Speak to the priest and inspect the ledger and basin. Near the southeast wall, a crop locust shows a small mana signature. Touch it to enter battle. The south door still marks the edge of the prototype. The artwork and dialogue are original placeholders.
 
-Combat, encounters, memory loss, saves, and travel beyond the church are not implemented yet. Progress resets on reload.
+In battle, drag the chameleon onto the locust to attack, or tap the chameleon to guard. The **Attack** and **Support** buttons offer the same actions with keyboard and touch access. Each action is followed by an enemy turn, then 3 mana regenerates. Read the physical attack tell: guard against its heavy leap. Exact health and damage remain hidden; mana is numeric.
+
+Prototype tuning: the thorn attack costs 2 mana, and the guarding support action costs 5. Guarding blocks physical damage for that enemy turn; it is not a spell barrier. Guard cost is provisional, since the guideline specifies barrier cost but leaves guard cost open. Spell barriers arrive with the later magic milestone.
+
+Victory removes the locust until you use **Return to the cot**, which resets the encounter. Defeat returns you to the cot and permits another attempt. Each new fight starts with full health and mana. These are temporary prototype reset rules; memory loss, Hollow perks, supplies, and persistent saves are not implemented yet. Party combat, suppression, unknown spells, and travel beyond the church are also still ahead. Progress resets on reload.
 
 ## Project layout
 
 - `src/scenes/ChurchScene.ts` — Phaser exploration, collision, and input.
 - `src/content/church.ts` — prototype dialogue.
+- `src/rules/battle.ts` — immutable, renderer-independent combat state and transitions.
+- `src/ui/BattleView.ts` — accessible combat view, drag input, and turn pacing.
 - `public/maps/church.json` — editable Tiled JSON map with floor, furniture, and named interaction points.
 - `public/assets/church-tiles.svg` — original placeholder tileset.
 - `scripts/create-church.mjs` — regenerates the starter map and tileset; running it replaces manual map edits.
 - `tests/church.spec.ts` — browser checks.
+- `tests/battle.spec.ts` — encounter and combat browser checks.
+- `tests/rules/battle.test.ts` — combat tests without a browser.
 
-Future combat and memory rules belong in plain TypeScript modules without Phaser imports, as specified in the design guideline.
+Combat rules have no Phaser or DOM imports. Future party and memory rules should preserve that boundary, as specified in the design guideline.
 
 Phaser's [tilemap documentation](https://docs.phaser.io/api-documentation/class/tilemaps-tilemap) describes the Tiled map loading used here.
 

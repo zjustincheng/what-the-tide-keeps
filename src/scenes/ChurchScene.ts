@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { conversations } from '../content/church';
+import { BattleView } from '../ui/BattleView';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 type Point = { name: string; x: number; y: number };
@@ -16,12 +17,16 @@ export class ChurchScene extends Phaser.Scene {
   private cleanup = new AbortController();
   private spawn = { x: 88, y: 124 };
   private shadow!: Phaser.GameObjects.Ellipse;
+  private enemy!: Phaser.Physics.Arcade.Sprite;
+  private signature!: Phaser.GameObjects.Container;
+  private battle?: BattleView;
 
   constructor() { super('church'); }
 
   preload() {
     this.load.svg('church-tiles', `${import.meta.env.BASE_URL}assets/church-tiles.svg`);
     this.load.tilemapTiledJSON('church-map', `${import.meta.env.BASE_URL}maps/church.json`);
+    this.load.svg('locust', `${import.meta.env.BASE_URL}assets/locust.svg`);
   }
 
   create() {
@@ -43,6 +48,14 @@ export class ChurchScene extends Phaser.Scene {
     const npc = this.physics.add.staticSprite(priest.x, priest.y, 'priest');
     npc.setSize(10, 8).setOffset(5, 16);
     this.physics.add.collider(this.player, npc);
+    const encounter = this.points.find(p => p.name === 'encounter')!;
+    this.enemy = this.physics.add.staticSprite(encounter.x, encounter.y, 'locust').setDepth(4);
+    this.enemy.setSize(22, 20).setOffset(5, 8);
+    const ring = this.add.ellipse(0, 4, 37, 20).setStrokeStyle(1, 0xd2b675, 0.7);
+    const mana = this.add.text(0, -23, '◇ 2', { fontFamily: 'monospace', fontSize: '8px', color: '#dbc58b' }).setOrigin(0.5);
+    this.signature = this.add.container(encounter.x, encounter.y, [ring, mana]).setDepth(5);
+    this.tweens.add({ targets: ring, alpha: 0.35, duration: 1000, yoyo: true, repeat: -1 });
+    this.physics.add.overlap(this.player, this.enemy, () => this.beginBattle());
 
     // Soft window light, hand placed in the same coordinates as the Tiled room.
     const light = this.add.graphics().setDepth(2);
@@ -64,6 +77,8 @@ export class ChurchScene extends Phaser.Scene {
     this.cameras.main.fadeIn(650, 16, 27, 24);
     this.events.once('shutdown', () => {
       this.cleanup.abort();
+      this.battle?.destroy();
+      this.setExplorationEnabled(true);
       this.closeDialogue();
     });
   }
@@ -92,6 +107,7 @@ export class ChurchScene extends Phaser.Scene {
   private bindControls() {
     const signal=this.cleanup.signal;
     window.addEventListener('keydown',event=>{
+      if(this.battle) return;
       if(event.target instanceof HTMLButtonElement && [' ', 'Enter'].includes(event.key)) return;
       if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(event.key)) event.preventDefault();
       if(['e','E',' ','Enter'].includes(event.key)) this.interact(event);
@@ -100,12 +116,17 @@ export class ChurchScene extends Phaser.Scene {
     element('continue').addEventListener('click',()=>this.interact(),{signal});
     element('touch-interact').addEventListener('click',()=>this.interact(),{signal});
     element('restart').addEventListener('click',()=>{
+      if(this.battle) return;
       this.closeDialogue();this.held.clear();this.player.setVelocity(0);this.player.setPosition(this.spawn.x,this.spawn.y);
+      const encounter = this.points.find(p => p.name === 'encounter')!;
+      this.enemy.enableBody(true, encounter.x, encounter.y, true, true);
+      this.signature.setVisible(true);
       element('game').focus({preventScroll:true});
     },{signal});
     document.querySelectorAll<HTMLButtonElement>('[data-direction]').forEach(button=>{
       const direction=button.dataset.direction as Direction;
       button.addEventListener('pointerdown',event=>{
+        if(this.battle) return;
         event.preventDefault();button.setPointerCapture(event.pointerId);this.held.add(direction);
       },{signal});
       const release=()=>this.held.delete(direction);
@@ -117,6 +138,7 @@ export class ChurchScene extends Phaser.Scene {
   }
 
   private interact(event?: KeyboardEvent) {
+    if(this.battle) return;
     if(event?.repeat) return;
     // Let native buttons handle their own Enter/Space activation once.
     if(event && document.activeElement instanceof HTMLButtonElement && [' ', 'Enter'].includes(event.key)) return;
@@ -138,8 +160,42 @@ export class ChurchScene extends Phaser.Scene {
     this.active=undefined;element('dialogue').hidden=true;
   }
 
+  private setExplorationEnabled(enabled: boolean) {
+    document.querySelector('.game-frame')!.classList.toggle('in-battle', !enabled);
+    element('game').inert = !enabled;
+    element('dialogue').inert = !enabled;
+    element('restart').inert = !enabled;
+    document.querySelector<HTMLElement>('.touch-controls')!.inert = !enabled;
+    if(this.input.keyboard) this.input.keyboard.enabled = enabled;
+  }
+
+  private beginBattle() {
+    if(this.battle || this.active || !this.enemy.active) return;
+    this.player.setVelocity(0);
+    this.held.clear();
+    this.input.keyboard?.resetKeys();
+    this.physics.pause();
+    element('prompt').textContent = '';
+    this.setExplorationEnabled(false);
+    this.battle = new BattleView(this.textures.getBase64('hero'), won => {
+      this.battle = undefined;
+      if(won) {
+        this.enemy.disableBody(true, true);
+        this.signature.setVisible(false);
+      } else {
+        this.player.setPosition(this.spawn.x, this.spawn.y);
+      }
+      this.held.clear();
+      this.input.keyboard?.resetKeys();
+      this.setExplorationEnabled(true);
+      this.physics.resume();
+      element('game').focus({preventScroll:true});
+    });
+  }
+
   update(time: number) {
     if(!this.player) return;
+    if(this.battle) return;
     const pressed=(direction:Direction,...keys:string[])=>this.held.has(direction)||keys.some(key=>this.keys[key].isDown);
     let x=Number(pressed('right','D','RIGHT'))-Number(pressed('left','A','LEFT'));
     let y=Number(pressed('down','S','DOWN'))-Number(pressed('up','W','UP'));
@@ -151,7 +207,7 @@ export class ChurchScene extends Phaser.Scene {
     this.shadow.setPosition(this.player.x,this.player.y+9);
     // A restrained walking bob, while the physics body stays steady.
     this.player.setOrigin(0.5,0.5+(x||y?Math.sin(time/85)*0.025:0));
-    this.nearby=this.points.filter(p=>p.name!=='spawn')
+    this.nearby=this.points.filter(p=>p.name in conversations)
       .find(p=>Phaser.Math.Distance.Between(this.player.x,this.player.y,p.x,p.y)<29);
     if(!this.active) element('prompt').textContent=this.nearby
       ? `E · ${this.nearby.name==='priest'?'Speak to the priest':this.nearby.name==='door'?'Look outside':'Examine '+this.nearby.name}` : '';

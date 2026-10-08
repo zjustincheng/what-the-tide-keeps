@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 6,
+  "nextobjectid": 7,
   "layers": [
     {
       "id": 1,
@@ -1639,6 +1639,18 @@
           "type": "",
           "x": 256,
           "y": 350,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 6,
+          "name": "encounter",
+          "type": "",
+          "x": 360,
+          "y": 320,
           "width": 0,
           "height": 0,
           "rotation": 0,

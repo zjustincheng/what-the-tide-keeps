@@ -1,3 +1,63 @@
+.battle {
+  position: absolute;
+  inset: 43px 6px 42px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 7%;
+  background: radial-gradient(ellipse at 50% 40%, #354437, #16231f 75%);
+  border: 1px solid #65705a;
+  overflow-y: auto;
+}
+.battle [hidden] { display: none; }
+.battle-heading { text-align: center; }
+.battle h2 { font-size: 29px; font-weight: normal; margin: 7px 0 10px; }
+#battle-turn { font: 10px ui-monospace, monospace; color: #9eb19a; }
+.combatants { display: flex; justify-content: space-around; align-items: center; width: 100%; margin: 12px 0; }
+.combatant { text-align: center; width: 42%; }
+.combatant h3 { font-size: 19px; font-weight: normal; margin: 7px 0; }
+.combatant>p { margin: 8px 0; }
+.combatant .mana { font: 12px ui-monospace, monospace; color: #c5c997; }
+#hero-condition, #enemy-condition { color: #a0b69c; font-size: 13px; font-style: italic; }
+.fighter { height: 104px; width: 120px; margin: auto; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at 50% 85%, #0e1e17, transparent 65%); border: 1px solid transparent; }
+.hero-fighter { touch-action: none; cursor: grab; }
+.hero-fighter:hover:not(:disabled) { background-color: #78876020; border-color: #8b9a7166; }
+.hero-fighter:active { cursor: grabbing; }
+.fighter img { height: 90px; width: auto; image-rendering: pixelated; pointer-events: none; user-select: none; }
+.enemy-fighter img { width: 112px; height: 112px; transform: scaleX(-1); }
+.battle-divider { color: #a69d65; }
+.intent { text-align: center; font-size: 13px; color: #d2bd8a; min-height: 18px; margin: 10px 0; }
+.battle-log { width: 100%; height: 71px; flex-shrink: 0; overflow-y: auto; padding: 5px 12px; border-top: 1px solid #61745666; border-bottom: 1px solid #61745666; font-size: 12px; color: #aab8a1; }
+.battle-log p { margin: 6px 0; }
+.battle-actions { display: flex; justify-content: center; gap: 12px; width: 100%; margin: 17px 0 0; }
+.battle-actions button { flex: 1; max-width: 230px; font: 17px Georgia, serif; padding: 10px; }
+.battle-actions small { display: block; margin-top: 5px; font: 10px ui-monospace, monospace; color: #b6bf9c; }
+.battle button:disabled { opacity: .45; cursor: default; }
+.battle-help { font: 10px/1.7 ui-monospace, monospace; color: #91a18a; text-align: center; margin-bottom: 0; }
+#battle-finish { margin-top: 18px; }
+@media(max-width:650px) {
+  .in-battle #game { min-height: 370px; }
+  .battle { padding: 12px 4%; justify-content: flex-start; }
+  .battle-heading .eyebrow { font-size: 7px; margin: 0; }
+  .battle h2 { font-size: 20px; margin: 5px 0; }
+  #battle-turn { margin: 5px 0; font-size: 8px; }
+  .combatants { margin: 3px 0; }
+  .combatant>.eyebrow, .battle-help { display: none; }
+  .fighter { width: 72px; height: 46px; }
+  .fighter img { height: 46px; }
+  .enemy-fighter img { width: 58px; height: 58px; }
+  .combatant h3 { font-size: 14px; margin: 3px 0; }
+  .combatant>p { margin: 3px 0; }
+  .combatant .mana { font-size: 10px; }
+  #hero-condition, #enemy-condition { font-size: 11px; }
+  .intent { font-size: 11px; margin: 6px 0; }
+  .battle-log { height: 43px; font-size: 10px; }
+  .battle-actions { margin-top: 8px; gap: 8px; }
+  .battle-actions button { font-size: 14px; padding: 6px; }
+  .battle-actions small { font-size: 8px; margin-top: 3px; }
+}
 :root {
   font-family:Georgia,'Times New Roman',serif;
   color:#d7d9c8;

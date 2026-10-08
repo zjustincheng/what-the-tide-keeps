@@ -3,7 +3,7 @@ export const conversations: Record<string, { speaker: string; lines: string[] }>
   priest: { speaker: 'THE PRIEST', lines: [
     'Easy, hero. The sea has given you back to us again.',
     'You asked me to remember something for you. I am sorry. You never told me what it was.',
-    'Rest while you can. The grain has stopped coming from the farmland. Soon, they will send you out again.',
+    'Something came in with the last grain sacks. A small signature, by the south wall. Watch its legs before you strike.',
   ] },
   ledger: { speaker: 'THE RESURRECTION LEDGER', lines: [
     'Five names. Five sentences. Beneath yours, a column of dates runs into the margin.',

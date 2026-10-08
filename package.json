@@ -7,7 +7,9 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "playwright test"
+    "test": "npm run test:unit && npm run test:browser",
+    "test:unit": "node --experimental-strip-types --test tests/rules/*.test.ts",
+    "test:browser": "playwright test"
   },
   "dependencies": { "phaser": "^3.90.0" },
   "devDependencies": { "@playwright/test": "^1.56.0", "typescript": "^5.9.3", "vite": "^7.1.9" }
