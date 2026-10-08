@@ -5,6 +5,7 @@ import type { Dialogue } from '../content/dialogue';
 import { border } from '../content/border';
 import { fields } from '../content/fields';
 import { town } from '../content/town';
+import { hall, inn, millInside, tannery } from '../content/interiors';
 import type { Encounter } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
@@ -27,8 +28,8 @@ export type Area = {
   assets?: string[];
   // Objects on the map that disappear once any hiddenIf condition holds. Solid ones block the way.
   props?: { point: string; texture: string; solid?: boolean; hiddenIf: Condition[] }[];
-  // Points that lead elsewhere when the hero interacts with them.
-  exits: Record<string, { to: string; spawn: string; prompt: string }>;
+  // Points that lead elsewhere when the hero interacts with them. A barred exit only opens once requires holds.
+  exits: Record<string, { to: string; spawn: string; prompt: string; requires?: Condition; barred?: { speaker: string; lines: string[] } }>;
   // Points where the hero can fish.
   fishing?: Record<string, SpotId>;
   // Places to rest: resting heals every wound and brings the area's enemies back.
@@ -102,6 +103,7 @@ export const FARMLAND: Area = {
     door: { to: 'church', spawn: 'from-road', prompt: 'Return to the church' },
     south: { to: 'town', spawn: 'spawn', prompt: 'Walk on to Millbrook' },
     east: { to: 'border-road', spawn: 'from-fields', prompt: 'Take the field track to the border' },
+    'mill-door': { to: 'mill-inside', spawn: 'spawn', prompt: 'Enter the mill' },
   },
   decorate(scene) {
     // A grey ground fog over the fields.
@@ -125,6 +127,10 @@ export const TOWN: Area = {
   exits: {
     north: { to: 'farmland', spawn: 'from-town', prompt: 'Return to the fields' },
     south: { to: 'border-road', spawn: 'spawn', prompt: 'Take the border road' },
+    'hall-door': { to: 'hall', spawn: 'spawn', prompt: "Enter the reeve's hall" },
+    'inn-door': { to: 'inn', spawn: 'spawn', prompt: 'Enter the inn', requires: { any: [{ flag: 'inn-room' }, { flag: 'boar-defeated' }] },
+      barred: { speaker: 'THE INN', lines: ['The innkeeper is standing in the doorway, and she doesn\'t move.'] } },
+    'tannery-door': { to: 'tannery', spawn: 'spawn', prompt: 'Enter the tannery' },
   },
   decorate(scene) {
     // Smoke from the tannery, drifting over the carnivore quarter.
@@ -173,4 +179,17 @@ export const BOAR_FARM: Area = {
   },
 };
 
-export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM];
+// Building interiors: small rooms in the dark, lit warmer than the fields outside.
+const INDOORS: Pick<Area, 'region' | 'tileset' | 'grade' | 'enemies'> = { region: 'THE FARMLAND', tileset: 'interior', grade: { saturation: -0.3, brightness: 0.74, vignette: 0.55 }, enemies: [] };
+export const INN: Area = { ...INDOORS, key: 'inn', map: 'inn', place: 'Millbrook · The inn', time: 'Morning', dialogue: inn,
+  npcs: [{ point: 'drinker', texture: 'drinker' }, { point: 'patron', texture: 'patron' }],
+  camps: { bed: { prompt: 'Sleep in the bed', lines: ['You sleep in a real bed for the first time you can remember. Your wounds close and your mana returns.'] } },
+  exits: { out: { to: 'town', spawn: 'from-inn', prompt: 'Go back outside' } } };
+export const HALL: Area = { ...INDOORS, key: 'hall', map: 'hall', place: "Millbrook · The reeve's hall", time: 'Morning', dialogue: hall,
+  npcs: [{ point: 'clerk', texture: 'clerk' }], exits: { out: { to: 'town', spawn: 'from-hall', prompt: 'Go back outside' } } };
+export const TANNERY: Area = { ...INDOORS, key: 'tannery', map: 'tannery', place: 'Millbrook · The tannery', time: 'Morning', dialogue: tannery,
+  npcs: [{ point: 'tanner', texture: 'tanner' }], exits: { out: { to: 'town', spawn: 'from-tannery', prompt: 'Go back outside' } } };
+export const MILL: Area = { ...INDOORS, key: 'mill-inside', map: 'mill-inside', place: 'The mill', time: 'Dawn', dialogue: millInside,
+  npcs: [], exits: { out: { to: 'farmland', spawn: 'from-mill', prompt: 'Go back outside' } } };
+
+export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL];

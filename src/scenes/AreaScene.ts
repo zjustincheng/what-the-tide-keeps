@@ -245,7 +245,10 @@ export class AreaScene extends Phaser.Scene {
     } else if(this.nearby && this.area.fishing?.[this.nearby.name]) {
       this.openFishing(this.area.fishing[this.nearby.name]);
     } else if(this.nearby && this.nearby.name in this.area.exits) {
-      this.travel(this.area.exits[this.nearby.name]);
+      const exit=this.area.exits[this.nearby.name];
+      // A barred way is explained instead of taken.
+      if(exit.requires && !holds(this.context(), exit.requires)) this.say({ speaker: exit.barred?.speaker ?? 'THE WAY', lines: exit.barred?.lines ?? ['It will not open.'] }, undefined);
+      else this.travel(exit);
     } else if(this.nearby) {
       const said=conversation(this.area.dialogue, this.nearby.name, this.context());
       // Effects land as the conversation opens, so closing it early never loses them.
@@ -497,7 +500,9 @@ export class AreaScene extends Phaser.Scene {
     const context=this.context();
     this.nearby=this.points.filter(p=>p.name in this.area.exits || p.name in (this.area.fishing ?? {}) || p.name in (this.area.camps ?? {}) || (p.name in this.area.dialogue
       && !this.area.dialogue[p.name].hiddenIf?.some(condition=>holds(context, condition))))
-      .find(p=>Phaser.Math.Distance.Between(this.player.x,this.player.y,p.x,p.y)<29);
+      // The nearest thing in reach wins, so a door and the person beside it never steal each other's prompt.
+      .map(p=>({ p, distance: Phaser.Math.Distance.Between(this.player.x,this.player.y,p.x,p.y) }))
+      .filter(({ distance })=>distance<29).sort((a,b)=>a.distance-b.distance)[0]?.p;
     if(!this.active) element('prompt').textContent=this.nearby
       ? `E · ${this.area.exits[this.nearby.name]?.prompt ?? this.area.camps?.[this.nearby.name]?.prompt ?? (this.area.fishing?.[this.nearby.name] ? `Fish ${SPOTS[this.area.fishing[this.nearby.name]].name.replace(/^The /, 'the ')}` : undefined) ?? this.area.dialogue[this.nearby.name].prompt ?? 'Examine '+this.nearby.name}` : '';
   }

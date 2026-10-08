@@ -14,6 +14,11 @@ const VILLAGERS: Record<string, Villager> = {
   driver: { fur: 0x7d7f80, muzzle: 0xc9c4b8, cloth: 0x5a4a3a, trim: 0x8f3f32, ears: 'pointed' },
   miller: { fur: 0x8a6a4a, muzzle: 0xd8c8a8, cloth: 0xd8d0b8, trim: 0x9a8a6a, ears: 'pointed' },
   shepherd: { fur: 0xc8bea8, muzzle: 0x6b5d50, cloth: 0x6a7a4a, trim: 0xb8a988, ears: 'horns' },
+  // Inside Millbrook.
+  drinker: { fur: 0x8a8070, muzzle: 0xc8bea8, cloth: 0x5a4a3a, trim: 0x8a7a5a, ears: 'horns' },
+  patron: { fur: 0x9a8a78, muzzle: 0xd8ccb8, cloth: 0x4a5a6a, trim: 0xa89878, ears: 'long' },
+  clerk: { fur: 0xc8b8a0, muzzle: 0xe8dcc8, cloth: 0x3a3a48, trim: 0xd8d0b8, ears: 'long' },
+  tanner: { fur: 0x4a3828, muzzle: 0x8a7058, cloth: 0x6a5a40, trim: 0x3a2e22, ears: 'pointed' },
   guard: { fur: 0xd6cdb8, muzzle: 0x9a8a72, cloth: 0x6b7a8a, trim: 0xd8cfae, ears: 'horns' },
 };
 

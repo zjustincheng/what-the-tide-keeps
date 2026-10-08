@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 39,
+  "nextobjectid": 41,
   "layers": [
     {
       "id": 1,
@@ -3818,7 +3818,7 @@
         18,
         18,
         18,
-        18,
+        8,
         18,
         18,
         18,
@@ -6643,6 +6643,30 @@
           "type": "",
           "x": 184,
           "y": 648,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 39,
+          "name": "mill-door",
+          "type": "",
+          "x": 88,
+          "y": 196,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 40,
+          "name": "from-mill",
+          "type": "",
+          "x": 88,
+          "y": 210,
           "width": 0,
           "height": 0,
           "rotation": 0,

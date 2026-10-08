@@ -60,12 +60,23 @@ The world is drained and cold. Each area's map has a colour grade (desaturated a
 
 The writing is deliberately plain. People talk about what is in front of them: the reeve about his carts, the shepherd about his sheep, the fox about the nightly count. The larger story surfaces only where the guideline puts it, and quietly.
 
+## Buildings
+
+Doors lead inside four buildings, each a small room with people and things to look at:
+
+- **The reeve's hall** in Millbrook: a clerk writing to the church for a better convict, and the town's records, which hold the order that burned the boar out.
+- **The inn**: barred while the innkeeper stands in the doorway. Pay her 12 coins, or come back once the boar is beaten, and the bed by the west wall is yours to rest in. Inside, a carter will trade what he knows about the ford for a drink, and a rabbit by the fire talks about the watch.
+- **The tannery** in the carnivore quarter: the tanner, the vats, and a back door bolted from outside, toward the shuttered stall.
+- **The mill**, entered from the fields: the gears off the wheel, sacks of church flour, and the miller's ledger.
+
+When several things are in reach, the prompt offers the nearest one.
+
 ## Choices with consequences
 
 Some replies change the world, and the game remembers them:
 
 - **The boar's followers.** After the boar falls, the badger can be told to go before the reeve's watch comes, or told he is being taken to the reeve. Sparing them sends both away; the badger tells you where the boar kept something, a box under the third fence post holding the **Boar's tusk** keepsake (attacks hit 3 harder; 3 less health). Reporting them pays 20 coins at the reeve, and the gibbet at the crossroads has a badger in it from then on.
-- **A bed at the inn.** With 12 coins, the innkeeper will let you up the back stairs for the night, healing wounds and restoring mana. Once the boar is beaten, the room is offered freely.
+- **A bed at the inn.** With 12 coins, the innkeeper lets you past her into the inn, where the bed heals wounds and restores mana. Once the boar is beaten, the room is offered freely.
 - **Leaning on the stallholder.** Once the bear has joined, asking her to lower her prices gets you twice the board price instead of three times.
 - **The nightly count.** Standing in the carnivore quarter's line with the fox earns a firepot and a word for the night market to come.
 - **The fishmonger.** Telling him you freed his squid ends his trade with you for good.
@@ -219,7 +230,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/scenes/AreaScene.ts` — Phaser exploration, collision, input, encounters, and travel, shared by every area.
 - `src/scenes/areas.ts` — each area's map, people, enemies, exits, and decoration.
 - `src/content/dialogue.ts` — dialogue types: variants and replies by memory, items, flags, or spells, and their effects.
-- `src/content/church.ts`, `fields.ts`, `town.ts`, `border.ts`, `farm.ts` — prototype dialogue for each area.
+- `src/content/church.ts`, `fields.ts`, `town.ts`, `border.ts`, `farm.ts`, `interiors.ts` — prototype dialogue for each area.
 - `src/scenes/sprites.ts` — generated placeholder sprites for the hero and townsfolk.
 - `src/rules/battle.ts` — immutable, renderer-independent combat state and transitions.
 - `src/rules/memory.ts` — memory loss and Hollow perks, independent of the renderer.
@@ -244,7 +255,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/ui/SettingsView.ts` — the controls list and menu actions.
 - `public/maps/church.json` — editable Tiled JSON map with floor, furniture, and named interaction points.
 - `public/assets/church-tiles.svg` — original placeholder tileset.
-- `public/maps/farmland.json`, `town.json`, `border-road.json`, `boar-farm.json` — the farmland maps, with placeholder tilesets in `public/assets/`.
+- `public/maps/farmland.json`, `town.json`, `border-road.json`, `boar-farm.json`, and the interiors `inn.json`, `hall.json`, `tannery.json`, `mill-inside.json` — the farmland maps, with placeholder tilesets in `public/assets/`.
 - `scripts/create-*.mjs` — regenerate each map and tileset; running one replaces manual edits to that map.
 - `tests/church.spec.ts` — browser checks.
 - `tests/battle.spec.ts` — encounter and combat browser checks.
@@ -262,6 +273,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/rules/fishing.test.ts` — the marker, the zone, bites, and the catch's value.
 - `tests/elites.spec.ts` — the guardians of the Covenant token and the yoke peg.
 - `tests/rules/elites.test.ts` — the warden's ward and the leech's drain.
+- `tests/buildings.spec.ts` — entering the hall, tannery, and mill.
 - `tests/consequences.spec.ts` — sparing or reporting the boar's followers, and a paid bed.
 - `tests/rules/consequences.test.ts` — every consequential reply and what it changes.
 - `tests/sidequests.spec.ts` — the strays, the barrel, and the swarm-mother's bounty.

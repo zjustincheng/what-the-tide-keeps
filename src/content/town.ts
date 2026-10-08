@@ -32,7 +32,7 @@ export const town: Dialogue = {
   ], variants: [{ if: { flag: 'boar-defeated' }, lines: [
     'A room\'s come free. Don\'t make me regret it.',
   ], choices: [
-    { text: 'Take the room.', lines: ['Upstairs, end of the hall. You sleep in a real bed. Your wounds close and your mana returns.'], then: { rest: true } },
+    { text: 'Take the room.', lines: ['The bed by the west wall. Go on in.'], then: { set: 'inn-room' } },
     { text: 'Not tonight.', lines: ['Suit yourself.'] },
   ] }] },
   shopkeeper: { speaker: 'THE STALLHOLDER', prompt: 'Speak to the stallholder', lines: [
@@ -125,9 +125,9 @@ town.innkeeper.choices = [
   { text: 'Your board says rooms are free.', lines: ['The board\'s old.'] },
   // Coin talks after all, if there is enough of it.
   { text: 'Twelve coins for a bed. Back stairs.', if: { coins: 12 }, lines: [
-    'She looks at the coins for a long moment, then sweeps them off the counter. "Back stairs. Out before anyone\'s up."',
-    'You sleep in a real bed. Your wounds close and your mana returns.',
-  ], then: { pay: 12, rest: true } },
+    'She looks at the coins for a long moment, then sweeps them off the counter.',
+    '"The bed by the west wall. Out before anyone\'s up."',
+  ], then: { pay: 12, set: 'inn-room' } },
   { text: "Fine. I'll sleep outdoors.", lines: ['There\'s a fire ring at the crossroads. The shepherds use it.'] },
 ];
 town.shopkeeper.choices = [

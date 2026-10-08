@@ -56,7 +56,7 @@ test('the brambles block the border road until the lamb teaches their word', asy
   await page.keyboard.press('Escape');
   await page.keyboard.down('s'); await page.waitForTimeout(1200); await page.keyboard.up('s');
   expect((await at(page, 'border-road'))!.y).toBeGreaterThan(190);
-  await talk(page, 'border-road', 152, 240, 'Speak to the carter');
+  await talk(page, 'border-road', 170, 264, 'Speak to the carter');
   await expect(page.locator('#dialogue-text')).toContainText('turn back, by order');
   // The opened hedge and the learned spell are saved.
   await page.reload();

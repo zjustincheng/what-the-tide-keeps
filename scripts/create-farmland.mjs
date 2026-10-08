@@ -60,7 +60,7 @@ fill(furniture,10,22,12,23,0);fill(floor,10,22,12,23,BRIDGE);
 fill(furniture,10,39,12,41,0);fill(floor,10,39,12,41,FORD);
 // The mill, where the bear is chained to the millstone.
 fill(furniture,2,8,8,9,MILLROOF);fill(furniture,2,10,8,11,MILLWALL);fill(furniture,9,9,9,11,WHEEL);
-fill(floor,4,12,6,21,ROAD);put(furniture,5,14,MILLSTONE);
+fill(floor,4,12,6,21,ROAD);put(furniture,5,14,MILLSTONE);put(furniture,5,11,DOOR);
 for(const [x,y] of [[2,16],[8,17],[3,19]]) put(furniture,x,y,HAY);
 // Southwest: dark woods with a winding path to an abandoned camp.
 fill(furniture,1,26,9,46,DARK);fill(floor,1,26,9,46,WOODS);
@@ -93,7 +93,7 @@ const points=[
   ['bear',104,232],['miller',56,216],['heron',296,600],['camp',104,616],['camp-cache',56,616],['weevil-woods',136,656],
   ['weevil-orchard',728,200],['orchard-cache',920,104],['weevil-yard',664,488],
   ['shrine',888,504],['shrine-cache',888,568],['exile',888,456],['ford-cache',216,680],['pond-spot',392,512],['stream-spot',216,224],
-  ['shepherd',440,696],['sheep-woods',104,472],['sheep-orchard',616,248],['sheep-yard',744,520],['swarm',72,712],['stream-bank',216,392],['camp-fields',600,392],['camp-woods',88,584],['gibbet',440,344],['bones',120,696],['warden',888,568],['leech',184,648],
+  ['shepherd',440,696],['sheep-woods',104,472],['sheep-orchard',616,248],['sheep-yard',744,520],['swarm',72,712],['stream-bank',216,392],['camp-fields',600,392],['camp-woods',88,584],['gibbet',440,344],['bones',120,696],['warden',888,568],['leech',184,648],['mill-door',88,196],['from-mill',88,210],
 ];
 const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
   layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([name,x,y],i)=>({id:i+1,name,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],

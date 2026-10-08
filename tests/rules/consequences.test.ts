@@ -38,10 +38,10 @@ test("reporting them pays, and the gibbet shows the cost", () => {
   assert.doesNotMatch(conversation(town, 'reeve', context).lines.join(' '), /Twenty coins/, 'paid once');
 });
 
-test('coin buys a bed, the bear lowers prices, and the count is remembered', () => {
+test('coin buys a room, the bear lowers prices, and the count is remembered', () => {
   assert.equal(replies(town.innkeeper.choices, start([], 11)).some(choice => choice.text.startsWith('Twelve coins')), false, 'not enough coin');
   let { context } = answer({ ...start([], 15), world: { ...start([], 15).world, wounds: { chameleon: 5 } } }, town, 'innkeeper', 'Twelve coins for a bed. Back stairs.');
-  assert.deepEqual([context.world.coins, context.world.wounds], [3, {}]);
+  assert.deepEqual([context.world.coins, context.world.flags], [3, ['inn-room']], 'paying gets the hero through the inn door');
   assert.match(answer(start(), town, 'shopkeeper', 'Lower your prices.').lines, /^No\./);
   ({ context } = answer(start(['bear-free']), town, 'shopkeeper', 'Lower your prices.'));
   assert.equal(price(context.world, { supply: 'firepot' }), price({ ...context.world, flags: ['boar-defeated'] }, { supply: 'firepot' }));

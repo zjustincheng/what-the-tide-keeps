@@ -71,11 +71,25 @@ test('reporting them puts the badger in the gibbet and pays at the reeve', async
   await expect(page.locator('#purse')).toHaveText('20 coins');
 });
 
-test('coin buys a bed at the inn, which heals the party', async ({ page }) => {
+test('coin gets the hero past the innkeeper to a bed that heals the party', async ({ page }) => {
   await start(page, { flags: [], carried: [], found: [], coins: 15, wounds: { chameleon: 9 }, drained: { chameleon: 6 } });
   await visit(page, 'town');
+  // The innkeeper stands in the doorway until she is paid.
+  await place(page, 'town', 104, 316);
+  await expect(page.locator('#prompt')).toContainText('Enter the inn');
+  await page.keyboard.press('e');
+  await expect(page.locator('#dialogue-text')).toContainText("she doesn't move");
+  await page.keyboard.press('Escape');
   await reply(page, 'town', 120, 344, 'Speak to the innkeeper', 'Twelve coins for a bed. Back stairs.');
   await finish(page);
   await expect(page.locator('#purse')).toHaveText('3 coins');
+  await place(page, 'town', 104, 316);
+  await expect(page.locator('#prompt')).toContainText('Enter the inn');
+  await page.keyboard.press('e');
+  await expect.poll(() => at(page, 'inn')).not.toBeNull();
+  await place(page, 'inn', 152, 232);
+  await expect(page.locator('#prompt')).toContainText('Sleep in the bed');
+  await page.keyboard.press('e');
+  await finish(page);
   await expect(page.getByRole('group', { name: 'Party' }).getByRole('meter', { name: 'Chameleon health', exact: true })).toHaveAttribute('aria-valuetext', '20 of 20');
 });
