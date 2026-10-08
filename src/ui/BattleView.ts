@@ -1,4 +1,4 @@
-import { act, canAct, canCast, canUse, cast, useSupply, condition, cost, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
+import { act, canAct, canCast, canUse, cast, useSupply, warded, condition, cost, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
 import type { Action, Battle, Dodge, Fighter, Foe, MemberId, Encounter } from '../rules/battle';
 import type { Hollow } from '../rules/memory';
 import type { Gear } from '../rules/gear';
@@ -295,7 +295,7 @@ export class BattleView {
       if (strike.selectedOptions[0]?.disabled) strike.value = Array.from(strike.options).find(option => !option.disabled)?.value ?? '0';
       strike.disabled = state.phase !== 'player';
     }
-    this.get('#enemy-mana').textContent = `Mana ${enemyMana(state)}${ENEMIES[state.encounter].veiled && !state.enemyRevealed ? ' · veiled' : ''}${state.fury ? ` · Fury ${state.fury}` : ''}`;
+    this.get('#enemy-mana').textContent = `Mana ${enemyMana(state)}${ENEMIES[state.encounter].veiled && !state.enemyRevealed ? ' · veiled' : ''}${state.fury ? ` · Fury ${state.fury}` : ''}${warded(state) ? ' · warded by its votives' : ''}`;
     const target = enemyTarget(state);
     this.get('#enemy-intent').textContent = done ? '' : state.enemy.health === 0 ? `The ${ENEMIES[state.encounter].short} is down. What stood with it fights on.`
       : state.snared ? 'Snared · thorns hold it. It cannot move this turn.'

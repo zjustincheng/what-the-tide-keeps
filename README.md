@@ -74,7 +74,7 @@ None of these are marked. Someone mentions a problem and the player works out th
 
 ## Coins, shops, and supplies
 
-Defeated enemies leave coins: 4 for a locust, 5 for a weevil, 10 for a hooded follower, 12 for the swarm-mother, 30 for the boar. Coins are shown at the top right of the game frame. As the guideline says, coins and supplies gathered since the last death are lost on a wipe.
+Defeated enemies leave coins: 4 for a locust, 5 for a weevil, 10 for a hooded follower, 12 for the swarm-mother, 15 for the Shrine warden, 10 for the Mire leech, 30 for the boar. Coins are shown at the top right of the game frame. As the guideline says, coins and supplies gathered since the last death are lost on a wipe.
 
 The stallholder in Millbrook's market square sells supplies at three times the citizen's price because of the brand, and at twice the price once the boar is beaten and the town thaws:
 
@@ -106,9 +106,16 @@ Press **Tab** while on the map, or choose **Equipment** in settings, to open the
 | --- | --- | --- | --- | --- |
 | Cracked mirror | The abandoned camp in the woods | Chameleon | Reveal hits 3 harder | Hiding costs 2 mana |
 | Crow's feather | The last row of the orchard | Vulture | Attacks hit 3 harder | 4 less health |
-| Covenant token | Behind the old shrine | Anyone | 6 more health | Shows 2 more mana, drawing attacks |
+| Covenant token | Behind the old shrine, guarded by the Shrine warden | Anyone | 6 more health | Shows 2 more mana, drawing attacks |
 | Wool charm | The shepherd, for his strays | Anyone | 5 more health | Shows 1 more mana |
-| Yoke peg | The reeds below the ford | Bear | 8 more health | Attacks cost 3 mana |
+| Yoke peg | The reeds below the ford, guarded by the Mire leech | Bear | 8 more health | Attacks cost 3 mana |
+
+Two keepsakes are guarded, and their caches appear only once the guardian is dead:
+
+- **The Shrine warden** stands where the shrine's offerings lie. While either of its two votive candles burns, attacks on the warden break on the candlelight, so the votives must be snuffed first. Every fourth round it relights them, and every third round its Judgement drives half its force through any guard.
+- **The Mire leech** lies in the ford. Every blow it lands heals it by the damage it dealt, so dodging and guarding starve it as much as they spare the party. Every third round it coils and strikes hard.
+
+Both are beyond the chameleon alone; with the bear they are hard but winnable, and each stays dead once beaten.
 
 Equipping a keepsake another hero holds moves it. The screen previews each hero's health, mana, and damage as the next fight will build them. Found keepsakes and grimoires are saved in `tide-keeps.world.v1` and equipped ones in `tide-keeps.gear.v1`.
 
@@ -235,6 +242,8 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/rules/economy.test.ts` — prices, the thaw, wipes, and supply effects.
 - `tests/fishing.spec.ts` — landing, scaring off, and selling a catch.
 - `tests/rules/fishing.test.ts` — the marker, the zone, bites, and the catch's value.
+- `tests/elites.spec.ts` — the guardians of the Covenant token and the yoke peg.
+- `tests/rules/elites.test.ts` — the warden's ward and the leech's drain.
 - `tests/sidequests.spec.ts` — the strays, the barrel, and the swarm-mother's bounty.
 - `tests/rules/quests.test.ts` — the brood call and each quest's dialogue and rewards.
 - `tests/spells.spec.ts` — casting, fizzling, phone keys, and swapping grimoires.

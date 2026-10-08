@@ -58,12 +58,12 @@ export const fields: Dialogue = {
     'Between the roots of the oldest tree, a crow has hoarded buttons, a thimble, and one of its own black feathers, oiled and perfect.',
     "You take the Crow's feather. The vulture would know what to do with it.",
   ], then: { find: 'crow-feather' } },
-  'shrine-cache': { speaker: 'BEHIND THE SHRINE', prompt: 'Search behind the shrine', hiddenIf: [{ owns: 'covenant-token' }], lines: [
-    'Offerings left at the foot of the stone: dried flowers, a wheat knot, and a worn bronze Covenant token stamped with a paw and a hoof.',
+  'shrine-cache': { speaker: 'BEHIND THE SHRINE', prompt: 'Search behind the shrine', hiddenIf: [{ owns: 'covenant-token' }, { not: { flag: 'warden-slain' } }], lines: [
+    'Where the warden stood, offerings at the foot of the stone: dried flowers, a wheat knot, and a worn bronze Covenant token stamped with a paw and a hoof.',
     'Whoever wears it is easy to see. Perhaps that was the point.',
   ], then: { find: 'covenant-token' } },
-  'ford-cache': { speaker: 'IN THE REEDS', prompt: 'Search the reeds', hiddenIf: [{ owns: 'yoke-peg' }], lines: [
-    'Washed up in the reeds below the ford: a heavy oak yoke peg, worn smooth by some great shoulder.',
+  'ford-cache': { speaker: 'IN THE REEDS', prompt: 'Search the reeds', hiddenIf: [{ owns: 'yoke-peg' }, { not: { flag: 'leech-slain' } }], lines: [
+    'In the reeds where the leech lay coiled: a heavy oak yoke peg, worn smooth by some great shoulder, and the bones of whatever wore it.',
     'It is too big for anyone but the bear.',
   ], then: { find: 'yoke-peg' } },
   // The shepherd's strays: three sheep scattered by the locusts, sent home one by one.

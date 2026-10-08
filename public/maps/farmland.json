@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 37,
+  "nextobjectid": 39,
   "layers": [
     {
       "id": 1,
@@ -6619,6 +6619,30 @@
           "type": "",
           "x": 120,
           "y": 696,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 37,
+          "name": "warden",
+          "type": "",
+          "x": 888,
+          "y": 568,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 38,
+          "name": "leech",
+          "type": "",
+          "x": 184,
+          "y": 648,
           "width": 0,
           "height": 0,
           "rotation": 0,

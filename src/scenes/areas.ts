@@ -6,7 +6,7 @@ import { border } from '../content/border';
 import { fields } from '../content/fields';
 import { town } from '../content/town';
 import type { Encounter } from '../rules/battle';
-import type { Condition, Effect } from '../rules/world';
+import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
 
 export type Area = {
@@ -66,9 +66,12 @@ export const CHURCH: Area = {
   },
 };
 
+// Caches that only appear once their guardian is dead.
+const GUARDED: Partial<Record<string, Flag>> = { 'shrine-cache': 'warden-slain', 'ford-cache': 'leech-slain' };
+
 export const FARMLAND: Area = {
   key: 'farmland', map: 'farmland', tileset: 'fields', region: 'THE FARMLAND', place: 'The fields', time: 'Dawn',
-  dialogue: fields, assets: ['bear', 'nymph'],
+  dialogue: fields, assets: ['bear', 'nymph', 'votive'],
   npcs: [{ point: 'bear', texture: 'bear', hiddenIf: [{ flag: 'bear-free' }] }, { point: 'miller', texture: 'miller' }, { point: 'heron', texture: 'heron' }, { point: 'shepherd', texture: 'shepherd' }],
   enemies: [
     // The reeve's fields: clearing both earns the writ that frees the bear.
@@ -76,11 +79,14 @@ export const FARMLAND: Area = {
     { point: 'weevil-yard', encounter: 'weevil', defeat: { set: 'pests-yard' } }, { point: 'weevil-orchard', encounter: 'weevil' }, { point: 'weevil-woods', encounter: 'weevil' },
     { point: 'exile', encounter: 'acolyte' },
     { point: 'swarm', encounter: 'swarm', hiddenIf: [{ flag: 'swarm-slain' }], defeat: { set: 'swarm-slain' } },
+    // Guardians of the harder keepsakes. Their caches appear only once they are dead.
+    { point: 'warden', encounter: 'warden', hiddenIf: [{ flag: 'warden-slain' }], defeat: { set: 'warden-slain' } },
+    { point: 'leech', encounter: 'leech', hiddenIf: [{ flag: 'leech-slain' }], defeat: { set: 'leech-slain' } },
   ],
   props: [
     { point: 'bell', texture: 'bell', hiddenIf: [{ has: 'bell' }, { flag: 'lamb-thanked' }] },
     ...([['camp-cache', 'cracked-mirror'], ['orchard-cache', 'crow-feather'], ['shrine-cache', 'covenant-token'], ['ford-cache', 'yoke-peg']] as const)
-      .map(([point, keepsake]) => ({ point, texture: 'cache', hiddenIf: [{ owns: keepsake }] })),
+      .map(([point, keepsake]) => ({ point, texture: 'cache', hiddenIf: [{ owns: keepsake }, ...(GUARDED[point] ? [{ not: { flag: GUARDED[point]! } }] : [])] })),
     { point: 'camp-fields', texture: 'campfire', hiddenIf: [] },
     { point: 'gibbet', texture: 'gibbet', solid: true, hiddenIf: [] },
     { point: 'bones', texture: 'bones', hiddenIf: [] },

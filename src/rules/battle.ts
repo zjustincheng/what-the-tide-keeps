@@ -10,15 +10,15 @@ import type { Supplies, SupplyId } from './economy';
 import type { Wounds } from './world';
 export type MemberId = 'chameleon' | 'bear' | 'vulture';
 export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze';
-export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm';
+export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm' | 'warden' | 'leech';
 export const SPELL = 'Salt lance';
 export type Phase = 'player' | 'enemy' | 'victory' | 'defeat';
 export type Fighter = Readonly<{ health: number; maxHealth: number; mana: number; maxMana: number }>;
 export type Follower = Fighter & Readonly<{ name: string }>;
 // Who an attack is aimed at: 0 is the main enemy, 1 and up are its followers.
 export type Foe = number;
-// revive: the move raises fallen followers instead of striking.
-type Move = { name: string; type: 'physical' | 'spell'; damage: number; piercing?: number; revive?: boolean };
+// revive: the move raises fallen followers instead of striking. drain: the attacker heals by what it deals.
+type Move = { name: string; type: 'physical' | 'spell'; damage: number; piercing?: number; revive?: boolean; drain?: boolean };
 export type Member = Fighter & Readonly<{
   id: MemberId;
   acted: boolean;
@@ -68,6 +68,11 @@ export const ENEMIES = {
     opening: 'A grain weevil the size of a handcart shoulders out of the wheat.' },
   boar: { name: 'The boar', short: 'boar', health: 72, mana: 6, veiled: false,
     opening: 'The boar rises from the ashes of his own hearth. His followers close in at his flanks. "Not them," he says. "Me."' },
+  // Guardians of keepsakes worth having.
+  warden: { name: 'Shrine warden', short: 'warden', health: 70, mana: 14, veiled: false,
+    opening: 'The warden turns from the shrine. Two votive candles flare at its sides, and its robes drink their light. Nothing will touch it while they burn.' },
+  leech: { name: 'Mire leech', short: 'leech', health: 96, mana: 3, veiled: false,
+    opening: 'The ford heaves. Something long and black uncoils from the silt and turns its mouth toward the warmest of you.' },
   swarm: { name: 'Swarm-mother', short: 'swarm-mother', health: 64, mana: 4, veiled: false,
     opening: 'Something the size of a cart unfolds in the dark between the trees. Her brood drops from the branches around her.' },
 } as const satisfies Record<Encounter, unknown>;
@@ -76,6 +81,8 @@ export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; healt
   boar: [{ name: 'Badger', health: 16, weapon: 'cudgel' }, { name: 'Rat', health: 12, weapon: 'cudgel' }],
   // The swarm-mother's brood can be killed, but she calls them back.
   swarm: [{ name: 'Nymph', health: 10, weapon: 'bite' }, { name: 'Nymph', health: 10, weapon: 'bite' }],
+  // The warden's votives burn at its sides; while any burns, the warden cannot be harmed.
+  warden: [{ name: 'Votive', health: 8, weapon: 'flare' }, { name: 'Votive', health: 8, weapon: 'flare' }],
 };
 // Followers who give up once their leader falls. Everyone else fights until the last of them is down.
 export const YIELDING: Partial<Record<Encounter, true>> = { boar: true };
@@ -151,6 +158,15 @@ export function intent(battle: Battle): Move & { tell: string } {
       ? { name: 'Tusk charge', type: 'physical', tell: `He lowers his tusks and paws the ash. A charge is coming.${fury}`, damage: 10 + battle.fury, piercing: battle.fury }
       : { name: 'Shoulder blow', type: 'physical', tell: `He squares his shoulders.${fury}`, damage: 4 + battle.fury, piercing: battle.fury };
   }
+  if (battle.encounter === 'warden') {
+    if (battle.round % 4 === 0) return { name: 'Rekindle', type: 'physical', tell: 'It lifts its censer to the dark wicks. The votives will burn again.', damage: 0, revive: true };
+    return battle.round % 3 === 0
+      ? { name: 'Judgement', type: 'physical', tell: 'It raises the censer high. Judgement falls next, and no guard will hold all of it.', damage: 14, piercing: 7 }
+      : { name: 'Censer swing', type: 'physical', tell: 'The censer swings on its chain.', damage: 6 };
+  }
+  if (battle.encounter === 'leech') return battle.round % 3 === 0
+    ? { name: 'Coil', type: 'physical', tell: 'It draws its whole length back into a coil.', damage: 13 }
+    : { name: 'Latch', type: 'physical', tell: 'Its mouth opens toward you. Whatever it takes, it keeps.', damage: 8, drain: true };
   if (battle.encounter === 'swarm') return battle.round % 3 === 0
     ? { name: 'Brood call', type: 'physical', tell: 'She shrills, and the brood answers. Fallen nymphs will rise again.', damage: 0, revive: true }
     : { name: 'Wing buffet', type: 'physical', tell: 'Her wings rattle. A buffet is coming.', damage: 5 };
@@ -168,6 +184,11 @@ export function enemyTarget(battle: Battle): Member | undefined {
     if (!target || visibleMana(member) > visibleMana(target) || (visibleMana(member) === visibleMana(target) && member.id === 'bear')) return member;
     return target;
   }, undefined);
+}
+
+// The warden cannot be harmed while any of its votives still burns.
+export function warded(battle: Pick<Battle, 'encounter' | 'followers'>): boolean {
+  return battle.encounter === 'warden' && battle.followers.some(follower => follower.health > 0);
 }
 
 // Whether a given enemy is still on its feet.
@@ -204,11 +225,13 @@ export function canAct(battle: Battle, actor: MemberId, action: Action, target: 
 // Damage aimed at an enemy. The boar takes every hit aimed at his followers, at half strength, and each one makes him stronger.
 function land(battle: Battle, damage: number, foe: Foe) {
   const shielded = foe > 0 && battle.encounter === 'boar' && battle.enemy.health > 0;
-  const enemy = foe === 0 || shielded ? { ...battle.enemy, health: Math.max(0, battle.enemy.health - (shielded ? Math.floor(damage / 2) : damage)) } : battle.enemy;
+  const blocked = foe === 0 && warded(battle);
+  const dealt = blocked ? 0 : shielded ? Math.floor(damage / 2) : damage;
+  const enemy = foe === 0 || shielded ? { ...battle.enemy, health: Math.max(0, battle.enemy.health - dealt) } : battle.enemy;
   const followers = foe > 0 && !shielded
     ? battle.followers.map((follower, index) => index === foe - 1 ? { ...follower, health: Math.max(0, follower.health - damage) } : follower)
     : battle.followers;
-  return { enemy, followers, fury: battle.fury + (shielded ? FURY_PER_HIT : 0), shielded };
+  return { enemy, followers, fury: battle.fury + (shielded ? FURY_PER_HIT : 0), shielded, blocked };
 }
 
 export function canUse(battle: Battle, actor: MemberId, supply: SupplyId, target: MemberId = actor, foe: Foe = 0): boolean {
@@ -239,6 +262,7 @@ export function useSupply(battle: Battle, actor: MemberId, supply: SupplyId, tar
   const aimed = foe > 0 ? battle.followers[foe - 1].name.toLowerCase() : ENEMIES[battle.encounter].short;
   const message = kind === 'ally' ? `${MEMBERS[actor].name} shares the ${name.toLowerCase()}${target !== actor ? ` with ${MEMBERS[target].name}` : ''}.`
     : kind === 'fallen' ? `${MEMBERS[actor].name} holds the smelling salts under ${MEMBERS[target].name}'s nose. They get back up.`
+    : hit?.blocked ? `The firepot bursts against the candlelight. The warden is untouched while its votives burn.`
     : hit?.shielded ? `The boar throws himself in front of the ${aimed}. The firepot bursts against him instead, and his fury grows.`
     : `${MEMBERS[actor].name} throws a firepot. It bursts across the ${aimed}.`;
   return {
@@ -274,6 +298,7 @@ export function cast(battle: Battle, actor: MemberId, success: boolean, foe: Foe
   const victory = won(after);
   const target = foe > 0 ? battle.followers[foe - 1].name.toLowerCase() : ENEMIES[battle.encounter].short;
   const message = !success ? `${MEMBERS[actor].name}'s ${spell.name.toLowerCase()} unravels half-spoken. The mana is gone.`
+    : hit?.blocked ? `${MEMBERS[actor].name} casts ${spell.name}. It breaks on the candlelight; the warden is untouched while its votives burn.`
     : hit?.shielded ? `The boar throws himself in front of the ${target}. ${spell.name} strikes him instead, and his fury grows.`
     : spell.kind === 'damage' ? `${MEMBERS[actor].name} casts ${spell.name}. It tears into the ${target}.`
     : spell.kind === 'heal' ? `${MEMBERS[actor].name} casts ${spell.name}. Wounds close across the party.`
@@ -295,8 +320,8 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
   // Forgetting his training leaves the hero with an ordinary reveal.
   const reveal = (actor === 'chameleon' && battle.hollow.trained ? 4 : 2) + member.gear.reveal;
   const damage = definition.damage + member.gear.damage + (actor === 'chameleon' ? battle.hollow.damage : 0) + (member.focused ? 3 : 0) + (member.suppressed ? reveal : 0);
-  const { enemy, followers, fury, shielded } = action === 'attack' ? land(battle, damage, foe)
-    : { enemy: battle.enemy, followers: battle.followers, fury: battle.fury, shielded: false };
+  const { enemy, followers, fury, shielded, blocked } = action === 'attack' ? land(battle, damage, foe)
+    : { enemy: battle.enemy, followers: battle.followers, fury: battle.fury, shielded: false, blocked: false };
   const party = battle.party.map(current => ({
     ...current,
     ...(current.id === actor ? {
@@ -313,6 +338,7 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
   const message = action === 'suppress' ? `${definition.name} conceals their mana.`
     : action === 'barrier' ? `${definition.name} raises a spell barrier around ${MEMBERS[target].name}.`
     : action === 'analyze' ? `${definition.name} studies the gathering spell. ${SPELL} is written into the grimoire.`
+    : blocked ? `${definition.name}'s ${definition.attack.toLowerCase()} breaks on the candlelight. The warden is untouched while its votives burn.`
     : shielded ? `The boar throws himself in front of the ${battle.followers[foe - 1].name.toLowerCase()}. ${definition.name}'s ${definition.attack.toLowerCase()} strikes him instead, and his fury grows.`
     : action === 'attack' ? `${definition.name}'s ${definition.attack.toLowerCase()} strikes the ${foe > 0 ? battle.followers[foe - 1].name.toLowerCase() : ENEMIES[battle.encounter].short}${member.suppressed ? ' in a burst of revealed mana' : ''}${member.focused ? ' with focused force' : ''}.`
     : actor === 'vulture' ? 'Vulture steadies her aim. Her next attack will strike harder.'
@@ -373,6 +399,9 @@ export function strike(battle: Battle, dodge: Dodge = 'miss'): Battle {
   const avoided = next.dodgeable ? dodge : 'miss';
   const damage = avoided === 'perfect' ? 0 : avoided === 'graze' ? Math.ceil(next.damage / 2) : next.damage;
   const party = battle.party.map(member => member.id === target.id ? { ...member, health: Math.max(0, member.health - damage) } : member);
+  // A draining blow feeds the attacker by whatever it actually took.
+  const taken = target.health - party.find(member => member.id === target.id)!.health;
+  const enemy = move.drain && taken > 0 ? { ...battle.enemy, health: Math.min(battle.enemy.maxHealth, battle.enemy.health + taken) } : battle.enemy;
   const downed = party.find(member => member.id === target.id)!.health === 0;
   const name = MEMBERS[target.id].name;
   const message = blocked ? `${name}'s barrier stops ${SPELL}.`
@@ -380,7 +409,7 @@ export function strike(battle: Battle, dodge: Dodge = 'miss'): Battle {
     : guarded ? `${MEMBERS[guarded.id].name} turns aside the ${move.name.toLowerCase()}${guarded.id !== target.id ? ` aimed at ${name}` : ''}.${damage ? ` His fury drives through anyway${avoided === 'graze' ? ', though only just' : ''}${downed ? `, and ${name} falls` : ''}.` : ''}`
     : avoided === 'graze' ? `${name} half twists away. The ${move.name.toLowerCase()} only grazes them.${downed ? ' They fall.' : ''}`
     : `The ${move.name.toLowerCase()} catches ${name}.${downed ? ' They fall.' : ''}`;
-  const after = { ...battle, party, step: battle.step + 1, log: [...battle.log, message] };
+  const after = { ...battle, party, enemy, step: battle.step + 1, log: [...battle.log, message, ...(enemy.health > battle.enemy.health ? [`The ${ENEMIES[battle.encounter].short} swells with what it took.`] : [])] };
   const done = party.every(member => member.health === 0) || !enemyMoves(battle)[battle.step + 1];
   return done ? enemyTurnEnds(after) : after;
 }

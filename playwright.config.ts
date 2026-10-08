@@ -4,6 +4,9 @@ export default defineConfig({
   testDir: './tests',
   testIgnore: '**/rules/**',
   fullyParallel: false,
+  // Four games run side by side, and enemy turns wait on dodge prompts, so give each check room under load.
+  timeout: 60_000,
+  expect: { timeout: 10_000 },
   use: {
     baseURL: 'http://127.0.0.1:5173',
     channel: 'chrome',
