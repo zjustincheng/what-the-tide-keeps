@@ -230,7 +230,21 @@ export class BattleView {
       if (this.state.phase === 'enemy') this.timer = setTimeout(() => this.enemyTurn(), 450);
       else if (this.state.phase === 'player') this.focusNext();
     };
-    if (!next?.dodgeable) { this.timer = setTimeout(() => land('miss'), next ? 400 : 0); return; }
+    if (!next?.dodgeable) {
+      // A blow that cannot be dodged is announced, so the player sees why no ring came.
+      if (next && next.damage > 0 && next.move.undodgeable) {
+        const bar = this.get('.dodge-bar');
+        const shown = ++this.prompts;
+        this.get('.dodge-call').textContent = `${next.move.name} → ${MEMBERS[next.target.id].name}. It cannot be dodged.`;
+        this.get<HTMLButtonElement>('#dodge').hidden = true;
+        bar.hidden = false;
+        setTimeout(() => { if (this.prompts === shown) bar.hidden = true; }, 900);
+        this.timer = setTimeout(() => land('miss'), 800);
+        return;
+      }
+      this.timer = setTimeout(() => land('miss'), next ? 400 : 0);
+      return;
+    }
     const card = this.card(next.target.id);
     const ring = document.createElement('div');
     ring.className = 'dodge-ring'; ring.style.setProperty('--lead', `${LEAD}ms`);
@@ -240,7 +254,7 @@ export class BattleView {
     this.get('.dodge-call').textContent = `${next.move.name} → ${MEMBERS[next.target.id].name}. Dodge!`;
     const bar = this.get('.dodge-bar'), button = this.get<HTMLButtonElement>('#dodge');
     const shown = ++this.prompts;
-    bar.hidden = false; button.disabled = false; button.focus({ preventScroll: true });
+    bar.hidden = false; button.hidden = false; button.disabled = false; button.focus({ preventScroll: true });
     this.prompt = {
       impact,
       answer: (dodge, early = false) => {

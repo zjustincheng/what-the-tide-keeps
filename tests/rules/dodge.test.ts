@@ -56,3 +56,20 @@ test("each of the boar's blows is its own dodge, and the turn ends after the las
   assert.equal(battle.round, 2);
   assert.ok(battle.party.every(member => member.health === member.maxHealth));
 });
+
+test('stronger blows leave a narrower window, and some cannot be dodged at all', () => {
+  const tusk = intent({ ...createBattle('boar'), round: 2 });
+  assert.equal(grade(50, tusk), 'graze', 'the boar charges too fast for an ordinary perfect dodge');
+  assert.equal(grade(130, tusk), 'miss');
+  const exposed = (encounter: Parameters<typeof createBattle>[0], round: number) =>
+    act(act(act({ ...createBattle(encounter), round }, 'chameleon', 'attack'), 'bear', 'attack'), 'vulture', 'attack');
+  for (const [encounter, round, name] of [['leech', 3, 'Coil'], ['warden', 3, 'Judgement'], ['weevil', 3, 'Rolling charge']] as const) {
+    const battle = exposed(encounter, round);
+    const next = nextStrike(battle)!;
+    assert.equal(next.move.name, name);
+    assert.equal(next.dodgeable, false, `${name} cannot be dodged`);
+    assert.match(intent(battle).tell, /dodge/);
+    const hit = strike(battle, 'perfect');
+    assert.ok(hit.party.find(member => member.id === next.target.id)!.health < next.target.health, 'a perfect press does nothing');
+  }
+});

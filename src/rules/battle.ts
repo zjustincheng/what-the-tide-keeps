@@ -18,7 +18,9 @@ export type Follower = Fighter & Readonly<{ name: string }>;
 // Who an attack is aimed at: 0 is the main enemy, 1 and up are its followers.
 export type Foe = number;
 // revive: the move raises fallen followers instead of striking. drain: the attacker heals by what it deals.
-type Move = { name: string; type: 'physical' | 'spell'; damage: number; piercing?: number; revive?: boolean; drain?: boolean };
+// window: this blow's dodge timing, tighter for stronger enemies. undodgeable: only a guard or barrier answers it.
+type Move = { name: string; type: 'physical' | 'spell'; damage: number; piercing?: number; revive?: boolean; drain?: boolean;
+  window?: { perfect: number; graze: number }; undodgeable?: boolean };
 export type Member = Fighter & Readonly<{
   id: MemberId;
   acted: boolean;
@@ -171,30 +173,31 @@ export function intent(battle: Battle): Move & { tell: string } {
     const name = battle.studied.includes(SPELL) ? SPELL : '???';
     return {
       name: casting ? name : 'Staff strike', type: casting ? 'spell' as const : 'physical' as const,
-      tell: casting ? `${name} · 1 enemy turn — releasing next.` : `A staff is raised. ${name} gathers · 2 enemy turns.`,
+      tell: casting ? `${name} · 1 enemy turn — releasing next.${name === SPELL ? ' It comes fast.' : ''}` : `A staff is raised. ${name} gathers · 2 enemy turns.`,
       damage: casting ? 18 : 4,
+      ...(casting ? { window: { perfect: 40, graze: 110 } } : {}),
     };
   }
   if (battle.encounter === 'boar') {
     const fury = battle.fury ? ` His fury burns · ${battle.fury} will drive through any guard.` : '';
     return battle.round % 2 === 0
-      ? { name: 'Tusk charge', type: 'physical', tell: `He lowers his tusks and paws the ash. A charge is coming.${fury}`, damage: 10 + battle.fury, piercing: battle.fury }
+      ? { name: 'Tusk charge', type: 'physical', tell: `He lowers his tusks and paws the ash. A charge is coming, fast.${fury}`, damage: 10 + battle.fury, piercing: battle.fury, window: { perfect: 45, graze: 120 } }
       : { name: 'Shoulder blow', type: 'physical', tell: `He squares his shoulders.${fury}`, damage: 4 + battle.fury, piercing: battle.fury };
   }
   if (battle.encounter === 'warden') {
     if (battle.round % 4 === 0) return { name: 'Rekindle', type: 'physical', tell: 'It lifts its censer to the dark wicks. The votives will burn again.', damage: 0, revive: true };
     return battle.round % 3 === 0
-      ? { name: 'Judgement', type: 'physical', tell: 'It raises the censer high. Judgement falls next, and no guard will hold all of it.', damage: 14, piercing: 7 }
+      ? { name: 'Judgement', type: 'physical', tell: 'It raises the censer high. Judgement falls next. It cannot be dodged, and no guard will hold all of it.', damage: 14, piercing: 7, undodgeable: true }
       : { name: 'Censer swing', type: 'physical', tell: 'The censer swings on its chain.', damage: 6 };
   }
   if (battle.encounter === 'leech') return battle.round % 3 === 0
-    ? { name: 'Coil', type: 'physical', tell: 'It draws its whole length back into a coil.', damage: 13 }
-    : { name: 'Latch', type: 'physical', tell: 'Its mouth opens toward you. Whatever it takes, it keeps.', damage: 8, drain: true };
+    ? { name: 'Coil', type: 'physical', tell: 'It draws its whole length back into a coil. It cannot be dodged.', damage: 13, undodgeable: true }
+    : { name: 'Latch', type: 'physical', tell: 'Its mouth opens toward you. Whatever it takes, it keeps.', damage: 8, drain: true, window: { perfect: 60, graze: 150 } };
   if (battle.encounter === 'swarm') return battle.round % 3 === 0
     ? { name: 'Brood call', type: 'physical', tell: 'She shrills, and the brood answers. Fallen nymphs will rise again.', damage: 0, revive: true }
     : { name: 'Wing buffet', type: 'physical', tell: 'Her wings rattle. A buffet is coming.', damage: 5 };
   if (battle.encounter === 'weevil') return battle.round % 3 === 0
-    ? { name: 'Rolling charge', type: 'physical' as const, tell: 'It tucks its snout and rocks back. A rolling charge is coming.', damage: 9 }
+    ? { name: 'Rolling charge', type: 'physical' as const, tell: 'It tucks its snout and rocks back. A rolling charge is coming. It cannot be dodged.', damage: 9, undodgeable: true }
     : { name: 'Snout jab', type: 'physical' as const, tell: 'Its snout lowers. It will jab.', damage: 3 };
   return battle.round % 2 === 0
     ? { name: 'Crushing leap', type: 'physical' as const, tell: 'Its hind legs draw tight. A crushing leap is coming.', damage: 10 }
@@ -380,10 +383,12 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
 export const DODGE = { perfect: 90, heavyPerfect: 60, graze: 200 } as const;
 
 // Early or late by errorMs; heavy, telegraphed blows leave a narrower perfect window.
+// A move may set its own window: stronger enemies leave less room.
 export function grade(errorMs: number, move: Move): Dodge {
   const off = Math.abs(errorMs);
-  if (off <= (move.damage >= 10 ? DODGE.heavyPerfect : DODGE.perfect)) return 'perfect';
-  return off <= DODGE.graze ? 'graze' : 'miss';
+  const window = move.window ?? { perfect: move.damage >= 10 ? DODGE.heavyPerfect : DODGE.perfect, graze: DODGE.graze };
+  if (off <= window.perfect) return 'perfect';
+  return off <= window.graze ? 'graze' : 'miss';
 }
 
 // The main enemy moves first, then each standing follower.
@@ -407,7 +412,7 @@ export function nextStrike(battle: Battle) {
   const damage = blocked ? 0 : guarded ? move.piercing ?? 0 : move.damage;
   // Nobody can dodge a spell they have not studied.
   const unknown = move.type === 'spell' && !battle.studied.includes(SPELL);
-  return { move, target, guarded, blocked, damage, dodgeable: damage > 0 && !unknown };
+  return { move, target, guarded, blocked, damage, dodgeable: damage > 0 && !unknown && !move.undodgeable };
 }
 
 // Land the next blow. Each blow picks the most visible target at that moment; the last one ends the enemy turn.

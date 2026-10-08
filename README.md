@@ -157,6 +157,8 @@ Enemy blows can be dodged with timing, never luck. When a blow is about to land,
 - **Graze** (within 200 ms): half damage.
 - **Too soon, too slow, or no press**: the full blow. A press cannot be retried, so mashing does not work.
 
+Stronger enemies leave less room: the boar's Tusk charge and a studied Salt lance give only about 40–45 ms for a perfect dodge and 110–120 ms to graze, and the leech's Latch is tighter than a pest's bite. Some blows cannot be dodged at all, and their warnings say so: the weevil's Rolling charge, the leech's Coil, and the warden's Judgement. For those, guard or raise a barrier ahead of time.
+
 Each blow in a turn, including each of the boar's followers, is its own dodge. Blows already stopped by a guard or barrier skip the prompt. A spell the party has not studied cannot be dodged. The timing windows live in `DODGE` in `src/rules/battle.ts`.
 
 ## Magic and the shared grimoire
