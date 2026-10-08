@@ -1,7 +1,10 @@
 import Phaser from 'phaser';
 import { conversations } from '../content/church';
 import type { Encounter } from '../rules/battle';
+import { forget, held, hollow, MEMORY_IDS, wipe } from '../rules/memory';
+import { loadMemory, saveMemory } from '../storage/memory';
 import { BattleView } from '../ui/BattleView';
+import { ResurrectionView } from '../ui/ResurrectionView';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 type Point = { name: string; x: number; y: number };
@@ -17,12 +20,13 @@ export class ChurchScene extends Phaser.Scene {
   private line = 0;
   private cleanup = new AbortController();
   private spawn = { x: 88, y: 124 };
+  private saved = true;
   private shadow!: Phaser.GameObjects.Ellipse;
   private enemy!: Phaser.Physics.Arcade.Sprite;
   private signature!: Phaser.GameObjects.Container;
   private exile!: Phaser.Physics.Arcade.Sprite;
   private exileSignature!: Phaser.GameObjects.Container;
-  private battle?: BattleView;
+  private overlay?: BattleView | ResurrectionView;
 
   constructor() { super('church'); }
 
@@ -87,9 +91,12 @@ export class ChurchScene extends Phaser.Scene {
     this.keys = this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT', false) as typeof this.keys;
     this.bindControls();
     this.cameras.main.fadeIn(650, 16, 27, 24);
+    this.renderMemory();
+    // A wipe that was not yet paid for, such as one interrupted by a reload, is still owed.
+    if(loadMemory().pending) this.wake();
     this.events.once('shutdown', () => {
       this.cleanup.abort();
-      this.battle?.destroy();
+      this.overlay?.destroy();
       this.setExplorationEnabled(true);
       this.closeDialogue();
     });
@@ -119,7 +126,7 @@ export class ChurchScene extends Phaser.Scene {
   private bindControls() {
     const signal=this.cleanup.signal;
     window.addEventListener('keydown',event=>{
-      if(this.battle) return;
+      if(this.overlay) return;
       if(event.target instanceof HTMLButtonElement && [' ', 'Enter'].includes(event.key)) return;
       if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(event.key)) event.preventDefault();
       if(['e','E',' ','Enter'].includes(event.key)) this.interact(event);
@@ -128,7 +135,7 @@ export class ChurchScene extends Phaser.Scene {
     element('continue').addEventListener('click',()=>this.interact(),{signal});
     element('touch-interact').addEventListener('click',()=>this.interact(),{signal});
     element('restart').addEventListener('click',()=>{
-      if(this.battle) return;
+      if(this.overlay) return;
       this.closeDialogue();this.held.clear();this.player.setVelocity(0);this.player.setPosition(this.spawn.x,this.spawn.y);
       const encounter = this.points.find(p => p.name === 'encounter')!;
       this.enemy.enableBody(true, encounter.x, encounter.y, true, true);
@@ -141,7 +148,7 @@ export class ChurchScene extends Phaser.Scene {
     document.querySelectorAll<HTMLButtonElement>('[data-direction]').forEach(button=>{
       const direction=button.dataset.direction as Direction;
       button.addEventListener('pointerdown',event=>{
-        if(this.battle) return;
+        if(this.overlay) return;
         event.preventDefault();button.setPointerCapture(event.pointerId);this.held.add(direction);
       },{signal});
       const release=()=>this.held.delete(direction);
@@ -153,7 +160,7 @@ export class ChurchScene extends Phaser.Scene {
   }
 
   private interact(event?: KeyboardEvent) {
-    if(this.battle) return;
+    if(this.overlay) return;
     if(event?.repeat) return;
     // Let native buttons handle their own Enter/Space activation once.
     if(event && document.activeElement instanceof HTMLButtonElement && [' ', 'Enter'].includes(event.key)) return;
@@ -187,32 +194,57 @@ export class ChurchScene extends Phaser.Scene {
   private beginBattle(encounter: Encounter) {
     const enemy = encounter === 'locust' ? this.enemy : this.exile;
     const signature = encounter === 'locust' ? this.signature : this.exileSignature;
-    if(this.battle || this.active || !enemy.active) return;
+    if(this.overlay || this.active || !enemy.active) return;
     this.player.setVelocity(0);
     this.held.clear();
     this.input.keyboard?.resetKeys();
     this.physics.pause();
     element('prompt').textContent = '';
     this.setExplorationEnabled(false);
-    this.battle = new BattleView(this.textures.getBase64('hero'), won => {
-      this.battle = undefined;
+    this.overlay = new BattleView(this.textures.getBase64('hero'), won => {
+      this.overlay = undefined;
       if(won) {
         enemy.disableBody(true, true);
         signature.setVisible(false);
+        this.resumeExploration();
       } else {
         this.player.setPosition(this.spawn.x, this.spawn.y);
+        this.saved = saveMemory(wipe(loadMemory()));
+        if(loadMemory().pending) this.wake(); else this.resumeExploration();
       }
-      this.held.clear();
-      this.input.keyboard?.resetKeys();
-      this.setExplorationEnabled(true);
-      this.physics.resume();
-      element('game').focus({preventScroll:true});
-    }, encounter);
+    }, encounter, hollow(loadMemory()));
+  }
+
+  private wake() {
+    this.player.setVelocity(0);
+    this.physics.pause();
+    element('prompt').textContent = '';
+    this.setExplorationEnabled(false);
+    this.overlay = new ResurrectionView(loadMemory(), id => {
+      this.overlay?.destroy();
+      this.overlay = undefined;
+      this.saved = saveMemory(forget(loadMemory(), id));
+      this.renderMemory();
+      this.cameras.main.fadeIn(900, 16, 27, 24);
+      this.resumeExploration();
+    });
+  }
+
+  private renderMemory() {
+    element('memory-status').textContent = `Some things are already missing · ${held(loadMemory()).length} of ${MEMORY_IDS.length} memories remain${this.saved ? '' : ' · not saved'}`;
+  }
+
+  private resumeExploration() {
+    this.held.clear();
+    this.input.keyboard?.resetKeys();
+    this.setExplorationEnabled(true);
+    this.physics.resume();
+    element('game').focus({preventScroll:true});
   }
 
   update(time: number) {
     if(!this.player) return;
-    if(this.battle) return;
+    if(this.overlay) return;
     const pressed=(direction:Direction,...keys:string[])=>this.held.has(direction)||keys.some(key=>this.keys[key].isDown);
     let x=Number(pressed('right','D','RIGHT'))-Number(pressed('left','A','LEFT'));
     let y=Number(pressed('down','S','DOWN'))-Number(pressed('up','W','UP'));

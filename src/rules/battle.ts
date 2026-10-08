@@ -1,4 +1,5 @@
 // Pure game rules: no Phaser, DOM, timers, or random state.
+import type { Hollow } from './memory';
 export type MemberId = 'chameleon' | 'bear' | 'vulture';
 export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze';
 export type Encounter = 'locust' | 'acolyte';
@@ -17,6 +18,7 @@ export type Battle = Readonly<{
   round: number;
   encounter: Encounter;
   studied: readonly string[];
+  hollow: Hollow;
   enemyRevealed: boolean;
   phase: Phase;
   party: readonly Member[];
@@ -31,15 +33,17 @@ export const MEMBERS = {
 } as const;
 export const COST = { attack: 2, support: 0, suppress: 1, barrier: 5, analyze: 2 } as const;
 export const MANA_REGEN = 3;
+export const UNHOLLOWED: Hollow = { mana: 0, damage: 0, trained: true };
 
-export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = []): Battle {
+// Hollow perks strengthen only the hero; companions keep their own memories.
+export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], hollow: Hollow = UNHOLLOWED): Battle {
   const member = (id: MemberId, health: number, mana: number): Member => ({
     id, health, maxHealth: health, mana, maxMana: mana,
     acted: false, guardingFor: null, focused: false, suppressed: false, barrier: false,
   });
   return {
-    round: 1, phase: 'player', encounter, studied: studied.includes(SPELL) ? [SPELL] : [], enemyRevealed: false,
-    party: [member('chameleon', 16, 10), member('bear', 24, 12), member('vulture', 12, 10)],
+    round: 1, phase: 'player', encounter, studied: studied.includes(SPELL) ? [SPELL] : [], hollow, enemyRevealed: false,
+    party: [member('chameleon', 16, 10 + hollow.mana), member('bear', 24, 12), member('vulture', 12, 10)],
     enemy: { health: 72, maxHealth: 72, mana: encounter === 'acolyte' ? 12 : 2, maxMana: encounter === 'acolyte' ? 12 : 2 },
     log: [encounter === 'locust' ? 'A crop locust has followed the grain sacks inside. The three of you take your places.' : 'The hooded exile shows almost no mana. A spell gathers behind the veil.'],
   };
@@ -101,7 +105,9 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
   if (!canAct(battle, actor, action, target)) return battle;
   const member = battle.party.find(member => member.id === actor)!;
   const definition = MEMBERS[actor];
-  const damage = definition.damage + (member.focused ? 3 : 0) + (member.suppressed ? actor === 'chameleon' ? 4 : 2 : 0);
+  // Forgetting his training leaves the hero with an ordinary reveal.
+  const reveal = actor === 'chameleon' && battle.hollow.trained ? 4 : 2;
+  const damage = definition.damage + (actor === 'chameleon' ? battle.hollow.damage : 0) + (member.focused ? 3 : 0) + (member.suppressed ? reveal : 0);
   const enemy = action === 'attack' ? { ...battle.enemy, health: Math.max(0, battle.enemy.health - damage) } : battle.enemy;
   const party = battle.party.map(current => ({
     ...current,

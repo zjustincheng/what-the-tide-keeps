@@ -1,5 +1,6 @@
 import { act, canAct, condition, COST, createBattle, enemyTarget, intent, MEMBERS, resolveEnemy, visibleMana, enemyMana, SPELL } from '../rules/battle';
 import type { Action, Battle, Fighter, MemberId, Encounter } from '../rules/battle';
+import type { Hollow } from '../rules/memory';
 
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
 
@@ -12,9 +13,9 @@ export class BattleView {
   private previousFocus = document.activeElement as HTMLElement | null;
   private onFinish: (won: boolean) => void;
 
-  constructor(heroImage: string, onFinish: (won: boolean) => void, encounter: Encounter = 'locust') {
+  constructor(heroImage: string, onFinish: (won: boolean) => void, encounter: Encounter = 'locust', hollow?: Hollow) {
     this.onFinish = onFinish;
-    this.state = createBattle(encounter, loadGrimoire());
+    this.state = createBattle(encounter, loadGrimoire(), hollow);
     const enemyName = encounter === 'locust' ? 'Crop locust' : 'Hooded exile';
     this.root = document.createElement('section');
     this.root.className = 'battle party-battle';
