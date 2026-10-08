@@ -391,6 +391,27 @@ footer span:last-child {
 }
 
 /* Three-member combat layout. The full roster stays visible while choosing actions. */
+.health-bar {
+  width: 100%;
+  height: 8px;
+  margin: 8px 0;
+  overflow: hidden;
+  border: 1px solid #738568;
+  background: #101c17;
+}
+.health-bar span {
+  display: block;
+  width: var(--health, 100%);
+  height: 100%;
+  background: #9bad72;
+  transition: width 250ms ease-out, background-color 250ms ease-out;
+}
+.health-bar[data-level="wounded"] span { background: #c1a05f; }
+.health-bar[data-level="low"] span { background: #bc755e; }
+.enemy-row .health-bar { min-width: 110px; }
+@media(prefers-reduced-motion:reduce) {
+  .health-bar span { transition: none; }
+}
 .party-battle { padding: 18px 4%; }
 .party-battle h2 { font-size: 26px; }
 .enemy-row { display: flex; gap: 14px; align-items: center; justify-content: center; }

@@ -195,6 +195,8 @@ There are two kinds of damage:
 
 Enemies signal which is coming. Mana is always shown, since reading it is the game. Exact health and damage numbers are hidden and described in words such as "wounded" or "barely standing".
 
+Presentation update: show health bars for party members and enemies alongside those condition descriptions. Keep exact health and damage numbers hidden.
+
 A shared meter fills as the party fights. When full, it can be spent on one character's strongest technique. For the hero this is a technique from his forgotten past.
 
 A character at zero health is downed. If all three are downed, the party wipes and wakes at the church.

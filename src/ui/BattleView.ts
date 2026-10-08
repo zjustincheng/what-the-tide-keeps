@@ -1,5 +1,5 @@
 import { act, canAct, condition, COST, createBattle, enemyTarget, intent, MEMBERS, resolveEnemy } from '../rules/battle';
-import type { Action, Battle, MemberId } from '../rules/battle';
+import type { Action, Battle, Fighter, MemberId } from '../rules/battle';
 
 export class BattleView {
   private state: Battle = createBattle();
@@ -20,14 +20,14 @@ export class BattleView {
       <div class="battle-heading"><p class="eyebrow">THE CONDEMNED</p><h2 id="battle-title">Stand together.</h2><p id="battle-turn"></p></div>
       <div class="enemy-row">
         <div class="fighter enemy-fighter"><img src="${import.meta.env.BASE_URL}assets/locust.svg" alt="Crop locust" /></div>
-        <div><h3>Crop locust</h3><p id="enemy-condition"></p><p class="mana" id="enemy-mana"></p></div>
+        <div><h3>Crop locust</h3><div class="health-bar" role="meter" aria-label="Crop locust health" aria-valuemin="0" aria-valuemax="100"><span></span></div><p id="enemy-condition"></p><p class="mana" id="enemy-mana"></p></div>
       </div>
       <p class="intent" id="enemy-intent"></p>
       <div class="party-roster">${this.state.party.map(member => {
         const info = MEMBERS[member.id];
         return `<section class="member-card" data-member="${member.id}" aria-label="${info.name}">
           <button class="fighter party-fighter" aria-label="${info.name}: tap for ${info.support.toLowerCase()}, drag to attack or support"><img alt="" /></button>
-          <h3>${info.name}</h3><p class="member-condition"></p><p class="mana member-mana"></p><p class="member-status"></p>
+          <h3>${info.name}</h3><div class="health-bar" role="meter" aria-label="${info.name} health" aria-valuemin="0" aria-valuemax="100"><span></span></div><p class="member-condition"></p><p class="mana member-mana"></p><p class="member-status"></p>
           ${member.id === 'bear' ? `<label class="protect-label">Protect <select aria-label="Bear protection target">${this.state.party.map(target => `<option value="${target.id}" ${target.id === 'bear' ? 'selected' : ''}>${MEMBERS[target.id].name}</option>`).join('')}</select></label>` : '<div class="target-spacer" aria-hidden="true"></div>'}
           <div class="member-actions"><button data-action="attack" aria-label="${info.name} attack">${info.attack}<small>${COST.attack} mana</small></button><button data-action="support" aria-label="${info.name} support">${info.support}<small>No mana</small></button></div>
         </section>`;
@@ -102,6 +102,14 @@ export class BattleView {
   private get<T extends HTMLElement = HTMLElement>(selector: string): T { return this.root.querySelector<T>(selector)!; }
   private card(id: MemberId): HTMLElement { return this.get(`[data-member="${id}"]`); }
 
+  private renderHealth(bar: HTMLElement, fighter: Fighter) {
+    const fraction = Math.max(0, Math.min(1, fighter.health / fighter.maxHealth));
+    bar.style.setProperty('--health', `${fraction * 100}%`);
+    bar.dataset.level = fraction <= 0.25 ? 'low' : fraction <= 0.5 ? 'wounded' : 'healthy';
+    bar.setAttribute('aria-valuenow', String(Math.round(fraction * 100)));
+    bar.setAttribute('aria-valuetext', condition(fighter));
+  }
+
   private focusNext() {
     const next = this.state.party.find(member => member.health > 0 && !member.acted);
     if (next) this.card(next.id).querySelector<HTMLButtonElement>('[data-action="support"]')!.focus({ preventScroll: true });
@@ -128,6 +136,7 @@ export class BattleView {
     this.get('#battle-turn').textContent = done ? (state.phase === 'victory' ? 'The room falls quiet.' : 'The party falls.')
       : `Round ${state.round} · ${state.phase === 'player' ? `${remaining} actions remaining` : 'The locust moves'}`;
     this.get('#enemy-condition').textContent = condition(state.enemy);
+    this.renderHealth(this.get('.enemy-row .health-bar'), state.enemy);
     this.get('#enemy-mana').textContent = `Mana ${state.enemy.mana} / ${state.enemy.maxMana}`;
     const target = enemyTarget(state);
     this.get('#enemy-intent').textContent = done ? '' : `Physical · ${intent(state).tell} ${target ? `Watching ${MEMBERS[target.id].name}.` : ''}`;
@@ -136,6 +145,7 @@ export class BattleView {
       card.dataset.acted = String(member.acted);
       card.dataset.downed = String(member.health === 0);
       card.querySelector('.member-condition')!.textContent = condition(member);
+      this.renderHealth(card.querySelector<HTMLElement>('.health-bar')!, member);
       card.querySelector('.member-mana')!.textContent = `Mana ${member.mana} / ${member.maxMana}`;
       card.querySelector('.member-status')!.textContent = member.health === 0 ? 'Cannot act'
         : member.guardingFor ? `Guarding ${MEMBERS[member.guardingFor].name}` : member.focused ? 'Focused'
