@@ -1,10 +1,12 @@
 // Pure story state: what the hero carries and what he has changed. No Phaser, DOM, or storage.
 import type { Conversation, Dialogue } from '../content/dialogue';
 import type { MemoryId } from './memory';
+import type { KeepsakeId } from './gear';
 
 export type Item = 'bell';
 export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated';
-export type World = Readonly<{ flags: readonly Flag[]; carried: readonly Item[] }>;
+// Keepsakes, once found, are kept through every death; carried items are not.
+export type World = Readonly<{ flags: readonly Flag[]; carried: readonly Item[]; keepsakes: readonly KeepsakeId[] }>;
 export const ITEMS: readonly Item[] = ['bell'];
 export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defeated'];
 // A favor spell: a small everyday spell a villager trades for help. It opens the hedge on the border road.
@@ -12,11 +14,11 @@ export const BRAMBLES = "Bramble's leave";
 
 // What a line of dialogue can depend on.
 export type Context = Readonly<{ world: World; lost: readonly MemoryId[]; studied: readonly string[] }>;
-export type Condition = { forgot: MemoryId } | { has: Item } | { flag: Flag } | { knows: string } | { not: Condition };
-export type Effect = { give?: Item; take?: Item; set?: Flag; learn?: string };
+export type Condition = { forgot: MemoryId } | { has: Item } | { flag: Flag } | { knows: string } | { owns: KeepsakeId } | { not: Condition };
+export type Effect = { give?: Item; take?: Item; set?: Flag; learn?: string; find?: KeepsakeId };
 
 export function createWorld(): World {
-  return { flags: [], carried: [] };
+  return { flags: [], carried: [], keepsakes: [] };
 }
 
 export function holds(context: Context, condition: Condition): boolean {
@@ -24,6 +26,7 @@ export function holds(context: Context, condition: Condition): boolean {
   if ('forgot' in condition) return context.lost.includes(condition.forgot);
   if ('has' in condition) return context.world.carried.includes(condition.has);
   if ('flag' in condition) return context.world.flags.includes(condition.flag);
+  if ('owns' in condition) return context.world.keepsakes.includes(condition.owns);
   return context.studied.includes(condition.knows);
 }
 
@@ -35,6 +38,7 @@ export function apply(context: Context, effect: Effect): Context {
     world: {
       carried: effect.give && !carried.includes(effect.give) ? [...carried, effect.give] : carried,
       flags: effect.set && !world.flags.includes(effect.set) ? [...world.flags, effect.set] : world.flags,
+      keepsakes: effect.find && !world.keepsakes.includes(effect.find) ? [...world.keepsakes, effect.find] : world.keepsakes,
     },
     studied: effect.learn && !studied.includes(effect.learn) ? [...studied, effect.learn] : studied,
   };

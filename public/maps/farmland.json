@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 24,
+  "nextobjectid": 25,
   "layers": [
     {
       "id": 1,
@@ -6463,6 +6463,18 @@
           "type": "",
           "x": 888,
           "y": 456,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 24,
+          "name": "ford-cache",
+          "type": "",
+          "x": 216,
+          "y": 680,
           "width": 0,
           "height": 0,
           "rotation": 0,

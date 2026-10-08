@@ -36,4 +36,21 @@ export const fields: Dialogue = {
     'A Covenant shrine older than the church, in a ring of standing stones. Moss has eaten most of the carving.',
     'What is left reads: HERE NOBODY EATS ANYBODY. Someone has added, in fresh chalk: ANYBODY WHO MATTERS.',
   ] },
+  // Keepsakes left where only someone wandering off the road would find them.
+  'camp-cache': { speaker: 'UNDER THE TENT FLAP', prompt: 'Search the bundle', hiddenIf: [{ owns: 'cracked-mirror' }], lines: [
+    'A bundle in oilcloth, tucked where the rain could not reach. Inside: a hand mirror, cracked straight across.',
+    'In the broken glass you look like two people. The Cracked mirror is a keepsake. Equip it from the Equipment screen.',
+  ], then: { find: 'cracked-mirror' } },
+  'orchard-cache': { speaker: 'IN THE LAST ROW OF TREES', prompt: 'Search the roots', hiddenIf: [{ owns: 'crow-feather' }], lines: [
+    'Between the roots of the oldest tree, a crow has hoarded buttons, a thimble, and one of its own black feathers, oiled and perfect.',
+    "You take the Crow's feather. The vulture would know what to do with it.",
+  ], then: { find: 'crow-feather' } },
+  'shrine-cache': { speaker: 'BEHIND THE SHRINE', prompt: 'Search behind the shrine', hiddenIf: [{ owns: 'covenant-token' }], lines: [
+    'Offerings left at the foot of the stone: dried flowers, a wheat knot, and a worn bronze Covenant token stamped with a paw and a hoof.',
+    'Whoever wears it is easy to see. Perhaps that was the point.',
+  ], then: { find: 'covenant-token' } },
+  'ford-cache': { speaker: 'IN THE REEDS', prompt: 'Search the reeds', hiddenIf: [{ owns: 'yoke-peg' }], lines: [
+    'Washed up in the reeds below the ford: a heavy oak yoke peg, worn smooth by some great shoulder.',
+    'It is too big for anyone but the bear.',
+  ], then: { find: 'yoke-peg' } },
 };

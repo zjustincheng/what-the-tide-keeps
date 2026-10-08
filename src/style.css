@@ -524,3 +524,22 @@ footer span:last-child {
 @media(max-width:650px) {
   .dodge-ring { top: 36px; width: 46px; height: 46px; margin: -23px 0 0 -23px; }
 }
+
+.below-actions { display: flex; gap: 16px; align-items: center; }
+.equipment { justify-content: flex-start; padding: 18px 4%; }
+.equipment-intro { margin: 0 auto 4px; font-size: 13px; color: #b9c3ad; }
+.equipment .fighter { height: 64px; width: 80px; }
+.equipment .fighter img { height: 56px; }
+.equipment-stats { font: 11px ui-monospace, monospace; color: #c5c997; }
+.keepsake-slot { display: block; margin: 8px 0 0; text-align: left; font: 10px ui-monospace, monospace; color: #abb899; }
+.keepsake-slot select { display: block; width: 100%; margin-top: 3px; background: #22372a; border: 1px solid #5d7253; color: #d7d9c8; font: 12px Georgia, serif; padding: 3px; }
+.keepsake-slot select:disabled { opacity: .45; }
+.keepsake-slot small { display: block; min-height: 28px; margin-top: 3px; font: 10px/1.4 Georgia, serif; color: #c5c997; }
+#equipment-close { margin-top: 8px; min-width: 160px; font: 16px Georgia, serif; padding: 9px; }
+@media(max-width:650px) {
+  .below-actions { gap: 10px; }
+  .equipment { padding: 12px 8px; }
+  .equipment .member-card h3 { font-size: 13px; }
+  .keepsake-slot select { font-size: 10px; }
+  .keepsake-slot small { font-size: 9px; }
+}

@@ -10,6 +10,8 @@ import { loadMemory, saveMemory } from '../storage/memory';
 import { loadWorld, saveWorld } from '../storage/world';
 import { BattleView } from '../ui/BattleView';
 import { ResurrectionView } from '../ui/ResurrectionView';
+import { EquipmentView } from '../ui/EquipmentView';
+import { loadGear, saveGear } from '../storage/gear';
 import type { Area } from './areas';
 import { createSprites } from './sprites';
 
@@ -38,7 +40,7 @@ export class AreaScene extends Phaser.Scene {
   private shadow!: Phaser.GameObjects.Ellipse;
   private foes: Foe[] = [];
   private props: Prop[] = [];
-  private overlay?: BattleView | ResurrectionView;
+  private overlay?: BattleView | ResurrectionView | EquipmentView;
 
   constructor(private area: Area) { super(area.key); }
 
@@ -158,7 +160,9 @@ export class AreaScene extends Phaser.Scene {
       if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(event.key)) event.preventDefault();
       if(['e','E',' ','Enter'].includes(event.key)) this.interact(event);
       if(event.key==='Escape') this.closeDialogue();
+      if(['i','I'].includes(event.key) && !this.active && !event.repeat) this.openEquipment();
     },{signal});
+    element('equipment').addEventListener('click',()=>this.openEquipment(),{signal});
     element('continue').addEventListener('click',()=>this.interact(),{signal});
     element('touch-interact').addEventListener('click',()=>this.interact(),{signal});
     // Returning to the cot always restarts the church, which also resets its encounters.
@@ -226,6 +230,7 @@ export class AreaScene extends Phaser.Scene {
     element('game').inert = !enabled;
     element('dialogue').inert = !enabled;
     element('restart').inert = !enabled;
+    element('equipment').inert = !enabled;
     document.querySelector<HTMLElement>('.touch-controls')!.inert = !enabled;
     if(this.input.keyboard) this.input.keyboard.enabled = enabled;
   }
@@ -254,7 +259,19 @@ export class AreaScene extends Phaser.Scene {
         saved = saveMemory(wipe(loadMemory())) && saveWorld(drop(loadWorld()));
         this.scene.start('church');
       }
-    }, foe.encounter, hollow(loadMemory()));
+    }, foe.encounter, hollow(loadMemory()), loadGear());
+  }
+
+  private openEquipment() {
+    if(this.overlay || this.leaving) return;
+    this.player.setVelocity(0);
+    this.held.clear();
+    this.physics.pause();
+    element('prompt').textContent = '';
+    this.setExplorationEnabled(false);
+    this.overlay = new EquipmentView(loadGear(), loadWorld().keepsakes, hollow(loadMemory()), this.textures.getBase64('hero'),
+      gear => { saved = saveGear(gear); },
+      () => { this.overlay?.destroy(); this.overlay = undefined; this.renderMemory(); this.resumeExploration(); });
   }
 
   private wake() {

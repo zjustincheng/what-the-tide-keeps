@@ -1,5 +1,8 @@
 // Pure game rules: no Phaser, DOM, timers, or random state.
+// Rule modules import each other with .ts extensions so Node can run their tests directly.
 import type { Hollow } from './memory';
+import { mods, NO_MODS } from './gear.ts';
+import type { Gear, Mods } from './gear';
 export type MemberId = 'chameleon' | 'bear' | 'vulture';
 export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze';
 export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar';
@@ -17,6 +20,8 @@ export type Member = Fighter & Readonly<{
   focused: boolean;
   suppressed: boolean;
   barrier: boolean;
+  // What equipped keepsakes change for this member.
+  gear: Mods;
 }>;
 export type Battle = Readonly<{
   round: number;
@@ -63,11 +68,12 @@ export const MANA_REGEN = 3;
 export const UNHOLLOWED: Hollow = { mana: 0, damage: 0, trained: true };
 
 // Hollow perks strengthen only the hero; companions keep their own memories.
-export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], hollow: Hollow = UNHOLLOWED): Battle {
-  const member = (id: MemberId, health: number, mana: number): Member => ({
-    id, health, maxHealth: health, mana, maxMana: mana,
-    acted: false, guardingFor: null, focused: false, suppressed: false, barrier: false,
-  });
+export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], hollow: Hollow = UNHOLLOWED, gear?: Gear): Battle {
+  const member = (id: MemberId, base: number, mana: number): Member => {
+    const worn = gear ? mods(gear, id) : NO_MODS;
+    const health = Math.max(1, base + worn.health);
+    return { id, health, maxHealth: health, mana, maxMana: mana, acted: false, guardingFor: null, focused: false, suppressed: false, barrier: false, gear: worn };
+  };
   return {
     round: 1, phase: 'player', encounter, studied: studied.includes(SPELL) ? [SPELL] : [], hollow, enemyRevealed: false,
     party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10)],
@@ -87,7 +93,12 @@ export function condition(fighter: Fighter): string {
 }
 
 export function visibleMana(member: Member): number {
-  return member.suppressed ? Math.min(1, member.mana) : member.mana;
+  return member.suppressed ? Math.min(1, member.mana) : member.mana + member.gear.shown;
+}
+
+// What an action costs this member, after keepsakes.
+export function cost(member: Member, action: Action): number {
+  return COST[action] + (action === 'attack' ? member.gear.attackCost : action === 'suppress' ? member.gear.suppressCost : 0);
 }
 
 export function enemyMana(battle: Battle): number {
@@ -128,7 +139,7 @@ export function enemyTarget(battle: Battle): Member | undefined {
 
 export function canAct(battle: Battle, actor: MemberId, action: Action, target: MemberId = actor, foe: Foe = 0): boolean {
   const member = battle.party.find(member => member.id === actor);
-  if (battle.phase !== 'player' || !member || member.health <= 0 || member.acted || member.mana < COST[action]) return false;
+  if (battle.phase !== 'player' || !member || member.health <= 0 || member.acted || member.mana < cost(member, action)) return false;
   if (action === 'attack' && foe > 0 && !(battle.followers[foe - 1]?.health > 0)) return false;
   if (action === 'suppress' && member.suppressed) return false;
   if (action === 'analyze' && (battle.encounter !== 'acolyte' || battle.studied.includes(SPELL))) return false;
@@ -145,8 +156,8 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
   const member = battle.party.find(member => member.id === actor)!;
   const definition = MEMBERS[actor];
   // Forgetting his training leaves the hero with an ordinary reveal.
-  const reveal = actor === 'chameleon' && battle.hollow.trained ? 4 : 2;
-  const damage = definition.damage + (actor === 'chameleon' ? battle.hollow.damage : 0) + (member.focused ? 3 : 0) + (member.suppressed ? reveal : 0);
+  const reveal = (actor === 'chameleon' && battle.hollow.trained ? 4 : 2) + member.gear.reveal;
+  const damage = definition.damage + member.gear.damage + (actor === 'chameleon' ? battle.hollow.damage : 0) + (member.focused ? 3 : 0) + (member.suppressed ? reveal : 0);
   // The boar takes every hit aimed at his followers, and each one makes him stronger.
   const shielded = action === 'attack' && foe > 0 && battle.encounter === 'boar';
   const hitsMain = action === 'attack' && (foe === 0 || shielded);
@@ -159,7 +170,7 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
   const party = battle.party.map(current => ({
     ...current,
     ...(current.id === actor ? {
-      acted: true, mana: current.mana - COST[action],
+      acted: true, mana: current.mana - cost(current, action),
       focused: action === 'attack' ? false : (action === 'support' && actor === 'vulture') || current.focused,
       suppressed: action === 'suppress' ? true : action === 'attack' ? false : current.suppressed,
       guardingFor: action === 'support' && actor !== 'vulture' ? target : current.guardingFor,

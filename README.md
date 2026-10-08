@@ -50,6 +50,19 @@ Prototype tuning: ordinary fights last two or three rounds, and the boar about f
 
 Victory removes the locust until you use **Return to the cot**, which resets the encounter. Defeat wakes you at the cot (see below). Each new fight starts with full health and mana. Supplies are not implemented yet, and recruitment and travel beyond the church are still ahead. Encounter progress resets on reload; studied spells and memories persist.
 
+## Equipment
+
+Press **I** or use **Equipment** below the map to open the equipment screen. Each hero holds two keepsakes, found by exploring off the roads. Keepsakes are kept through every death, and most come with a drawback:
+
+| Keepsake | Where | Holder | Effect | Drawback |
+| --- | --- | --- | --- | --- |
+| Cracked mirror | The abandoned camp in the woods | Chameleon | Reveal hits 3 harder | Hiding costs 2 mana |
+| Crow's feather | The last row of the orchard | Vulture | Attacks hit 3 harder | 4 less health |
+| Covenant token | Behind the old shrine | Anyone | 6 more health | Shows 2 more mana, drawing attacks |
+| Yoke peg | The reeds below the ford | Bear | 8 more health | Attacks cost 3 mana |
+
+Equipping a keepsake another hero holds moves it. The screen previews each hero's health, mana, and damage as the next fight will build them. Found keepsakes are saved in `tide-keeps.world.v1` and equipped ones in `tide-keeps.gear.v1`.
+
 ## Dodging
 
 Enemy blows can be dodged with timing, never luck. When a blow is about to land, a ring closes on the companion it targets and a **Dodge** bar appears at the bottom of the screen. Press **Space** (or **Enter**, or tap **Dodge**) as the ring meets the inner circle:
@@ -117,13 +130,16 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/scenes/sprites.ts` — generated placeholder sprites for the hero and townsfolk.
 - `src/rules/battle.ts` — immutable, renderer-independent combat state and transitions.
 - `src/rules/memory.ts` — memory loss and Hollow perks, independent of the renderer.
+- `src/rules/gear.ts` — keepsakes, slots, and what they change in battle.
 - `src/rules/world.ts` — story flags, carried items, favor spells, and which dialogue variant applies.
 - `src/content/memories.ts` — memory names and what forgetting each costs.
 - `src/storage/grimoire.ts` — versioned browser storage for studied spells.
 - `src/storage/memory.ts` — versioned browser storage for lost memories and an unpaid wipe.
-- `src/storage/world.ts` — versioned browser storage for story flags and carried items.
+- `src/storage/world.ts` — versioned browser storage for story flags, carried items, and found keepsakes.
+- `src/storage/gear.ts` — versioned browser storage for equipped keepsakes.
 - `src/ui/BattleView.ts` — accessible combat view, drag input, and turn pacing.
 - `src/ui/ResurrectionView.ts` — the wake screen where a memory is chosen.
+- `src/ui/EquipmentView.ts` — the equipment screen.
 - `public/maps/church.json` — editable Tiled JSON map with floor, furniture, and named interaction points.
 - `public/assets/church-tiles.svg` — original placeholder tileset.
 - `public/maps/farmland.json`, `town.json`, `border-road.json`, `boar-farm.json` — the farmland maps, with placeholder tilesets in `public/assets/`.
@@ -136,6 +152,8 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/death.spec.ts` — wipe, memory choice, and save browser checks.
 - `tests/rules/battle.test.ts` — combat tests without a browser.
 - `tests/rules/memory.test.ts` — memory and Hollow perk tests without a browser.
+- `tests/equipment.spec.ts` — finding, equipping, and fighting with a keepsake.
+- `tests/rules/gear.test.ts` — slots, restrictions, and keepsake effects.
 - `tests/dodge.spec.ts` — dodge timing in the browser.
 - `tests/rules/dodge.test.ts` — dodge grading and the stepwise enemy turn.
 - `tests/rules/boar.test.ts` — the boar's shielding, fury, and both strategies.

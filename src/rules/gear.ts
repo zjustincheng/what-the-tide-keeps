@@ -1,0 +1,50 @@
+// Pure equipment rules: keepsakes and the slots that hold them. No Phaser, DOM, or storage.
+import type { MemberId } from './battle';
+
+export type KeepsakeId = 'cracked-mirror' | 'crow-feather' | 'covenant-token' | 'yoke-peg';
+// What a keepsake changes about its holder in battle.
+export type Mods = Readonly<{ health: number; damage: number; reveal: number; suppressCost: number; attackCost: number; shown: number }>;
+export type Gear = Readonly<Record<MemberId, readonly KeepsakeId[]>>;
+
+export const NO_MODS: Mods = { health: 0, damage: 0, reveal: 0, suppressCost: 0, attackCost: 0, shown: 0 };
+export const SLOTS = 2;
+export const MEMBER_IDS: readonly MemberId[] = ['chameleon', 'bear', 'vulture'];
+
+// Each keepsake changes how its holder plays, usually with a drawback. Some fit only one hero.
+export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; effect: string; drawback: string; mods: Partial<Mods> }> = {
+  'cracked-mirror': { name: 'Cracked mirror', holder: 'chameleon',
+    effect: 'His reveal hits 3 harder.', drawback: 'Hiding costs 2 mana instead of 1.', mods: { reveal: 3, suppressCost: 1 } },
+  'crow-feather': { name: "Crow's feather", holder: 'vulture',
+    effect: 'Every attack hits 3 harder.', drawback: '4 less health.', mods: { damage: 3, health: -4 } },
+  'covenant-token': { name: 'Covenant token',
+    effect: '6 more health.', drawback: 'Shows 2 more mana, so enemies watch the holder.', mods: { health: 6, shown: 2 } },
+  'yoke-peg': { name: 'Yoke peg', holder: 'bear',
+    effect: '8 more health.', drawback: 'Attacks cost 3 mana instead of 2.', mods: { health: 8, attackCost: 1 } },
+};
+export const KEEPSAKE_IDS = Object.keys(KEEPSAKES) as KeepsakeId[];
+
+export function createGear(): Gear {
+  return { chameleon: [], bear: [], vulture: [] };
+}
+
+export function canEquip(owned: readonly KeepsakeId[], member: MemberId, id: KeepsakeId): boolean {
+  const holder = KEEPSAKES[id].holder;
+  return owned.includes(id) && (!holder || holder === member);
+}
+
+// Put a keepsake in a hero's slot. A keepsake held by someone else moves; slot -1 takes it off.
+export function equip(gear: Gear, owned: readonly KeepsakeId[], member: MemberId, slot: number, id: KeepsakeId | null): Gear {
+  if (slot < 0 || slot >= SLOTS || (id && !canEquip(owned, member, id))) return gear;
+  const next = Object.fromEntries(MEMBER_IDS.map(other => [other, gear[other].filter(held => held !== id)])) as Record<MemberId, KeepsakeId[]>;
+  const slots = [...gear[member]];
+  if (id) slots[slot] = id; else slots.splice(slot, 1);
+  next[member] = slots.filter((held, index): held is KeepsakeId => Boolean(held) && slots.indexOf(held) === index && index < SLOTS);
+  return next;
+}
+
+export function mods(gear: Gear, member: MemberId): Mods {
+  return gear[member].reduce<Mods>((total, id) => {
+    const add = KEEPSAKES[id].mods;
+    return Object.fromEntries(Object.entries(total).map(([key, value]) => [key, value + (add[key as keyof Mods] ?? 0)])) as Mods;
+  }, NO_MODS);
+}
