@@ -21,48 +21,74 @@ test.beforeEach(async ({ page }) => {
   })).toBe(true);
 });
 
-test('touching the visible enemy begins battle; drag attack and tap support respect turns', async ({ page }) => {
+
+const card = (page: Page, id: string) => page.locator(`[data-member="${id}"]`);
+async function drag(page: Page, from: string, to: string) {
+  const start = (await page.locator(from).boundingBox())!;
+  const end = (await page.locator(to).boundingBox())!;
+  await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, { steps: 8 });
+  await page.mouse.up();
+}
+
+test('party acts in any order, locks spent turns, and wins with protection', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await enterEncounter(page);
-  await expect(page.locator('#hero-mana')).toHaveText('Mana 10 / 10');
-  const hero = (await page.locator('.hero-fighter').boundingBox())!;
-  const enemy = (await page.locator('.enemy-fighter').boundingBox())!;
-  await page.mouse.move(hero.x + hero.width / 2, hero.y + hero.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, { steps: 8 });
-  await page.mouse.up();
+  await expect(page.locator('#battle-turn')).toHaveText('Round 1 · 3 actions remaining');
+  await drag(page, '[data-member="vulture"] .party-fighter', '.enemy-fighter');
+  await expect(page.locator('#battle-turn')).toHaveText('Round 1 · 2 actions remaining');
+  await expect(page.getByRole('button', { name: 'Vulture attack', exact: true })).toBeDisabled();
+  await expect(card(page, 'vulture').locator('.member-mana')).toHaveText('Mana 8 / 10');
+  await expect(card(page, 'bear').locator('.member-condition')).toHaveText('Unhurt');
+  await page.getByRole('button', { name: 'Bear support', exact: true }).click();
+  await expect(page.locator('#battle-turn')).toHaveText('Round 1 · 1 actions remaining');
+  await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
   await expect(page.locator('.battle')).toHaveAttribute('data-phase', 'enemy');
-  await expect(page.getByRole('button', { name: 'Attack Thorn' })).toBeDisabled();
-  await expect(page.locator('#hero-mana')).toHaveText('Mana 8 / 10');
-  await expect(page.locator('#battle-turn')).toHaveText('Round 2 · Your turn');
-  await expect(page.locator('#enemy-intent')).toContainText('crushing leap');
-  await page.locator('.hero-fighter').click();
-  await expect(page.locator('#battle-turn')).toHaveText('Round 3 · Your turn');
-  await expect(page.getByRole('log')).toContainText('You turn aside the crushing leap');
-  // Win the remaining turns using the accessible action buttons.
-  for (let round = 3; round <= 9; round++) {
-    await expect(page.locator('#battle-turn')).toHaveText(`Round ${round} · Your turn`);
-    await page.getByRole('button', { name: round % 2 ? 'Attack Thorn' : 'Support Guard' }).click();
+  await expect(page.getByRole('button', { name: 'Bear attack', exact: true })).toBeDisabled();
+  await expect(page.locator('#battle-turn')).toHaveText('Round 2 · 3 actions remaining');
+  await expect(page.getByRole('log')).toContainText('Bear turns aside');
+  for(let round=2;round<=8;round++) {
+    await expect(page.locator('#battle-turn')).toHaveText(`Round ${round} · 3 actions remaining`);
+    await page.getByRole('button', { name: 'Bear support', exact: true }).click();
+    await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
+    if(round<8) await page.getByRole('button', { name: 'Vulture attack', exact: true }).click();
   }
   await expect(page.locator('.battle')).toHaveAttribute('data-phase', 'victory');
   await page.getByRole('button', { name: 'Return to the church' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await page.keyboard.down('d');
-  await page.waitForTimeout(250);
-  await page.keyboard.up('d');
+  await page.keyboard.down('d'); await page.waitForTimeout(150); await page.keyboard.up('d');
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('button', { name: 'Return to the cot' }).click();
   await enterEncounter(page);
-  await expect(page.locator('#hero-condition')).toHaveText('Unhurt');
+  await expect(card(page, 'bear').locator('.member-condition')).toHaveText('Unhurt');
   expect(errors).toEqual([]);
 });
 
-test('defeat returns to the cot and leaves the encounter available', async ({ page }) => {
+test('bear can drag onto an ally and vulture can tap to focus', async ({ page }) => {
   await enterEncounter(page);
-  for (let round = 1; round <= 4; round++) {
-    await expect(page.locator('#battle-turn')).toHaveText(`Round ${round} · Your turn`);
-    await page.getByRole('button', { name: 'Attack Thorn' }).click();
+  await drag(page, '[data-member="bear"] .party-fighter', '[data-member="chameleon"] .party-fighter');
+  await expect(card(page, 'bear').locator('.member-status')).toHaveText('Guarding Chameleon');
+  await card(page, 'vulture').locator('.party-fighter').click();
+  await expect(card(page, 'vulture').locator('.member-status')).toHaveText('Focused');
+  await page.getByRole('button', { name: 'Chameleon support', exact: true }).click();
+  await expect(page.locator('#battle-turn')).toHaveText('Round 2 · 3 actions remaining');
+  await page.getByRole('button', { name: 'Vulture attack', exact: true }).click();
+  await expect(page.getByRole('log')).toContainText('with focused force');
+  await expect(card(page, 'vulture').locator('.member-status')).toHaveText('Acted');
+});
+
+test('downed companions are skipped and only a full party wipe returns to the cot', async ({ page }) => {
+  await enterEncounter(page);
+  for(let round=1;round<=6;round++) {
+    const living=round<=3?['chameleon','bear','vulture']:round<=5?['chameleon','vulture']:['vulture'];
+    await expect(page.locator('#battle-turn')).toHaveText(`Round ${round} · ${living.length} actions remaining`);
+    if(round===4) {
+      await expect(card(page, 'bear').locator('.member-condition')).toHaveText('Downed');
+      await expect(page.getByRole('button', { name: 'Bear attack', exact: true })).toBeDisabled();
+    }
+    for(const id of living) await page.getByRole('button', { name: `${id[0].toUpperCase()+id.slice(1)} attack`, exact: true }).click();
   }
   await page.getByRole('button', { name: 'Wake at the cot' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -73,19 +99,23 @@ test('defeat returns to the cot and leaves the encounter available', async ({ pa
   });
   expect(position).toEqual({ x: 88, y: 124 });
   await enterEncounter(page);
-  await expect(page.locator('#hero-mana')).toHaveText('Mana 10 / 10');
+  await expect(card(page, 'bear').locator('.member-mana')).toHaveText('Mana 12 / 12');
 });
 
-test('mobile battle actions remain reachable and keyboard focus stays in battle', async ({ page }) => {
+test('mobile party controls, ally selector, and focus remain accessible', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await enterEncounter(page);
   await expect(page.locator('#restart')).toHaveAttribute('inert', '');
-  for(let i=0;i<5;i++) {
+  for(let i=0;i<12;i++) {
     await page.keyboard.press('Tab');
     expect(await page.evaluate(() => Boolean(document.activeElement?.closest('.battle')))).toBe(true);
   }
-  await page.getByRole('button', { name: 'Support Guard' }).click();
-  await expect(page.locator('#battle-turn')).toHaveText('Round 2 · Your turn');
-  await expect(page.locator('#hero-condition')).toHaveText('Unhurt');
+  await page.getByRole('combobox', { name: 'Bear protection target' }).selectOption('vulture');
+  await page.getByRole('button', { name: 'Bear support', exact: true }).click();
+  await expect(card(page, 'bear').locator('.member-status')).toHaveText('Guarding Vulture');
+  await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
+  await page.getByRole('button', { name: 'Vulture attack', exact: true }).click();
+  await expect(page.locator('#battle-turn')).toHaveText('Round 2 · 3 actions remaining');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: 'test-results/party-mobile.png', fullPage: true });
 });

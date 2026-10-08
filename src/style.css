@@ -389,3 +389,49 @@ footer span:last-child {
     display:flex;
   }
 }
+
+/* Three-member combat layout. The full roster stays visible while choosing actions. */
+.party-battle { padding: 18px 4%; }
+.party-battle h2 { font-size: 26px; }
+.enemy-row { display: flex; gap: 14px; align-items: center; justify-content: center; }
+.enemy-row .fighter { margin: 0; height: 70px; width: 85px; }
+.enemy-row img { width: 80px; height: 80px; }
+.enemy-row h3 { font-size: 18px; font-weight: normal; margin: 5px 0; }
+.enemy-row p { margin: 5px 0; font-size: 12px; }
+.party-roster { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; width: 100%; margin: 10px 0 15px; }
+.member-card { border: 1px solid #6b7c5866; background: #17271e66; padding: 10px; text-align: center; min-width: 0; }
+.member-card[data-acted="true"] { border-color: #394d3d; }
+.member-card[data-downed="true"] { opacity: .5; }
+.member-card h3 { font-size: 18px; font-weight: normal; margin: 5px 0; }
+.member-card p { margin: 5px 0; font-size: 12px; }
+.member-card .mana { color: #c5c997; font: 11px ui-monospace, monospace; }
+.member-status { min-height: 14px; color: #b4ae79; font-style: italic; }
+.party-fighter { height: 72px; width: 90px; touch-action: none; cursor: grab; }
+.party-fighter img { height: 65px; }
+.party-fighter:hover:not(:disabled) { border-color: #91a375; background-color: #78876020; }
+.protect-label, .target-spacer { display: block; height: 34px; font: 10px ui-monospace, monospace; color: #abb899; }
+.protect-label select { width: 100%; max-width: 130px; background: #22372a; border: 1px solid #5d7253; color: #d7d9c8; font: 11px Georgia, serif; padding: 2px; }
+.member-actions { display: flex; gap: 5px; }
+.member-actions button { flex: 1; min-width: 0; padding: 7px 2px; font: 12px Georgia, serif; }
+.member-actions small { display: block; margin-top: 5px; font: 8px ui-monospace, monospace; color: #b6bf9c; }
+.party-battle .battle-log { height: 58px; }
+@media(max-width:650px) {
+  .in-battle #game { min-height: 530px; }
+  .party-battle { padding: 13px 8px; }
+  .party-battle h2 { font-size: 22px; }
+  .enemy-row .fighter { width: 65px; height: 60px; }
+  .enemy-row img { width: 65px; height: 65px; }
+  .party-roster { gap: 5px; margin: 8px 0 12px; }
+  .member-card { padding: 6px 3px; }
+  .member-card h3 { font-size: 13px; }
+  .member-card p, .member-card .mana { font-size: 9px; }
+  .party-fighter { width: 60px; height: 54px; }
+  .party-fighter img { height: 48px; }
+  .member-actions { flex-direction: column; gap: 4px; }
+  .member-actions button { min-height: 38px; font-size: 11px; padding: 5px 2px; }
+  .member-actions small { margin-top: 3px; }
+  .member-status { height: 22px; }
+  .protect-label, .target-spacer { height: 38px; font-size: 9px; }
+  .protect-label select { font-size: 10px; }
+  .party-battle .battle-log { height: 53px; }
+}

@@ -1,63 +1,111 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { act, canAct, condition, createBattle, resolveEnemy } from '../../src/rules/battle.ts';
+import { act, canAct, condition, createBattle, enemyTarget, resolveEnemy } from '../../src/rules/battle.ts';
+import type { Battle, MemberId } from '../../src/rules/battle.ts';
+const member = (battle: Battle, id: MemberId) => battle.party.find(member => member.id === id)!;
+const round = (battle: Battle, guard = false) => resolveEnemy(act(act(act(battle, 'vulture', 'attack'), 'bear', guard ? 'support' : 'attack'), 'chameleon', 'attack'));
 
-test('an action spends mana once, then only the enemy can act', () => {
+test('all three act once in any order before the enemy; inputs remain immutable', () => {
   const initial = createBattle();
-  const next = act(initial, 'attack');
-  assert.equal(next.hero.mana, 8);
-  assert.equal(next.enemy.health, 14);
+  let next = act(initial, 'vulture', 'attack');
+  assert.equal(next.phase, 'player');
+  assert.equal(member(next, 'vulture').mana, 8);
+  assert.equal(member(initial, 'vulture').mana, 10);
+  assert.equal(act(next, 'vulture', 'attack'), next);
+  assert.equal(resolveEnemy(next), next);
+  next = act(next, 'chameleon', 'attack');
+  assert.equal(next.phase, 'player');
+  next = act(next, 'bear', 'support');
   assert.equal(next.phase, 'enemy');
-  assert.equal(act(next, 'attack'), next);
-  assert.equal(act(next, 'guard'), next);
-  assert.equal(initial.enemy.health, 18, 'input state is immutable');
-  const round = resolveEnemy(next);
-  assert.equal(round.hero.health, 13);
-  assert.equal(round.hero.mana, 10);
-  assert.equal(round.round, 2);
-  assert.equal(resolveEnemy(round), round, 'cannot replay an enemy turn');
+  assert.equal(act(next, 'bear', 'attack'), next);
+  next = resolveEnemy(next);
+  assert.equal(next.round, 2);
+  assert.equal(next.phase, 'player');
+  assert.ok(next.party.every(member => !member.acted && member.mana === member.maxMana));
+  assert.equal(resolveEnemy(next), next);
 });
 
-test('unaffordable actions do not spend a turn or produce negative mana', () => {
-  const battle = createBattle();
-  const low = { ...battle, hero: { ...battle.hero, mana: 1 } };
-  assert.equal(canAct(low, 'attack'), false);
-  assert.equal(act(low, 'attack'), low);
-  assert.equal(act(low, 'guard'), low);
+test('low mana prevents attacks but always permits a support action', () => {
+  const initial = createBattle();
+  const low = { ...initial, party: initial.party.map(member => ({ ...member, mana: 0 })) };
+  assert.equal(canAct(low, 'chameleon', 'attack'), false);
+  assert.equal(act(low, 'chameleon', 'attack'), low);
+  assert.equal(canAct(low, 'chameleon', 'support'), true);
+  let next = act(act(act(low, 'chameleon', 'support'), 'bear', 'support'), 'vulture', 'support');
+  next = resolveEnemy(next);
+  assert.ok(next.party.every(member => member.mana === 3));
 });
 
-test('guard absorbs a physical hit, clears next round, and regenerates mana', () => {
-  const battle = resolveEnemy(act(createBattle(), 'guard'));
-  assert.equal(battle.hero.health, 16);
-  assert.equal(battle.hero.mana, 8);
-  assert.equal(battle.guarding, false);
-  const unguarded = resolveEnemy(act(battle, 'attack'));
-  assert.equal(unguarded.hero.health, 9, 'heavy leap is not protected by the last round’s guard');
+test('enemy reads current mana, uses stable ties, and ignores downed companions', () => {
+  let battle = createBattle();
+  assert.equal(enemyTarget(battle)?.id, 'bear');
+  battle = act(battle, 'bear', 'attack');
+  assert.equal(enemyTarget(battle)?.id, 'bear', 'bear wins a tie');
+  const down = { ...battle, party: battle.party.map(member => member.id === 'bear' ? { ...member, health: 0 } : member) };
+  assert.equal(enemyTarget(down)?.id, 'chameleon');
 });
 
-test('reading the alternating physical tell wins; attacking blindly loses', () => {
-  let careful = createBattle();
-  while (careful.phase === 'player') {
-    careful = resolveEnemy(act(careful, careful.round % 2 === 0 ? 'guard' : 'attack'));
-    assert.ok(careful.round < 12);
-    assert.ok(careful.hero.mana >= 0 && careful.hero.mana <= 10);
+test('bear protects another ally; protection expires after one enemy turn', () => {
+  const initial = createBattle();
+  let battle = { ...initial, party: initial.party.map(member => member.id === 'bear' ? { ...member, mana: 1 } : member) };
+  battle = act(act(act(battle, 'bear', 'support', 'chameleon'), 'chameleon', 'attack'), 'vulture', 'attack');
+  assert.equal(enemyTarget(battle)?.id, 'chameleon');
+  battle = resolveEnemy(battle);
+  assert.equal(member(battle, 'chameleon').health, 16);
+  assert.equal(member(battle, 'bear').health, 24);
+  assert.ok(battle.party.every(member => member.guardingFor === null));
+  battle = round(battle);
+  assert.equal(member(battle, 'chameleon').health, 2);
+});
+
+test('invalid ally support does not spend a turn', () => {
+  const initial = createBattle();
+  assert.equal(act(initial, 'chameleon', 'support', 'vulture'), initial);
+  const down = { ...initial, party: initial.party.map(member => member.id === 'vulture' ? { ...member, health: 0 } : member) };
+  assert.equal(act(down, 'bear', 'support', 'vulture'), down);
+  assert.equal(act(down, 'vulture', 'support'), down);
+});
+
+test('vulture focus persists between rounds and boosts only the next attack', () => {
+  let battle = act(act(act(createBattle(), 'vulture', 'support'), 'bear', 'support'), 'chameleon', 'support');
+  battle = resolveEnemy(battle);
+  assert.equal(member(battle, 'vulture').focused, true);
+  const before = battle.enemy.health;
+  battle = act(battle, 'vulture', 'attack');
+  assert.equal(before - battle.enemy.health, 9);
+  assert.equal(member(battle, 'vulture').focused, false);
+});
+
+test('a downed member is skipped; a wipe requires every companion to fall', () => {
+  let battle = createBattle();
+  for(let i=0;i<3;i++) battle = round(battle);
+  assert.equal(member(battle, 'bear').health, 0);
+  assert.equal(battle.phase, 'player');
+  battle = act(act(battle, 'chameleon', 'attack'), 'vulture', 'attack');
+  assert.equal(battle.phase, 'enemy', 'no action is required from a downed bear');
+  battle = resolveEnemy(battle);
+  while(battle.phase === 'player') {
+    for(const member of battle.party) battle = act(battle, member.id, 'attack');
+    battle = resolveEnemy(battle);
+    assert.ok(battle.round < 12);
   }
-  assert.equal(careful.phase, 'victory');
-  assert.equal(careful.hero.health, 4);
-  assert.equal(careful.enemy.health, 0);
-  assert.equal(resolveEnemy(careful), careful, 'a defeated enemy cannot retaliate');
-  let reckless = createBattle();
-  while (reckless.phase === 'player') reckless = resolveEnemy(act(reckless, 'attack'));
-  assert.equal(reckless.phase, 'defeat');
-  assert.equal(reckless.hero.health, 0);
-  assert.equal(act(reckless, 'guard'), reckless);
+  assert.equal(battle.phase, 'defeat');
+  assert.ok(battle.party.every(member => member.health === 0));
+  assert.equal(act(battle, 'chameleon', 'support'), battle);
 });
 
-test('health descriptions handle each threshold without exposing exact numbers', () => {
-  const hero = createBattle().hero;
-  assert.equal(condition(hero), 'Unhurt');
-  assert.equal(condition({ ...hero, health: 15 }), 'Bloodied');
-  assert.equal(condition({ ...hero, health: 8 }), 'Wounded');
-  assert.equal(condition({ ...hero, health: 4 }), 'Barely standing');
-  assert.equal(condition({ ...hero, health: 0 }), 'Downed');
+test('coordinated guarding wins and victory cancels unused actions and retaliation', () => {
+  let battle = createBattle();
+  while(battle.phase === 'player') { battle = round(battle, true); assert.ok(battle.round < 12); }
+  assert.equal(battle.phase, 'victory');
+  assert.ok(battle.party.every(member => member.health === member.maxHealth));
+  assert.equal(resolveEnemy(battle), battle);
+  assert.equal(act(battle, 'bear', 'attack'), battle);
+});
+
+test('health descriptions use words at each threshold', () => {
+  const hero = member(createBattle(), 'chameleon');
+  for(const [health, label] of [[16, 'Unhurt'], [15, 'Bloodied'], [8, 'Wounded'], [4, 'Barely standing'], [0, 'Downed']] as const) {
+    assert.equal(condition({ ...hero, health }), label);
+  }
 });

@@ -40,13 +40,15 @@ npm run test:unit # Pure TypeScript combat rule tests
 
 Build the repeatable loop in miniature before adding the full story. The first playable milestone is a small Tiled map with a moving character, starting with the hero waking in the church. Add the feast opening after the loop works.
 
-The first three build steps are playable: church exploration, a visible encounter, and a one-on-one fight. Speak to the priest and inspect the ledger and basin. Near the southeast wall, a crop locust shows a small mana signature. Touch it to enter battle. The south door still marks the edge of the prototype. The artwork and dialogue are original placeholders.
+The first four build steps are playable: church exploration, a visible encounter, basic combat, and a party of three. Speak to the priest and inspect the ledger and basin. Near the southeast wall, a crop locust shows a small mana signature. Touch it to enter battle. The south door still marks the edge of the prototype. The artwork and dialogue are original placeholders.
 
-In battle, drag the chameleon onto the locust to attack, or tap the chameleon to guard. The **Attack** and **Support** buttons offer the same actions with keyboard and touch access. Each action is followed by an enemy turn, then 3 mana regenerates. Read the physical attack tell: guard against its heavy leap. Exact health and damage remain hidden; mana is numeric.
+In battle, command the chameleon, bear, and vulture. Each living member acts once in any order; only then does the locust act and each surviving companion regain 3 mana. Downed members cannot act, and the party only wipes when all three fall. Exact health and damage remain hidden; mana is numeric. Enemies target the living member with the most current mana, preferring the bear in a tie.
 
-Prototype tuning: the thorn attack costs 2 mana, and the guarding support action costs 5. Guarding blocks physical damage for that enemy turn; it is not a spell barrier. Guard cost is provisional, since the guideline specifies barrier cost but leaves guard cost open. Spell barriers arrive with the later magic milestone.
+Drag any member onto the locust to attack, or tap that member for self-support. Per-member action buttons offer keyboard and touch access. Chameleon guards himself. Bear can guard himself or protect another companion: drag him onto that ally, or choose a target with his **Protect** selector before using the **Protect** button. Vulture focuses to strengthen her next shot; focus does not stack. Guards last for one enemy turn. Bear also blocks attacks aimed at himself while protecting another companion.
 
-Victory removes the locust until you use **Return to the cot**, which resets the encounter. Defeat returns you to the cot and permits another attempt. Each new fight starts with full health and mana. These are temporary prototype reset rules; memory loss, Hollow perks, supplies, and persistent saves are not implemented yet. Party combat, suppression, unknown spells, and travel beyond the church are also still ahead. Progress resets on reload.
+Prototype tuning: attacks cost 2 mana. Physical guarding and focusing are free, so an empty mana pool cannot stall the turn. Guarding stops physical damage; it is not a spell barrier. The guideline's five-mana barriers arrive with the later magic milestone. The party is a fixed combat-test roster; this does not implement or change the story's regional recruitment sequence.
+
+Victory removes the locust until you use **Return to the cot**, which resets the encounter. Defeat returns you to the cot and permits another attempt. Each new fight starts with full health and mana. These are temporary prototype reset rules; memory loss, Hollow perks, supplies, and persistent saves are not implemented yet. Suppression, spell barriers, unknown spells, recruitment, and travel beyond the church are also still ahead. Progress resets on reload.
 
 ## Project layout
 
