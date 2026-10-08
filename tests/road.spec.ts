@@ -47,14 +47,6 @@ test('the church door opens onto open fields that scroll, and leads back in', as
   expect(errors).toEqual([]);
 });
 
-test('the bear is chained at the mill across the stream', async ({ page }) => {
-  await outside(page);
-  await place(page, 'farmland', 104, 258);
-  await expect(page.locator('#prompt')).toContainText('Speak to the bear');
-  await page.keyboard.press('e');
-  await expect(page.locator('#dialogue-text')).toContainText('You look thinner');
-});
-
 test('a grain weevil waits in the hay yard and fights only physically', async ({ page }) => {
   await outside(page);
   await place(page, 'farmland', 700, 488);

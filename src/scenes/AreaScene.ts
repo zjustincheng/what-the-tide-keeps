@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { createBattle, enemyMana, ENEMIES } from '../rules/battle';
 import type { Encounter } from '../rules/battle';
 import { forget, held, hollow, MEMORY_IDS, wipe } from '../rules/memory';
-import { apply, conversation, drop, holds } from '../rules/world';
+import { apply, conversation, drop, holds, roster } from '../rules/world';
 import type { Condition, Context, Effect } from '../rules/world';
 import type { Conversation } from '../content/dialogue';
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
@@ -18,7 +18,7 @@ import { createSprites } from './sprites';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 type Point = { name: string; x: number; y: number };
-type Prop = { sprite: Phaser.Physics.Arcade.Sprite; hiddenIf: Condition[] };
+type Prop = { sprite: Phaser.Physics.Arcade.Sprite; hiddenIf: Condition[]; shadow?: Phaser.GameObjects.Ellipse };
 type Foe = { encounter: Encounter; defeat?: Effect; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container };
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 // Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
@@ -76,12 +76,14 @@ export class AreaScene extends Phaser.Scene {
     // Maps larger than the view scroll with the hero.
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels).startFollow(this.player, true, 0.15, 0.15);
     this.physics.add.collider(this.player, furniture);
-    for (const { point, texture } of this.area.npcs) {
+    for (const { point, texture, hiddenIf = [] } of this.area.npcs) {
       const at = this.point(point);
-      this.add.ellipse(at.x, at.y + 4, 15, 6, 0x142a23, 0.6);
+      const shadow = this.add.ellipse(at.x, at.y + 4, 15, 6, 0x142a23, 0.6);
       const npc = this.physics.add.staticSprite(at.x, at.y, texture);
       npc.setSize(10, 8).setOffset(5, 16);
       this.physics.add.collider(this.player, npc);
+      // People who can leave, like a freed companion, come and go with story state.
+      this.props.push({ sprite: npc, hiddenIf, shadow });
     }
     const context = this.context();
     for (const enemy of this.area.enemies) if (!enemy.hiddenIf?.some(condition => holds(context, condition))) this.createFoe(this.point(enemy.point), enemy);
@@ -121,8 +123,9 @@ export class AreaScene extends Phaser.Scene {
   // Props follow story state: brambles that let go, a bell already picked up, a cup left behind.
   private refreshProps(instant = false) {
     const context = this.context();
-    for (const { sprite, hiddenIf } of this.props) {
+    for (const { sprite, hiddenIf, shadow } of this.props) {
       const hidden = hiddenIf.some(condition => holds(context, condition));
+      shadow?.setVisible(!hidden);
       if (hidden && sprite.active) {
         sprite.disableBody(true, false);
         if (instant) sprite.setVisible(false);
@@ -262,7 +265,7 @@ export class AreaScene extends Phaser.Scene {
         saved = saveMemory(wipe(loadMemory())) && saveWorld(drop(loadWorld()));
         this.scene.start('church');
       }
-    }, foe.encounter, hollow(loadMemory()), loadGear(), loadBooks());
+    }, foe.encounter, hollow(loadMemory()), loadGear(), loadBooks(), roster(loadWorld()));
   }
 
   private openEquipment() {
@@ -272,7 +275,7 @@ export class AreaScene extends Phaser.Scene {
     this.physics.pause();
     element('prompt').textContent = '';
     this.setExplorationEnabled(false);
-    this.overlay = new EquipmentView(loadGear(), loadBooks(), loadWorld().found, hollow(loadMemory()), this.textures.getBase64('hero'),
+    this.overlay = new EquipmentView(loadGear(), loadBooks(), loadWorld().found, roster(loadWorld()), hollow(loadMemory()), this.textures.getBase64('hero'),
       (gear, books) => { saved = saveGear(gear) && saveBooks(books); },
       () => { this.overlay?.destroy(); this.overlay = undefined; this.renderMemory(); this.resumeExploration(); });
   }

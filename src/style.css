@@ -572,3 +572,7 @@ main:fullscreen .game-frame { flex: 1; min-height: 0; display: flex; flex-direct
 main:fullscreen #game { flex: 1; min-height: 0; aspect-ratio: auto; }
 main:fullscreen .below { margin: 6px 0 0; }
 main:fullscreen .touch-controls { margin: 6px 0 0; }
+
+/* Smaller parties, before every companion has been found. */
+.party-roster[data-size="1"] { grid-template-columns: minmax(0, 300px); justify-content: center; }
+.party-roster[data-size="2"] { grid-template-columns: repeat(2, minmax(0, 300px)); justify-content: center; }

@@ -9,6 +9,8 @@ export default defineConfig({
     channel: 'chrome',
     viewport: { width: 1280, height: 1100 },
     screenshot: 'only-on-failure',
+    // Most checks exercise the full party; tests of the solo start opt out with an empty storage state.
+    storageState: 'tests/full-party.json',
   },
   webServer: {
     command: 'npm run dev -- --port 5173 --strictPort',

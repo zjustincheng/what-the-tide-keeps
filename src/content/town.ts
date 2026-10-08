@@ -6,10 +6,17 @@ export const town: Dialogue = {
     'A reptile with a church brand. The church said it would send someone. I had hoped for someone else.',
     'Grain carts leave here for the highlands every morning. For six days, every one has come back. The drivers say they were turned at the border.',
     'Nobody gave the order. Everybody has heard it. Find out who is turning my carts, and I may find a use for a convict.',
-  ], variants: [{ if: { flag: 'boar-defeated' }, lines: [
+    'The bear at the mill is yours, I suppose. If you want him, earn him. Clear the pests from my fields, the locust in the wheat and the weevil in the hay yard, and I will sign a writ.',
+  ], variants: [{ if: { all: [{ flag: 'pests-field' }, { flag: 'pests-yard' }, { not: { flag: 'writ-given' } }] }, lines: [
+    'The wheat is standing and the hay yard is quiet. You did that.',
+    'Here. A writ releasing the bear into the custody of the church\'s convict. Into yours. Not into mine.',
+    'Show it to the miller. And keep that bear out of my square.',
+  ], then: { set: 'writ-given' } }, { if: { flag: 'boar-defeated' }, lines: [
     'The carts went through at dawn. The highlands will have their grain.',
     'The boar. We burned him out over a kid who was never eaten. I signed the order myself.',
     'I will not thank a convict in the square. I am thanking you here.',
+  ] }, { if: { all: [{ flag: 'writ-given' }, { not: { flag: 'bear-free' } }] }, lines: [
+    'You have the writ. The miller is waiting, though he will not admit it.',
   ] }] },
   innkeeper: { speaker: 'THE INNKEEPER', prompt: 'Speak to the innkeeper', lines: [
     'We are full.',

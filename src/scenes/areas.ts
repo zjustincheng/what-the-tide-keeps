@@ -18,7 +18,8 @@ export type Area = {
   // Where the hero may walk; the whole map when omitted. Larger maps scroll with the hero.
   bounds?: [x: number, y: number, width: number, height: number];
   dialogue: Dialogue;
-  npcs: { point: string; texture: string }[];
+  // People on the map. One whose hiddenIf condition holds has left.
+  npcs: { point: string; texture: string; hiddenIf?: Condition[] }[];
   // Enemies respawn on every visit unless hiddenIf holds; defeat applies once the fight is won.
   enemies: { point: string; encounter: Encounter; hiddenIf?: Condition[]; defeat?: Effect }[];
   // SVG art in public/assets to load, beyond the map, tiles, and enemies.
@@ -58,10 +59,11 @@ export const CHURCH: Area = {
 export const FARMLAND: Area = {
   key: 'farmland', map: 'farmland', tileset: 'fields', region: 'THE FARMLAND', place: 'The fields', time: 'Dawn',
   dialogue: fields, assets: ['bear'],
-  npcs: [{ point: 'bear', texture: 'bear' }, { point: 'miller', texture: 'miller' }, { point: 'heron', texture: 'heron' }],
+  npcs: [{ point: 'bear', texture: 'bear', hiddenIf: [{ flag: 'bear-free' }] }, { point: 'miller', texture: 'miller' }, { point: 'heron', texture: 'heron' }],
   enemies: [
-    { point: 'locust', encounter: 'locust' }, { point: 'locust-road', encounter: 'locust' },
-    { point: 'weevil-yard', encounter: 'weevil' }, { point: 'weevil-orchard', encounter: 'weevil' }, { point: 'weevil-woods', encounter: 'weevil' },
+    // The reeve's fields: clearing both earns the writ that frees the bear.
+    { point: 'locust', encounter: 'locust', defeat: { set: 'pests-field' } }, { point: 'locust-road', encounter: 'locust' },
+    { point: 'weevil-yard', encounter: 'weevil', defeat: { set: 'pests-yard' } }, { point: 'weevil-orchard', encounter: 'weevil' }, { point: 'weevil-woods', encounter: 'weevil' },
     { point: 'exile', encounter: 'acolyte' },
   ],
   props: [

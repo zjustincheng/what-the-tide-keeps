@@ -1,0 +1,11 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://127.0.0.1:5173",
+      "localStorage": [
+        { "name": "tide-keeps.world.v1", "value": "{\"flags\":[\"bear-free\",\"vulture-free\"],\"carried\":[],\"found\":[]}" }
+      ]
+    }
+  ]
+}

@@ -3,20 +3,21 @@ import type { Conversation, Dialogue } from '../content/dialogue';
 import type { MemoryId } from './memory';
 import type { KeepsakeId } from './gear';
 import type { BookId } from './spells';
+import type { MemberId } from './battle';
 
 export type Item = 'bell';
-export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated';
+export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated' | 'pests-field' | 'pests-yard' | 'writ-given' | 'bear-free' | 'vulture-free';
 // Things worth keeping: keepsakes and grimoires. Once found, they are kept through every death; carried items are not.
 export type Found = KeepsakeId | BookId;
 export type World = Readonly<{ flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[] }>;
 export const ITEMS: readonly Item[] = ['bell'];
-export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defeated'];
+export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free'];
 // A favor spell: a small everyday spell a villager trades for help. It opens the hedge on the border road.
 export const BRAMBLES = "Bramble's leave";
 
 // What a line of dialogue can depend on.
 export type Context = Readonly<{ world: World; lost: readonly MemoryId[]; studied: readonly string[] }>;
-export type Condition = { forgot: MemoryId } | { has: Item } | { flag: Flag } | { knows: string } | { owns: Found } | { not: Condition };
+export type Condition = { forgot: MemoryId } | { has: Item } | { flag: Flag } | { knows: string } | { owns: Found } | { not: Condition } | { all: Condition[] };
 export type Effect = { give?: Item; take?: Item; set?: Flag; learn?: string; find?: Found };
 
 export function createWorld(): World {
@@ -25,6 +26,7 @@ export function createWorld(): World {
 
 export function holds(context: Context, condition: Condition): boolean {
   if ('not' in condition) return !holds(context, condition.not);
+  if ('all' in condition) return condition.all.every(each => holds(context, each));
   if ('forgot' in condition) return context.lost.includes(condition.forgot);
   if ('has' in condition) return context.world.carried.includes(condition.has);
   if ('flag' in condition) return context.world.flags.includes(condition.flag);
@@ -44,6 +46,12 @@ export function apply(context: Context, effect: Effect): Context {
     },
     studied: effect.learn && !studied.includes(effect.learn) ? [...studied, effect.learn] : studied,
   };
+}
+
+// The hero sets out alone. Companions join as they are found and freed, in the order of the story.
+// Only the bear can be freed so far; the vulture waits in the highlands.
+export function roster(world: World): MemberId[] {
+  return ['chameleon', ...(world.flags.includes('bear-free') ? ['bear' as const] : []), ...(world.flags.includes('vulture-free') ? ['vulture' as const] : [])];
 }
 
 // Things carried since the last death are lost on a wipe. Flags, like opened shortcuts, persist.

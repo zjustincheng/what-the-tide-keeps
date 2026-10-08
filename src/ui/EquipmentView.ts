@@ -1,6 +1,6 @@
 import { createBattle, MEMBERS } from '../rules/battle';
 import type { MemberId } from '../rules/battle';
-import { canEquip, equip, KEEPSAKES, MEMBER_IDS, SLOTS } from '../rules/gear';
+import { canEquip, equip, KEEPSAKES, SLOTS } from '../rules/gear';
 import type { Gear, KeepsakeId } from '../rules/gear';
 import type { Hollow } from '../rules/memory';
 import { BOOK_IDS, BOOKS, carry, SPELLS, STARTING_BOOKS } from '../rules/spells';
@@ -15,7 +15,7 @@ export class EquipmentView {
   private owned: KeepsakeId[];
   private books: BookId[];
 
-  constructor(private gear: Gear, private carried: Books, found: readonly Found[], private hollow: Hollow, heroImage: string, onChange: (gear: Gear, books: Books) => void, onClose: () => void) {
+  constructor(private gear: Gear, private carried: Books, found: readonly Found[], private party: readonly MemberId[], private hollow: Hollow, heroImage: string, onChange: (gear: Gear, books: Books) => void, onClose: () => void) {
     this.owned = found.filter((id): id is KeepsakeId => id in KEEPSAKES);
     // Each hero's own grimoire is always theirs to carry; others must be found.
     this.books = BOOK_IDS.filter(id => Object.values(STARTING_BOOKS).includes(id) || found.includes(id));
@@ -28,7 +28,7 @@ export class EquipmentView {
     this.root.innerHTML = `
       <div class="battle-heading"><p class="eyebrow">THE CONDEMNED</p><h2 id="equipment-title">Equipment</h2>
       <p class="equipment-intro">A grimoire sets a hero's spell. Each hero also holds ${SLOTS} keepsakes, kept through every death, most with a drawback.</p></div>
-      <div class="party-roster">${MEMBER_IDS.map(id => `<section class="member-card" data-member="${id}" aria-label="${MEMBERS[id].name}">
+      <div class="party-roster" data-size="${party.length}">${party.map(id => `<section class="member-card" data-member="${id}" aria-label="${MEMBERS[id].name}">
         <div class="fighter"><img alt="" src="${id === 'chameleon' ? heroImage : `${import.meta.env.BASE_URL}assets/${id}.svg`}" /></div>
         <h3>${MEMBERS[id].name}</h3><p class="equipment-stats"></p>
         <label class="keepsake-slot">Grimoire<select data-book aria-label="${MEMBERS[id].name} grimoire"></select><small></small></label>
@@ -62,14 +62,14 @@ export class EquipmentView {
 
   private render() {
     // Preview the party exactly as the next fight will build it.
-    const party = createBattle('locust', [], this.hollow, this.gear, this.carried).party;
-    for (const id of MEMBER_IDS) {
+    const party = createBattle('locust', [], this.hollow, this.gear, this.carried, this.party).party;
+    for (const id of this.party) {
       const card = this.root.querySelector<HTMLElement>(`[data-member="${id}"]`)!;
       const member = party.find(member => member.id === id)!;
       card.querySelector('.equipment-stats')!.textContent = `Health ${member.maxHealth} · Mana ${member.maxMana} · Damage ${MEMBERS[id].damage + member.gear.damage}`;
       const book = card.querySelector<HTMLSelectElement>('[data-book]')!;
       const carrying = this.carried[id];
-      const holder = (other: BookId) => MEMBER_IDS.find(member => member !== id && this.carried[member] === other);
+      const holder = (other: BookId) => this.party.find(member => member !== id && this.carried[member] === other);
       book.innerHTML = `<option value="">— none —</option>${this.books.map(other => `<option value="${other}" ${other === carrying ? 'selected' : ''}>${BOOKS[other].name}${holder(other) ? ` (from ${MEMBERS[holder(other)!].name})` : ''}</option>`).join('')}`;
       const spell = carrying && SPELLS[BOOKS[carrying].spell];
       book.nextElementSibling!.textContent = spell ? `${spell.name} · ${spell.cost} mana · ${spell.length} keys in ${spell.seconds}s. ${spell.text}` : 'No spell.';
@@ -77,7 +77,7 @@ export class EquipmentView {
         const slot = Number(select.dataset.slot);
         const held = this.gear[id][slot];
         const fits = this.owned.filter(keepsake => canEquip(this.owned, id, keepsake));
-        const elsewhere = (keepsake: KeepsakeId) => MEMBER_IDS.find(other => other !== id && this.gear[other].includes(keepsake));
+        const elsewhere = (keepsake: KeepsakeId) => this.party.find(other => other !== id && this.gear[other].includes(keepsake));
         select.innerHTML = `<option value="">— empty —</option>${fits.map(keepsake => `<option value="${keepsake}" ${keepsake === held ? 'selected' : ''}>${KEEPSAKES[keepsake].name}${elsewhere(keepsake) ? ` (from ${MEMBERS[elsewhere(keepsake)!].name})` : ''}</option>`).join('')}`;
         // A second slot opens once the first is filled.
         select.disabled = !fits.length || (slot > 0 && !this.gear[id][slot - 1]);

@@ -1,7 +1,7 @@
 // Pure game rules: no Phaser, DOM, timers, or random state.
 // Rule modules import each other with .ts extensions so Node can run their tests directly.
 import type { Hollow } from './memory';
-import { mods, NO_MODS } from './gear.ts';
+import { MEMBER_IDS, mods, NO_MODS } from './gear.ts';
 import type { Gear, Mods } from './gear';
 import { BOOKS, SPELLS, STARTING_BOOKS } from './spells.ts';
 import type { Books, SpellId } from './spells';
@@ -72,20 +72,24 @@ export const FOLLOWER_BLOW = 2;
 export const COST = { attack: 2, support: 0, suppress: 1, barrier: 5, analyze: 2 } as const;
 export const MANA_REGEN = 3;
 export const UNHOLLOWED: Hollow = { mana: 0, damage: 0, trained: true };
+// Enemy health for a party of one, two, or three, so a smaller party is not simply outmatched.
+export const PARTY_SCALE = [0.45, 0.65, 1] as const;
 
 // Hollow perks strengthen only the hero; companions keep their own memories.
-export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], hollow: Hollow = UNHOLLOWED, gear?: Gear, books: Books = STARTING_BOOKS): Battle {
+export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], hollow: Hollow = UNHOLLOWED, gear?: Gear, books: Books = STARTING_BOOKS, roster: readonly MemberId[] = MEMBER_IDS): Battle {
   const member = (id: MemberId, base: number, mana: number): Member => {
     const worn = gear ? mods(gear, id) : NO_MODS;
     const health = Math.max(1, base + worn.health);
     return { id, health, maxHealth: health, mana, maxMana: mana, acted: false, guardingFor: null, focused: false, suppressed: false, barrier: false, gear: worn,
       spell: books[id] ? BOOKS[books[id]!].spell : null };
   };
+  const size = Math.max(1, Math.min(3, roster.length));
+  const scaled = (health: number) => Math.round(health * PARTY_SCALE[size - 1]);
   return {
     round: 1, phase: 'player', encounter, studied: studied.includes(SPELL) ? [SPELL] : [], hollow, enemyRevealed: false,
-    party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10)],
-    enemy: { health: ENEMIES[encounter].health, maxHealth: ENEMIES[encounter].health, mana: ENEMIES[encounter].mana, maxMana: ENEMIES[encounter].mana },
-    followers: (FOLLOWERS[encounter] ?? []).map(({ name, health }) => ({ name, health, maxHealth: health, mana: 4, maxMana: 4 })),
+    party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10)].filter(member => roster.includes(member.id)),
+    enemy: { health: scaled(ENEMIES[encounter].health), maxHealth: scaled(ENEMIES[encounter].health), mana: ENEMIES[encounter].mana, maxMana: ENEMIES[encounter].mana },
+    followers: (FOLLOWERS[encounter] ?? []).map(({ name, health }) => ({ name, health: scaled(health), maxHealth: scaled(health), mana: 4, maxMana: 4 })),
     fury: 0, step: 0, snared: false,
     log: [ENEMIES[encounter].opening],
   };

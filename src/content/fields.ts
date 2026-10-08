@@ -14,15 +14,23 @@ export const fields: Dialogue = {
     'Its sack face has been stitched with a snout and long ears, so the locusts know whose field this is.',
     'The locusts have eaten the wheat right up to its feet.',
   ] },
-  bear: { speaker: 'THE BEAR', prompt: 'Speak to the bear', lines: [
+  bear: { speaker: 'THE BEAR', prompt: 'Speak to the bear', hiddenIf: [{ flag: 'bear-free' }], lines: [
     'Hero? Hero! Look at you. You look thinner. Do they feed you at that church, or only bury you?',
     'They chained me to the millstone. Penal labor, the miller calls it. The miller is frightened of me, so the chain is very short.',
     'You still know me. Good. Remember the kraken? You took its eye and I took the blame for the smell. Hold on to that one.',
+    'The miller only answers to paper. Get the reeve in Millbrook to sign a writ, and I am yours.',
   ] },
   miller: { speaker: 'THE MILLER', prompt: 'Speak to the miller', lines: [
     'Keep back from him. And from me, while we are at it.',
     'The church sends me a convict, the church takes the flour. Nobody asks the miller. The key stays on my belt.',
-  ] },
+    'He stays until someone with a writ says otherwise. The reeve writes the writs.',
+  ], variants: [{ if: { flag: 'bear-free' }, lines: [
+    'The wheel turns slower without him. I will not say I miss him. Do not tell him I said anything at all.',
+  ] }, { if: { flag: 'writ-given' }, lines: [
+    'A writ. Signed by the reeve, sealed by the reeve. He would sign anything to be rid of a problem.',
+    'The key turns. The chain drops. The bear rolls his shoulders for the first time in a long while.',
+    '"Right," says the bear. "Where are we going?" The bear joins you.',
+  ], then: { set: 'bear-free' } }] },
   heron: { speaker: 'A HERON', prompt: 'Speak to the heron', lines: [
     'Shh. The fish here are small and very suspicious.',
     'Everyone inland eats fish by church license now. Carted up from the capital in barrels. Not all of the barrels hold fish, mind you.',

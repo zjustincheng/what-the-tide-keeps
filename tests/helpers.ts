@@ -11,6 +11,18 @@ export async function doom(page: Page) {
   });
 }
 
+// Rig the open fight so the next hit wins it, for checks about what winning unlocks.
+export async function win(page: Page) {
+  await page.evaluate(async () => {
+    const { game } = await import('/src/main.ts');
+    const view = game.scene.getScenes(true)[0].overlay;
+    view.state = { ...view.state, enemy: { ...view.state.enemy, health: 1 } };
+    view.render();
+  });
+  await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
+  await page.getByRole('button', { name: 'Return to the church' }).click();
+}
+
 // Everyone attacks; each enemy turn downs the member showing the most mana until the party wipes.
 export async function lose(page: Page) {
   await doom(page);

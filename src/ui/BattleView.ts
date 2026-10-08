@@ -24,9 +24,9 @@ export class BattleView {
   // Set while a spell is being typed.
   private casting?: (key: number) => void;
 
-  constructor(heroImage: string, onFinish: (won: boolean) => void, encounter: Encounter = 'locust', hollow?: Hollow, gear?: Gear, books?: Books) {
+  constructor(heroImage: string, onFinish: (won: boolean) => void, encounter: Encounter = 'locust', hollow?: Hollow, gear?: Gear, books?: Books, roster?: readonly MemberId[]) {
     this.onFinish = onFinish;
-    this.state = createBattle(encounter, loadGrimoire(), hollow, gear, books);
+    this.state = createBattle(encounter, loadGrimoire(), hollow, gear, books, roster);
     const enemyName = ENEMIES[encounter].name;
     this.root = document.createElement('section');
     this.root.className = 'battle party-battle';
@@ -45,7 +45,7 @@ export class BattleView {
       </div>
       ${this.state.followers.length ? `<label class="strike-label">Strike at <select id="strike-target" aria-label="Attack target"><option value="0">${enemyName}</option>${this.state.followers.map((follower, index) => `<option value="${index + 1}">${follower.name}</option>`).join('')}</select></label>` : ''}
       <p class="intent" id="enemy-intent"></p><p class="grimoire-status" aria-live="polite"></p>
-      <div class="party-roster">${this.state.party.map(member => {
+      <div class="party-roster" data-size="${this.state.party.length}">${this.state.party.map(member => {
         const info = MEMBERS[member.id];
         return `<section class="member-card" data-member="${member.id}" aria-label="${info.name}">
           <button class="fighter party-fighter" aria-label="${info.name}: tap for ${info.support.toLowerCase()}, drag to attack or support"><img alt="" /></button>

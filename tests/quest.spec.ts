@@ -62,7 +62,7 @@ test('the brambles block the border road until the lamb teaches their word', asy
   await page.reload();
   await expect.poll(() => at(page, 'church')).not.toBeNull();
   expect(await page.evaluate(() => ['tide-keeps.world.v1', 'tide-keeps.grimoire.v1'].map(key => JSON.parse(localStorage.getItem(key)!)))).toEqual([
-    { flags: ['lamb-thanked', 'hedge-open'], carried: [], found: [] }, ["Bramble's leave"],
+    { flags: ['bear-free', 'vulture-free', 'lamb-thanked', 'hedge-open'], carried: [], found: [] }, ["Bramble's leave"],
   ]);
   expect(errors).toEqual([]);
 });

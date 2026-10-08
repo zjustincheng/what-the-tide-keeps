@@ -42,11 +42,11 @@ Build the repeatable loop in miniature before adding the full story. The first p
 
 The first eight build steps are playable: church exploration, visible encounters, basic combat, a party of three, mana-based magic, death, memory in the world, and one region. Speak to the priest and inspect the ledger and basin. Near the southeast wall, a crop locust shows a small mana signature. Touch it to enter battle. A hooded exile near the northeast wall provides a second encounter with suppressed mana and an unknown spell. The priest gives the farmland mission, and the south door opens onto the farmland. The artwork and dialogue are original placeholders.
 
-In battle, command the chameleon, bear, and vulture. Each living member acts once in any order; only then does the enemy act and each surviving companion regain 3 mana. Downed members cannot act, and the party only wipes when all three fall. Party members and enemies have health bars and condition descriptions; exact health and damage numbers remain hidden. Mana is numeric. Enemies target the living member with the most visible mana, preferring the bear in a tie.
+In battle, command the chameleon and whichever companions have joined him (see **Companions**). Each living member acts once in any order; only then does the enemy act and each surviving companion regain 3 mana. Downed members cannot act, and the party only wipes when all three fall. Party members and enemies have health bars and condition descriptions; exact health and damage numbers remain hidden. Mana is numeric. Enemies target the living member with the most visible mana, preferring the bear in a tie.
 
 Drag any member onto the locust to attack, or tap that member for self-support. Per-member action buttons offer keyboard and touch access. Chameleon guards himself. Bear can guard himself or protect another companion: drag him onto that ally, or choose a target with his **Protect** selector before using the **Protect** button. Vulture focuses to strengthen her next shot; focus does not stack. Guards last for one enemy turn. Bear also blocks attacks aimed at himself while protecting another companion.
 
-Prototype tuning: ordinary fights last two or three rounds, and the boar about five. All numbers live in `src/rules/battle.ts`. Attacks cost 2 mana. Physical guarding and focusing are free, so an empty mana pool cannot stall the turn. Guarding stops physical damage; it is not a spell barrier. Spell barriers cost 5 mana and protect the selected ally until the end of the enemy turn, but only against studied spells. Physical blows pass through them. The party is a fixed combat-test roster; this does not implement or change the story's regional recruitment sequence.
+Prototype tuning: ordinary fights last two or three rounds, and the boar about five. All numbers live in `src/rules/battle.ts`. Attacks cost 2 mana. Physical guarding and focusing are free, so an empty mana pool cannot stall the turn. Guarding stops physical damage; it is not a spell barrier. Spell barriers cost 5 mana and protect the selected ally until the end of the enemy turn, but only against studied spells. Physical blows pass through them. Enemy health scales with the size of the party: 45% for the chameleon alone, 65% with one companion, full strength with three.
 
 Victory removes the locust until you use **Return to the cot**, which resets the encounter. Defeat wakes you at the cot (see below). Each new fight starts with full health and mana. Supplies are not implemented yet, and recruitment and travel beyond the church are still ahead. Encounter progress resets on reload; studied spells and memories persist.
 
@@ -100,6 +100,10 @@ The exile alternates staff attacks with a spell. Its two-turn countdown initiall
 The shared grimoire survives cot resets, defeats, and reloads in browser local storage (`tide-keeps.grimoire.v1`). If storage is unavailable, it remains usable for the current page session and the battle view reports that it cannot save. Memories and story progress are saved separately (see below).
 
 These are prototype combat encounters in the church, not the final regional placement or recruitment story. Spellcraft options supplement the original attack/support controls while testing the rules.
+
+## Companions
+
+As in the story, the chameleon sets out alone; his companions are scattered across the regions and must be found. So far only the **bear** can join. He is chained to the millstone west of the stream, and the miller answers only to a writ. The reeve in Millbrook will sign one once the pests are cleared from his fields: the locust in the wheat and the weevil in the hay yard. Show the writ to the miller and the bear joins for good. The guideline's other two ways to free him (buying the writ, or breaking the chain at night) need money and nighttime, which are not built yet. The vulture, the frog, and the octopus wait in regions still to come. The equipment screen and battles show only the heroes who have joined.
 
 ## The farmland
 
@@ -176,6 +180,9 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/dodge.spec.ts` — dodge timing in the browser.
 - `tests/rules/dodge.test.ts` — dodge grading and the stepwise enemy turn.
 - `tests/rules/boar.test.ts` — the boar's shielding, fury, and both strategies.
+- `tests/companions.spec.ts` — the solo start and freeing the bear, from a fresh game.
+- `tests/rules/companions.test.ts` — the roster, party scaling, and the writ.
+- `tests/full-party.json` — the save most browser checks start from, with the bear and vulture already in the party.
 - `tests/rules/world.test.ts` — dialogue variants and the favor-spell quest.
 
 Combat rules have no Phaser or DOM imports. Future party and memory rules should preserve that boundary, as specified in the design guideline.
