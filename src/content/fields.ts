@@ -36,7 +36,12 @@ export const fields: Dialogue = {
   ], then: { find: 'pond-primer' }, variants: [{ if: { owns: 'pond-primer' }, lines: [
     'Quiet. You\'ll scare them.',
     'Use the primer. It was never any good sitting on a shelf.',
-  ] }] },
+  ] }], choices: [
+    { text: 'What happened to your mother?', lines: [
+      'The reeve\'s watch took her for a pike out of the mill pond. The miller sent for them.',
+      'She didn\'t come back. I fish the stream now. Nobody owns the stream.',
+    ] },
+  ] },
   camp: { speaker: 'AN ABANDONED CAMP', prompt: 'Examine the camp', lines: [
     'A tent gone grey with rain and a fire long cold. A tally of days is scratched into the tent pole. It stops at nine.',
   ] },
@@ -87,7 +92,10 @@ export const fields: Dialogue = {
   gibbet: { speaker: 'THE GIBBET', prompt: 'Examine the gibbet', lines: [
     'An iron cage on a post at the crossroads. The crows have had most of what was in it.',
     'A painted plaque: COVENANT-BREAKER.',
-  ] },
+  ], variants: [{ if: { flag: 'followers-reported' }, lines: [
+    'There is someone in the cage now. A badger. He doesn\'t look up.',
+    'A painted plaque: COVENANT-BREAKER.',
+  ] }] },
   bones: { speaker: 'IN THE HOLLOW', prompt: 'Examine the bones', lines: [
     'Bones, picked clean. A scrap of sleeve on one arm still has a church brand on it.',
   ] },
@@ -103,3 +111,4 @@ fields.bear.choices = [
     '"I\'ll keep telling you," he says.',
   ] },
 ];
+fields.heron.variants![0].choices = fields.heron.choices;

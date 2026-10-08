@@ -156,8 +156,10 @@ export const BOAR_FARM: Area = {
   dialogue: farm, npcs: [], assets: ['badger', 'rat'],
   enemies: [{ point: 'boar', encounter: 'boar', hiddenIf: [{ flag: 'boar-defeated' }], defeat: { set: 'boar-defeated' } }],
   props: [
-    { point: 'badger', texture: 'badger', solid: true, hiddenIf: [] },
-    { point: 'rat', texture: 'rat', solid: true, hiddenIf: [] },
+    // The boar's followers leave, one way or another, once the hero decides what becomes of them.
+    { point: 'badger', texture: 'badger', solid: true, hiddenIf: [{ flag: 'followers-spared' }, { flag: 'followers-reported' }] },
+    { point: 'rat', texture: 'rat', solid: true, hiddenIf: [{ flag: 'followers-spared' }, { flag: 'followers-reported' }] },
+    { point: 'tusk-cache', texture: 'cache', hiddenIf: [{ not: { flag: 'followers-spared' } }, { owns: 'boar-tusk' }] },
     { point: 'cup', texture: 'cup', hiddenIf: [{ not: { flag: 'boar-defeated' } }] },
     { point: 'ruin-cache', texture: 'cache', hiddenIf: [{ owns: 'snare-primer' }] },
   ],

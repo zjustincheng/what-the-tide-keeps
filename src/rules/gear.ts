@@ -1,7 +1,7 @@
 // Pure equipment rules: keepsakes and the slots that hold them. No Phaser, DOM, or storage.
 import type { MemberId } from './battle';
 
-export type KeepsakeId = 'cracked-mirror' | 'crow-feather' | 'covenant-token' | 'yoke-peg' | 'wool-charm';
+export type KeepsakeId = 'cracked-mirror' | 'crow-feather' | 'covenant-token' | 'yoke-peg' | 'wool-charm' | 'boar-tusk';
 // What a keepsake changes about its holder in battle.
 export type Mods = Readonly<{ health: number; damage: number; reveal: number; suppressCost: number; shown: number }>;
 export type Gear = Readonly<Record<MemberId, readonly KeepsakeId[]>>;
@@ -22,6 +22,8 @@ export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; ef
     effect: '8 more health.', drawback: 'Attacks hit 2 softer.', mods: { health: 8, damage: -2 } },
   'wool-charm': { name: 'Wool charm',
     effect: '5 more health.', drawback: 'Shows 1 more mana.', mods: { health: 5, shown: 1 } },
+  'boar-tusk': { name: "Boar's tusk",
+    effect: 'Attacks hit 3 harder.', drawback: '3 less health.', mods: { damage: 3, health: -3 } },
 };
 export const KEEPSAKE_IDS = Object.keys(KEEPSAKES) as KeepsakeId[];
 

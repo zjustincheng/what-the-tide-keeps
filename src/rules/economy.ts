@@ -26,7 +26,8 @@ export type Ware = { supply: SupplyId } | { deed: Flag; name: string; text: stri
 export function price(world: World, ware: Ware): number {
   if ('sellCatch' in ware) return catchValue(world.fish);
   if ('deed' in ware) return ware.price;
-  return SUPPLIES[ware.supply].price * (world.flags.includes('boar-defeated') ? 2 : 3);
+  // Leaning on the stallholder with the bear at your back gets the same as the thaw.
+  return SUPPLIES[ware.supply].price * (world.flags.includes('boar-defeated') || world.flags.includes('stall-cowed') ? 2 : 3);
 }
 
 export function canBuy(world: World, ware: Ware): boolean {

@@ -60,6 +60,17 @@ The world is drained and cold. Each area's map has a colour grade (desaturated a
 
 The writing is deliberately plain. People talk about what is in front of them: the reeve about his carts, the shepherd about his sheep, the fox about the nightly count. The larger story surfaces only where the guideline puts it, and quietly.
 
+## Choices with consequences
+
+Some replies change the world, and the game remembers them:
+
+- **The boar's followers.** After the boar falls, the badger can be told to go before the reeve's watch comes, or told he is being taken to the reeve. Sparing them sends both away; the badger tells you where the boar kept something, a box under the third fence post holding the **Boar's tusk** keepsake (attacks hit 3 harder; 3 less health). Reporting them pays 20 coins at the reeve, and the gibbet at the crossroads has a badger in it from then on.
+- **A bed at the inn.** With 12 coins, the innkeeper will let you up the back stairs for the night, healing wounds and restoring mana. Once the boar is beaten, the room is offered freely.
+- **Leaning on the stallholder.** Once the bear has joined, asking her to lower her prices gets you twice the board price instead of three times.
+- **The nightly count.** Standing in the carnivore quarter's line with the fox earns a firepot and a word for the night market to come.
+- **The fishmonger.** Telling him you freed his squid ends his trade with you for good.
+- **The heron** will tell you what happened to her mother.
+
 ## Wounds and rest
 
 Injuries and spent mana carry from one fight into the next. In battle a hero regains only 1 mana a round, less than an attack costs, so spells and attacks run the party dry over a few fights. A hero who falls in a won fight stays down until revived with smelling salts or rested. The top left of the map shows each hero's portrait, health, and mana as the next fight will find them, with a reminder to rest when anyone is hurt or drained.
@@ -110,6 +121,7 @@ Press **Tab** while on the map, or choose **Equipment** in settings, to open the
 | Crow's feather | The last row of the orchard | Vulture | Attacks hit 3 harder | 4 less health |
 | Covenant token | Behind the old shrine, guarded by the Shrine warden | Anyone | 6 more health | Shows 2 more mana, drawing attacks |
 | Wool charm | The shepherd, for his strays | Anyone | 5 more health | Shows 1 more mana |
+| Boar's tusk | Under a fence post at the burned farm, if the boar's followers are spared | Anyone | Attacks hit 3 harder | 3 less health |
 | Yoke peg | The reeds below the ford, guarded by the Mire leech | Bear | 8 more health | Attacks hit 2 softer |
 
 Two keepsakes are guarded, and their caches appear only once the guardian is dead:
@@ -248,6 +260,8 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/rules/fishing.test.ts` — the marker, the zone, bites, and the catch's value.
 - `tests/elites.spec.ts` — the guardians of the Covenant token and the yoke peg.
 - `tests/rules/elites.test.ts` — the warden's ward and the leech's drain.
+- `tests/consequences.spec.ts` — sparing or reporting the boar's followers, and a paid bed.
+- `tests/rules/consequences.test.ts` — every consequential reply and what it changes.
 - `tests/sidequests.spec.ts` — the strays, the barrel, and the swarm-mother's bounty.
 - `tests/rules/quests.test.ts` — the brood call and each quest's dialogue and rewards.
 - `tests/spells.spec.ts` — casting, fizzling, phone keys, and swapping grimoires.

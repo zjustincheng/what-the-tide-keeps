@@ -8,7 +8,11 @@ export const town: Dialogue = {
     'Nobody here gave that order. Find out who did.',
     'The bear at the mill is yours, I suppose. Clear the pests out of my fields, the locust in the wheat and the weevil in the hay yard, and I will sign a writ for him.',
     'Or pay his fine. Sixty coins.',
-  ], then: { shop: 'reeve' }, variants: [{ if: { all: [{ flag: 'swarm-slain' }, { not: { flag: 'bounty-paid' } }] }, lines: [
+  ], then: { shop: 'reeve' }, variants: [{ if: { all: [{ flag: 'followers-reported' }, { not: { flag: 'followers-paid' } }] }, lines: [
+    'The watch brought a badger in this morning. Said you sent him.',
+    'Twenty coins. The Covenant thanks you.',
+    'You receive 20 coins.',
+  ], then: { earn: 20, set: 'followers-paid' } }, { if: { all: [{ flag: 'swarm-slain' }, { not: { flag: 'bounty-paid' } }] }, lines: [
     'The swarm-mother? You?',
     'Twenty-five coins, as posted.',
     'You receive 25 coins.',
@@ -27,12 +31,17 @@ export const town: Dialogue = {
     'We\'re full.',
   ], variants: [{ if: { flag: 'boar-defeated' }, lines: [
     'A room\'s come free. Don\'t make me regret it.',
+  ], choices: [
+    { text: 'Take the room.', lines: ['Upstairs, end of the hall. You sleep in a real bed. Your wounds close and your mana returns.'], then: { rest: true } },
+    { text: 'Not tonight.', lines: ['Suit yourself.'] },
   ] }] },
   shopkeeper: { speaker: 'THE STALLHOLDER', prompt: 'Speak to the stallholder', lines: [
     'Smoked fish, smelling salts, firepots. The board price is for citizens.',
     'Yours is three times that.',
   ], then: { shop: 'stall' }, variants: [{ if: { flag: 'boar-defeated' }, lines: [
     'Carts are moving again. Twice the board price, then.',
+  ], then: { shop: 'stall' } }, { if: { flag: 'stall-cowed' }, lines: [
+    'Twice the board price, like we said. Leave the bear outside.',
   ], then: { shop: 'stall' } }] },
   board: { speaker: 'THE NOTICE BOARD', prompt: 'Read the notice board', lines: [
     'WANTED, by order of the Covenant: the five who murdered the rulers.',
@@ -55,7 +64,9 @@ export const town: Dialogue = {
   fishmonger: { speaker: 'THE FISHMONGER', prompt: 'Speak to the fishmonger', lines: [
     'Fish from the capital port, church license on every barrel. For the carnivore quarter, mostly.',
     'If you\'ve caught anything yourself, I\'ll take it. At my price.',
-  ], then: { shop: 'fishmonger' } },
+  ], then: { shop: 'fishmonger' }, variants: [{ if: { flag: 'fishmonger-angry' }, lines: [
+    'He turns his back on you and stays that way.',
+  ] }] },
   barrel: { speaker: 'THE BARREL', lines: [
     'Something inside knocks against the staves, then stops.',
     'The fishmonger puts a hoof on the lid.',
@@ -69,7 +80,10 @@ export const town: Dialogue = {
   fox: { speaker: 'A FOX ON A DOORSTEP', prompt: 'Speak to the fox', lines: [
     'The gate in that wall locks from their side, not ours.',
     'They still do a count of us every night. Thirty years and nobody\'s eaten anybody, and they still count.',
-  ] },
+  ], variants: [{ if: { flag: 'stood-count' }, lines: [
+    'You stood in the line with us. People on this side noticed.',
+    'When the stall behind the tannery opens, ask for the salt cut. Say the fox sent you.',
+  ] }] },
   stocks: { speaker: 'THE STOCKS', prompt: 'Examine the stocks', lines: [
     'Stocks in the middle of the market square, where everyone can see. Empty today. The stones under them have not been scrubbed.',
   ] },
@@ -100,14 +114,36 @@ const reeveReplies: Choice[] = [
 town.reeve.choices = reeveReplies;
 town.fox.choices = [
   { text: 'Who counts you?', lines: ['The reeve\'s watch. With a lantern and a list.'] },
+  { text: "I'll stand in the count tonight.", lines: [
+    'The fox looks at you for a while. "They\'ll count you twice. Once for the brand."',
+    'You stand in the line with the carnivore quarter until the watch has gone past. Nobody says anything.',
+    'In the morning someone has left a firepot by your pack.',
+  ], then: { set: 'stood-count', supply: 'firepot' } },
   { text: 'I eat insects.', lines: ['Lucky you. They don\'t count insects.'] },
 ];
 town.innkeeper.choices = [
   { text: 'Your board says rooms are free.', lines: ['The board\'s old.'] },
-  { text: 'I can pay.', lines: ['It\'s not about the money.'] },
+  // Coin talks after all, if there is enough of it.
+  { text: 'Twelve coins for a bed. Back stairs.', if: { coins: 12 }, lines: [
+    'She looks at the coins for a long moment, then sweeps them off the counter. "Back stairs. Out before anyone\'s up."',
+    'You sleep in a real bed. Your wounds close and your mana returns.',
+  ], then: { pay: 12, rest: true } },
   { text: "Fine. I'll sleep outdoors.", lines: ['There\'s a fire ring at the crossroads. The shepherds use it.'] },
+];
+town.shopkeeper.choices = [
+  { text: 'Lower your prices.', if: { all: [{ flag: 'bear-free' }, { not: { flag: 'boar-defeated' } }] }, lines: [
+    'She looks past you at the bear filling the doorway.',
+    '"Twice the board price. Not a copper less."',
+  ], then: { set: 'stall-cowed' } },
+  { text: 'Lower your prices.', if: { not: { flag: 'bear-free' } }, lines: ['No.'] },
+  { text: 'Show me what you have.', lines: ['Look, then. Don\'t touch.'] },
 ];
 town.fishmonger.choices = [
   { text: "What's in the barrel?", if: { not: { flag: 'barrel-bought' } }, lines: ['Pickling. Leave it.'] },
+  // Telling him costs a buyer for good.
+  { text: 'I let your squid go.', if: { flag: 'squid-freed' }, lines: [
+    'He stares at you.',
+    '"Get away from my stall. Don\'t come back."',
+  ], then: { set: 'fishmonger-angry' } },
   { text: 'Show me what you buy.', lines: ['Go on, then.'] },
 ];
