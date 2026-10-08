@@ -29,7 +29,10 @@ class Music {
 
   // Browsers only allow sound after the player has pressed or clicked something.
   unlock() {
-    if (!this.context) {
+    // A closed engine (after a reload, say) cannot be resumed, so it is rebuilt.
+    if (!this.context || this.context.state === 'closed') {
+      clearInterval(this.timer);
+      this.track = undefined;
       const Context = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       if (!Context) return;
       this.context = new Context();
@@ -60,7 +63,12 @@ class Music {
   toggleMute() {
     this.muted = !this.muted;
     this.apply(); saveSettings({ muted: this.muted });
+    for (const listener of this.listeners) listener();
   }
+
+  // Anything showing the mute state, such as the button in the top bar, listens here.
+  private listeners: (() => void)[] = [];
+  onChange(listener: () => void) { this.listeners.push(listener); }
 
   // A sound effect, played now. Before the player has made sound possible, it is simply skipped.
   effect(name: Effect, pitch = 0) {
@@ -266,6 +274,7 @@ class Music {
   stop() {
     clearInterval(this.timer);
     if (this.context instanceof AudioContext) void this.context.close();
+    this.context = undefined; this.track = undefined;
   }
 }
 

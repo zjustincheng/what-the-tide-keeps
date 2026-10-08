@@ -134,3 +134,23 @@ test('every sound effect is audible without clipping', async ({ page }) => {
     expect(peak, `${name} is inaudible`).toBeGreaterThan(0.01);
   }
 });
+
+test('the music comes back after its engine is shut down, and the top bar shows when it is muted', async ({ page }) => {
+  await page.goto('/');
+  await expect.poll(() => at(page, 'church')).not.toBeNull();
+  await page.locator('#game').focus();
+  await page.keyboard.press('ArrowDown');
+  await expect.poll(() => playing(page)).toBe('church');
+  // As happens when the game reloads under the player: the old engine is closed.
+  await page.evaluate(async () => (await import('/src/audio/music.ts')).music.stop());
+  expect(await playing(page)).toBeUndefined();
+  await page.keyboard.press('ArrowDown');
+  await expect.poll(() => playing(page)).toBe('church');
+  await expect.poll(() => page.evaluate(async () => ((await import('/src/audio/music.ts')).music as unknown as { context: AudioContext }).context.state)).toBe('running');
+  // The button in the top bar mutes, and shows it.
+  await page.getByRole('button', { name: 'Mute music' }).click();
+  await expect(page.getByRole('button', { name: 'Unmute music' })).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#game').focus();
+  await page.keyboard.press('m');
+  await expect(page.getByRole('button', { name: 'Mute music' })).toHaveAttribute('aria-pressed', 'false');
+});

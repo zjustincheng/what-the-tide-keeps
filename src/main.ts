@@ -24,5 +24,16 @@ for (const type of ['pointerdown', 'keydown'] as const) document.addEventListene
 document.addEventListener('keydown', event => {
   if ((event.key === 'm' || event.key === 'M') && !event.repeat && !(event.target instanceof HTMLSelectElement || event.target instanceof HTMLInputElement)) music.toggleMute();
 });
+// The music button in the top bar shows whether the music is muted, and toggles it.
+const sound = document.getElementById('sound') as HTMLButtonElement;
+const showSound = () => {
+  sound.classList.toggle('muted', music.muted);
+  sound.setAttribute('aria-pressed', String(music.muted));
+  sound.setAttribute('aria-label', music.muted ? 'Unmute music' : 'Mute music');
+  sound.title = music.muted ? 'Music is muted. Unmute (M)' : 'Mute music (M)';
+};
+sound.addEventListener('click', () => { music.unlock(); music.toggleMute(); });
+music.onChange(showSound);
+showSound();
 
 if (import.meta.hot) import.meta.hot.dispose(() => { game.destroy(true); music.stop(); });

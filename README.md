@@ -80,7 +80,7 @@ Sound effects are synthesised the same way and have their own volume:
   - Typing a spell ticks, casting shimmers, and a fizzle sputters. Healing, barriers, and gathering have their own tones.
   - A short cue marks victory or defeat.
 
-Browsers only allow sound after the player presses or clicks something, so sound starts then. **M** mutes the music; settings hold separate music and effects volume sliders. All of it is remembered in `tide-keeps.settings.v1`. The compositions are data in `src/audio/themes.ts` (notes, beats, instruments) and the instruments are in `src/audio/music.ts`, so a theme can be rewritten without touching the synthesis.
+Browsers only allow sound after the player presses or clicks something, so sound starts then. **M**, or the **♪** button in the top bar, mutes the music; the button is struck through while it's muted. Settings hold separate music and effects volume sliders. All of it is remembered in `tide-keeps.settings.v1`. The compositions are data in `src/audio/themes.ts` (notes, beats, instruments) and the instruments are in `src/audio/music.ts`, so a theme can be rewritten without touching the synthesis.
 
 ## Tone
 

@@ -699,3 +699,5 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
 .hud[data-mode="compact"] .health-bar, .hud[data-mode="compact"] .mana-bar { width: 24px; height: 3px; margin: 1px 0 0; }
 .settings-audio { flex-wrap: wrap; }
 .settings-audio input[type="range"] { width: 120px; }
+/* The music button: struck through while the music is muted. */
+#sound.muted { color: #bc755e; border-color: #7a4a3a; text-decoration: line-through; }
