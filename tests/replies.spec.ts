@@ -80,3 +80,43 @@ test('people speak with a portrait above the text; objects show only a name', as
   await expect(page.locator('#speaker')).toHaveText('THE RESURRECTION LEDGER');
   await expect(page.locator('#portrait')).toBeHidden();
 });
+
+test('after an answer the hero can ask the priest something else, and come back later straight to the questions', async ({ page }) => {
+  await start(page);
+  await place(page, 'church', 248, 148);
+  await expect(page.locator('#prompt')).toContainText('Speak to the priest');
+  await page.keyboard.press('e');
+  while (!(await page.locator('#choices').isVisible())) await page.getByRole('button', { name: 'Continue' }).click();
+  const replies = page.getByRole('group', { name: 'Replies' }).getByRole('button');
+  await page.getByRole('button', { name: '1. How many times have I died?' }).click();
+  await expect(page.locator('#dialogue-text')).toHaveText('Forty-one, by the ledger.');
+  // Back to the same questions, the asked one dimmed, and a way out.
+  await expect(replies).toHaveText(['1. How many times have I died?', '2. I was framed.', '3. Tend my wounds.', '4. I should go.']);
+  await expect(replies.first()).toHaveAttribute('data-asked', 'true');
+  await page.keyboard.press('2');
+  await expect(page.locator('#dialogue-text')).toContainText('The ledger says sentenced.');
+  await page.keyboard.press('4');
+  await expect(page.locator('#dialogue-text')).toHaveText('Go on, then. Try to come back on your feet.');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.locator('#dialogue')).toBeHidden();
+  // Talking again goes straight to the questions.
+  await page.keyboard.press('e');
+  await expect(page.locator('#dialogue-text')).toHaveText('Was there something else?');
+  await expect(replies).toHaveCount(4);
+});
+
+test('people without a goodbye of their own can be left from their replies', async ({ page }) => {
+  await start(page);
+  await page.evaluate(async () => {
+    const { game } = await import('/src/main.ts');
+    game.scene.getScene('church').scene.start('hall', { spawn: 'spawn' });
+  });
+  await expect.poll(() => at(page, 'hall')).not.toBeNull();
+  await place(page, 'hall', 264, 186);
+  await expect(page.locator('#prompt')).toContainText('Speak to the clerk');
+  await page.keyboard.press('e');
+  await page.getByRole('button', { name: '2. What are you writing?' }).click();
+  await expect(page.getByRole('group', { name: 'Replies' }).getByRole('button')).toHaveText(['1. Can I see the writ book?', '2. What are you writing?', '3. Leave.']);
+  await page.keyboard.press('3');
+  await expect(page.locator('#dialogue')).toBeHidden();
+});

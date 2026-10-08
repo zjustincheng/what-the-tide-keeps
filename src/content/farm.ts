@@ -35,12 +35,12 @@ farm.badger.choices = [
   { text: 'Who was he?', lines: ['Never said. Kept his hood up.'] },
   { text: 'Where did he go?', lines: ['West, toward the coast.'] },
   // What happens to the boar's followers is the hero's call, and it is remembered.
-  { text: 'Go. Before the reeve\'s watch comes.', lines: [
+  { text: 'Go. Before the reeve\'s watch comes.', ends: true, lines: [
     'The badger looks at you for a long time.',
     '"Third fence post from the gate. There\'s a box under it. His. He\'d want it to go to someone who didn\'t burn him out."',
     'When you look back, they are gone.',
   ], then: { set: 'followers-spared' } },
-  { text: 'I\'m taking you to the reeve.', lines: [
+  { text: 'I\'m taking you to the reeve.', ends: true, lines: [
     'The rat runs. The badger doesn\'t.',
     '"Fine," he says. "Get it over with."',
   ], then: { set: 'followers-reported' } },

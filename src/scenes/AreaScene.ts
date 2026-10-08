@@ -36,6 +36,8 @@ const element = <T extends HTMLElement>(id: string) => document.getElementById(i
 const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8], warden: [22, 26, 5, 4], leech: [28, 12, 2, 14] };
 // Whether the last save succeeded, shared by every area.
 let saved = true;
+// The way out of a conversation, offered whenever the hero comes back to the replies.
+const LEAVE: Choice = { text: 'Leave.', lines: [], ends: true };
 // Speaker portraits, cut once from each sprite.
 const PORTRAITS = new Map<string, string>();
 
@@ -52,6 +54,11 @@ export class AreaScene extends Phaser.Scene {
   private blips: ReturnType<typeof setTimeout>[] = [];
   // Replies on offer under the speaker's last line.
   private options: Choice[] = [];
+  // The replies to return to after an answer, and what has been asked this visit.
+  private menu?: Choice[];
+  private returning = false;
+  private asked = new Set<string>();
+  private talked = new Set<string>();
   private cleanup = new AbortController();
   private arrival = 'spawn';
   private leaving = false;
@@ -70,7 +77,7 @@ export class AreaScene extends Phaser.Scene {
     // Scene instances are reused, so every visit starts from a clean slate.
     this.arrival = data?.spawn ?? 'spawn';
     this.cleanup = new AbortController();
-    this.held = new Set(); this.foes = []; this.props = [];
+    this.held = new Set(); this.foes = []; this.props = []; this.asked = new Set(); this.talked = new Set();
     this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false; this.pendingShop = undefined; this.pendingRest = undefined;
   }
 
@@ -258,18 +265,22 @@ export class AreaScene extends Phaser.Scene {
       else this.travel(exit, /door|out/.test(this.nearby.name));
     } else if(this.nearby) {
       const said=conversation(this.area.dialogue, this.nearby.name, this.context());
+      const point=this.nearby.name;
+      const portrait=this.area.dialogue[point].portrait ?? this.area.npcs.find(npc=>npc.point===point)?.texture;
+      // Someone already spoken to this visit goes straight to the replies, rather than saying it all again.
+      const again=this.talked.has(point) && replies(said.choices, this.context()).length>0 && (!said.then || Object.keys(said.then).every(key=>key==='shop'));
+      this.talked.add(point);
       // Effects land as the conversation opens, so closing it early never loses them.
       this.effect(said.then);
-      const point=this.nearby.name;
-      this.say(said, this.area.dialogue[point].portrait ?? this.area.npcs.find(npc=>npc.point===point)?.texture);
+      this.say(again ? { ...said, lines: ['Was there something else?'] } : said, portrait, again);
       element('prompt').textContent='';
       this.player.setVelocity(0);
     }
   }
 
   // Speak with a portrait in its own box above the text, as in Omori; objects and places show only a name.
-  private say(conversation: Conversation, portrait=this.portraitKey) {
-    this.active=conversation;this.line=0;this.portraitKey=portrait;
+  private say(conversation: Conversation, portrait=this.portraitKey, returning=false) {
+    this.active=conversation;this.line=0;this.portraitKey=portrait;this.returning=returning;
     element('speaker').textContent=conversation.speaker;
     const frame=element('portrait');
     frame.hidden=!portrait;
@@ -285,10 +296,17 @@ export class AreaScene extends Phaser.Scene {
     element('dialogue-text').textContent=active.lines[this.line];
     this.speak(active.lines[this.line]);
     this.options=this.line===active.lines.length-1 ? replies(active.choices, this.context()) : [];
+    if(this.options.length) {
+      if(!this.returning || !this.menu) this.menu=active.choices;
+      // Coming back to the replies always offers a way out.
+      if(this.returning && !this.options.some(option=>option.ends)) this.options=[...this.options, LEAVE];
+    }
     const box=element('choices');
     box.replaceChildren(...this.options.map((option,index)=>{
       const button=document.createElement('button');
       button.type='button';button.textContent=`${index+1}. ${option.text}`;
+      // Questions already asked this visit are dimmed, not removed.
+      if(this.asked.has(`${active.speaker}:${option.text}`)) button.dataset.asked='true';
       button.addEventListener('click',()=>this.choose(option));
       return button;
     }));
@@ -317,7 +335,11 @@ export class AreaScene extends Phaser.Scene {
   private choose(option: Choice) {
     music.effect('select');
     this.effect(option.then);
-    this.say({ speaker: this.active!.speaker, lines: option.lines, choices: option.choices });
+    if(!option.lines.length) { this.closeDialogue(); return; }
+    this.asked.add(`${this.active!.speaker}:${option.text}`);
+    // After an answer, the hero can ask something else from the same replies, unless this one ends it.
+    const back=option.choices ?? (option.ends ? undefined : this.menu);
+    this.say({ speaker: this.active!.speaker, lines: option.lines, choices: back }, this.portraitKey, Boolean(back && !option.choices));
   }
 
   private effect(then?: Effect) {
@@ -354,7 +376,7 @@ export class AreaScene extends Phaser.Scene {
   private closeDialogue() {
     // Focus left on the hidden Continue button would strand the keyboard, so it returns to the map.
     if(element('dialogue').contains(document.activeElement)) element('game').focus({preventScroll:true});
-    this.active=undefined;this.options=[];this.portraitKey=undefined;element('dialogue').hidden=true;element('choices').hidden=true;element('continue').hidden=false;
+    this.active=undefined;this.options=[];this.portraitKey=undefined;this.menu=undefined;this.returning=false;element('dialogue').hidden=true;element('choices').hidden=true;element('continue').hidden=false;
     const shop=this.pendingShop;this.pendingShop=undefined;
     if(shop) this.openShop(shop);
     const camp=this.pendingRest;this.pendingRest=undefined;

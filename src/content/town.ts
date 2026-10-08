@@ -32,8 +32,8 @@ export const town: Dialogue = {
   ], variants: [{ if: { flag: 'boar-defeated' }, lines: [
     'A room\'s come free. Don\'t make me regret it.',
   ], choices: [
-    { text: 'Take the room.', lines: ['The bed by the west wall. Go on in.'], then: { set: 'inn-room' } },
-    { text: 'Not tonight.', lines: ['Suit yourself.'] },
+    { text: 'Take the room.', ends: true, lines: ['The bed by the west wall. Go on in.'], then: { set: 'inn-room' } },
+    { text: 'Not tonight.', ends: true, lines: ['Suit yourself.'] },
   ] }] },
   shopkeeper: { speaker: 'THE STALLHOLDER', prompt: 'Speak to the stallholder', lines: [
     'Smoked fish, smelling salts, firepots. The board price is for citizens.',
@@ -99,9 +99,9 @@ const lambGoesOn = [
   "I lost my bell in the locust field. If you get it back I'll show you how to make thorns let go. Gran showed me.",
 ];
 town.child.choices = [
-  { text: "No. I don't think so.", if: { not: { forgot: 'feast' } }, lines: ['Mum says you did.', ...lambGoesOn] },
-  { text: "I don't remember.", if: { forgot: 'feast' }, lines: ['That\'s what everyone says.', ...lambGoesOn] },
-  { text: 'They say I did.', lines: ['Mum says.', ...lambGoesOn] },
+  { text: "No. I don't think so.", ends: true, if: { not: { forgot: 'feast' } }, lines: ['Mum says you did.', ...lambGoesOn] },
+  { text: "I don't remember.", ends: true, if: { forgot: 'feast' }, lines: ['That\'s what everyone says.', ...lambGoesOn] },
+  { text: 'They say I did.', ends: true, lines: ['Mum says.', ...lambGoesOn] },
 ];
 const reeveReplies: Choice[] = [
   { text: 'Who gave the order to turn the carts?', lines: ['If I knew, I wouldn\'t need you. Ask at the border.'] },
@@ -124,11 +124,11 @@ town.fox.choices = [
 town.innkeeper.choices = [
   { text: 'Your board says rooms are free.', lines: ['The board\'s old.'] },
   // Coin talks after all, if there is enough of it.
-  { text: 'Twelve coins for a bed. Back stairs.', if: { coins: 12 }, lines: [
+  { text: 'Twelve coins for a bed. Back stairs.', ends: true, if: { coins: 12 }, lines: [
     'She looks at the coins for a long moment, then sweeps them off the counter.',
     '"The bed by the west wall. Out before anyone\'s up."',
   ], then: { pay: 12, set: 'inn-room' } },
-  { text: "Fine. I'll sleep outdoors.", lines: ['There\'s a fire ring at the crossroads. The shepherds use it.'] },
+  { text: "Fine. I'll sleep outdoors.", ends: true, lines: ['There\'s a fire ring at the crossroads. The shepherds use it.'] },
 ];
 town.shopkeeper.choices = [
   { text: 'Lower your prices.', if: { all: [{ flag: 'bear-free' }, { not: { flag: 'boar-defeated' } }] }, lines: [
@@ -136,14 +136,14 @@ town.shopkeeper.choices = [
     '"Twice the board price. Not a copper less."',
   ], then: { set: 'stall-cowed' } },
   { text: 'Lower your prices.', if: { not: { flag: 'bear-free' } }, lines: ['No.'] },
-  { text: 'Show me what you have.', lines: ['Look, then. Don\'t touch.'] },
+  { text: 'Show me what you have.', ends: true, lines: ['Look, then. Don\'t touch.'] },
 ];
 town.fishmonger.choices = [
   { text: "What's in the barrel?", if: { not: { flag: 'barrel-bought' } }, lines: ['Pickling. Leave it.'] },
   // Telling him costs a buyer for good.
-  { text: 'I let your squid go.', if: { flag: 'squid-freed' }, lines: [
+  { text: 'I let your squid go.', ends: true, if: { flag: 'squid-freed' }, lines: [
     'He stares at you.',
     '"Get away from my stall. Don\'t come back."',
   ], then: { set: 'fishmonger-angry' } },
-  { text: 'Show me what you buy.', lines: ['Go on, then.'] },
+  { text: 'Show me what you buy.', ends: true, lines: ['Go on, then.'] },
 ];

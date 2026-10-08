@@ -38,7 +38,7 @@ const priestReplies: Choice[] = [
     'He cleans each cut with salt water. It stings, then it does not.',
     'Your wounds close.',
   ], then: { rest: true } },
-  { text: 'I should go.', lines: ['Go on, then. Try to come back on your feet.'] },
+  { text: 'I should go.', ends: true, lines: ['Go on, then. Try to come back on your feet.'] },
 ];
 church.priest.choices = priestReplies;
 church.priest.variants![0].choices = priestReplies;
