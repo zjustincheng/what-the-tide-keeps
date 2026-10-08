@@ -161,7 +161,9 @@ export class AreaScene extends Phaser.Scene {
       if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(event.key)) event.preventDefault();
       if(['e','E',' ','Enter'].includes(event.key)) this.interact(event);
       if(event.key==='Escape') this.closeDialogue();
-      if(['i','I'].includes(event.key) && !this.active && !event.repeat) this.openEquipment();
+      // Tab opens equipment only from the map, so it still moves focus everywhere else on the page.
+      const onMap=[element('game'),document.body].includes(document.activeElement as HTMLElement);
+      if(event.key==='Tab' && !event.shiftKey && onMap && !this.active && !event.repeat) { event.preventDefault(); this.openEquipment(); }
     },{signal});
     element('equipment').addEventListener('click',()=>this.openEquipment(),{signal});
     element('continue').addEventListener('click',()=>this.interact(),{signal});

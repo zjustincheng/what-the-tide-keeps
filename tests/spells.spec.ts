@@ -72,7 +72,7 @@ test("the heron's primer can be given to any hero, who then casts its spell", as
   await expect(page.locator('#prompt')).toContainText('Speak to the heron');
   await page.keyboard.press('e');
   await page.keyboard.press('Escape');
-  await page.keyboard.press('i');
+  await page.keyboard.press('Tab');
   await page.getByRole('combobox', { name: 'Bear grimoire' }).selectOption({ label: "Pond-keeper's primer" });
   await expect(page.locator('[data-member="bear"]')).toContainText('Still water · 4 mana · 5 keys');
   await page.getByRole('combobox', { name: 'Chameleon grimoire' }).selectOption({ label: 'Windward (from Vulture)' });

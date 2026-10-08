@@ -27,7 +27,7 @@ test('a keepsake found off the road can be equipped and changes the fight', asyn
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.locator('#game').focus();
-  await page.keyboard.press('i');
+  await page.keyboard.press('Tab');
   await expect(page.getByRole('dialog', { name: 'Equipment' })).toContainText('Nothing found yet');
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);

@@ -49,7 +49,7 @@ export class EquipmentView {
     }, { signal });
     this.root.querySelector('#equipment-close')!.addEventListener('click', onClose, { signal });
     this.root.addEventListener('keydown', event => {
-      if (event.key === 'Escape' || event.key === 'i' || event.key === 'I') { event.preventDefault(); onClose(); return; }
+      if (event.key === 'Escape') { event.preventDefault(); onClose(); return; }
       if (event.key !== 'Tab') return;
       const controls = Array.from(this.root.querySelectorAll<HTMLElement>('select:not([disabled]),button'));
       event.preventDefault();

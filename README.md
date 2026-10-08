@@ -52,7 +52,7 @@ Victory removes the locust until you use **Return to the cot**, which resets the
 
 ## Equipment
 
-Press **I** or use **Equipment** below the map to open the equipment screen. Each hero carries a grimoire (see below) and holds two keepsakes, found by exploring off the roads. Keepsakes are kept through every death, and most come with a drawback:
+Press **Tab** while on the map, or use **Equipment** below it, to open the equipment screen; **Escape** or **Done** closes it. Each hero carries a grimoire (see below) and holds two keepsakes, found by exploring off the roads. Keepsakes are kept through every death, and most come with a drawback:
 
 | Keepsake | Where | Holder | Effect | Drawback |
 | --- | --- | --- | --- | --- |
