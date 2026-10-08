@@ -64,3 +64,19 @@ test('the priest can tend wounds', async ({ page }) => {
   await page.getByRole('button', { name: '3. Tend my wounds.' }).click();
   await expect(page.locator('#party-status')).toHaveText('Chameleon 20/20');
 });
+
+test('people speak with a portrait above the text; objects show only a name', async ({ page }) => {
+  await start(page);
+  await place(page, 'church', 248, 148);
+  await expect(page.locator('#prompt')).toContainText('Speak to the priest');
+  await page.keyboard.press('e');
+  await expect(page.locator('#portrait')).toBeVisible();
+  await expect(page.locator('#portrait img')).toHaveAttribute('src', /^data:image\/png/);
+  await expect(page.locator('#speaker')).toHaveText('THE PRIEST');
+  await page.keyboard.press('Escape');
+  await place(page, 'church', 408, 124);
+  await expect(page.locator('#prompt')).toContainText('Examine ledger');
+  await page.keyboard.press('e');
+  await expect(page.locator('#speaker')).toHaveText('THE RESURRECTION LEDGER');
+  await expect(page.locator('#portrait')).toBeHidden();
+});

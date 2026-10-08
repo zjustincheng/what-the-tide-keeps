@@ -32,6 +32,8 @@ const element = <T extends HTMLElement>(id: string) => document.getElementById(i
 const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8] };
 // Whether the last save succeeded, shared by every area.
 let saved = true;
+// Speaker portraits, cut once from each sprite.
+const PORTRAITS = new Map<string, string>();
 
 // One explorable map: the church, a route, or a town. Areas differ only in their data.
 export class AreaScene extends Phaser.Scene {
@@ -42,6 +44,7 @@ export class AreaScene extends Phaser.Scene {
   private nearby?: Point;
   private active?: Conversation;
   private line = 0;
+  private portraitKey?: string;
   // Replies on offer under the speaker's last line.
   private options: Choice[] = [];
   private cleanup = new AbortController();
@@ -234,7 +237,7 @@ export class AreaScene extends Phaser.Scene {
     } else if(this.nearby && this.area.camps?.[this.nearby.name]) {
       // Resting is told like a conversation; the rest itself happens when it ends.
       this.pendingRest=this.nearby.name;
-      this.say({ speaker: 'REST', lines: this.area.camps[this.nearby.name].lines });
+      this.say({ speaker: 'REST', lines: this.area.camps[this.nearby.name].lines }, 'hero');
       element('prompt').textContent='';
       this.player.setVelocity(0);
     } else if(this.nearby && this.area.fishing?.[this.nearby.name]) {
@@ -245,15 +248,21 @@ export class AreaScene extends Phaser.Scene {
       const said=conversation(this.area.dialogue, this.nearby.name, this.context());
       // Effects land as the conversation opens, so closing it early never loses them.
       this.effect(said.then);
-      this.say(said);
+      const point=this.nearby.name;
+      this.say(said, this.area.dialogue[point].portrait ?? this.area.npcs.find(npc=>npc.point===point)?.texture);
       element('prompt').textContent='';
       this.player.setVelocity(0);
     }
   }
 
-  private say(conversation: Conversation) {
-    this.active=conversation;this.line=0;
+  // Speak with a portrait in its own box above the text, as in Omori; objects and places show only a name.
+  private say(conversation: Conversation, portrait=this.portraitKey) {
+    this.active=conversation;this.line=0;this.portraitKey=portrait;
     element('speaker').textContent=conversation.speaker;
+    const frame=element('portrait');
+    frame.hidden=!portrait;
+    element('dialogue').classList.toggle('with-portrait',Boolean(portrait));
+    if(portrait) (frame.querySelector('img') as HTMLImageElement).src=this.portrait(portrait);
     element('dialogue').hidden=false;
     this.showLine();
   }
@@ -273,6 +282,23 @@ export class AreaScene extends Phaser.Scene {
     box.hidden=!this.options.length;
     element('continue').hidden=this.options.length>0;
     (box.querySelector('button') as HTMLButtonElement|null)?.focus({preventScroll:true});
+  }
+
+  // A bust cut from the sprite: the head and shoulders, scaled up with hard pixels. Cached per texture.
+  private portrait(key: string): string {
+    const cached=PORTRAITS.get(key);
+    if(cached) return cached;
+    const source=this.textures.get(key).getSourceImage() as CanvasImageSource & { width: number; height: number };
+    const width=source.width, height=Math.round(source.height*0.6);
+    const scale=Math.max(1,Math.floor(96/width));
+    const canvas=document.createElement('canvas');
+    canvas.width=width*scale;canvas.height=height*scale;
+    const context=canvas.getContext('2d')!;
+    context.imageSmoothingEnabled=false;
+    context.drawImage(source,0,0,width,height,0,0,canvas.width,canvas.height);
+    const url=canvas.toDataURL();
+    PORTRAITS.set(key,url);
+    return url;
   }
 
   private choose(option: Choice) {
@@ -300,7 +326,7 @@ export class AreaScene extends Phaser.Scene {
   private closeDialogue() {
     // Focus left on the hidden Continue button would strand the keyboard, so it returns to the map.
     if(element('dialogue').contains(document.activeElement)) element('game').focus({preventScroll:true});
-    this.active=undefined;this.options=[];element('dialogue').hidden=true;element('choices').hidden=true;element('continue').hidden=false;
+    this.active=undefined;this.options=[];this.portraitKey=undefined;element('dialogue').hidden=true;element('choices').hidden=true;element('continue').hidden=false;
     const shop=this.pendingShop;this.pendingShop=undefined;
     if(shop) this.openShop(shop);
     const camp=this.pendingRest;this.pendingRest=undefined;

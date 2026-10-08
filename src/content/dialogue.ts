@@ -7,4 +7,5 @@ export type Conversation = { speaker: string; lines: string[]; then?: Effect; ch
 type Variant = { if: Condition; lines: string[]; then?: Effect; choices?: Choice[] };
 // The first variant whose condition holds replaces the usual lines.
 // A point whose hiddenIf condition holds can no longer be interacted with, like a bell already picked up.
-export type Dialogue = Record<string, Conversation & { prompt?: string; variants?: Variant[]; hiddenIf?: Condition[] }>;
+// portrait names the texture to show beside the speaker when it is not the NPC standing at that point.
+export type Dialogue = Record<string, Conversation & { prompt?: string; variants?: Variant[]; hiddenIf?: Condition[]; portrait?: string }>;

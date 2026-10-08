@@ -52,7 +52,7 @@ Victory removes the locust until you use **Return to the cot**, which resets the
 
 ## Replies
 
-Many people can be answered. When a speaker finishes, the hero's possible replies appear under their last line; choose one with **1–4** or by clicking, and the conversation goes on from there. **Escape** walks away. Replies depend on what the hero still remembers and what has happened. While he remembers the feast he can tell the lamb he doesn't think he killed the king; once it is forgotten, that answer is gone and "I don't remember" takes its place. His name is lost before the game begins, so the bear can tell it to him, and it slides off him. The priest can also tend the hero's wounds.
+People speak with a portrait in its own box above the text and their name on a tab beside it, as in Omori. Portraits are cut from each character's sprite and scaled up; objects and places show only a name. Many people can be answered. When a speaker finishes, the hero's possible replies appear under their last line; choose one with **1–4** or by clicking, and the conversation goes on from there. **Escape** walks away. Replies depend on what the hero still remembers and what has happened. While he remembers the feast he can tell the lamb he doesn't think he killed the king; once it is forgotten, that answer is gone and "I don't remember" takes its place. His name is lost before the game begins, so the bear can tell it to him, and it slides off him. The priest can also tend the hero's wounds.
 
 ## Tone
 

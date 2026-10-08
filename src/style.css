@@ -631,3 +631,18 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
 
 /* Character art outside the map gets the same drained grade as the world. */
 .fighter img, .portrait img { filter: saturate(.55) brightness(.86) contrast(1.06); }
+
+/* Omori-style speaker: a portrait in its own box above the text, with the name on a tab beside it. */
+
+.portrait { position: absolute; left: -1px; bottom: calc(100% + 6px); width: 104px; height: 90px; display: grid; place-items: center; overflow: hidden; background: radial-gradient(ellipse at 50% 70%, #1f2c27, #0c1311 75%); border: 1px solid #8d9270; box-shadow: 0 8px 20px #0008; }
+.portrait[hidden] { display: none; }
+.portrait img { image-rendering: pixelated; max-width: 96px; max-height: 86px; }
+.speaker { position: absolute; left: -1px; bottom: calc(100% + 6px); margin: 0; padding: 4px 12px; background: #18231ff7; border: 1px solid #8d9270; font: 10px ui-monospace, monospace; letter-spacing: 1.5px; color: #d8c48f; }
+.speaker:empty { display: none; }
+.dialogue.with-portrait .speaker { left: 110px; }
+@media(max-width:650px) {
+  .portrait { width: 76px; height: 66px; }
+  .portrait img { max-width: 70px; max-height: 62px; }
+  .dialogue.with-portrait .speaker { left: 82px; }
+  .speaker { font-size: 8px; padding: 3px 8px; }
+}

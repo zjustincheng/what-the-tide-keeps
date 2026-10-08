@@ -6,12 +6,12 @@ export const farm: Dialogue = {
     'FOUND, ALIVE AND WELL: the miller\'s kid, in the high pasture, three weeks after wandering off. Thanks to all who searched.',
     'Beneath it, older and half burned, another notice. Only the last words survive: ...BURN THE EATER OUT.',
   ] },
-  badger: { speaker: 'THE BADGER', prompt: 'Speak to the badger', hiddenIf: [{ not: { flag: 'boar-defeated' } }], lines: [
+  badger: { speaker: 'THE BADGER', prompt: 'Speak to the badger', portrait: 'badger', hiddenIf: [{ not: { flag: 'boar-defeated' } }], lines: [
     'He made us promise not to fight for him. Then he fought for us anyway. He always did.',
     'After the fire, nobody came. Then one came, with no fur on him at all. He sat in the ashes and asked what happened, and he listened to the answer.',
     'Nobody else ever listened. So when he asked for the carts to stop, we stopped them.',
   ] },
-  rat: { speaker: 'THE RAT', prompt: 'Speak to the rat', hiddenIf: [{ not: { flag: 'boar-defeated' } }], lines: [
+  rat: { speaker: 'THE RAT', prompt: 'Speak to the rat', portrait: 'rat', hiddenIf: [{ not: { flag: 'boar-defeated' } }], lines: [
     'The one with no fur said the farmland would burn us all eventually. He was right about one farm.',
   ] },
   'ruin-cache': { speaker: 'IN THE FARMHOUSE ASHES', prompt: 'Search the ashes', hiddenIf: [{ owns: 'snare-primer' }], lines: [
