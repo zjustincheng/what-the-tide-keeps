@@ -20,17 +20,28 @@ export const town: Dialogue = {
     'The wheat is standing and the hay yard is quiet.',
     'Here. A writ releasing the bear into your custody. Show it to the miller.',
     'And keep him out of my square.',
-  ], then: { set: 'writ-given' } }, { if: { all: [{ flag: 'boar-defeated' }, { not: { flag: 'reeve-pardon' } }] }, lines: [
+  ], then: { set: 'writ-given' } }, { if: { all: [{ flag: 'boar-defeated' }, { not: { flag: 'reeve-pardon' } }, { not: { flag: 'writ-given' } }, { not: { flag: 'bear-free' } }] }, lines: [
+    'The carts went through at dawn.',
+    'The boar. We burned him out over a kid who turned up alive three weeks later. I signed the order.',
+    'I won\'t thank a convict in the square. So, here.',
+    'He hands you a folded letter with the reeve\'s seal on it. Good conduct, it says, for the bearer, in Millbrook.',
+    'The brand stays. That\'s the church\'s business. But here you\'ll be treated as a citizen.',
+    'And the bear\'s writ. Pests or no pests, you\'ve done more than I asked. Show it to the miller.',
+    'You receive the reeve\'s letter of good conduct, and the bear\'s writ.',
+  ], then: { set: ['reeve-pardon', 'writ-given'] } }, { if: { all: [{ flag: 'boar-defeated' }, { not: { flag: 'reeve-pardon' } }] }, lines: [
     'The carts went through at dawn.',
     'The boar. We burned him out over a kid who turned up alive three weeks later. I signed the order.',
     'I won\'t thank a convict in the square. So, here.',
     'He hands you a folded letter with the reeve\'s seal on it. Good conduct, it says, for the bearer, in Millbrook.',
     'The brand stays. That\'s the church\'s business. But here you\'ll be treated as a citizen.',
     'You receive the reeve\'s letter of good conduct.',
-  ], then: { set: 'reeve-pardon' } }, { if: { flag: 'boar-defeated' }, lines: [
-    'The carts went through at dawn. Keep that letter on you.',
-  ] }, { if: { all: [{ flag: 'writ-given' }, { not: { flag: 'bear-free' } }] }, lines: [
+  ], then: { set: 'reeve-pardon' } }, { if: { all: [{ flag: 'boar-defeated' }, { not: { flag: 'writ-given' } }, { not: { flag: 'bear-free' } }] }, lines: [
+    'The bear. Pests or no pests, you\'ve done more than I asked. Here, his writ. Show it to the miller.',
+    'You receive the bear\'s writ.',
+  ], then: { set: 'writ-given' } }, { if: { all: [{ flag: 'writ-given' }, { not: { flag: 'bear-free' } }] }, lines: [
     'You have the writ. Go and show the miller.',
+  ] }, { if: { flag: 'boar-defeated' }, lines: [
+    'The carts went through at dawn. Keep that letter on you.',
   ] }] },
   innkeeper: { speaker: 'THE INNKEEPER', prompt: 'Speak to the innkeeper', lines: [
     'We\'re full.',
@@ -117,7 +128,17 @@ const reeveReplies: Choice[] = [
   { text: 'Why am I branded?', if: { forgot: 'trial' }, lines: [
     'You don\'t know? They say you killed the king.',
   ] },
-  { text: 'About the bear.', if: { not: { flag: 'bear-free' } }, lines: ['Earn him or buy him. I don\'t care which.'] },
+  // He says exactly what is left to do for the writ.
+  { text: 'About the bear.', if: { all: [{ not: { flag: 'writ-given' } }, { not: { flag: 'pests-field' } }, { not: { flag: 'pests-yard' } }] }, lines: [
+    'Kill the locust in my wheat and the weevil in the hay yard, and I\'ll sign his writ. Or pay his fine. Sixty coins.',
+  ] },
+  { text: 'About the bear.', if: { all: [{ not: { flag: 'writ-given' } }, { flag: 'pests-field' }, { not: { flag: 'pests-yard' } }] }, lines: [
+    'The wheat\'s clear. The weevil in the hay yard isn\'t. Then you get your writ. Or sixty coins.',
+  ] },
+  { text: 'About the bear.', if: { all: [{ not: { flag: 'writ-given' } }, { not: { flag: 'pests-field' } }, { flag: 'pests-yard' }] }, lines: [
+    'The hay yard\'s clear. The locust in the wheat isn\'t. Then you get your writ. Or sixty coins.',
+  ] },
+  { text: 'About the bear.', if: { all: [{ flag: 'writ-given' }, { not: { flag: 'bear-free' } }] }, lines: ['You have his writ. Show it to the miller.'] },
   // The brand is the church's to lift, not his. What the reeve can give is Millbrook's good word.
   { text: 'I want a pardon.', if: { all: [{ not: { flag: 'boar-defeated' } }, { not: { flag: 'reeve-pardon' } }] }, lines: [
     'A pardon? The brand is the church\'s, not mine. I couldn\'t lift it if I wanted to.',

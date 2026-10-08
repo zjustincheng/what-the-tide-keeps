@@ -45,3 +45,22 @@ test("the reeve can't lift the brand, but once the carts move his letter makes t
   assert.equal(price(context.world, { supply: 'firepot' }), 4, 'board price');
   assert.match(conversation(town, 'board', context).lines[1], /All five faces/);
 });
+
+test('beating the boar earns the bear\'s writ even with the pests still alive, and the miller honours it', async () => {
+  const { fields } = await import('../../src/content/fields.ts');
+  const free = (start: Context) => {
+    let context = start;
+    for (let i = 0; i < 3 && !context.world.flags.includes('writ-given'); i++) context = apply(context, conversation(town, 'reeve', context).then ?? {});
+    assert.ok(context.world.flags.includes('writ-given'));
+    context = apply(context, conversation(fields, 'miller', context).then!);
+    assert.ok(context.world.flags.includes('bear-free'));
+  };
+  const base: Context = { world: { ...createWorld(), flags: ['boar-defeated'] }, lost: [], studied: [] };
+  free(base);
+  // A save that already had the letter from before still gets the writ.
+  free({ ...base, world: { ...base.world, flags: ['boar-defeated', 'reeve-pardon'] } });
+  // Before that, the reeve says which pests are left.
+  const halfway: Context = { ...base, world: { ...base.world, flags: ['pests-field'] } };
+  const about = replies(conversation(town, 'reeve', halfway).choices, halfway).find(choice => choice.text === 'About the bear.')!;
+  assert.match(about.lines[0], /weevil in the hay yard isn't/);
+});

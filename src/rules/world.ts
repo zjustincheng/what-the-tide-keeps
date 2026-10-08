@@ -38,7 +38,7 @@ export type Condition = { forgot: MemoryId } | { has: Item } | { flag: Flag } | 
   | { coins: number };
 // shop names a shop to open once the conversation ends.
 // pay spends coins; supply hands over one of a supply.
-export type Effect = { give?: Item; take?: Item; set?: Flag; learn?: string; find?: Found; earn?: number; pay?: number; supply?: SupplyId; shop?: ShopId; rest?: true };
+export type Effect = { give?: Item; take?: Item; set?: Flag | readonly Flag[]; learn?: string; find?: Found; earn?: number; pay?: number; supply?: SupplyId; shop?: ShopId; rest?: true };
 export type ShopId = 'stall' | 'reeve' | 'fishmonger';
 
 export function createWorld(): World {
@@ -64,7 +64,7 @@ export function apply(context: Context, effect: Effect): Context {
     ...context,
     world: {
       carried: effect.give && !carried.includes(effect.give) ? [...carried, effect.give] : carried,
-      flags: effect.set && !world.flags.includes(effect.set) ? [...world.flags, effect.set] : world.flags,
+      flags: [...world.flags, ...[effect.set ?? []].flat().filter((flag, i, all) => !world.flags.includes(flag) && all.indexOf(flag) === i)],
       found: effect.find && !world.found.includes(effect.find) ? [...world.found, effect.find] : world.found,
       coins: Math.max(0, world.coins + (effect.earn ?? 0) - (effect.pay ?? 0)),
       supplies: effect.supply ? { ...world.supplies, [effect.supply]: world.supplies[effect.supply] + 1 } : world.supplies, fish: world.fish, deaths: world.deaths, wounds: effect.rest ? {} : world.wounds, drained: effect.rest ? {} : world.drained,

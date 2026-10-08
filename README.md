@@ -222,7 +222,7 @@ These are prototype combat encounters in the church, not the final regional plac
 
 ## Companions
 
-As in the story, the chameleon sets out alone; his companions are scattered across the regions and must be found. So far only the **bear** can join. He is chained to the millstone west of the stream, and the miller answers only to a writ. The reeve in Millbrook will sign one once the pests are cleared from his fields: the locust in the wheat and the weevil in the hay yard. Show the writ to the miller and the bear joins for good. The guideline's other two ways to free him (buying the writ, or breaking the chain at night) need money and nighttime, which are not built yet. The vulture, the frog, and the octopus wait in regions still to come. The equipment screen and battles show only the heroes who have joined.
+As in the story, the chameleon sets out alone; his companions are scattered across the regions and must be found. So far only the **bear** can join. He is chained to the millstone west of the stream, and the miller answers only to a writ. The reeve in Millbrook will sign one once the pests are cleared from his fields: the locust in the wheat and the weevil in the hay yard. He also hands it over, pests or no pests, once the boar is beaten, and he'll sell it for 60 coins. Asking him "About the bear." tells you exactly which pests are left. Show the writ to the miller and the bear joins for good. Breaking the chain at night, the guideline's third way, needs nighttime, which isn't built yet. The vulture, the frog, and the octopus wait in regions still to come. The equipment screen and battles show only the heroes who have joined.
 
 ## The farmland
 

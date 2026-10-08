@@ -21,6 +21,7 @@ export const fields: Dialogue = {
   miller: { speaker: 'THE MILLER', prompt: 'Speak to the miller', lines: [
     'Keep back from him. And from me.',
     'The church sends me a convict, the church takes the flour. The key stays on my belt until the reeve says otherwise, in writing.',
+    'Go and ask the reeve in Millbrook what he wants for it.',
   ], variants: [{ if: { flag: 'bear-free' }, lines: [
     'Wheel turns slower without him. Don\'t tell him I said that.',
   ] }, { if: { flag: 'writ-given' }, lines: [
