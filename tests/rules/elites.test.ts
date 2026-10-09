@@ -22,7 +22,7 @@ test('the shrine warden cannot be harmed while its votives burn, and relights th
   const rekindle = { ...createBattle('warden'), round: 4, phase: 'enemy' as const, followers: battle.followers };
   assert.equal(intent(rekindle).name, 'Rekindle');
   assert.ok(resolveEnemy(rekindle).followers.every(votive => votive.health === votive.maxHealth), 'the votives burn again');
-  assert.equal(intent({ ...rekindle, round: 3 }).piercing, 7, 'Judgement drives through guards');
+  assert.equal(intent({ ...rekindle, round: 3 }).type, 'spell', 'Judgement is a spell: a guard is no use, a barrier is, once studied');
 });
 
 test('the mire leech heals by what it takes, so dodging or guarding starves it', () => {

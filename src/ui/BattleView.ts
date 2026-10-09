@@ -1,5 +1,5 @@
-import { act, agility, canAct, canCast, canFlee, canUse, cast, flee, GATHER, hesitate, PATIENCE, STAGES, SURVIVE, useSupply, warded, condition, cost, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
-import type { Action, Battle, BattleOptions, Dodge, Fighter, Foe, MemberId, Encounter } from '../rules/battle';
+import { act, agility, dodgeKind, canAct, canCast, canFlee, canUse, cast, flee, GATHER, hesitate, PATIENCE, STAGES, SURVIVE, useSupply, warded, condition, cost, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
+import type { Action, Battle, BattleOptions, Dodge, DodgeKind, Fighter, Foe, MemberId, Encounter } from '../rules/battle';
 import { checkSequence, SPELLS } from '../rules/spells';
 import { BOUNTY, SUPPLIES, SUPPLY_IDS } from '../rules/economy';
 import type { Supplies, SupplyId } from '../rules/economy';
@@ -10,6 +10,9 @@ import type { Effect as Sound } from '../audio/effects';
 
 // How long the dodge ring takes to close on its target, in milliseconds.
 const LEAD = 900;
+
+// Who appears in a boss's scene when they speak, by the name the scene gives them.
+const SPEAKER_ART: Record<string, string> = { 'THE BOAR': 'boar', 'THE BADGER': 'badger', 'THE RAT': 'rat', 'THE HYENA': 'hyena' };
 
 // What each hero's support does. A guard stops physical blows; a barrier (under Spellcraft) stops studied spells.
 const SUPPORT_SHORT: Record<MemberId, string> = { chameleon: 'Stops blows', bear: 'Guards an ally', vulture: 'Next hit harder' };
@@ -29,7 +32,7 @@ export class BattleView {
   private onFinish: (won: boolean, state: Battle) => void;
   // Set while a dodge prompt is open: when the blow lands, and how to answer it.
   private prompts = 0;
-  private prompt?: { impact: number; answer: (dodge: Dodge, early?: boolean) => void };
+  private prompt?: { impact: number; kind: DodgeKind; answer: (dodge: Dodge, early?: boolean) => void; key?: (digit: number) => void; stop?: () => Dodge };
   // Set while a spell is being typed.
   private casting?: (key: number) => void;
   // The stage the screen last showed, so a boss's rising scene plays when it changes during the fight.
@@ -103,6 +106,11 @@ export class BattleView {
       event.preventDefault(); this.casting?.(Number(button.dataset.key));
     }, { signal }));
     // Dodges answer on press, not release: keydown and pointerdown keep the timing honest.
+    // Keys answer a spell's dodge.
+    this.root.addEventListener('keydown', event => {
+      if (this.prompt?.kind !== 'keys' || !['1', '2', '3', '4'].includes(event.key) || event.repeat) return;
+      event.preventDefault(); this.prompt.key!(Number(event.key));
+    }, { signal });
     this.root.addEventListener('keydown', event => {
       if (!this.prompt || ![' ', 'Enter'].includes(event.key) || event.repeat) return;
       event.preventDefault(); this.press();
@@ -206,6 +214,7 @@ export class BattleView {
 
   private choose(actor: MemberId, action: Action, target: MemberId = actor, foe: Foe = 0) {
     if (this.casting || !canAct(this.state, actor, action, target, foe)) return;
+    this.strikeKind = action === 'attack' ? 'slash' : undefined;
     this.state = act(this.state, actor, action, target, foe);
     // Each hero strikes with their own sound; spellcraft has its own.
     const sounds: Record<Action, Sound> = { attack: ({ chameleon: 'lash', bear: 'maul', vulture: 'talons' } as const)[actor], support: actor === 'vulture' ? 'gather' : 'block', suppress: 'open', barrier: 'barrier', analyze: 'key', gather: 'gather' };
@@ -220,6 +229,7 @@ export class BattleView {
     const fallen = this.state.party.find(member => member.id === chosen && member.health === 0) ?? this.state.party.find(member => member.health === 0);
     const target = SUPPLIES[supply].target === 'fallen' ? fallen?.id ?? chosen : chosen;
     if (!canUse(this.state, actor, supply, target, this.foe())) return;
+    this.strikeKind = supply === 'firepot' ? 'fire' : undefined;
     this.state = useSupply(this.state, actor, supply, target, this.foe());
     music.effect(supply === 'firepot' ? 'hit' : 'heal');
     this.afterAction();
@@ -244,6 +254,7 @@ export class BattleView {
       bar.dataset.result = success ? 'cast' : 'fizzle';
       this.get('.spell-name').textContent = success ? `${spell.name}!` : `${spell.name} fizzles.`;
       setTimeout(() => { bar.hidden = true; delete bar.dataset.result; }, 600);
+      this.strikeKind = success ? 'burst' : undefined;
       this.state = cast(this.state, actor, success, foe);
       music.effect(!success ? 'fizzle' : spell.kind === 'heal' ? 'heal' : spell.kind === 'ward' ? 'barrier' : 'spell');
       this.afterAction();
@@ -278,6 +289,9 @@ export class BattleView {
     const land = (dodge: Dodge) => {
       // How the blow lands decides its sound: stopped, dodged, grazed, or taken.
       const before = next;
+      // The enemy lunges as its blow lands.
+      if (before && !before.move.revive) this.play(this.root.querySelector('.fighter[data-foe="0"]'), 'is-striking');
+      this.strikeKind = undefined;
       this.state = strike(this.state, dodge); this.persist(); this.render();
       if (before && before.damage === 0 && !before.move.revive) music.effect('block');
       else if (before?.dodgeable && dodge === 'perfect') music.effect('dodge');
@@ -302,40 +316,96 @@ export class BattleView {
       this.timer = setTimeout(() => land('miss'), next ? 400 : 0);
       return;
     }
+    // Each blow asks for its own kind of dodge: a closing ring, a target to click, keys to type, or a bar to stop.
+    const kind = dodgeKind(next.move);
+    const quick = agility(next.target);
     const card = this.card(next.target.id);
     const ring = document.createElement('div');
     ring.className = 'dodge-ring'; ring.style.setProperty('--lead', `${LEAD}ms`);
-    card.append(ring);
     const impact = performance.now() + LEAD;
-    this.root.dataset.impact = String(impact);
-    this.get('.dodge-call').textContent = `${next.move.name} → ${MEMBERS[next.target.id].name}. Dodge!`;
     const bar = this.get('.dodge-bar'), button = this.get<HTMLButtonElement>('#dodge');
     const shown = ++this.prompts;
+    const call = `${next.move.name} → ${MEMBERS[next.target.id].name}.`;
+    const pieces: HTMLElement[] = [ring];
+    let hint = 'Space or tap · as the ring closes';
+    if (kind === 'ring') { card.append(ring); this.root.dataset.impact = String(impact); }
+    if (kind === 'target') {
+      // A circle somewhere over the fight, with its own closing ring: click it as the ring closes.
+      const target = document.createElement('button');
+      target.type = 'button'; target.className = 'dodge-target'; target.setAttribute('aria-label', 'Dodge target');
+      target.style.left = `${15 + Math.random() * 70}%`; target.style.top = `${30 + Math.random() * 45}%`;
+      target.append(ring);
+      target.addEventListener('pointerdown', event => { event.preventDefault(); this.press(true); }, { signal: this.cleanup.signal });
+      this.root.append(target); pieces.push(target);
+      this.root.dataset.impact = String(impact);
+      hint = 'Click the circle as it closes';
+    }
+    let keys: number[] = [];
+    if (kind === 'keys') {
+      // Trace the spell's sigil back at it: three keys, quickly.
+      keys = Array.from({ length: 3 }, () => 1 + Math.floor(Math.random() * 4));
+      hint = `Type ${keys.join(' ')}`;
+    }
+    let sweep = 0;
+    const zone = { start: 0.2 + Math.random() * 0.5, width: Math.min(0.4, 0.2 * quick) };
+    const started = performance.now();
+    if (kind === 'bar') {
+      // A marker sweeps a bar; stop it inside the gold.
+      const meter = document.createElement('div');
+      meter.className = 'dodge-meter';
+      meter.innerHTML = `<span class="dodge-zone" style="left:${zone.start * 100}%;width:${zone.width * 100}%"></span><span class="dodge-marker"></span>`;
+      bar.prepend(meter); pieces.push(meter);
+      const marker = meter.querySelector<HTMLElement>('.dodge-marker')!;
+      const move = () => { const t = ((performance.now() - started) / 700) % 2; marker.style.left = `${(t < 1 ? t : 2 - t) * 100}%`; sweep = requestAnimationFrame(move); };
+      move();
+      hint = 'Space or tap · inside the gold';
+    }
+    this.get('.dodge-call').textContent = `${call} ${kind === 'keys' ? `Type ${keys.join(' ')}!` : 'Dodge!'}`;
+    button.querySelector('small')!.textContent = hint;
     bar.hidden = false; button.hidden = false; button.disabled = false; button.focus({ preventScroll: true });
+    let typed = 0;
+    const allowed = LEAD * 1.6 * quick;
     this.prompt = {
-      impact,
+      impact, kind,
       answer: (dodge, early = false) => {
-        clearTimeout(this.timer); this.prompt = undefined;
+        clearTimeout(this.timer); cancelAnimationFrame(sweep); this.prompt = undefined;
         delete this.root.dataset.impact;
         button.disabled = true; this.root.focus({ preventScroll: true });
         // Leave the result up briefly, unless the next blow has already opened a new prompt.
         setTimeout(() => { if (this.prompts === shown) bar.hidden = true; }, 700);
         ring.dataset.result = dodge;
         this.get('.dodge-call').textContent = dodge === 'perfect' ? 'Dodged!' : dodge === 'graze' ? 'Grazed.' : early ? 'Too soon.' : 'Too slow.';
-        setTimeout(() => ring.remove(), 350);
+        setTimeout(() => pieces.forEach(piece => piece.remove()), 350);
         land(dodge);
       },
+      key: digit => {
+        if (digit !== keys[typed]) { this.prompt?.answer('miss'); return; }
+        music.effect('key', digit * 2);
+        typed++;
+        this.get('.dodge-call').textContent = `${call} Type ${keys.map((key, i) => i < typed ? '·' : key).join(' ')}!`;
+        if (typed === keys.length) this.prompt?.answer(performance.now() - started <= allowed * 0.6 ? 'perfect' : 'graze');
+      },
+      stop: () => {
+        const t = ((performance.now() - started) / 700) % 2, at = t < 1 ? t : 2 - t;
+        const inner = { start: zone.start + zone.width / 4, end: zone.start + zone.width * 3 / 4 };
+        return at >= inner.start && at <= inner.end ? 'perfect' : at >= zone.start && at <= zone.start + zone.width ? 'graze' : 'miss';
+      },
     };
-    // No press at all means the blow lands in full.
-    this.timer = setTimeout(() => this.prompt?.answer('miss'), LEAD + DODGE.graze + 1);
+    // No answer at all means the blow lands in full.
+    const wait = kind === 'keys' ? allowed : kind === 'bar' ? 2400 : LEAD + DODGE.graze + 1;
+    this.timer = setTimeout(() => this.prompt?.answer('miss'), wait);
   }
 
-  private press() {
+  // clicked: the press came from clicking the target itself. A key press for a target is allowed, but its window is narrower.
+  private press(clicked = false) {
     if (!this.prompt) return;
+    if (this.prompt.kind === 'keys') return;
+    if (this.prompt.kind === 'bar') { this.prompt.answer(this.prompt.stop!()); return; }
     const error = performance.now() - this.prompt.impact;
     // Pressing far too early commits the dodge too soon; it cannot be retried.
     const next = nextStrike(this.state)!;
-    this.prompt.answer(grade(error, next.move, agility(next.target)), error < 0);
+    const quick = agility(next.target) * (this.prompt.kind === 'target' && !clicked ? 0.6 : 1);
+    this.prompt.answer(grade(error, next.move, quick), error < 0);
   }
 
   // A short cue when the fight ends, once.
@@ -350,8 +420,22 @@ export class BattleView {
     this.saved = saveGrimoire(this.state.studied);
   }
 
-  // What each fighter looked like at the last render, so changes can be shown: a flinch when hurt, a hop when acting.
+  // What each fighter looked like at the last render, so changes can be shown: a flinch when hurt, a lunge when acting,
+  // and over a struck enemy, the mark of what hit it.
   private seen = new Map<string, number>();
+  private strikeKind?: 'slash' | 'burst' | 'fire';
+  private play(target: Element | null, name: string) {
+    if (!target) return;
+    target.classList.remove(name); void (target as HTMLElement).offsetWidth; target.classList.add(name);
+    setTimeout(() => target.classList.remove(name), 500);
+  }
+  private mark(target: Element | null, kind: 'slash' | 'burst' | 'fire') {
+    if (!target) return;
+    const fx = document.createElement('span');
+    fx.className = `fx fx-${kind}`;
+    target.append(fx);
+    setTimeout(() => fx.remove(), 520);
+  }
   private animateChanges() {
     const state = this.state;
     const now = new Map<string, number>([
@@ -369,8 +453,12 @@ export class BattleView {
       if (before === undefined) continue;
       const [kind, who] = key.split(':');
       const fighter = kind === 'hp' && /^\d+$/.test(who) ? this.root.querySelector(`[data-foe="${who}"] .fighter, .fighter[data-foe="${who}"]`) : this.root.querySelector(`.member-card[data-member="${who}"] .party-fighter`);
-      if (kind === 'hp' && value < before) play(fighter, 'is-hit');
-      if (kind === 'act' && value > before) play(fighter, 'is-acting');
+      if (kind === 'hp' && value < before) {
+        play(fighter, 'is-hit');
+        // An enemy struck by the party shows what struck it.
+        if (/^\d+$/.test(who) && this.strikeKind) this.mark(fighter, this.strikeKind);
+      }
+      if (kind === 'act' && value > before) play(fighter, this.strikeKind === 'slash' ? 'is-lunging' : this.strikeKind === 'burst' ? 'is-casting' : 'is-acting');
       // A boss turning to its second stage roars.
     }
     this.seen = now;
@@ -389,16 +477,31 @@ export class BattleView {
     const block = this.casting;
     this.casting = () => {};
     let index = 0;
+    // Lines type out; Continue finishes a line that is still typing before it moves on.
+    let typing: ReturnType<typeof setInterval> | undefined;
+    const text = scene.querySelector<HTMLElement>('.cutscene-line')!;
+    const portrait = scene.querySelector<HTMLImageElement>('img')!;
     const show = () => {
       const { who, line } = stage.scene[index];
       scene.querySelector('.cutscene-speaker')!.textContent = who;
-      scene.querySelector('.cutscene-line')!.textContent = line;
       scene.classList.toggle('narration', !who);
-      if (who) music.effect('blip', -6);
+      // A speaker shows as themselves; narration shows the boss.
+      portrait.src = `${import.meta.env.BASE_URL}assets/${SPEAKER_ART[who] ?? this.state.encounter}.svg`;
+      text.textContent = ''; text.dataset.full = line;
+      let shown = 0;
+      clearInterval(typing);
+      typing = setInterval(() => {
+        shown++; text.textContent = line.slice(0, shown);
+        if (shown % 3 === 0 && who) music.effect('blip', -6);
+        if (shown >= line.length) { clearInterval(typing); typing = undefined; }
+      }, 24);
+      if (who) { scene.classList.remove('jolt'); void scene.offsetWidth; scene.classList.add('jolt'); }
     };
     const next = () => {
+      if (typing) { clearInterval(typing); typing = undefined; text.textContent = text.dataset.full ?? ''; return; }
       index++;
       if (index < stage.scene.length) { show(); return; }
+      clearInterval(typing);
       scene.remove();
       this.root.classList.remove('in-cutscene');
       this.casting = block;
@@ -448,7 +551,7 @@ export class BattleView {
     this.get('#enemy-intent').textContent = done ? '' : state.enemy.health === 0 ? `The ${ENEMIES[state.encounter].short} is down. What stood with it fights on.`
       : state.snared ? 'Snared · thorns hold it. It cannot move this turn.'
       : `${intent(state).type === 'spell' ? 'Spell' : 'Physical'} · ${intent(state).tell} ${target ? `Watching ${MEMBERS[target.id].name}.` : ''}`;
-    this.get('.grimoire-status').textContent = `Grimoire · ${state.studied.includes(SPELL) ? SPELL + ' — can be blocked' : 'No spells studied'}${this.saved ? '' : ' · kept for this visit; browser save unavailable'}`;
+    this.get('.grimoire-status').textContent = `Grimoire · ${state.studied.length ? `${state.studied.join(', ')}: can be dodged and barred` : 'No spells studied'}${this.saved ? '' : ' · kept for this visit; browser save unavailable'}`;
     for (const member of state.party) {
       const card = this.card(member.id);
       card.dataset.acted = String(member.acted);

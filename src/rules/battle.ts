@@ -13,6 +13,12 @@ export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze' |
 export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm' | 'warden' | 'leech' | 'hound' | 'pack' | 'wisp' | 'drowned'
   | 'raider' | 'ghoul' | 'vulture' | 'pair' | 'hyena' | 'inquisitor';
 export const SPELL = 'Salt lance';
+// Each caster's spell. Until a spell is studied (analyzed, or survived once) its name is hidden, it can't be dodged,
+// and no barrier stops it. Once studied, it can be seen coming, dodged, and barred.
+export const ENEMY_SPELLS: Partial<Record<Encounter, string>> = {
+  acolyte: SPELL, pair: SPELL, warden: 'Judgement', drowned: 'Drowning toll', wisp: 'Marsh-fire', inquisitor: 'Verdict',
+};
+export const STUDIABLE: readonly string[] = [...new Set(Object.values(ENEMY_SPELLS))];
 export type Phase = 'player' | 'enemy' | 'victory' | 'defeat' | 'fled';
 export type Fighter = Readonly<{ health: number; maxHealth: number; mana: number; maxMana: number }>;
 // A follower the hyena has fed on is gone for good: it cannot be raised again.
@@ -23,7 +29,9 @@ export type Foe = number;
 // window: this blow's dodge timing, tighter for stronger enemies. undodgeable: only a guard or barrier answers it.
 // feed: the hyena feeds on a fallen body instead of striking, unless a barrier covers it.
 // hits: the move lands this many times, each dodged on its own. unblockable: no guard or barrier stops it.
-type Move = { name: string; type: 'physical' | 'spell'; damage: number; piercing?: number; revive?: boolean; drain?: boolean; feed?: boolean; hits?: number; unblockable?: boolean;
+// spell: for a spell, which one it is.
+// dodge: how this blow is dodged, when it differs from what dodgeKind would choose.
+type Move = { name: string; type: 'physical' | 'spell'; spell?: string; dodge?: DodgeKind; damage: number; piercing?: number; revive?: boolean; drain?: boolean; feed?: boolean; hits?: number; unblockable?: boolean;
   window?: { perfect: number; graze: number }; undodgeable?: boolean };
 export type Member = Fighter & Readonly<{
   id: MemberId;
@@ -64,6 +72,16 @@ export type Battle = Readonly<{
   log: readonly string[];
 }>;
 export type Dodge = 'perfect' | 'graze' | 'miss';
+// How a blow is dodged. ring: press as a ring closes. target: click a circle somewhere on screen as it closes.
+// keys: type a short sequence before a spell lands. bar: stop a sweeping marker in the zone, like reeling a fish.
+export type DodgeKind = 'ring' | 'target' | 'keys' | 'bar';
+export function dodgeKind(move: Pick<Move, 'dodge' | 'type' | 'drain' | 'hits' | 'damage'>): DodgeKind {
+  if (move.dodge) return move.dodge;
+  if (move.type === 'spell') return 'keys';
+  if (move.drain) return 'bar';
+  if (!move.hits && move.damage >= 10) return 'target';
+  return 'ring';
+}
 
 export const MEMBERS = {
   // Attacks are physical and cost nothing; mana is for spells and spellcraft.
@@ -130,8 +148,6 @@ export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; healt
 };
 // Fights the party only has to live through: the enemy cannot fall, and the fight ends after this many rounds.
 export const SURVIVE: Partial<Record<Encounter, number>> = { vulture: 3 };
-// Enemies that cast a studied spell, which can be analyzed and barred.
-const CASTERS: readonly Encounter[] = ['acolyte', 'pair'];
 // How much stronger the hyena grows with every body she feeds on, and with anyone falling at all, on either side.
 export const FEED = 5;
 export const FRENZY = 2;
@@ -238,7 +254,7 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
   const size = Math.max(1, Math.min(3, roster.length));
   const scaled = (health: number) => Math.round(health * PARTY_SCALE[size - 1]);
   return {
-    round: 1, phase: ambush ? 'enemy' : 'player', encounter, studied: studied.includes(SPELL) ? [SPELL] : [], hollow, enemyRevealed: false,
+    round: 1, phase: ambush ? 'enemy' : 'player', encounter, studied: studied.filter(name => STUDIABLE.includes(name)), hollow, enemyRevealed: false,
     party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10)].filter(member => roster.includes(member.id)),
     enemy: { health: scaled(ENEMIES[encounter].health), maxHealth: scaled(ENEMIES[encounter].health), mana: ENEMIES[encounter].mana, maxMana: ENEMIES[encounter].mana },
     followers: (FOLLOWERS[encounter] ?? []).map(({ name, health }) => ({ name, health: scaled(health), maxHealth: scaled(health), mana: 4, maxMana: 4 })),
@@ -301,12 +317,18 @@ export function enemyMana(battle: Battle): number {
 }
 
 export function intent(battle: Battle): Move & { tell: string } {
+  const move = plainIntent(battle);
+  if (!move.spell || battle.studied.includes(move.spell)) return move;
+  // An unstudied spell keeps its name even while it is still gathering.
+  return { ...move, name: move.type === 'spell' ? '???' : move.name, tell: move.tell.replaceAll(move.spell, '???') };
+}
+
+function plainIntent(battle: Battle): Move & { tell: string } {
   if (battle.encounter === 'acolyte') {
     const casting = battle.round % 2 === 0;
-    const name = battle.studied.includes(SPELL) ? SPELL : '???';
     return {
-      name: casting ? name : 'Staff strike', type: casting ? 'spell' as const : 'physical' as const,
-      tell: casting ? `${name} · 1 enemy turn — releasing next.${name === SPELL ? ' It comes fast.' : ''}` : `A staff is raised. ${name} gathers · 2 enemy turns.`,
+      name: casting ? SPELL : 'Staff strike', type: casting ? 'spell' as const : 'physical' as const, spell: SPELL,
+      tell: casting ? `${SPELL} · 1 enemy turn — releasing next.${battle.studied.includes(SPELL) ? ' It comes fast.' : ''}` : `A staff is raised. ${SPELL} gathers · 2 enemy turns.`,
       damage: casting ? 18 : 4,
       ...(casting ? { window: { perfect: 40, graze: 110 } } : {}),
     };
@@ -324,7 +346,7 @@ export function intent(battle: Battle): Move & { tell: string } {
     if (battle.stage === 2 && battle.round % 2 === 1)
       return { name: 'Censer storm', type: 'physical', tell: 'The censer whirls on its chain. Three blows are coming.', damage: 4, hits: 3, window: { perfect: 55, graze: 140 } };
     return battle.round % (battle.stage === 2 ? 2 : 3) === 0
-      ? { name: 'Judgement', type: 'physical', tell: 'It raises the censer high. Judgement falls next. It cannot be dodged, and no guard will hold all of it.', damage: 14, piercing: 7, undodgeable: true }
+      ? { name: 'Judgement', type: 'spell', spell: 'Judgement', tell: 'It raises the censer high. Judgement falls next: a spell. It can\'t be dodged until you have studied it, and a guard is no use against it.', damage: 14, window: { perfect: 45, graze: 120 } }
       : { name: 'Censer swing', type: 'physical', tell: 'The censer swings on its chain.', damage: 6 };
   }
   if (battle.encounter === 'leech' && battle.stage === 2 && battle.round % 3 === 1)
@@ -345,11 +367,11 @@ export function intent(battle: Battle): Move & { tell: string } {
         : { name: 'Throat bite', type: 'physical', tell: 'He drops low. He will go for the throat, fast.', damage: 8, window: { perfect: 50, graze: 130 } };
   }
   if (battle.encounter === 'wisp') return battle.round % 2 === 0
-    ? { name: 'Flare', type: 'physical', tell: 'The light gutters, then swells. A flare is coming, and it comes very fast.', damage: 7, window: { perfect: 35, graze: 90 } }
+    ? { name: 'Marsh-fire', type: 'spell', spell: 'Marsh-fire', tell: 'The light gutters, then swells: Marsh-fire, and it comes very fast.', damage: 7, window: { perfect: 35, graze: 90 } }
     : { name: 'Flicker', type: 'physical', tell: 'The light flickers at the edge of your eye.', damage: 3 };
   if (battle.encounter === 'drowned') {
     if (battle.stage === 2 && battle.round % 2 === 0) return { name: 'Bell swing', type: 'physical', tell: 'It swings the bell itself. Nothing will block it: dodge, or take it.', damage: 12, unblockable: true, window: { perfect: 45, graze: 110 } };
-    if (battle.round % 3 === 0) return { name: 'Toll', type: 'physical', tell: 'It hauls on the rope. The sunken bell will toll. It cannot be dodged, and no guard will hold all of it.', damage: 10, piercing: 4, undodgeable: true };
+    if (battle.round % 3 === 0) return { name: 'Drowning toll', type: 'spell', spell: 'Drowning toll', tell: 'It hauls on the rope. The sunken bell will toll: Drowning toll, a spell. It can\'t be dodged until you have studied it, and a guard is no use against it.', damage: 10, window: { perfect: 50, graze: 130 } };
     return battle.round % 3 === 2
       ? { name: 'Pull under', type: 'physical', tell: 'It lets go of the rope and reaches for you. It will try to pull someone under.', damage: 12, window: { perfect: 45, graze: 110 } }
       : { name: 'Grasp', type: 'physical', tell: 'Cold hands come up out of the water, and drag. A guard won\'t hold all of it.', damage: 7, piercing: 3 };
@@ -364,9 +386,8 @@ export function intent(battle: Battle): Move & { tell: string } {
     ? { name: 'Stoop', type: 'physical', tell: 'She climbs out of reach. She will drop on you, fast.', damage: 10, window: { perfect: 45, graze: 120 } }
     : { name: 'Talon rake', type: 'physical', tell: 'Her talons come forward.', damage: 6 };
   if (battle.encounter === 'pair') {
-    const name = battle.studied.includes(SPELL) ? SPELL : '???';
     return battle.round % 2 === 0
-      ? { name, type: 'spell', tell: `The hexer's hands are moving: ${name}, this turn, while the brute swings his pick. Both will land.`, damage: 14, window: { perfect: 50, graze: 130 } }
+      ? { name: SPELL, type: 'spell', spell: SPELL, tell: `The hexer's hands are moving: ${SPELL}, this turn, while the brute swings his pick. Both will land.`, damage: 14, window: { perfect: 50, graze: 130 } }
       : { name: 'Knife', type: 'physical', tell: 'The hexer has a knife out. The brute is lifting his pick.', damage: 4 };
   }
   if (battle.encounter === 'hyena') {
@@ -382,7 +403,7 @@ export function intent(battle: Battle): Move & { tell: string } {
         : { name: 'Rend', type: 'physical', tell: `She comes in low.${fed}`, damage: 9 + battle.fury, piercing: 3 + Math.floor(battle.fury / 2), window: { perfect: 50, graze: 120 } };
   }
   if (battle.encounter === 'inquisitor')
-    return { name: 'Verdict', type: 'physical', tell: 'He does not hurry. The verdict cannot be dodged or blocked.', damage: 14, undodgeable: true, unblockable: true };
+    return { name: 'Verdict', type: 'spell', spell: 'Verdict', tell: 'He does not hurry. Verdict: no barrier will stop it, and it cannot be dodged.', damage: 14, undodgeable: true, unblockable: true };
   if (battle.encounter === 'swarm') return battle.round % 3 === 0
     ? { name: 'Brood call', type: 'physical', tell: 'She shrills, and the brood answers. Fallen nymphs will rise again.', damage: 0, revive: true }
     : battle.stage === 2
@@ -440,7 +461,8 @@ export function canAct(battle: Battle, actor: MemberId, action: Action, target: 
   if (action === 'attack' && !standing(battle, foe)) return false;
   if (action === 'suppress' && member.suppressed) return false;
   if (action === 'gather' && member.mana >= member.maxMana) return false;
-  if (action === 'analyze' && (!CASTERS.includes(battle.encounter) || battle.studied.includes(SPELL))) return false;
+  const casts = ENEMY_SPELLS[battle.encounter];
+  if (action === 'analyze' && (!casts || battle.studied.includes(casts))) return false;
   // A barrier can cover a fallen ally too, which keeps the hyena off the body.
   if (action === 'barrier' && !battle.party.some(ally => ally.id === target)) return false;
   if (action === 'support') {
@@ -571,7 +593,7 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
   const message = action === 'gather' ? `${definition.name} goes still and gathers their mana.`
     : action === 'suppress' ? `${definition.name} conceals their mana.`
     : action === 'barrier' ? `${definition.name} raises a spell barrier around ${MEMBERS[target].name}.`
-    : action === 'analyze' ? `${definition.name} studies the gathering spell. ${SPELL} is written into the grimoire.`
+    : action === 'analyze' ? `${definition.name} studies the gathering spell. ${ENEMY_SPELLS[battle.encounter]} is written into the grimoire.`
     : blocked ? `${definition.name}'s ${definition.attack.toLowerCase()} breaks on the candlelight. The warden is untouched while its votives burn.`
     : shielded ? `The boar throws himself in front of the ${battle.followers[foe - 1].name.toLowerCase()}. ${definition.name}'s ${definition.attack.toLowerCase()} strikes him instead, and his fury grows.`
     : action === 'attack' ? `${definition.name}'s ${definition.attack.toLowerCase()} strikes the ${foe > 0 ? battle.followers[foe - 1].name.toLowerCase() : ENEMIES[battle.encounter].short}${member.suppressed ? ' in a burst of revealed mana' : ''}${member.focused ? ' with focused force' : ''}.`
@@ -579,7 +601,7 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
     : actor === 'bear' && target !== actor ? `Bear steps in front of ${MEMBERS[target].name}.`
     : `${definition.name} plants their feet and guards.`;
   return staged({
-    ...battle, party, enemy, followers, fury, studied: action === 'analyze' ? [SPELL] : battle.studied, phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
+    ...battle, party, enemy, followers, fury, studied: action === 'analyze' ? [...battle.studied, ENEMY_SPELLS[battle.encounter]!] : battle.studied, phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
     log: [...battle.log, message, ...fallen(battle, after), ...(victory ? [QUIET] : [])],
   });
 }
@@ -639,11 +661,11 @@ export function nextStrike(battle: Battle) {
   const protector = battle.party.find(member => member.health > 0 && member.id === 'bear' && member.guardingFor !== null
     && (member.guardingFor === target.id || member.id === target.id));
   const guarded = move.unblockable ? undefined : move.type === 'physical' ? protector || (target.guardingFor === target.id ? target : undefined) : undefined;
-  const blocked = !move.unblockable && move.type === 'spell' && battle.studied.includes(SPELL) && target.barrier;
+  const blocked = !move.unblockable && move.type === 'spell' && battle.studied.includes(move.spell ?? '') && target.barrier;
   // A guard stops an ordinary blow; piercing strength still lands.
   const damage = blocked ? 0 : guarded ? move.piercing ?? 0 : move.damage;
   // Nobody can dodge a spell they have not studied.
-  const unknown = move.type === 'spell' && !battle.studied.includes(SPELL);
+  const unknown = move.type === 'spell' && !battle.studied.includes(move.spell ?? '');
   return { move, target, guarded, blocked, damage, dodgeable: damage > 0 && !unknown && !move.undodgeable };
 }
 
@@ -683,7 +705,7 @@ export function strike(battle: Battle, dodge: Dodge = 'miss'): Battle {
   const enemy = move.drain && taken > 0 ? { ...battle.enemy, health: Math.min(battle.enemy.maxHealth, battle.enemy.health + taken) } : battle.enemy;
   const downed = party.find(member => member.id === target.id)!.health === 0;
   const name = MEMBERS[target.id].name;
-  const message = blocked ? `${name}'s barrier stops ${SPELL}.`
+  const message = blocked ? `${name}'s barrier stops ${move.spell}.`
     : avoided === 'perfect' ? `${name} slips aside. The ${move.name.toLowerCase()} finds only air.`
     : guarded ? `${MEMBERS[guarded.id].name} turns aside the ${move.name.toLowerCase()}${guarded.id !== target.id ? ` aimed at ${name}` : ''}.${damage ? ` His fury drives through anyway${avoided === 'graze' ? ', though only just' : ''}${downed ? `, and ${name} falls` : ''}.` : ''}`
     : avoided === 'graze' ? `${name} half twists away. The ${move.name.toLowerCase()} only grazes them.${downed ? ' They fall.' : ''}`
@@ -700,17 +722,19 @@ function enemyTurnEnds(battle: Battle): Battle {
     ...member, guardingFor: null, barrier: false, acted: false, flaring: false, cooldown: Math.max(0, member.cooldown - 1),
     mana: !defeat && member.health > 0 ? Math.min(member.maxMana, member.mana + MANA_REGEN) : member.mana,
   }));
-  const spell = !battle.snared && battle.enemy.health > 0 && intent(battle).type === 'spell';
+  const cast = !battle.snared && battle.enemy.health > 0 && plainIntent(battle).type === 'spell' ? plainIntent(battle).spell : undefined;
+  const spell = Boolean(cast);
+  const learned = spell && !battle.studied.includes(cast!);
   // A fight the party only had to survive ends once they have.
   const survived = !defeat && SURVIVE[battle.encounter] !== undefined && battle.round >= SURVIVE[battle.encounter]!;
   if (survived) return { ...battle, party, step: 0, snared: false, phase: 'victory', log: [...battle.log, 'She lands and folds her wings. "Grave thieves run. You didn\'t."'] };
   return {
     ...battle, party, step: 0, snared: false,
-    studied: spell && !defeat ? [SPELL] : battle.studied,
+    studied: learned && !defeat ? [...battle.studied, cast!] : battle.studied,
     enemyRevealed: battle.enemyRevealed || spell,
     enemy: { ...battle.enemy, mana: Math.min(battle.enemy.maxMana, battle.enemy.mana - (spell ? 5 : 0) + ENEMY_REGEN) },
     phase: defeat ? 'defeat' : 'player', round: defeat ? battle.round : battle.round + 1,
-    log: [...battle.log, ...(battle.snared && battle.enemy.health > 0 ? [`The ${ENEMIES[battle.encounter].short} strains against the thorns and cannot move.`] : []), ...(spell && !defeat && !battle.studied.includes(SPELL) ? [`Surviving the spell reveals its structure. ${SPELL} joins the grimoire.`] : []), ...(defeat ? ['The last of you falls. Then, the familiar smell of salt.'] : [])],
+    log: [...battle.log, ...(battle.snared && battle.enemy.health > 0 ? [`The ${ENEMIES[battle.encounter].short} strains against the thorns and cannot move.`] : []), ...(learned && !defeat ? [`Surviving the spell reveals its structure. ${cast} joins the grimoire.`] : []), ...(defeat ? ['The last of you falls. Then, the familiar smell of salt.'] : [])],
   };
 }
 

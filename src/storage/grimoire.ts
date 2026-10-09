@@ -1,9 +1,9 @@
-import { SPELL } from '../rules/battle';
+import { STUDIABLE } from '../rules/battle';
 import { BRAMBLES } from '../rules/world';
 
 const KEY = 'tide-keeps.grimoire.v1';
 // Studied enemy spells and learned favor spells share one book.
-const KNOWN = [SPELL, BRAMBLES];
+const KNOWN = [...STUDIABLE, BRAMBLES];
 const session = new Set<string>();
 const keep = (spells: readonly unknown[]) => { for (const spell of KNOWN) if (spells.includes(spell)) session.add(spell); };
 

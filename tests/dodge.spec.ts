@@ -59,7 +59,8 @@ test('pressing too soon or not at all takes the full blow', async ({ page }) => 
   await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
   await page.getByRole('button', { name: 'Bear attack', exact: true }).click();
   await page.getByRole('button', { name: 'Vulture support', exact: true }).click();
-  await expect(page.getByRole('button', { name: /Dodge/ })).toBeVisible();
+  // A heavy leap is a target to click; not clicking it means it lands.
+  await expect(page.locator('.dodge-target')).toBeVisible();
   await expect(page.locator('.dodge-call')).toHaveText('Too slow.');
   await expect(page.getByRole('log')).toContainText('The crushing leap catches');
 });

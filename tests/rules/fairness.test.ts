@@ -40,3 +40,19 @@ test('hesitating gives the enemy a free blow, which a guard still holds', () => 
   const guarded = hesitate({ ...battle, party: battle.party.map(member => ({ ...member, guardingFor: member.id })) });
   assert.equal(guarded.party[0].health, battle.party[0].health);
 });
+
+test('each blow asks for its own kind of dodge, and every caster has a spell to study', async () => {
+  const { dodgeKind, ENEMY_SPELLS, intent: plan } = await import('../../src/rules/battle.ts');
+  assert.equal(dodgeKind({ type: 'physical', damage: 5 }), 'ring');
+  assert.equal(dodgeKind({ type: 'physical', damage: 12 }), 'target');
+  assert.equal(dodgeKind({ type: 'physical', damage: 12, hits: 2 }), 'ring');
+  assert.equal(dodgeKind({ type: 'spell', damage: 14 }), 'keys');
+  assert.equal(dodgeKind({ type: 'physical', damage: 8, drain: true }), 'bar');
+  // The warden's Judgement is hidden until studied, then has a name and can be barred.
+  const warden = { ...createBattle('warden'), round: 3 };
+  assert.equal(plan(warden).name, '???');
+  assert.equal(ENEMY_SPELLS.warden, 'Judgement');
+  const studied = act({ ...warden, round: 3 }, 'chameleon', 'analyze');
+  assert.ok(studied.studied.includes('Judgement'));
+  assert.equal(plan(studied).name, 'Judgement');
+});

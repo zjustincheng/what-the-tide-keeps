@@ -65,7 +65,8 @@ test('stronger blows leave a narrower window, and some cannot be dodged at all',
   assert.equal(grade(130, tusk), 'miss');
   const exposed = (encounter: Parameters<typeof createBattle>[0], round: number) =>
     act(act(act({ ...createBattle(encounter), round }, 'chameleon', 'attack'), 'bear', 'attack'), 'vulture', 'attack');
-  for (const [encounter, round, name] of [['leech', 3, 'Coil'], ['warden', 3, 'Judgement'], ['weevil', 3, 'Rolling charge']] as const) {
+  // The warden's Judgement is a spell, nameless and undodgeable until it has been studied.
+  for (const [encounter, round, name] of [['leech', 3, 'Coil'], ['warden', 3, '???'], ['weevil', 3, 'Rolling charge']] as const) {
     const battle = exposed(encounter, round);
     const next = nextStrike(battle)!;
     assert.equal(next.move.name, name);

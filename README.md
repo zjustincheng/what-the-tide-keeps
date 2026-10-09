@@ -202,6 +202,14 @@ Spells have consequences inside a fight. After casting, a grimoire needs time to
 
 A companion's own grimoire can't be lent to anyone before they join, and a companion who joins takes theirs back from whoever was carrying it. Any hero can carry any grimoire, which is how the guideline's "the grimoire is the class" begins: giving the bear the primer makes him the healer. Damage spells follow the same targeting as attacks, so the boar still shields his followers from them. Which hero carries which grimoire is saved in `tide-keeps.books.v1`. These carried grimoires are separate from the shared grimoire of studied enemy spells.
 
+## Studying spells
+
+Every caster has its own spell: the exile and the deserter hexer cast Salt lance, the warden Judgement, the drowned the Drowning toll, the marsh lights Marsh-fire, and the inquisitor Verdict. Until a spell is studied, by analyzing it (Spellcraft, 2 mana) or by surviving it once, its name shows as ???, it can't be dodged, and no barrier stops it. Studied spells are kept in the grimoire for good.
+
+## Animation in battle
+
+Heroes lunge at the enemy when they attack and glow when they cast; the struck enemy shows a slash, a spell's burst, or a firepot's flash, and flinches. Enemies lunge as their blows land. A boss's rising scene types out line by line, shows each speaker as themselves, and jolts on spoken lines.
+
 ## Guard, barrier, and the pressure of a fight
 
 - **Guard** stops physical blows. The chameleon guards himself; the bear's Protect guards whichever ally is chosen on his card; the vulture's Focus makes her next attack hit harder instead.
@@ -212,6 +220,12 @@ A companion's own grimoire can't be lent to anyone before they join, and a compa
 ## Dodging
 
 Enemy blows can be dodged with timing, never luck. When a blow is about to land, a ring closes on the companion it targets and a **Dodge** bar appears at the bottom of the screen. Press **Space** (or **Enter**, or tap **Dodge**) as the ring meets the inner circle:
+
+Blows ask for different kinds of dodge (`dodgeKind` in `src/rules/battle.ts`):
+- **Ring:** ordinary blows and each blow of a flurry. Press Space or tap as the ring around the hero closes.
+- **Target:** heavy blows. A circle appears somewhere over the fight with its own closing ring: click it as it closes. Space still works, but with a much narrower window.
+- **Keys:** spells you have studied. Type the three keys shown before the spell lands.
+- **Bar:** draining blows, like the leech's latch and the raised dead's gnaw. A marker sweeps a bar; stop it in the gold, as when reeling a fish.
 
 Each hero has an **agility** that widens or narrows their dodge windows: the vulture is quick (125%), the chameleon ordinary, the bear slow (80%). Keepsakes can change it: the Tide shell helps, the Iron collar hinders. The base windows are a little tighter than before.
 

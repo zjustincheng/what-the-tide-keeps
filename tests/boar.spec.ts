@@ -109,9 +109,13 @@ test('brought down the first time, the boar gets back up after a scene, as his s
   await expect(scene.locator('.cutscene-line')).toHaveText('The boar goes down on his knees in the ash of his own house.');
   await scene.getByRole('button', { name: /Continue/ }).click();
   await expect(scene.locator('.cutscene-speaker')).toHaveText('THE BADGER');
+  // The speaker appears as themselves, and the line types out.
+  await expect(scene.locator('img')).toHaveAttribute('src', /badger\.svg/);
+  await expect(scene.locator('.cutscene-line')).toHaveText("Stay down! It's done. Stay down!");
   await scene.getByRole('button', { name: /Continue/ }).click();
   await expect(scene.locator('.cutscene-line')).toHaveText('I stayed down last time.');
   await scene.getByRole('button', { name: /Continue/ }).click();
+  await expect(scene.locator('.cutscene-line')).toHaveText('He gets up. Smoke is rising off his bristles.');
   await scene.getByRole('button', { name: /Continue/ }).click();
   await expect(scene).toHaveCount(0);
   await expect(page.locator('#battle-title')).toHaveText('The boar, cornered.');

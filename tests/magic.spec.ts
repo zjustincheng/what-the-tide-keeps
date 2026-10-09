@@ -33,7 +33,7 @@ test('analyze, barrier, and grimoire persist through reload', async ({ page }) =
   await expect(page.locator('#enemy-intent')).toContainText('???');
   await expect(page.locator('#enemy-mana')).toHaveText('Mana 2 · veiled');
   await magic(page, 'chameleon', 'analyze');
-  await expect(page.locator('.grimoire-status')).toContainText('Salt lance — can be blocked');
+  await expect(page.locator('.grimoire-status')).toContainText('Salt lance: can be dodged and barred');
   await support(page, 'Bear'); await support(page, 'Vulture');
   await expect(page.locator('#battle-turn')).toHaveText('Round 2 · 3 actions remaining');
   await expect(page.locator('#enemy-intent')).toContainText('Salt lance · 1 enemy turn');
@@ -84,4 +84,24 @@ test('malformed or unavailable storage does not interrupt analysis', async ({ pa
   await expect(page.locator('#enemy-intent')).toContainText('Salt lance');
   await support(page, 'Bear'); await support(page, 'Vulture');
   await expect(page.locator('#battle-turn')).toContainText('Round 2');
+});
+
+test('a studied spell is dodged by typing its keys back at it', async ({ page }) => {
+  await enter(page);
+  // Study it on the first turn, while everyone else guards.
+  await magic(page, 'chameleon', 'analyze');
+  await support(page, 'Bear');
+  await support(page, 'Vulture');
+  await expect(page.locator('.battle')).toHaveAttribute('data-phase', 'player', { timeout: 15000 });
+  await expect(page.locator('#enemy-intent')).toContainText('Salt lance');
+  await support(page, 'Chameleon');
+  await support(page, 'Bear');
+  await support(page, 'Vulture');
+  // Salt lance is cast: the dodge asks for keys.
+  const call = page.locator('.dodge-call');
+  await expect(call).toContainText(/Salt lance → \w+\. Type (\d) (\d) (\d)!/, { timeout: 10000 });
+  const [, a, b, c] = (await call.textContent())!.match(/Type (\d) (\d) (\d)!/)!;
+  for (const key of [a, b, c]) await page.keyboard.press(key);
+  await expect(call).toHaveText('Dodged!');
+  await expect(page.getByRole('log')).toContainText('finds only air');
 });

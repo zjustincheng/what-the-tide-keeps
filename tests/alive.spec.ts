@@ -52,5 +52,7 @@ test('fighters breathe, hop when they act, and flinch when hit', async ({ page }
   expect(await enemy.locator('img').evaluate(image => getComputedStyle(image).animationName)).toBe('sway');
   await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
   await expect(enemy).toHaveClass(/is-hit/);
-  await expect(page.locator('.member-card[data-member="chameleon"] .party-fighter')).toHaveClass(/is-acting/);
+  await expect(page.locator('.member-card[data-member="chameleon"] .party-fighter')).toHaveClass(/is-lunging/);
+  // The struck enemy shows the slash.
+  await expect(enemy.locator('.fx-slash')).toHaveCount(1);
 });
