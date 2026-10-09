@@ -9,17 +9,18 @@ import type { Supplies, SupplyId } from './economy';
 import { feed, FISH_IDS, NO_CATCH } from './fishing.ts';
 import { NO_PANTRY } from './cooking.ts';
 import type { Pantry } from './cooking';
+import type { WaystoneId } from './waystones';
 import type { Catch } from './fishing';
 
 // Carried items are lost on a wipe and go back to where they were found.
-export type Item = 'bell' | 'letter' | 'note' | 'crate' | 'ring';
+export type Item = 'bell' | 'letter' | 'note' | 'crate' | 'ring' | 'shrine-stone';
 export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated' | 'pests-field' | 'pests-yard' | 'writ-given' | 'bear-free' | 'vulture-free'
   | 'sheep-woods' | 'sheep-orchard' | 'sheep-yard' | 'sheep-reward' | 'barrel-bought' | 'squid-freed' | 'swarm-slain' | 'bounty-paid'
   | 'warden-slain' | 'leech-slain'
   | 'followers-spared' | 'followers-reported' | 'followers-paid' | 'fishmonger-angry' | 'stall-cowed' | 'stood-count' | 'inn-room' | 'reeve-pardon'
   | 'hounds-fed' | 'pack-slain' | 'ram-paid' | 'barrow-coins' | 'sluice-open' | 'drowned-slain' | 'otter-trusted' | 'otter-reported' | 'otter-paid'
   | 'vulture-met' | 'anchors-known' | 'letter-delivered' | 'bridge-lowered' | 'pair-slain' | 'hyena-slain' | 'ration-ledger' | 'merchant-thanked'
-  | 'hall-key' | 'crab-freed'
+  | 'hall-key' | 'crab-freed' | 'old-roads' | 'way-crossroads' | 'way-millbrook' | 'way-downs' | 'way-weir' | 'way-fort' | 'way-square'
   | 'brother-freed' | 'warden-bribed' | 'crate-delivered' | 'ring-returned' | 'ladder-down' | 'drove-gate-open' | 'drover-cache'
   | 'burn-order-seen' | 'kid-found' | 'lane-open' | 'boar-challenged' | 'dead-1' | 'dead-2' | 'dead-3' | 'ossuary-key' | 'hyena-challenged';
 // Things worth keeping: keepsakes and grimoires. Once found, they are kept through every death; carried items are not.
@@ -33,14 +34,14 @@ export type Drained = Readonly<Partial<Record<MemberId, number>>>;
 // pantry: herbs, mushrooms, and berries foraged for cooking. Like fish, they are lost on a wipe.
 // night: whether it is dark. The hero chooses when he sleeps whether to wake at dawn or at dusk.
 export type World = Readonly<{ night?: boolean; flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number; pantry?: Pantry }>;
-export const ITEMS: readonly Item[] = ['bell', 'letter', 'note', 'crate', 'ring'];
+export const ITEMS: readonly Item[] = ['bell', 'letter', 'note', 'crate', 'ring', 'shrine-stone'];
 export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
   'sheep-woods', 'sheep-orchard', 'sheep-yard', 'sheep-reward', 'barrel-bought', 'squid-freed', 'swarm-slain', 'bounty-paid',
   'warden-slain', 'leech-slain',
   'followers-spared', 'followers-reported', 'followers-paid', 'fishmonger-angry', 'stall-cowed', 'stood-count', 'inn-room', 'reeve-pardon',
   'hounds-fed', 'pack-slain', 'ram-paid', 'barrow-coins', 'sluice-open', 'drowned-slain', 'otter-trusted', 'otter-reported', 'otter-paid',
   'vulture-met', 'anchors-known', 'letter-delivered', 'bridge-lowered', 'pair-slain', 'hyena-slain', 'ration-ledger', 'merchant-thanked',
-  'hall-key', 'crab-freed',
+  'hall-key', 'crab-freed', 'old-roads', 'way-crossroads', 'way-millbrook', 'way-downs', 'way-weir', 'way-fort', 'way-square',
   'brother-freed', 'warden-bribed', 'crate-delivered', 'ring-returned', 'ladder-down', 'drove-gate-open', 'drover-cache',
   'burn-order-seen', 'kid-found', 'lane-open', 'boar-challenged', 'dead-1', 'dead-2', 'dead-3', 'ossuary-key', 'hyena-challenged'];
 // A favor spell: a small everyday spell a villager trades for help. It opens the hedge on the border road.
@@ -59,7 +60,9 @@ export type Condition = { forgot: MemoryId } | { has: Item } | { flag: Flag } | 
 // pay spends coins; supply hands over one of a supply.
 export type Effect = { give?: Item; take?: Item; set?: Flag | readonly Flag[]; learn?: string; find?: Found; earn?: number; pay?: number; feed?: number; supply?: SupplyId;
   // Handled by the scene, not the story: camp sleeps at the fire, cook opens the cooking, dice starts a game of bones for that stake.
-  camp?: 'dawn' | 'dusk'; cook?: true; dice?: number; shop?: ShopId; rest?: true };
+  camp?: 'dawn' | 'dusk'; cook?: true; dice?: number;
+  // travel: go to that waystone.
+  travel?: WaystoneId; shop?: ShopId; rest?: true };
 export type ShopId = 'stall' | 'reeve' | 'fishmonger' | 'merchant' | 'fence' | 'apothecary' | 'night-market';
 
 export function createWorld(): World {

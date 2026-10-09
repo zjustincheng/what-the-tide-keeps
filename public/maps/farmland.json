@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 65,
+  "nextobjectid": 67,
   "layers": [
     {
       "id": 1,
@@ -6699,6 +6699,30 @@
         },
         {
           "id": 43,
+          "name": "waystone",
+          "type": "",
+          "x": 568,
+          "y": 424,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 44,
+          "name": "from-waystone",
+          "type": "",
+          "x": 568,
+          "y": 440,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 45,
           "name": "pilgrim",
           "type": "",
           "x": 712,
@@ -6710,7 +6734,7 @@
           "point": true
         },
         {
-          "id": 44,
+          "id": 46,
           "name": "pilgrim-shrine",
           "type": "",
           "x": 856,
@@ -6722,7 +6746,7 @@
           "point": true
         },
         {
-          "id": 45,
+          "id": 47,
           "name": "carter-cart",
           "type": "",
           "x": 664,
@@ -6734,7 +6758,7 @@
           "point": true
         },
         {
-          "id": 46,
+          "id": 48,
           "name": "hive-1",
           "type": "",
           "x": 824,
@@ -6746,7 +6770,7 @@
           "point": true
         },
         {
-          "id": 47,
+          "id": 49,
           "name": "hive-2",
           "type": "",
           "x": 840,
@@ -6758,7 +6782,7 @@
           "point": true
         },
         {
-          "id": 48,
+          "id": 50,
           "name": "forage-1",
           "type": "",
           "x": 232,
@@ -6770,7 +6794,7 @@
           "point": true
         },
         {
-          "id": 49,
+          "id": 51,
           "name": "forage-2",
           "type": "",
           "x": 88,
@@ -6782,7 +6806,7 @@
           "point": true
         },
         {
-          "id": 50,
+          "id": 52,
           "name": "forage-3",
           "type": "",
           "x": 424,
@@ -6794,7 +6818,7 @@
           "point": true
         },
         {
-          "id": 51,
+          "id": 53,
           "name": "forage-4",
           "type": "",
           "x": 680,
@@ -6806,7 +6830,7 @@
           "point": true
         },
         {
-          "id": 52,
+          "id": 54,
           "name": "forage-5",
           "type": "",
           "x": 104,
@@ -6818,7 +6842,7 @@
           "point": true
         },
         {
-          "id": 53,
+          "id": 55,
           "name": "carter",
           "type": "",
           "x": 632,
@@ -6830,7 +6854,7 @@
           "point": true
         },
         {
-          "id": 54,
+          "id": 56,
           "name": "beekeeper",
           "type": "",
           "x": 840,
@@ -6842,7 +6866,7 @@
           "point": true
         },
         {
-          "id": 55,
+          "id": 57,
           "name": "downs",
           "type": "",
           "x": 1016,
@@ -6854,7 +6878,7 @@
           "point": true
         },
         {
-          "id": 56,
+          "id": 58,
           "name": "from-downs",
           "type": "",
           "x": 992,
@@ -6866,7 +6890,7 @@
           "point": true
         },
         {
-          "id": 57,
+          "id": 59,
           "name": "upstream",
           "type": "",
           "x": 224,
@@ -6878,7 +6902,7 @@
           "point": true
         },
         {
-          "id": 58,
+          "id": 60,
           "name": "from-fen",
           "type": "",
           "x": 224,
@@ -6890,7 +6914,7 @@
           "point": true
         },
         {
-          "id": 59,
+          "id": 61,
           "name": "water-1",
           "type": "",
           "x": 168,
@@ -6902,7 +6926,7 @@
           "point": true
         },
         {
-          "id": 60,
+          "id": 62,
           "name": "water-2",
           "type": "",
           "x": 184,
@@ -6914,7 +6938,7 @@
           "point": true
         },
         {
-          "id": 61,
+          "id": 63,
           "name": "water-3",
           "type": "",
           "x": 200,
@@ -6926,7 +6950,7 @@
           "point": true
         },
         {
-          "id": 62,
+          "id": 64,
           "name": "water-4",
           "type": "",
           "x": 168,
@@ -6938,7 +6962,7 @@
           "point": true
         },
         {
-          "id": 63,
+          "id": 65,
           "name": "water-5",
           "type": "",
           "x": 184,
@@ -6950,7 +6974,7 @@
           "point": true
         },
         {
-          "id": 64,
+          "id": 66,
           "name": "water-6",
           "type": "",
           "x": 200,

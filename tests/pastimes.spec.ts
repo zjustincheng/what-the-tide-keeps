@@ -146,3 +146,22 @@ test('sleeping until dark brings night: the clock says so, and the night market 
   await page.getByRole('button', { name: 'Buy Night cloak' }).click();
   expect((await saved(page)).found).toContain('night-cloak');
 });
+
+test('the bestiary writes down what you have fought, what it did, and how often you have beaten it', async ({ page }) => {
+  await start(page, { flags: ['bear-free'] });
+  await place(page, 'farmland', 530, 282);
+  await expect(page.getByRole('heading', { name: 'Crop locust' })).toBeVisible({ timeout: 5000 });
+  await page.evaluate(async () => {
+    const { game } = await import('/src/main.ts');
+    const view = game.scene.getScenes(true)[0].overlay;
+    view.state = { ...view.state, enemy: { ...view.state.enemy, health: 1 } };
+    view.render();
+  });
+  await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await page.keyboard.press('b');
+  await expect(page.getByRole('heading', { name: 'Bestiary' })).toBeVisible();
+  await page.locator('.bestiary summary', { hasText: 'Crop locust' }).click();
+  await expect(page.locator('.bestiary')).toContainText('beaten 1×');
+  await expect(page.locator('.bestiary')).toContainText('Mandible strike');
+});

@@ -73,6 +73,10 @@ export const harbour: Dialogue = {
   'sea-shrine': { speaker: 'THE LAST SHRINE', prompt: 'Examine the shrine', lines: [
     'The last shrine, where the fish come ashore. The oath is carved on the land side: HERE NOBODY EATS ANYBODY.',
     'On the sea side, in a different hand, an answer: EXCEPT US.',
+  ], choices: [
+    { text: 'Take a stone from the shrine.', if: { all: [{ not: { has: 'shrine-stone' } }, { not: { flag: 'old-roads' } }] }, ends: true, lines: [
+      'A small grey stone from the foot of the shrine, smooth from the tide. It would be lost if you fell.',
+    ], then: { give: 'shrine-stone' } },
   ] },
   crab: { speaker: 'THE CRAB IN THE TANK', prompt: 'Speak to the crab', hiddenIf: [{ flag: 'crab-freed' }], lines: [
     'A crab woman in a market tank, the lid weighted shut. She speaks through the glass.',

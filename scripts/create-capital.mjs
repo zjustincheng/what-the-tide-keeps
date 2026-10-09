@@ -76,7 +76,7 @@ const at=(x,y)=>[x*16+8,y*16+8];
   write('square',m,[
     ['east',568,256],['from-church',548,256],['south',328,504],['from-harbour',328,472],['hall-door',312,152],['from-hall',312,168],
     ['statue',...at(20,19)],['fountain',...at(22,19)],['alchemists-gate',...at(7,15)],
-    ['crier',...at(17,17)],['broadsheets',...at(26,22)],['lamplighter',...at(11,12)],['guard-square',...at(33,15)],['apothecary',...at(29,13)],['citizen',...at(13,22)],
+    ['crier',...at(17,17)],['broadsheets',...at(26,22)],['lamplighter',...at(11,12)],['guard-square',...at(33,15)],['apothecary',...at(29,13)],['citizen',...at(13,22)],['waystone',...at(30,22)],['from-waystone',...at(30,23)],
   ]);
 }
 

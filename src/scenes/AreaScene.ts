@@ -14,9 +14,12 @@ import { ResurrectionView } from '../ui/ResurrectionView';
 import { AnchorView } from '../ui/AnchorView';
 import { CookView } from '../ui/CookView';
 import { JournalView } from '../ui/JournalView';
+import { BestiaryView } from '../ui/BestiaryView';
+import { loadBestiary } from '../storage/bestiary';
 import { DiceView } from '../ui/DiceView';
 import { loadJournal, writeDown as record } from '../storage/journal';
 import { forage, INGREDIENTS } from '../rules/cooking';
+import { destinations, waystoneIn, WAYSTONES } from '../rules/waystones';
 import { EquipmentView } from '../ui/EquipmentView';
 import { ShopView } from '../ui/ShopView';
 import { FishingView } from '../ui/FishingView';
@@ -99,7 +102,7 @@ export class AreaScene extends Phaser.Scene {
   private props: Prop[] = [];
   private people: Phaser.Physics.Arcade.Sprite[] = [];
   private walls!: Phaser.Tilemaps.TilemapLayer;
-  private overlay?: BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView;
+  private overlay?: BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView;
   // A shop to open once the current conversation ends.
   private pendingShop?: ShopId;
   // A campfire to rest at once the current conversation ends.
@@ -107,6 +110,8 @@ export class AreaScene extends Phaser.Scene {
   private pendingFight?: Foe;
   private pendingCook = false;
   private pendingNight = false;
+  private pendingTravel?: keyof typeof WAYSTONES;
+  private waystone?: Phaser.GameObjects.Image;
   private pendingDice?: { stake: number; opponent: string };
   private campPoint?: string;
   // Hiding the party's mana: slower and silent, unseen by enemies, and a first strike on anyone walked into.
@@ -120,7 +125,7 @@ export class AreaScene extends Phaser.Scene {
     // Scene instances are reused, so every visit starts from a clean slate.
     this.arrival = data?.spawn ?? 'spawn';
     this.cleanup = new AbortController();
-    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
+    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
     this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false; this.pendingShop = undefined; this.pendingRest = undefined; this.pendingFight = undefined;
   }
 
@@ -179,6 +184,15 @@ export class AreaScene extends Phaser.Scene {
       const sprite = this.add.image(at.x, at.y, ingredient).setDepth(3);
       this.tweens.add({ targets: sprite, scaleY: 1.06, duration: 1600 + (at.x % 500), yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       this.forage.push({ point, sprite });
+    }
+    // The area's waystone, if it has one: grey while asleep, lit once woken.
+    if (waystoneIn(this.area.key)) {
+      const at = this.point('waystone');
+      const stone = this.physics.add.staticImage(at.x, at.y - 4, 'waystone').setDepth(3);
+      stone.setSize(12, 8).setOffset(3, 16);
+      this.physics.add.collider(this.player, stone);
+      this.waystone = stone;
+      this.refreshWaystone();
     }
     this.refreshProps(true);
     this.area.decorate?.(this);
@@ -275,6 +289,11 @@ export class AreaScene extends Phaser.Scene {
     }
   }
 
+  private refreshWaystone() {
+    const here = waystoneIn(this.area.key);
+    if (here && this.waystone) this.waystone.setTexture(loadWorld().flags.includes(WAYSTONES[here].flag) ? 'waystone-woken' : 'waystone');
+  }
+
   // A slow rise and fall, staggered so a crowd doesn't breathe in step.
   private breathe(sprite: Phaser.GameObjects.Sprite) {
     this.tweens.add({ targets: sprite, scaleY: 1.04, scaleX: 0.985, duration: 1300 + (this.people.length * 173) % 700, delay: (sprite.x * 7) % 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
@@ -325,6 +344,7 @@ export class AreaScene extends Phaser.Scene {
       if(['h','H'].includes(event.key) && !event.repeat && !this.active) this.toggleHud();
       if(['q','Q'].includes(event.key) && !event.repeat && !this.active) this.toggleSneak();
       if(['j','J'].includes(event.key) && !event.repeat && !this.active) this.openPanel(()=>new JournalView(loadJournal(), ()=>this.closePanel()));
+      if(['b','B'].includes(event.key) && !event.repeat && !this.active) this.openPanel(()=>new BestiaryView(loadBestiary(), loadGrimoire(), ()=>this.closePanel()));
       // Number keys pick a reply.
       const pick=this.options[Number(event.key)-1];
       if(this.active && pick && !event.repeat) { event.preventDefault(); this.choose(pick); }
@@ -364,6 +384,21 @@ export class AreaScene extends Phaser.Scene {
       this.line++;
       if(this.line>=this.active.lines.length) this.closeDialogue();
       else this.showLine();
+    } else if(this.nearby && this.nearby.name==='waystone' && waystoneIn(this.area.key)) {
+      const here=waystoneIn(this.area.key)!;
+      const world=loadWorld();
+      if(!world.flags.includes('old-roads')) this.say({ speaker: 'A WAYSTONE', lines: ['A standing stone carved with a road that goes nowhere. It is cold, and it doesn\'t answer.'] });
+      else if(!world.flags.includes(WAYSTONES[here].flag)) {
+        this.effect({ set: WAYSTONES[here].flag });
+        music.effect('find');
+        this.refreshWaystone();
+        this.say({ speaker: 'A WAYSTONE', lines: ['You put your hand on the stone the way the pilgrim showed you. The carved road fills with pale light. It is awake.'] });
+      } else {
+        const ways=destinations(world, here);
+        this.say({ speaker: 'A WAYSTONE', lines: [ways.length ? 'The carved road is lit. You can feel the other woken stones, far off, like warmth on one side of your face.' : 'The stone is awake, but no other stone answers yet. Wake more of them.'],
+          choices: ways.map(id=>({ text: `Walk the old road to ${WAYSTONES[id].name.replace(/^The /, 'the ')}.`, ends: true, lines: [], then: { travel: id } as Effect })) }, undefined);
+      }
+      element('prompt').textContent='';
     } else if(this.nearby && this.area.forage?.[this.nearby.name]) {
       // Picking what grows wild; it comes back after the next rest.
       const point=this.nearby.name, ingredient=this.area.forage[point];
@@ -489,6 +524,7 @@ export class AreaScene extends Phaser.Scene {
     if(!then) return;
     if(then.cook) this.pendingCook=true;
     if(then.camp) { this.pendingRest=this.campPoint; this.pendingNight=then.camp==='dusk'; }
+    if(then.travel) this.pendingTravel=then.travel;
     if(then.dice) this.pendingDice={ stake: then.dice, opponent: (this.active?.speaker ?? 'the house').toLowerCase().replace(/^(a|an|the) /, 'the ') };
     if(then.shop) this.pendingShop=then.shop;
     if(then.find || then.learn || then.give) music.effect('find');
@@ -532,6 +568,13 @@ export class AreaScene extends Phaser.Scene {
     const shop=this.pendingShop;this.pendingShop=undefined;
     if(shop) this.openShop(shop);
     if(this.pendingCook) { this.pendingCook=false; this.openPanel(()=>new CookView(loadWorld(), world=>{ saved=saveWorld(world); this.renderMemory(); }, ()=>this.closePanel())); }
+    const road=this.pendingTravel;this.pendingTravel=undefined;
+    if(road && !this.leaving) {
+      // The old road: a fade to pale light, and out at the other stone.
+      music.effect('barrier');
+      this.leaving=true; this.cameras.main.fadeOut(600,168,216,224);
+      this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.start(WAYSTONES[road].area,{ spawn: 'from-waystone' }));
+    }
     const dice=this.pendingDice;this.pendingDice=undefined;
     if(dice) this.openPanel(()=>new DiceView(dice.opponent, dice.stake, coins=>{ const world=loadWorld(); saved=saveWorld({ ...world, coins: Math.max(0, world.coins+coins) }); this.renderMemory(); }, ()=>this.closePanel()));
     const camp=this.pendingRest;this.pendingRest=undefined;
@@ -640,13 +683,14 @@ export class AreaScene extends Phaser.Scene {
       close,
       equipment: () => { close(); this.openEquipment(); },
       journal: () => { close(); this.openPanel(()=>new JournalView(loadJournal(), ()=>this.closePanel())); },
+      bestiary: () => { close(); this.openPanel(()=>new BestiaryView(loadBestiary(), loadGrimoire(), ()=>this.closePanel())); },
       // Returning to the cot always restarts the church, which also resets its encounters.
       restart: () => { close(); this.scene.start('church'); },
     });
   }
 
   // A panel over the map: cooking, the journal, or a game of bones.
-  private openPanel(make: () => CookView | JournalView | DiceView) {
+  private openPanel(make: () => CookView | JournalView | DiceView | BestiaryView) {
     if(this.overlay || this.leaving) return;
     this.player.setVelocity(0);
     this.held.clear();
@@ -827,12 +871,12 @@ export class AreaScene extends Phaser.Scene {
     // A restrained walking bob, or slow breathing when standing still, while the physics body stays steady.
     this.player.setOrigin(0.5,0.5+(x||y?Math.sin(time/85)*0.025:Math.sin(time/520)*0.012));
     const context=this.context();
-    this.nearby=this.points.filter(p=>p.name in this.area.exits || p.name in (this.area.fishing ?? {}) || p.name in (this.area.camps ?? {}) || this.forage.some(spot=>spot.point===p.name) || (p.name in this.area.dialogue
+    this.nearby=this.points.filter(p=>p.name in this.area.exits || p.name in (this.area.fishing ?? {}) || p.name in (this.area.camps ?? {}) || this.forage.some(spot=>spot.point===p.name) || (p.name==='waystone' && Boolean(waystoneIn(this.area.key))) || (p.name in this.area.dialogue
       && !this.area.dialogue[p.name].hiddenIf?.some(condition=>holds(context, condition))))
       // The nearest thing in reach wins, so a door and the person beside it never steal each other's prompt.
       .map(p=>({ p, distance: Phaser.Math.Distance.Between(this.player.x,this.player.y,p.x,p.y) }))
       .filter(({ distance })=>distance<29).sort((a,b)=>a.distance-b.distance)[0]?.p;
     if(!this.active) element('prompt').textContent=this.nearby
-      ? `E · ${this.area.exits[this.nearby.name]?.prompt ?? (this.area.camps?.[this.nearby.name] ? `${this.area.camps[this.nearby.name].prompt}${this.area.camps[this.nearby.name].cost ? ` (${this.area.camps[this.nearby.name].cost} coins)` : ''}` : undefined) ?? (this.area.fishing?.[this.nearby.name] ? `Fish ${SPOTS[this.area.fishing[this.nearby.name]].name.replace(/^The /, 'the ')}` : undefined) ?? (this.area.forage?.[this.nearby.name] ? `Pick ${INGREDIENTS[this.area.forage[this.nearby.name]].plural}` : undefined) ?? this.area.dialogue[this.nearby.name].prompt ?? 'Examine '+this.nearby.name}` : '';
+      ? `E · ${this.area.exits[this.nearby.name]?.prompt ?? (this.area.camps?.[this.nearby.name] ? `${this.area.camps[this.nearby.name].prompt}${this.area.camps[this.nearby.name].cost ? ` (${this.area.camps[this.nearby.name].cost} coins)` : ''}` : undefined) ?? (this.area.fishing?.[this.nearby.name] ? `Fish ${SPOTS[this.area.fishing[this.nearby.name]].name.replace(/^The /, 'the ')}` : undefined) ?? (this.area.forage?.[this.nearby.name] ? `Pick ${INGREDIENTS[this.area.forage[this.nearby.name]].plural}` : undefined) ?? (this.nearby.name==='waystone' ? 'Touch the waystone' : undefined) ?? this.area.dialogue[this.nearby.name].prompt ?? 'Examine '+this.nearby.name}` : '';
   }
 }

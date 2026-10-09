@@ -163,6 +163,19 @@ export function createSprites(scene: Phaser.Scene) {
   altar.fillStyle(0xf0b34a).fillRect(5, 2, 1, 1).fillRect(10, 2, 1, 1);
   altar.fillStyle(0x8a8a7a).fillRect(7, 1, 2, 5).fillRect(6, 2, 4, 1);
   altar.generateTexture('altar', 16, 16); altar.destroy();
+  // A waystone: a standing stone carved with a road that goes nowhere.
+  const stone = scene.make.graphics({ x: 0, y: 0 });
+  stone.fillStyle(0x3a3a34).fillRect(2, 22, 14, 3);
+  stone.fillStyle(0x6a6a62).fillRect(4, 3, 10, 20);
+  stone.fillStyle(0x7e7e74).fillRect(5, 2, 8, 4).fillRect(5, 6, 3, 16);
+  stone.fillStyle(0x4a4a44).fillRect(8, 8, 2, 12).fillRect(7, 10, 4, 1).fillRect(7, 15, 4, 1);
+  stone.generateTexture('waystone', 18, 25); stone.destroy();
+  const woken = scene.make.graphics({ x: 0, y: 0 });
+  woken.fillStyle(0x3a3a34).fillRect(2, 22, 14, 3);
+  woken.fillStyle(0x6a6a62).fillRect(4, 3, 10, 20);
+  woken.fillStyle(0x7e7e74).fillRect(5, 2, 8, 4).fillRect(5, 6, 3, 16);
+  woken.fillStyle(0xa8d8e0).fillRect(8, 8, 2, 12).fillRect(7, 10, 4, 1).fillRect(7, 15, 4, 1);
+  woken.generateTexture('waystone-woken', 18, 25); woken.destroy();
   // Firelight: a soft warm glow that fades to nothing at its edge.
   const glow = scene.textures.createCanvas('firelight', 128, 128)!;
   const ctx = glow.getContext();

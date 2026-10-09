@@ -6,6 +6,7 @@ import type { Supplies, SupplyId } from '../rules/economy';
 
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
 import { music } from '../audio/music';
+import { beaten, sighted } from '../storage/bestiary';
 import type { Effect as Sound } from '../audio/effects';
 
 // How long the dodge ring takes to close on its target, in milliseconds.
@@ -127,6 +128,7 @@ export class BattleView {
     this.get('#battle-finish').addEventListener('click', () => {
       if (this.state.phase !== 'victory' && this.state.phase !== 'defeat' && this.state.phase !== 'fled') return;
       const won = this.state.phase === 'victory';
+      if (won) beaten(this.state.encounter);
       this.destroy(); this.onFinish(won, this.state);
     }, { signal });
     this.root.addEventListener('keydown', event => {
@@ -520,6 +522,7 @@ export class BattleView {
 
   private render() {
     this.animateChanges();
+    if (this.state.enemy.health > 0 && this.state.phase === 'player') sighted(this.state.encounter, intent(this.state).name);
     this.shownStage = this.state.stage;
     const state = this.state;
     const done = state.phase === 'victory' || state.phase === 'defeat' || state.phase === 'fled';

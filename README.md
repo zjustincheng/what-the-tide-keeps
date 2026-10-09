@@ -344,6 +344,11 @@ The regions are joined in more than one place, and some links only open from the
 - **The high tarn**, up the smugglers' stair, is a frozen lake under the pass. Cut fishing holds **mountain char**, the most valuable fish, found nowhere else. The trapper's partner lies under the ice; bring him her ring and he gives you the **Frost ring** (the vulture's keepsake: 7 more health, hits 1 softer). Hounds and a raider hunt on the ice. A rope ladder climbs to the middle of the pass, but it can only be let down from the pass side.
 - **The drove road** runs from the downs, east up the chalk, to the battlefield's south gate. A wolf drover takes herbivores' sheep up to the carnivores' fort for them, and remembers a man with no fur carrying a sack toward the abbey. Raiders camp in a ring of boulders with a stash of stolen coin. The gate at the top is barred from the battlefield side: lift the bar from there and the road opens both ways.
 
+## The old roads and the bestiary
+
+- **Waystones.** Standing stones carved with roads that go nowhere stand at the crossroads, in Millbrook, on the downs, at the weir, in the fort town, and in the capital's square. They sleep until the hero knows the old roads: the pilgrim asks for a stone from the last shrine (on the harbour quay, where her walk ends), and when you bring her one she teaches you. After that, touching a stone wakes it (its carving lights up), and from any woken stone you can walk the old road to any other (`src/rules/waystones.ts`).
+- **The bestiary (B, or Bestiary in Settings).** Every kind of enemy you have fought, with what it is, the moves you have seen it make, how many times you have beaten it, and whether you have studied its spell. Kept in `tide-keeps.bestiary.v1`, on paper, so it survives every death.
+
 ## Day and night
 
 Every fire, bed, and cot asks whether to **sleep until dawn or until dark**. Night lasts until you sleep it off, or until you die and the church wakes you at dawn. At night the world is darker and colder, fires are the only warm light, the clock in the top bar reads Night, and **every ordinary enemy hunts unseen**, like an ambusher, and sees further. Saved with the world (`night` in `tide-keeps.world.v1`).
@@ -447,6 +452,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/buildings.spec.ts` — entering the hall, tannery, and mill.
 - `tests/music.spec.ts` — themes per place and battle, muting, volume, and levels.
 - `tests/rules/themes.test.ts` — every theme fits its loop and range.
+- `tests/waystones.spec.ts` and `tests/rules/waystones.test.ts` — the pilgrim's stone, waking waystones, and travelling between them.
 - `tests/capital.spec.ts` — the capital: the square, the harbour, the steward's key, the crab, and the feast hall.
 - `tests/pastimes.spec.ts` and `tests/rules/pastimes.test.ts` — foraging and cooking, hiding your mana, the journal, and bones.
 - `tests/lore.spec.ts` and `tests/rules/lore.test.ts` — the keepers of lore and what they know.

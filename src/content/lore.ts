@@ -52,7 +52,14 @@ export const fieldsLore: Dialogue = {
     { text: 'Where are you walking to?', lines: [
       'The last shrine is on the coast, below the capital, where the land stops. I\'ll get there or I won\'t.',
       'They say the sea peoples were never asked to the Long Table. That shrine is where the fish come ashore.',
+      'If you stand at it before I do, bring me a stone from it. Then at least one of us will have been.',
     ] },
+    { text: 'I brought you a stone from the last shrine.', if: { has: 'shrine-stone' }, ends: true, lines: [
+      'She turns it over for a long time, and puts it in her mouth for a moment, the way pilgrims do, to taste the salt.',
+      '"Then I know the way now. So should you."',
+      '"Before the Covenant there were roads that weren\'t on the ground. The waystones remember them. Put your hand on one the way I show you, and it wakes; walk from one woken stone, and you arrive at another."',
+      'You know the old roads now. Touch a waystone to wake it.',
+    ], then: { take: 'shrine-stone', set: 'old-roads' } },
   ] },
   carter: { speaker: 'A SEAL WITH A FISH CART', prompt: 'Speak to the seal', lines: [
     'Mind the cart. The barrels are counted.',

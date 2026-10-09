@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 28,
+  "nextobjectid": 30,
   "layers": [
     {
       "id": 1,
@@ -5103,6 +5103,30 @@
         },
         {
           "id": 22,
+          "name": "waystone",
+          "type": "",
+          "x": 440,
+          "y": 360,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 23,
+          "name": "from-waystone",
+          "type": "",
+          "x": 440,
+          "y": 376,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 24,
           "name": "forage-1",
           "type": "",
           "x": 328,
@@ -5114,7 +5138,7 @@
           "point": true
         },
         {
-          "id": 23,
+          "id": 25,
           "name": "forage-2",
           "type": "",
           "x": 648,
@@ -5126,7 +5150,7 @@
           "point": true
         },
         {
-          "id": 24,
+          "id": 26,
           "name": "forage-3",
           "type": "",
           "x": 632,
@@ -5138,7 +5162,7 @@
           "point": true
         },
         {
-          "id": 25,
+          "id": 27,
           "name": "forage-4",
           "type": "",
           "x": 424,
@@ -5150,7 +5174,7 @@
           "point": true
         },
         {
-          "id": 26,
+          "id": 28,
           "name": "hound-west",
           "type": "",
           "x": 200,
@@ -5162,7 +5186,7 @@
           "point": true
         },
         {
-          "id": 27,
+          "id": 29,
           "name": "hound-east",
           "type": "",
           "x": 744,

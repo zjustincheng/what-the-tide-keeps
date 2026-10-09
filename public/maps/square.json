@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 16,
+  "nextobjectid": 18,
   "layers": [
     {
       "id": 1,
@@ -3039,6 +3039,30 @@
           "type": "",
           "x": 216,
           "y": 360,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 16,
+          "name": "waystone",
+          "type": "",
+          "x": 488,
+          "y": 360,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 17,
+          "name": "from-waystone",
+          "type": "",
+          "x": 488,
+          "y": 376,
           "width": 0,
           "height": 0,
           "rotation": 0,
