@@ -16,6 +16,10 @@ The [design guideline](docs/design-guideline.md) contains the story, world, comb
 - **Saves:** Browser local storage
 - **Game rules:** Plain TypeScript, independent of Phaser, so combat and memory systems can be tested without a browser and moved to a server for future co-op.
 
+## Play online
+
+Every push to `main` builds the game and publishes it to GitHub Pages at **https://zjustincheng.github.io/what-the-tide-keeps/** (see `.github/workflows/pages.yml`). The build is served from that sub-path, which `vite.config.ts` sets when `GITHUB_PAGES` is set. Saves live in each browser, so progress does not move between computers.
+
 ## Run locally
 
 Requires Node.js 22.12+ (Node.js 24 recommended).
