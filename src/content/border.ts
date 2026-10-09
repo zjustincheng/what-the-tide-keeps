@@ -26,6 +26,34 @@ export const border: Dialogue = {
     'Grain carts, still loaded, turned around to face the farmland.',
     'The farmland\'s mark has been cut off every sack.',
   ] },
+  // The boar's sister won't let anyone from Millbrook past until they know the truth and say it.
+  sister: { speaker: 'THE BOAR\'S SISTER', prompt: 'Speak to the sow', hiddenIf: [{ flag: 'boar-defeated' }], lines: [
+    'That\'s far enough. The lane is his. What\'s left of it.',
+    'Millbrook sent you. I can see the brand from here, but they sent you.',
+  ], variants: [{ if: { flag: 'lane-open' }, lines: [
+    'Go on. He knows you\'re coming. He always knows.',
+  ] }], choices: [
+    { text: 'Tell me what happened.', lines: [
+      'A kid went missing. My brother\'s a boar. That was the trial.',
+      'They came at night with torches and the reeve\'s paper. He carried our mother out through the smoke and they threw stones at him while he did it.',
+    ] },
+    { text: 'Let me through.', if: { not: { all: [{ flag: 'kid-found' }, { flag: 'burn-order-seen' }] } }, lines: [
+      'To finish what Millbrook started? No.',
+      'Come back when you know what they did. All of it. Not the part they tell.',
+    ] },
+    { text: 'The kid is alive. He told me himself.', if: { flag: 'kid-found' }, lines: [
+      'Everybody knows he\'s alive. Nobody has ever said it to my face.',
+      'She looks away for a while.',
+    ] },
+    { text: 'The reeve signed the burn order.', if: { flag: 'burn-order-seen' }, lines: [
+      'I know whose hand it was. I watched him sign it, by torchlight, on the back of a cart.',
+    ] },
+    { text: 'I know he didn\'t do it. Let me speak to him.', if: { all: [{ flag: 'kid-found' }, { flag: 'burn-order-seen' }, { not: { flag: 'lane-open' } }] }, ends: true, lines: [
+      'She studies you for a long time.',
+      '"He won\'t stop. Not for you, not for me. But he\'ll hear it said, once, before."',
+      'She drags the beams aside.',
+    ], then: { set: 'lane-open' } },
+  ] },
   marker: { speaker: 'THE BORDER MARKER', prompt: 'Read the marker', lines: [
     'FARMLAND on one face. HIGHLANDS on the other.',
   ] },
@@ -38,3 +66,5 @@ border.guard.choices = [
 border.driver.choices = [
   { text: 'Who stopped you?', lines: ['That one, and the one before him. Same words every time.'] },
 ];
+// Meeting her again after she has let you through, the same replies stand.
+border.sister.variants![0].choices = border.sister.choices;

@@ -151,6 +151,66 @@ export const abbey: Dialogue = {
   nave: { speaker: 'THE NAVE', prompt: 'Examine the nave', lines: [
     'Open to the sky, with snow on the altar. In the north-east corner, steps go down to the ossuary. Something has worn them smooth recently.',
   ] },
+  // The abbey's last monk keeps the key to the ossuary, and won't give it up while her dead lie in his yard.
+  monk: { speaker: 'THE LAST MONK', prompt: 'Speak to the monk', hiddenIf: [{ flag: 'hyena-slain' }], lines: [
+    'Don\'t. Please. I\'m not one of hers.',
+    'She keeps the dead below. The grate on the stair is locked; I locked it, from up here, the last time she came up.',
+  ], variants: [{ if: { flag: 'ossuary-key' }, lines: [
+    'Lock it behind you. Whatever comes up.',
+  ] }], choices: [
+    { text: 'Who is she?', lines: [
+      'Our gravedigger, in the winter of no bread. She kept us alive.',
+      'We never forgave her for how. I never forgave her. I ate what she brought, and then I preached against her.',
+    ] },
+    { text: 'Give me the key.', if: { not: { all: [{ flag: 'dead-1' }, { flag: 'dead-2' }, { flag: 'dead-3' }] } }, lines: [
+      'Not while her dead lie in my yard. Her creatures dragged them up from the battlefield and left them where I have to see them.',
+      'Lay them back in the ground. I can\'t lift them anymore, and I can\'t look at them. Then the key is yours.',
+    ] },
+    { text: 'They\'re buried. The key.', if: { all: [{ flag: 'dead-1' }, { flag: 'dead-2' }, { flag: 'dead-3' }, { not: { flag: 'ossuary-key' } }] }, ends: true, lines: [
+      'He holds it out at arm\'s length, as if it might bite.',
+      '"Lock it behind you. Whatever comes up."',
+      'You receive the ossuary key.',
+    ], then: { set: 'ossuary-key' } },
+  ] },
+  'dead-1': { speaker: 'ONE OF THE DEAD', prompt: 'Examine the body', hiddenIf: [{ flag: 'dead-1' }], lines: [
+    'A garrison soldier, dragged here by the heels from the battlefield. The frost has kept him.',
+  ], choices: [
+    { text: 'Bury him in the yard.', ends: true, lines: [
+      'You scrape a shallow grave in the frozen yard with your hands and lay him in it. It takes a long time.',
+    ], then: { set: 'dead-1' } },
+  ], variants: [{ if: { flag: 'vulture-free' }, lines: [
+    'A garrison soldier, dragged here by the heels from the battlefield. The frost has kept him.',
+  ], choices: [
+    { text: 'Bury him in the yard.', ends: true, lines: [
+      'The vulture does it properly: straightens the coat, closes the eyes, and says a name she reads off the collar. She doesn\'t look at you while she does it.',
+    ], then: { set: 'dead-1' } },
+  ] }] },
+  'dead-2': { speaker: 'ONE OF THE DEAD', prompt: 'Examine the body', hiddenIf: [{ flag: 'dead-2' }], lines: [
+    'An old soldier from the border war, in a coat that belongs to neither side.',
+  ], choices: [
+    { text: 'Bury him in the yard.', ends: true, lines: [
+      'You scrape a shallow grave in the frozen yard with your hands and lay him in it. It takes a long time.',
+    ], then: { set: 'dead-2' } },
+  ], variants: [{ if: { flag: 'vulture-free' }, lines: [
+    'An old soldier from the border war, in a coat that belongs to neither side.',
+  ], choices: [
+    { text: 'Bury him in the yard.', ends: true, lines: [
+      'The vulture does it properly: straightens the coat, closes the eyes, and says a name she reads off the collar. She doesn\'t look at you while she does it.',
+    ], then: { set: 'dead-2' } },
+  ] }] },
+  'dead-3': { speaker: 'ONE OF THE DEAD', prompt: 'Examine the body', hiddenIf: [{ flag: 'dead-3' }], lines: [
+    'A body small enough to be a child\'s, wrapped in a ration sack.',
+  ], choices: [
+    { text: 'Bury him in the yard.', ends: true, lines: [
+      'You scrape a shallow grave in the frozen yard with your hands and lay him in it. It takes a long time.',
+    ], then: { set: 'dead-3' } },
+  ], variants: [{ if: { flag: 'vulture-free' }, lines: [
+    'A body small enough to be a child\'s, wrapped in a ration sack.',
+  ], choices: [
+    { text: 'Bury him in the yard.', ends: true, lines: [
+      'The vulture does it properly: straightens the coat, closes the eyes, and says a name she reads off the collar. She doesn\'t look at you while she does it.',
+    ], then: { set: 'dead-3' } },
+  ] }] },
   'abbey-cache': { speaker: 'BEHIND THE ALTAR STONE', prompt: 'Search behind the stone', hiddenIf: [{ owns: 'famine-spoon' }], lines: [
     'Behind the fallen altar stone, a wooden spoon worn thin, wrapped in a ration card from the winter of no bread.',
     'The Famine spoon is a keepsake. Equip it from the Equipment screen.',
@@ -164,6 +224,27 @@ const HYENA = [
   '"Your church cut the fish before anyone rioted. Look in my ledger. Then tell me who the grave-eaters are."',
 ];
 export const ossuary: Dialogue = {
+  // She talks first; the hero decides when it comes to blows.
+  hyena: { speaker: 'THE HYENA', prompt: 'Speak to the hyena', portrait: 'hyena', hiddenIf: [{ flag: 'hyena-challenged' }, { flag: 'hyena-slain' }], lines: [
+    'She looks up from the bones. "Nobody comes down here to pray."',
+    '"You came with the key. So the old monk finally gave it to someone. Good for him."',
+  ], choices: [
+    { text: 'Why do you raise the dead?', lines: [
+      '"The fish is cut again. I know what comes after that. I lived through it."',
+      '"I\'m keeping the dead out of the ground before somebody needs them. Better they walk than end up in a pot with a church seal on it."',
+    ] },
+    { text: 'You ate them.', lines: [
+      '"I fed the living with them. Ask the monk upstairs how he got through that winter. Ask him what he said about me after."',
+    ] },
+    { text: 'Who is the one with no fur?', lines: [
+      '"He ate at my table. He eats anything. Like me."',
+      '"Ask me again when you\'ve won. If you win."',
+    ] },
+    { text: 'The church sent me to put you down.', ends: true, lines: [
+      'She laughs, and behind her the dead she keeps get up.',
+      '"Then they sent the right one. You\'ve died more than any of mine."',
+    ], then: { set: 'hyena-challenged' } },
+  ] },
   den: { speaker: 'THE HYENA', prompt: 'Speak to the hyena', hiddenIf: [{ not: { flag: 'hyena-slain' } }], lines: HYENA,
     variants: [{ if: { flag: 'vulture-free' }, lines: [
       ...HYENA,
@@ -185,3 +266,5 @@ export const ossuary: Dialogue = {
 };
 // Meeting her with the note in hand offers the same replies.
 battlefield.vulture.variants![0].choices = battlefield.vulture.choices;
+// Coming back to the monk with the key in hand, the same replies stand.
+abbey.monk.variants![0].choices = abbey.monk.choices;

@@ -165,11 +165,13 @@ export const TOWN: Area = {
 export const BORDER_ROAD: Area = {
   key: 'border-road', map: 'border-road', tileset: 'border', music: 'wilds', region: 'THE FARMLAND', place: 'The border road', time: 'Midday',
   dialogue: border, enemies: [{ point: 'follower', encounter: 'acolyte' }], ground: 'grass', surfaces: { 2: 'dirt' },
-  npcs: [{ point: 'driver', texture: 'driver' }, { point: 'guard', texture: 'guard' }],
+  npcs: [{ point: 'driver', texture: 'driver' }, { point: 'guard', texture: 'guard' }, { point: 'sister', texture: 'sow', hiddenIf: [{ flag: 'boar-defeated' }] }],
   camps: { 'camp-border': { prompt: 'Rest by the fire', cost: 4, lines: ['The carters let you sit at their fire. Nobody talks much.'] } },
   props: [
     ...[1, 2, 3, 4, 5, 6, 7, 8].map(i => ({ point: `bramble-${i}`, texture: 'brambles', solid: true, hiddenIf: [{ flag: 'hedge-open' as const }] })),
     { point: 'camp-border', texture: 'campfire', hiddenIf: [] },
+    // The sister's barricade across the lane to the farm, until she lets the hero through.
+    ...[1, 2, 3, 4].map(i => ({ point: `barricade-${i}`, texture: 'barricade', solid: true, hiddenIf: [{ flag: 'lane-open' as const }, { flag: 'boar-defeated' as const }] })),
   ],
   exits: {
     north: { to: 'town', spawn: 'from-border', prompt: 'Return to Millbrook' },
@@ -183,8 +185,10 @@ export const BORDER_ROAD: Area = {
 
 export const BOAR_FARM: Area = {
   key: 'boar-farm', map: 'boar-farm', tileset: 'ash', music: 'wilds', region: 'THE FARMLAND', place: 'The burned farm', time: 'Afternoon',
-  dialogue: farm, npcs: [], assets: ['badger', 'rat'], ground: 'dirt', surfaces: { 1: 'grass' },
-  enemies: [{ point: 'boar', encounter: 'boar', hiddenIf: [{ flag: 'boar-defeated' }], defeat: { set: 'boar-defeated' } }],
+  dialogue: farm, assets: ['badger', 'rat'],
+  // The boar talks before he fights; once challenged, he stands up to fight.
+  npcs: [{ point: 'boar', texture: 'boar', hiddenIf: [{ flag: 'boar-challenged' }, { flag: 'boar-defeated' }] }], ground: 'dirt', surfaces: { 1: 'grass' },
+  enemies: [{ point: 'boar', encounter: 'boar', hiddenIf: [{ flag: 'boar-defeated' }, { not: { flag: 'boar-challenged' } }], defeat: { set: 'boar-defeated' } }],
   props: [
     // The boar's followers leave, one way or another, once the hero decides what becomes of them.
     { point: 'badger', texture: 'badger', solid: true, hiddenIf: [{ flag: 'followers-spared' }, { flag: 'followers-reported' }] },
@@ -223,7 +227,7 @@ export const DOWNS: Area = {
   key: 'downs', map: 'downs', tileset: 'downs', music: 'fields', region: 'THE FARMLAND', place: 'The downs', time: 'Late morning',
   dialogue: downs, assets: ['hound'], ground: 'grass', surfaces: { 3: 'dirt', 7: 'stone', 11: 'dirt', 25: 'dirt', 26: 'dirt' },
   grade: { saturation: -0.3, brightness: 0.86, vignette: 0.4 },
-  npcs: [{ point: 'ram', texture: 'ram' }],
+  npcs: [{ point: 'ram', texture: 'ram' }, { point: 'kid', texture: 'kid' }],
   enemies: [
     // Hounds hunt the way hounds do: unseen until they are on you.
     { point: 'hound-west', encounter: 'hound', hiddenIf: [{ flag: 'hounds-fed' }], ambush: true },
@@ -345,20 +349,26 @@ export const BATTLEFIELD: Area = {
 };
 export const ABBEY: Area = {
   ...HIGHLAND_GROUND, key: 'abbey', map: 'abbey', music: 'wilds', place: 'The ruined abbey', time: 'Dusk', dialogue: abbey, grade: COLD,
-  npcs: [], assets: ['brute'],
+  npcs: [{ point: 'monk', texture: 'monk', hiddenIf: [{ flag: 'hyena-slain' }] }], assets: ['brute'],
   // The lesson fight: a spell and a heavy blow in the same round.
   enemies: [{ point: 'pair', encounter: 'pair', hiddenIf: [{ flag: 'pair-slain' }], defeat: { set: 'pair-slain' } }],
-  props: [{ point: 'abbey-cache', texture: 'cache', hiddenIf: [{ owns: 'famine-spoon' }] }],
+  props: [
+    { point: 'abbey-cache', texture: 'cache', hiddenIf: [{ owns: 'famine-spoon' }] },
+    // Her dead, dragged up into the monk's yard, until the hero buries them.
+    ...([1, 2, 3] as const).map(i => ({ point: `dead-${i}`, texture: 'corpse', hiddenIf: [{ flag: `dead-${i}` as const }] })),
+  ],
   exits: {
     west: { to: 'battlefield', spawn: 'from-abbey', prompt: 'Go back over the ravine' },
-    stair: { to: 'ossuary', spawn: 'spawn', prompt: 'Go down into the ossuary' },
+    stair: { to: 'ossuary', spawn: 'spawn', prompt: 'Go down into the ossuary', requires: { flag: 'ossuary-key' },
+      barred: { speaker: 'THE STAIR', lines: ['An iron grate across the stair, chained and locked from above with a church padlock. Someone up here has the key.'] } },
   },
   decorate: scene => snowfall(scene, 640, 480),
 };
 export const OSSUARY: Area = {
   ...HIGHLAND_GROUND, key: 'ossuary', map: 'ossuary', music: 'wilds', place: 'The ossuary', time: 'Dusk', dialogue: ossuary,
-  ground: 'stone', grade: { saturation: -0.45, brightness: 0.6, vignette: 0.75 }, npcs: [], assets: ['ghoul'],
-  enemies: [{ point: 'hyena', encounter: 'hyena', hiddenIf: [{ flag: 'hyena-slain' }], defeat: { set: 'hyena-slain' } }],
+  ground: 'stone', grade: { saturation: -0.45, brightness: 0.6, vignette: 0.75 }, assets: ['ghoul'],
+  npcs: [{ point: 'hyena', texture: 'hyena', hiddenIf: [{ flag: 'hyena-challenged' }, { flag: 'hyena-slain' }] }],
+  enemies: [{ point: 'hyena', encounter: 'hyena', hiddenIf: [{ flag: 'hyena-slain' }, { not: { flag: 'hyena-challenged' } }], defeat: { set: 'hyena-slain' } }],
   // Beaten, she lies where she fell and will still talk.
   props: [{ point: 'den', texture: 'hyena', hiddenIf: [{ not: { flag: 'hyena-slain' } }] }],
   exits: { up: { to: 'abbey', spawn: 'from-ossuary', prompt: 'Climb back up to the abbey' } },

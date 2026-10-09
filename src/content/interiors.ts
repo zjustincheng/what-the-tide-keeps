@@ -28,11 +28,16 @@ export const hall: Dialogue = {
   ], choices: [
     { text: 'Can I see the writ book?', lines: ['No.'] },
     { text: 'What are you writing?', lines: ['A letter to the church. Asking for a different convict.'] },
+    { text: 'Who signed the burn order?', if: { flag: 'burn-order-seen' }, lines: [
+      'The reeve. It\'s in his hand. Ask him, if you like. He won\'t deny it.',
+      'He just won\'t say the second part, about the kid coming home. Nobody says that part.',
+    ] },
   ] },
   records: { speaker: 'THE RECORDS', prompt: 'Read the records', lines: [
     'Writs, licenses, and fines in neat columns.',
     'Halfway down a page from last spring: AUTHORITY TO CLEAR THE BOAR\'S HOLDING BY FIRE. Signed by the reeve.',
-  ] },
+    'The reason given is one line: "On suspicion of the miller\'s kid." There is no later entry saying the kid came home.',
+  ], then: { set: 'burn-order-seen' } },
   letter: { speaker: 'THE CLERK\'S DESK', prompt: 'Look at the desk', lines: [
     'A half-written letter to the church: "...request that a more suitable convict be sent..."',
   ] },

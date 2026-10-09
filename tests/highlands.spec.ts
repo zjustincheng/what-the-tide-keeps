@@ -151,7 +151,7 @@ test('coming to the vulture with her note in hand, there is no fight', async ({ 
 });
 
 test('the deserters, the hyena, her ledger, and the inquisitor on the road', async ({ page }) => {
-  await start(page, { ...BEAR, flags: ['bear-free', 'boar-defeated', 'vulture-free', 'bridge-lowered'] }, 'abbey', 'from-battlefield');
+  await start(page, { ...BEAR, flags: ['bear-free', 'boar-defeated', 'vulture-free', 'bridge-lowered', 'ossuary-key', 'hyena-challenged'] }, 'abbey', 'from-battlefield');
   await place(page, 'abbey', 260, 240);
   await page.keyboard.down('d');
   await expect(page.getByRole('heading', { name: 'Deserter hexer' })).toBeVisible();

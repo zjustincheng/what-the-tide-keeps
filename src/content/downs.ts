@@ -34,7 +34,25 @@ export const downs: Dialogue = {
       'They have to eat something. It\'s been my lambs.',
     ] },
     { text: 'Where is your son?', lines: ['Down at the crossroads with the flock. He thinks I\'m too old for the hill. He\'s right.'] },
+    { text: 'Who is the kid by the fold?', lines: [
+      'The miller\'s boy. He wandered up here after my sheep one spring and stayed three weeks before anyone thought to look uphill.',
+      'By the time he went home, they\'d burned the boar out for eating him. The miller sends him up here every summer now. Says it\'s safer. Means it\'s further from the farm.',
+    ] },
     { text: 'Leave him be.', ends: true, lines: ['He goes back to watching the gorse.'] },
+  ] },
+  kid: { speaker: 'THE MILLER\'S KID', prompt: 'Speak to the kid', lines: [
+    'I\'m not supposed to talk to people from the town.',
+    'You\'re not from the town, though. You\'re from the church. That\'s worse, Dad says.',
+  ], choices: [
+    { text: 'Where did you go, that spring?', lines: [
+      'I followed the sheep up the hill. The ram let me sleep in the fold. I didn\'t want to go home.',
+      'When I did, everyone was crying, and then they weren\'t, and then nobody would say the boar\'s name.',
+    ] },
+    { text: 'Did the boar ever hurt you?', lines: [
+      'He gave me bread through his fence. Twice. He told me not to tell my dad, because my dad would be angry he\'d spoken to me.',
+      'I told the reeve that. After. He wrote it down and then he tore the page out.',
+      'You can tell people I said it. I\'m not scared of the reeve.',
+    ], then: { set: 'kid-found' } },
   ] },
   hut: { speaker: 'THE RAM\'S HUT', prompt: 'Examine the hut', lines: [
     'A crook by the door, and a row of tally marks cut into the frame. One for each lamb lost. The newest are still pale.',

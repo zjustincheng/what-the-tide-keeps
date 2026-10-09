@@ -24,6 +24,10 @@ const VILLAGERS: Record<string, Villager> = {
   ram: { fur: 0xa8a090, muzzle: 0x5a5048, cloth: 0x5a5a40, trim: 0x8a7a5a, ears: 'horns' },
   'hound-mother': { fur: 0x5a524a, muzzle: 0x8a7a68, cloth: 0x3a3530, trim: 0x4a433c, ears: 'pointed' },
   otter: { fur: 0x6a4a30, muzzle: 0xb8a088, cloth: 0x3a4a44, trim: 0x5a6a5a, ears: 'pointed' },
+  // The boar's sister, the kid Millbrook said he ate, and the abbey's last monk.
+  sow: { fur: 0x9a7a6a, muzzle: 0xc8a090, cloth: 0x4a3a30, trim: 0x6a4a3a, ears: 'pointed' },
+  kid: { fur: 0xd8ccb0, muzzle: 0x8a7a68, cloth: 0x6a7a5a, trim: 0xb8a988, ears: 'horns', child: true },
+  monk: { fur: 0xc8c0b0, muzzle: 0x7a6e60, cloth: 0x3a3430, trim: 0x5a5048, ears: 'horns' },
   // The fort town in the highlands: a carnivore garrison, and the herbivores who trade there.
   sergeant: { fur: 0x6a6a6a, muzzle: 0xb8b0a0, cloth: 0x4a3a34, trim: 0x8a3a30, ears: 'pointed' },
   quartermaster: { fur: 0x3a3a38, muzzle: 0xe0dcd0, cloth: 0x5a5040, trim: 0x8a7a5a, ears: 'pointed' },
@@ -97,6 +101,22 @@ export function createSprites(scene: Phaser.Scene) {
   const crow = scene.make.graphics({ x: 0, y: 0 });
   crow.fillStyle(0x0e0f10).fillRect(0, 2, 3, 1).fillRect(2, 1, 4, 3).fillRect(5, 2, 3, 1).fillRect(3, 0, 2, 1);
   crow.generateTexture('crow', 8, 4); crow.destroy();
+  // Charred beams across the lane to the burned farm.
+  const barricade = scene.make.graphics({ x: 0, y: 0 });
+  barricade.fillStyle(0x1e1814).fillRect(0, 5, 16, 6);
+  barricade.fillStyle(0x3a2a20).fillRect(0, 4, 16, 4);
+  barricade.fillStyle(0x5a3a28).fillRect(2, 5, 5, 1).fillRect(10, 6, 4, 1);
+  barricade.fillStyle(0x2a201a).fillRect(3, 0, 3, 14).fillRect(11, 1, 3, 13);
+  barricade.fillStyle(0xd8743a).fillRect(4, 1, 1, 1);
+  barricade.generateTexture('barricade', 16, 14); barricade.destroy();
+  // One of the dead the hyena's ghouls dragged up from the battlefield.
+  const corpse = scene.make.graphics({ x: 0, y: 0 });
+  corpse.fillStyle(0x3a4038).fillRect(3, 5, 18, 7);
+  corpse.fillStyle(0x4a5a48).fillRect(5, 5, 12, 5);
+  corpse.fillStyle(0x8a8a70).fillRect(19, 5, 5, 5);
+  corpse.fillStyle(0x6a2a24).fillRect(9, 7, 2, 2);
+  corpse.fillStyle(0x2e342c).fillRect(0, 7, 4, 3);
+  corpse.generateTexture('corpse', 24, 14); corpse.destroy();
   // The gap where the bridge over the ravine should be.
   const chasm = scene.make.graphics({ x: 0, y: 0 });
   chasm.fillStyle(0x08090a).fillRect(0, 0, 16, 16);

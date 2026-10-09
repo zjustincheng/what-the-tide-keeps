@@ -18,7 +18,15 @@ async function visit(page: Page, key: string) {
   await expect.poll(() => at(page, key)).not.toBeNull();
   await page.locator('#game').focus();
 }
+// These checks are about the fight, so the hero has already talked to him and challenged him.
+async function challenged(page: Page) {
+  await page.evaluate(async () => {
+    const { loadWorld, saveWorld } = await import('/src/storage/world.ts');
+    saveWorld({ ...loadWorld(), flags: [...loadWorld().flags, 'boar-challenged'] });
+  });
+}
 async function meetBoar(page: Page) {
+  await challenged(page);
   await visit(page, 'boar-farm');
   await place(page, 'boar-farm', 256, 196);
   await page.keyboard.down('s');

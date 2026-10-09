@@ -34,7 +34,7 @@ type Direction = 'up' | 'down' | 'left' | 'right';
 type Point = { name: string; x: number; y: number };
 type Prop = { sprite: Phaser.Physics.Arcade.Sprite; hiddenIf: Condition[]; shadow?: Phaser.GameObjects.Ellipse };
 type Foe = { encounter: Encounter; defeat?: Effect; fledAt?: number; ambush?: boolean; hidden?: boolean; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container;
-  home: { x: number; y: number }; phase: number };
+  home: { x: number; y: number }; phase: number; point: string };
 // Ordinary enemies come after the hero once he is in sight, a little slower than he walks; bosses and guardians hold their ground.
 // sight and speed are in pixels and pixels per second. The hero walks at 70.
 const CHASE: Partial<Record<Encounter, { sight: number; speed: number }>> = {
@@ -95,6 +95,7 @@ export class AreaScene extends Phaser.Scene {
   private pendingShop?: ShopId;
   // A campfire to rest at once the current conversation ends.
   private pendingRest?: string;
+  private pendingFight?: Foe;
 
   constructor(private area: Area) { super(area.key); }
 
@@ -103,7 +104,7 @@ export class AreaScene extends Phaser.Scene {
     this.arrival = data?.spawn ?? 'spawn';
     this.cleanup = new AbortController();
     this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.asked = new Set(); this.talked = new Set();
-    this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false; this.pendingShop = undefined; this.pendingRest = undefined;
+    this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false; this.pendingShop = undefined; this.pendingRest = undefined; this.pendingFight = undefined;
   }
 
   preload() {
@@ -144,7 +145,7 @@ export class AreaScene extends Phaser.Scene {
       this.props.push({ sprite: npc, hiddenIf, shadow });
     }
     const context = this.context();
-    for (const enemy of this.area.enemies) if (!enemy.hiddenIf?.some(condition => holds(context, condition))) this.createFoe(this.point(enemy.point), enemy);
+    this.refreshFoes(context);
     for (const { point, texture, solid, hiddenIf } of this.area.props ?? []) {
       const at = this.point(point);
       const sprite = solid ? this.physics.add.staticSprite(at.x, at.y, texture) : this.physics.add.sprite(at.x, at.y, texture);
@@ -223,7 +224,18 @@ export class AreaScene extends Phaser.Scene {
     return this.points.find(p => p.name === name)!;
   }
 
-  private createFoe(at: Point, { encounter, defeat, ambush }: Area['enemies'][number]) {
+  // Enemies the story now allows, such as a boss the hero has just challenged, step out; each point holds one.
+  // One that steps out mid-visit, right beside the hero, starts its fight as soon as the conversation ends.
+  private refreshFoes(context = this.context(), midVisit = false) {
+    for (const enemy of this.area.enemies)
+      if (!this.foes.some(foe => foe.point === enemy.point) && !enemy.hiddenIf?.some(condition => holds(context, condition))) {
+        this.createFoe(this.point(enemy.point), enemy);
+        const foe = this.foes[this.foes.length - 1];
+        if (midVisit && Phaser.Math.Distance.Between(this.player.x, this.player.y, foe.sprite.x, foe.sprite.y) < 80) this.pendingFight = foe;
+      }
+  }
+
+  private createFoe(at: Point, { encounter, defeat, ambush, point }: Area['enemies'][number]) {
     const [width, height, x, y] = BODY[encounter];
     // Chasers move, so they need a body that collides with the walls; the rest stand where they are.
     const sprite = (CHASE[encounter] ? this.physics.add.sprite(at.x, at.y, encounter) : this.physics.add.staticSprite(at.x, at.y, encounter)).setDepth(4);
@@ -235,7 +247,7 @@ export class AreaScene extends Phaser.Scene {
     const mana = this.add.text(0, veiled ? -24 : -23, `◇ ${enemyMana(createBattle(encounter))}`, { fontFamily: 'monospace', fontSize: '8px', color: veiled ? '#b7d3c7' : '#dbc58b' }).setOrigin(0.5);
     const signature = this.add.container(at.x, at.y, [ring, mana]).setDepth(5);
     this.tweens.add({ targets: ring, alpha: veiled ? 0.15 : 0.35, duration: veiled ? 1400 : 1000, yoyo: true, repeat: -1 });
-    const foe: Foe = { encounter, sprite, signature, defeat, ambush, home: { x: at.x, y: at.y }, phase: this.foes.length * 1.7 };
+    const foe: Foe = { encounter, sprite, signature, defeat, ambush, home: { x: at.x, y: at.y }, phase: this.foes.length * 1.7, point };
     this.foes.push(foe);
     this.physics.add.overlap(this.player, sprite, () => this.beginBattle(foe));
   }
@@ -396,6 +408,7 @@ export class AreaScene extends Phaser.Scene {
     const before=roster(loadWorld());
     const next=apply(this.context(), then);
     saved=saveWorld(next.world)&&saveGrimoire(next.studied);
+    this.refreshFoes(undefined, true);
     // A companion who has just joined takes their own grimoire back.
     for(const member of roster(next.world).filter(member=>!before.includes(member))) saved=saveBooks(reclaim(loadBooks(), member)) && saved;
     this.refreshProps();
@@ -425,6 +438,8 @@ export class AreaScene extends Phaser.Scene {
     // Focus left on the hidden Continue button would strand the keyboard, so it returns to the map.
     if(element('dialogue').contains(document.activeElement)) element('game').focus({preventScroll:true});
     this.active=undefined;this.options=[];this.portraitKey=undefined;this.menu=undefined;this.returning=false;element('dialogue').hidden=true;element('choices').hidden=true;element('continue').hidden=false;
+    const fight=this.pendingFight;this.pendingFight=undefined;
+    if(fight && !this.leaving) { this.time.delayedCall(250, () => this.beginBattle(fight)); }
     const shop=this.pendingShop;this.pendingShop=undefined;
     if(shop) this.openShop(shop);
     const camp=this.pendingRest;this.pendingRest=undefined;

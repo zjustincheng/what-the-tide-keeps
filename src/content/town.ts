@@ -133,6 +133,11 @@ const reeveReplies: Choice[] = [
     'You don\'t know? They say you killed the king.',
   ] },
   // He says exactly what is left to do for the writ.
+  { text: 'You signed the order to burn the boar out.', if: { all: [{ flag: 'burn-order-seen' }, { not: { flag: 'boar-defeated' } }] }, lines: [
+    'I did. The town wanted it done, and I wanted the town quiet. Those were the same thing that week.',
+    'The kid turned up three weeks later, up on the downs with the old ram\'s flock. Nobody wrote that down. I didn\'t either.',
+    'If you\'re going out there, the sow on the lane is his sister. She won\'t let anyone from Millbrook past. I wouldn\'t, in her place.',
+  ] },
   { text: 'About the bear.', if: { all: [{ not: { flag: 'writ-given' } }, { not: { flag: 'pests-field' } }, { not: { flag: 'pests-yard' } }] }, lines: [
     'Kill the locust in my wheat and the weevil in the hay yard, and I\'ll sign his writ. Or pay his fine. Sixty coins.',
   ] },

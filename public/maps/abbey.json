@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 9,
+  "nextobjectid": 13,
   "layers": [
     {
       "id": 1,
@@ -2523,6 +2523,54 @@
         },
         {
           "id": 7,
+          "name": "monk",
+          "type": "",
+          "x": 552,
+          "y": 200,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 8,
+          "name": "dead-1",
+          "type": "",
+          "x": 392,
+          "y": 280,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 9,
+          "name": "dead-2",
+          "type": "",
+          "x": 456,
+          "y": 168,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 10,
+          "name": "dead-3",
+          "type": "",
+          "x": 504,
+          "y": 360,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 11,
           "name": "abbey-cache",
           "type": "",
           "x": 568,
@@ -2534,7 +2582,7 @@
           "point": true
         },
         {
-          "id": 8,
+          "id": 12,
           "name": "nave",
           "type": "",
           "x": 456,

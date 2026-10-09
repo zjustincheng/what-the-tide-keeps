@@ -199,7 +199,7 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
   put(furniture,10,13,H.CAIRN);
   write('abbey','highland',HROWS,HIGHLAND_SOLID,m,[
     ['west',8,232],['from-battlefield',28,232],['stair',536,104],['from-ossuary',536,128],
-    ['pair',296,240],['memorial',...at(10,14)],['abbey-cache',...at(35,24)],['nave',...at(28,15)],
+    ['pair',296,240],['memorial',...at(10,14)],['monk',...at(34,12)],['dead-1',...at(24,17)],['dead-2',...at(28,10)],['dead-3',...at(31,22)],['abbey-cache',...at(35,24)],['nave',...at(28,15)],
   ]);
 }
 

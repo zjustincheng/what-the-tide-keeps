@@ -6,6 +6,31 @@ export const farm: Dialogue = {
     'FOUND: the miller\'s kid, alive and well, in the high pasture, three weeks after going missing.',
     'Under it, an older notice, mostly burned.',
   ] },
+  // The boar speaks before he fights; the hero decides when it begins.
+  boar: { speaker: 'THE BOAR', prompt: 'Speak to the boar', portrait: 'boar', hiddenIf: [{ flag: 'boar-challenged' }, { flag: 'boar-defeated' }], lines: [
+    'He is sitting in the ashes of his own doorway, and he doesn\'t get up.',
+    '"My sister let you through. That means you know. Say it, then."',
+  ], choices: [
+    { text: 'The kid is alive. You never touched him.', if: { flag: 'kid-found' }, lines: [
+      '"I know. I\'ve known for a year."',
+      '"Do you think that matters to them? They\'d burn me again tomorrow, and sleep fine. They did sleep fine."',
+    ] },
+    { text: 'Why stop the grain?', lines: [
+      '"A man sat at that table. No fur on him. He asked me what I wanted, and nobody had asked me anything since the fire."',
+      '"I said I wanted Millbrook to be hungry for once. To feel what it\'s like when the thing you need is kept from you on somebody\'s say-so. He made it happen."',
+    ] },
+    { text: 'Who is the man with no fur?', lines: [
+      '"He didn\'t give a name. He drank from a gold cup and he listened. That\'s all I know, and it was more than I\'d had."',
+    ] },
+    { text: 'Stand down. Let the carts through.', lines: [
+      '"And then what? Millbrook says sorry? Gives me my farm back? My mother?"',
+      '"No. If it ends, it ends the way it started. With someone from the church in my yard."',
+    ] },
+    { text: 'Then we fight.', ends: true, lines: [
+      'He gets up, slowly. His followers move to his flanks without being told.',
+      '"Good. At least you\'ll do it to my face."',
+    ], then: { set: 'boar-challenged' } },
+  ] },
   badger: { speaker: 'THE BADGER', prompt: 'Speak to the badger', portrait: 'badger', hiddenIf: [{ not: { flag: 'boar-defeated' } }, { flag: 'followers-spared' }, { flag: 'followers-reported' }], lines: [
     'He told us not to fight for him. Then he went and fought for us.',
     'After the fire nobody came. Except one, later. No fur on him. He sat with us and listened. That was all, but nobody else had.',
