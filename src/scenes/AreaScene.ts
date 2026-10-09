@@ -235,6 +235,29 @@ export class AreaScene extends Phaser.Scene {
     }
   }
 
+  // Corner assist: walking straight into a wall that the hero only clips by a few pixels slides him along it,
+  // so narrow bridges and boardwalks don't need pixel-perfect lining up.
+  private slideAroundCorners(x: number, y: number) {
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    // Walls, and anything solid standing on the map: dark water, barricades, people.
+    const solid = (wx: number, wy: number) => Boolean(this.walls.getTileAtWorldXY(wx, wy)?.collides) || this.physics.overlapRect(wx, wy, 1, 1, false, true).length > 0;
+    const reach = 7, speed = this.sneaking ? 42 : 70;
+    if (y && !x && (body.blocked.up || body.blocked.down || body.touching.up || body.touching.down)) {
+      const ahead = y < 0 ? body.top - 2 : body.bottom + 2;
+      for (let shift = 1; shift <= reach; shift++) for (const side of [-1, 1]) {
+        const left = body.left + side * shift, right = body.right - 1 + side * shift;
+        if (!solid(left, ahead) && !solid(right, ahead) && !solid(left, body.top) && !solid(right, body.bottom - 1)) { this.player.setVelocity(side * speed, 0); return; }
+      }
+    }
+    if (x && !y && (body.blocked.left || body.blocked.right || body.touching.left || body.touching.right)) {
+      const ahead = x < 0 ? body.left - 2 : body.right + 2;
+      for (let shift = 1; shift <= reach; shift++) for (const side of [-1, 1]) {
+        const top = body.top + side * shift, bottom = body.bottom - 1 + side * shift;
+        if (!solid(ahead, top) && !solid(ahead, bottom) && !solid(body.left, top) && !solid(body.right - 1, bottom)) { this.player.setVelocity(0, side * speed); return; }
+      }
+    }
+  }
+
   // A slow rise and fall, staggered so a crowd doesn't breathe in step.
   private breathe(sprite: Phaser.GameObjects.Sprite) {
     this.tweens.add({ targets: sprite, scaleY: 1.04, scaleX: 0.985, duration: 1300 + (this.people.length * 173) % 700, delay: (sprite.x * 7) % 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
@@ -720,6 +743,7 @@ export class AreaScene extends Phaser.Scene {
     if(this.active){x=0;y=0;}
     const motion=new Phaser.Math.Vector2(x,y).normalize().scale(this.sneaking ? 42 : 70);
     this.player.setVelocity(motion.x,motion.y);
+    this.slideAroundCorners(x,y);
     // Enemies come alive: they bob where they stand, turn to face the hero, and the ordinary ones give chase.
     for(const foe of this.foes) {
       if(!foe.sprite.active) continue;

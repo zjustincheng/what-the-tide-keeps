@@ -282,12 +282,13 @@ export const FEN: Area = {
   dialogue: fen, ground: 'grass', surfaces: { 2: 'water', 3: 'wood', 10: 'water' }, grade: { saturation: -0.45, brightness: 0.7, vignette: 0.55 },
   npcs: [{ point: 'otter', texture: 'otter', hiddenIf: [{ flag: 'otter-reported' }] }],
   enemies: [
-    { point: 'wisp-1', encounter: 'wisp' }, { point: 'wisp-2', encounter: 'wisp', ambush: true },
+    // Both lights are visible: the route to the chapel runs past them, so they can be seen coming and steered around.
+    { point: 'wisp-1', encounter: 'wisp' }, { point: 'wisp-2', encounter: 'wisp' },
     { point: 'drowned', encounter: 'drowned', hiddenIf: [{ flag: 'drowned-slain' }], defeat: { set: 'drowned-slain' } },
   ],
   props: [
     ...Array.from({ length: 8 }, (_, i) => ({ point: `reeds-${i + 1}`, texture: 'reeds', solid: true, hiddenIf: [{ flag: 'otter-trusted' as const }] })),
-    ...Array.from({ length: 24 }, (_, i) => ({ point: `flood-${i + 1}`, texture: 'dark-water', solid: true, hiddenIf: [{ flag: 'sluice-open' as const }] })),
+    ...Array.from({ length: 36 }, (_, i) => ({ point: `flood-${i + 1}`, texture: 'dark-water', solid: true, hiddenIf: [{ flag: 'sluice-open' as const }] })),
     { point: 'chapel-cache', texture: 'cache', hiddenIf: [{ owns: 'drowned-psalter' }, { not: { flag: 'drowned-slain' } }] },
   ],
   fishing: { 'fen-spot': 'fen' },

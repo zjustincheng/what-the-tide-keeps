@@ -20,6 +20,10 @@ The [design guideline](docs/design-guideline.md) contains the story, world, comb
 
 Every push to `main` builds the game and publishes it to GitHub Pages at **https://zjustincheng.github.io/what-the-tide-keeps/** (see `.github/workflows/pages.yml`). The build is served from that sub-path, which `vite.config.ts` sets when `GITHUB_PAGES` is set. Saves live in each browser, so progress does not move between computers.
 
+## Movement
+
+Walking into a wall you only clip by a few pixels slides you along it, so narrow bridges, boardwalks, and doorways don't need lining up exactly (`slideAroundCorners` in `src/scenes/AreaScene.ts`). Solid things on the map, like dark water, barricades, and people, count as walls for this too.
+
 ## Run locally
 
 Requires Node.js 22.12+ (Node.js 24 recommended).
@@ -251,7 +255,7 @@ Under the barrow to the south, the leader's mate is nursing pups. She takes the 
 
 Upstream of the mill, the water spreads over the drowned hamlet of Wetherby; the roofs still stand in it. **Marsh lights** hang over the water with a very fast flare. An otter poaches eels from a camp on a hummock and sells them to the fishmonger at his back door. Promise not to tell and she parts the reeds to her eel run, the best eel fishing in the game. Report her and the reeve pays ten coins, but the camp is empty when the watch arrives.
 
-The sluice gate above the mill holds the fen back. Open it and the water drops enough to uncover a causeway to the sunken chapel, where **the drowned** still holds the bell rope: it tolls an undodgeable, guard-piercing blow every third round and tries to pull someone under. Beyond it is the **Drowned psalter**, which teaches **Undertow**, the hardest-hitting spell so far (seven keys in three seconds). Opening the sluice slows the mill wheel, and the miller notices.
+The sluice gate above the mill holds the fen back. Open it and the water drops enough to uncover a causeway, three tiles wide, from the middle island's boardwalk to the sunken chapel, where **the drowned** still holds the bell rope: it tolls an undodgeable, guard-piercing blow every third round and tries to pull someone under. Beyond it is the **Drowned psalter**, which teaches **Undertow**, the hardest-hitting spell so far (seven keys in three seconds). Opening the sluice slows the mill wheel, and the miller notices.
 
 Crop pests show their full mana and only strike physically, as the guideline describes. The weevil jabs most turns and makes a heavy rolling charge every third round.
 
@@ -280,7 +284,7 @@ Every boss has a **second stage**. The first time a boss is brought down, it doe
 - **The drowned, the bell freed:** swings the bell itself every other round, harder than the toll.
 - **The hyena, not laughing:** eats her own standing dead on the spot, then feeds every round there is a body and lunges every other round.
 
-Ordinary enemies notice the hero when he comes close and come after him, a little slower than he walks; they give up and go back if he gets far enough away (`CHASE` in `src/scenes/AreaScene.ts`). Bosses and guardians hold their ground. Ambushers hide their mana: besides the highland raiders, the downs hounds, the battlefield's raised dead, a weevil in the dark woods, and one of the fen's marsh lights strike first if they reach you unseen. People breathe and turn to look at the hero as he passes, enemies bob and face him, and in battle every fighter breathes, heroes hop when they act, and anyone hit flinches.
+Ordinary enemies notice the hero when he comes close and come after him, a little slower than he walks; they give up and go back if he gets far enough away (`CHASE` in `src/scenes/AreaScene.ts`). Bosses and guardians hold their ground. Ambushers hide their mana: besides the highland raiders, the downs hounds, the battlefield's raised dead, and a weevil in the dark woods strike first if they reach you unseen. People breathe and turn to look at the hero as he passes, enemies bob and face him, and in battle every fighter breathes, heroes hop when they act, and anyone hit flinches.
 
 Every fight is optional except the boar. Leaving an area and coming back respawns its enemies. A wipe anywhere wakes the party at the church cot, and **Return to the cot** works from any area.
 

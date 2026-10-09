@@ -98,3 +98,19 @@ test('the new enemies fight with their own art', async ({ page }) => {
   await page.keyboard.up('w');
   await expect.poll(art).not.toContain(false);
 });
+
+test('the way to the drowned can be walked without lining up to the pixel', async ({ page }) => {
+  await start(page, { flags: ['sluice-open'], carried: [], found: [], coins: 0 });
+  await page.evaluate(async () => {
+    const { game } = await import('/src/main.ts');
+    game.scene.getScene('farmland').scene.start('fen', { spawn: 'from-fields' });
+  });
+  await expect.poll(() => at(page, 'fen')).not.toBeNull();
+  await page.locator('#game').focus();
+  // A few pixels off the boardwalk's line, walking up still gets on it.
+  await place(page, 'fen', 451, 236);
+  await walk(page, 'fen', 'w', spot => spot.y < 180);
+  // From where the boardwalk meets the causeway, walking west goes all the way along it, wherever the hero's feet are.
+  await place(page, 'fen', 440, 142);
+  await walk(page, 'fen', 'a', spot => spot.x < 230);
+});

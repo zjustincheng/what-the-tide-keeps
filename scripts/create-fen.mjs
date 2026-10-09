@@ -58,7 +58,8 @@ fill(furniture,26,21,27,22,0);
 fill(furniture,33,17,35,18,0);fill(floor,33,17,35,18,WALK);
 fill(furniture,28,9,29,14,0);fill(floor,28,9,29,14,WALK);fill(furniture,28,8,30,9,0);fill(floor,30,8,30,9,WALK);
 // The causeway to the chapel lies under the water until the sluice is opened.
-fill(furniture,14,7,25,8,0);fill(floor,14,7,25,8,MUD);fill(furniture,26,8,27,9,0);fill(floor,26,8,27,9,MUD);
+// Three tiles wide, so it can be walked without lining up to the pixel, and it meets the boardwalk squarely.
+fill(furniture,14,7,25,9,0);fill(floor,14,7,25,9,MUD);fill(furniture,26,7,27,9,0);fill(floor,26,7,27,9,MUD);
 // The drowned hamlet: roofs and wall stubs standing in the water.
 for(const [x,y,t] of [[6,14,ROOF],[7,14,ROOF],[6,15,STUB],[7,15,STUB],[11,17,ROOF],[12,17,ROOF],[13,17,ROOF],[11,18,STUB],[13,18,STUB],[5,21,ROOF],[6,21,ROOF],[5,22,STUB],[15,12,ROOF],[16,12,ROOF],[16,13,STUB],[9,24,ROOF],[10,24,ROOF]]) put(furniture,x,y,t);
 put(furniture,18,23,SIGN);
@@ -77,10 +78,10 @@ const points=[
   ['sluice',...at(23,34)],['hamlet-sign',...at(18,24)],
   ['otter',...at(44,16)],['traps',...at(40,17)],['fen-spot',...at(49,9)],
   ...[45,46,47,48,49,50,51,52].map((x,i)=>[`reeds-${i+1}`,...at(x,11)]),
-  ['wisp-1',...at(34,5)],['wisp-2',...at(28,18)],
+  ['wisp-1',...at(34,5)],['wisp-2',...at(31,20)],
   ['drowned',...at(6,4)],['chapel-cache',...at(8,4)],['bell',...at(5,5)],
   // Each tile of the causeway is under water until the sluice opens.
-  ...[7,8].flatMap(y=>Array.from({length:12},(_,i)=>[14+i,y])).map(([x,y],i)=>[`flood-${i+1}`,...at(x,y)]),
+  ...[7,8,9].flatMap(y=>Array.from({length:12},(_,i)=>[14+i,y])).map(([x,y],i)=>[`flood-${i+1}`,...at(x,y)]),
   ['willow-sign',...at(31,8)],['forage-1',...at(41,13)],['forage-2',...at(24,26)],['north',608,8],['from-weir',608,40],
 ];
 const layer=(name,data,id)=>({id,name,type:'tilelayer',width:w,height:h,x:0,y:0,opacity:1,visible:true,data});
