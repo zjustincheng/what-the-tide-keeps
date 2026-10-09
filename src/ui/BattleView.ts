@@ -318,7 +318,7 @@ export class BattleView {
       this.timer = setTimeout(() => land('miss'), next ? 400 : 0);
       return;
     }
-    // Each blow asks for its own kind of dodge: a closing ring, a target to click, keys to type, or a bar to stop.
+    // Each blow asks for its own kind of dodge: a closing ring, keys to type, or a bar to stop.
     const kind = dodgeKind(next.move);
     const quick = agility(next.target);
     const card = this.card(next.target.id);
@@ -331,17 +331,6 @@ export class BattleView {
     const pieces: HTMLElement[] = [ring];
     let hint = 'Space or tap · as the ring closes';
     if (kind === 'ring') { card.append(ring); this.root.dataset.impact = String(impact); }
-    if (kind === 'target') {
-      // A circle somewhere over the fight, with its own closing ring: click it as the ring closes.
-      const target = document.createElement('button');
-      target.type = 'button'; target.className = 'dodge-target'; target.setAttribute('aria-label', 'Dodge target');
-      target.style.left = `${15 + Math.random() * 70}%`; target.style.top = `${30 + Math.random() * 45}%`;
-      target.append(ring);
-      target.addEventListener('pointerdown', event => { event.preventDefault(); this.press(true); }, { signal: this.cleanup.signal });
-      this.root.append(target); pieces.push(target);
-      this.root.dataset.impact = String(impact);
-      hint = 'Click the circle as it closes';
-    }
     let keys: number[] = [];
     if (kind === 'keys') {
       // Trace the spell's sigil back at it: three keys, quickly.
@@ -398,16 +387,14 @@ export class BattleView {
     this.timer = setTimeout(() => this.prompt?.answer('miss'), wait);
   }
 
-  // clicked: the press came from clicking the target itself. A key press for a target is allowed, but its window is narrower.
-  private press(clicked = false) {
+  private press() {
     if (!this.prompt) return;
     if (this.prompt.kind === 'keys') return;
     if (this.prompt.kind === 'bar') { this.prompt.answer(this.prompt.stop!()); return; }
     const error = performance.now() - this.prompt.impact;
     // Pressing far too early commits the dodge too soon; it cannot be retried.
     const next = nextStrike(this.state)!;
-    const quick = agility(next.target) * (this.prompt.kind === 'target' && !clicked ? 0.6 : 1);
-    this.prompt.answer(grade(error, next.move, quick), error < 0);
+    this.prompt.answer(grade(error, next.move, agility(next.target)), error < 0);
   }
 
   // A short cue when the fight ends, once.

@@ -76,12 +76,11 @@ export type Battle = Readonly<{
 export type Dodge = 'perfect' | 'graze' | 'miss';
 // How a blow is dodged. ring: press as a ring closes. target: click a circle somewhere on screen as it closes.
 // keys: type a short sequence before a spell lands. bar: stop a sweeping marker in the zone, like reeling a fish.
-export type DodgeKind = 'ring' | 'target' | 'keys' | 'bar';
+export type DodgeKind = 'ring' | 'keys' | 'bar';
 export function dodgeKind(move: Pick<Move, 'dodge' | 'type' | 'drain' | 'hits' | 'damage'>): DodgeKind {
   if (move.dodge) return move.dodge;
   if (move.type === 'spell') return 'keys';
   if (move.drain) return 'bar';
-  if (!move.hits && move.damage >= 10) return 'target';
   return 'ring';
 }
 
