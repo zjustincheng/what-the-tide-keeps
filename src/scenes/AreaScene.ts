@@ -24,6 +24,7 @@ import { loadBooks, saveBooks } from '../storage/books';
 import { loadSettings, saveSettings } from '../storage/settings';
 import type { Area } from './areas';
 import { music } from '../audio/music';
+import type { Surface } from '../audio/effects';
 import { battleTheme } from '../audio/themes';
 import { createSprites } from './sprites';
 
@@ -52,7 +53,13 @@ export class AreaScene extends Phaser.Scene {
   private line = 0;
   private portraitKey?: string;
   private blips: ReturnType<typeof setTimeout>[] = [];
+  // The ground under the hero's feet.
+  surface(): Surface {
+    const tile=this.floor.getTileAtWorldXY(this.player.x, this.player.y+8);
+    return (tile && this.area.surfaces?.[tile.index]) ?? this.area.ground;
+  }
   private lastStep = 0;
+  private floor!: Phaser.Tilemaps.TilemapLayer;
   private foot = 1;
   // Replies on offer under the speaker's last line.
   private options: Choice[] = [];
@@ -94,7 +101,7 @@ export class AreaScene extends Phaser.Scene {
   create() {
     const map = this.make.tilemap({ key: `${this.area.map}-map` });
     const tiles = map.addTilesetImage(this.area.tileset, `${this.area.tileset}-tiles`)!;
-    map.createLayer('Floor', tiles);
+    this.floor = map.createLayer('Floor', tiles)!;
     const furniture = map.createLayer('Furniture', tiles)!;
     furniture.setCollisionByProperty({ collides: true });
     this.points = map.getObjectLayer('Points')!.objects.map(p => ({ name: p.name, x: p.x!, y: p.y! }));
@@ -574,7 +581,7 @@ export class AreaScene extends Phaser.Scene {
     const motion=new Phaser.Math.Vector2(x,y).normalize().scale(70);
     this.player.setVelocity(motion.x,motion.y);
     // Footsteps while walking, alternating feet.
-    if((x||y) && time-this.lastStep>290) { this.lastStep=time; this.foot=-this.foot; music.effect('step', this.foot); }
+    if((x||y) && time-this.lastStep>290) { this.lastStep=time; this.foot=-this.foot; music.effect(`step-${this.surface()}`, this.foot); }
     if(x) this.player.setFlipX(x<0);
     this.player.setDepth(4);
     this.shadow.setPosition(this.player.x,this.player.y+9);

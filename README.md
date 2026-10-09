@@ -77,7 +77,7 @@ The score is original and synthesised live in the browser with Web Audio, with n
 
 Sound effects are synthesised the same way and have their own volume:
 
-- **Walking:** soft footsteps.
+- **Walking:** footsteps that change with the ground: grass, dirt and chalk paths, stone floors and cobbles, wooden bridges, boardwalks and floorboards, water and mud, the woods' leaf litter, and straw. Each area names its usual ground and the floor tiles that differ (`ground` and `surfaces` in `src/scenes/areas.ts`).
 - **Talking:** people blip as each line appears, each voice at its own pitch. Objects and places just click, and so does choosing a reply.
 - **Doors and rewards:** doors creak, finding something chimes, coins clink, and resting crackles like a fire.
 - **Fishing:** a whoosh on the cast, a plop on a bite, then a splash, or a splash and a chime for a catch.
@@ -334,6 +334,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/buildings.spec.ts` — entering the hall, tannery, and mill.
 - `tests/music.spec.ts` — themes per place and battle, muting, volume, and levels.
 - `tests/rules/themes.test.ts` — every theme fits its loop and range.
+- `tests/footsteps.spec.ts` — which surface the hero is standing on.
 - `tests/regions.spec.ts` — reaching the downs, the barrow, and the fen, their quests, and the new enemies.
 - `tests/rules/regions.test.ts` — feeding the hounds, the pack rush, the otter, and the sluice.
 - `tests/running.spec.ts` — running away, campfire costs, the way into the woods, and the death count.

@@ -12,6 +12,7 @@ import type { Encounter } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
 import type { ThemeId } from '../audio/themes';
+import type { Surface } from '../audio/effects';
 
 export type Area = {
   key: string;
@@ -38,6 +39,9 @@ export type Area = {
   // Places to rest: resting heals every wound and brings the area's enemies back.
   // cost: coins for wood and a place by the fire; the church cot is free.
   camps?: Record<string, { prompt: string; lines: string[]; cost?: number }>;
+  // What the ground is made of, for footsteps: ground everywhere, except floor tiles listed in surfaces (by tile number in the map).
+  ground: Surface;
+  surfaces?: Partial<Record<number, Surface>>;
   decorate?: (scene: Phaser.Scene) => void;
   // The theme that plays here.
   music: ThemeId;
@@ -50,7 +54,7 @@ const PRACTICE = typeof location !== 'undefined' && new URLSearchParams(location
 
 export const CHURCH: Area = {
   key: 'church', map: 'church', tileset: 'church', music: 'church', region: 'THE CAPITAL', place: 'Church of the Covenant', time: 'Before dawn',
-  bounds: [32, 48, 448, 304], dialogue: church,
+  bounds: [32, 48, 448, 304], dialogue: church, ground: 'stone',
   // Candlelight keeps a little warmth in the church; everywhere else is colder.
   grade: { saturation: -0.35, brightness: 0.78, vignette: 0.5 },
   npcs: [{ point: 'priest', texture: 'priest' }],
@@ -82,6 +86,7 @@ const GUARDED: Partial<Record<string, Flag>> = { 'shrine-cache': 'warden-slain',
 export const FARMLAND: Area = {
   key: 'farmland', map: 'farmland', tileset: 'fields', music: 'fields', region: 'THE FARMLAND', place: 'The fields', time: 'Dawn',
   dialogue: fields, assets: ['bear', 'nymph', 'votive'],
+  ground: 'grass', surfaces: { 3: 'dirt', 16: 'wood', 17: 'water', 27: 'leaves' },
   npcs: [{ point: 'bear', texture: 'bear', hiddenIf: [{ flag: 'bear-free' }] }, { point: 'miller', texture: 'miller' }, { point: 'heron', texture: 'heron' }, { point: 'shepherd', texture: 'shepherd' }],
   enemies: [
     // The reeve's fields: clearing both earns the writ that frees the bear.
@@ -135,7 +140,7 @@ export const FARMLAND: Area = {
 
 export const TOWN: Area = {
   key: 'town', map: 'town', tileset: 'town', music: 'town', region: 'THE FARMLAND', place: 'Millbrook', time: 'Morning',
-  dialogue: town, enemies: [],
+  dialogue: town, enemies: [], ground: 'stone', surfaces: { 3: 'grass', 4: 'dirt' },
   npcs: ['reeve', 'innkeeper', 'shopkeeper', 'child', 'fishmonger', 'fox'].map(name => ({ point: name, texture: name })),
   props: [{ point: 'stocks', texture: 'stocks', solid: true, hiddenIf: [] }],
   exits: {
@@ -157,7 +162,7 @@ export const TOWN: Area = {
 
 export const BORDER_ROAD: Area = {
   key: 'border-road', map: 'border-road', tileset: 'border', music: 'wilds', region: 'THE FARMLAND', place: 'The border road', time: 'Midday',
-  dialogue: border, enemies: [{ point: 'follower', encounter: 'acolyte' }],
+  dialogue: border, enemies: [{ point: 'follower', encounter: 'acolyte' }], ground: 'grass', surfaces: { 2: 'dirt' },
   npcs: [{ point: 'driver', texture: 'driver' }, { point: 'guard', texture: 'guard' }],
   camps: { 'camp-border': { prompt: 'Rest by the fire', cost: 4, lines: ['The carters let you sit at their fire. Nobody talks much.'] } },
   props: [
@@ -173,7 +178,7 @@ export const BORDER_ROAD: Area = {
 
 export const BOAR_FARM: Area = {
   key: 'boar-farm', map: 'boar-farm', tileset: 'ash', music: 'wilds', region: 'THE FARMLAND', place: 'The burned farm', time: 'Afternoon',
-  dialogue: farm, npcs: [], assets: ['badger', 'rat'],
+  dialogue: farm, npcs: [], assets: ['badger', 'rat'], ground: 'dirt', surfaces: { 1: 'grass' },
   enemies: [{ point: 'boar', encounter: 'boar', hiddenIf: [{ flag: 'boar-defeated' }], defeat: { set: 'boar-defeated' } }],
   props: [
     // The boar's followers leave, one way or another, once the hero decides what becomes of them.
@@ -194,7 +199,8 @@ export const BOAR_FARM: Area = {
 };
 
 // Building interiors: small rooms in the dark, lit warmer than the fields outside.
-const INDOORS: Pick<Area, 'region' | 'tileset' | 'grade' | 'enemies' | 'music'> = { region: 'THE FARMLAND', tileset: 'interior', music: 'hearth', grade: { saturation: -0.3, brightness: 0.74, vignette: 0.55 }, enemies: [] };
+const INDOORS: Pick<Area, 'region' | 'tileset' | 'grade' | 'enemies' | 'music' | 'ground' | 'surfaces'> = { region: 'THE FARMLAND', tileset: 'interior', music: 'hearth', grade: { saturation: -0.3, brightness: 0.74, vignette: 0.55 }, enemies: [],
+  ground: 'wood', surfaces: { 3: 'stone', 19: 'straw', 23: 'straw' } };
 export const INN: Area = { ...INDOORS, key: 'inn', map: 'inn', place: 'Millbrook · The inn', time: 'Morning', dialogue: inn,
   npcs: [{ point: 'drinker', texture: 'drinker' }, { point: 'patron', texture: 'patron' }],
   camps: { bed: { prompt: 'Sleep in the bed', lines: ['You sleep in a real bed for the first time you can remember. Your wounds close and your mana returns.'] } },
@@ -210,7 +216,7 @@ export const MILL: Area = { ...INDOORS, key: 'mill-inside', map: 'mill-inside', 
 const PACK_GONE = [{ flag: 'pack-slain' as const }, { flag: 'hounds-fed' as const }];
 export const DOWNS: Area = {
   key: 'downs', map: 'downs', tileset: 'downs', music: 'fields', region: 'THE FARMLAND', place: 'The downs', time: 'Late morning',
-  dialogue: downs, assets: ['hound'],
+  dialogue: downs, assets: ['hound'], ground: 'grass', surfaces: { 3: 'dirt', 7: 'stone', 11: 'dirt', 25: 'dirt', 26: 'dirt' },
   grade: { saturation: -0.3, brightness: 0.86, vignette: 0.4 },
   npcs: [{ point: 'ram', texture: 'ram' }],
   enemies: [
@@ -241,7 +247,7 @@ export const DOWNS: Area = {
 };
 export const BARROW: Area = {
   key: 'barrow', map: 'barrow', tileset: 'downs', music: 'wilds', region: 'THE FARMLAND', place: 'The barrow', time: 'Late morning',
-  dialogue: barrow, enemies: [], grade: { saturation: -0.4, brightness: 0.62, vignette: 0.7 },
+  dialogue: barrow, enemies: [], ground: 'stone', surfaces: { 22: 'straw' }, grade: { saturation: -0.4, brightness: 0.62, vignette: 0.7 },
   npcs: [{ point: 'hound-mother', texture: 'hound-mother', hiddenIf: PACK_GONE }],
   exits: { out: { to: 'downs', spawn: 'from-barrow', prompt: 'Go back out into the light' } },
 };
@@ -249,7 +255,7 @@ export const BARROW: Area = {
 // The fen, upstream of the mill, over the drowned hamlet. The sluice drains it enough to reach the chapel.
 export const FEN: Area = {
   key: 'fen', map: 'fen', tileset: 'fen', music: 'wilds', region: 'THE FARMLAND', place: 'The fen', time: 'Grey afternoon',
-  dialogue: fen, grade: { saturation: -0.45, brightness: 0.7, vignette: 0.55 },
+  dialogue: fen, ground: 'grass', surfaces: { 2: 'water', 3: 'wood', 10: 'water' }, grade: { saturation: -0.45, brightness: 0.7, vignette: 0.55 },
   npcs: [{ point: 'otter', texture: 'otter', hiddenIf: [{ flag: 'otter-reported' }] }],
   enemies: [
     { point: 'wisp-1', encounter: 'wisp' }, { point: 'wisp-2', encounter: 'wisp' },
