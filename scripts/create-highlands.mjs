@@ -43,10 +43,14 @@ const HIGHLAND = [
   rect(0,0,16,16,'#4a3e2c')+rect(0,0,16,2,'#3a3022')+rect(0,14,16,2,'#3a3022')+rect(4,6,4,1,'#5a4c36'),    // 25 trench
   rect(0,0,16,16,'#3a5058')+rect(2,4,5,1,'#5a7078')+rect(9,10,5,1,'#5a7078'),                              // 26 icy stream
   rect(0,0,16,16,'#55573e')+rect(1,6,14,9,'#7a7058')+rect(3,3,10,4,'#8a8068')+rect(6,1,4,3,'#9a9078')+rect(7,9,2,6,'#3a2e22'), // 27 tent
+  rect(0,0,16,16,'#9aaab0')+rect(2,4,6,1,'#b8c6ca')+rect(9,10,5,1,'#b8c6ca')+rect(4,12,3,1,'#7a8a90'),     // 28 ice
+  rect(0,0,16,16,'#9aaab0')+rect(3,3,10,10,'#2a3a40')+rect(4,4,8,8,'#1a2a30')+rect(3,3,10,1,'#c8d6da'),    // 29 hole in the ice
+  rect(0,0,16,16,'#4a3a2c')+[1,5,9,13].map(y=>rect(0,y,16,3,'#5d4630')).join('')+rect(0,0,16,1,'#c8ccc8'), // 30 log hut
+  rect(0,0,16,16,'#9aaab0')+rect(3,5,10,6,'#7a8288')+rect(4,6,4,3,'#a89878')+rect(10,7,2,2,'#6a5a48')+rect(2,4,1,1,'#b8c6ca'), // 31 a body under the ice
 ];
 sheet('highland', HIGHLAND);
-const H = Object.fromEntries(['HEATHER','STONES','ROAD','ROCK','SCREE','PINE','SNOW','BOULDER','CAIRN','SIGN','DEAD','MOUND','BONES','PIT','CHASM','BRIDGE','AWALL','FLAG','PILLAR','BONEWALL','OFLOOR','VOID','NICHE','STAIR','BANNER','TRENCH','STREAM','TENT'].map((n,i)=>[n,i+1]));
-const HIGHLAND_SOLID = [3,5,7,8,9,10,11,13,14,16,18,19,21,22,24,26,27];
+const H = Object.fromEntries(['HEATHER','STONES','ROAD','ROCK','SCREE','PINE','SNOW','BOULDER','CAIRN','SIGN','DEAD','MOUND','BONES','PIT','CHASM','BRIDGE','AWALL','FLAG','PILLAR','BONEWALL','OFLOOR','VOID','NICHE','STAIR','BANNER','TRENCH','STREAM','TENT','ICE','HOLE','HUT','FROZEN'].map((n,i)=>[n,i+1]));
+const HIGHLAND_SOLID = [3,5,7,8,9,10,11,13,14,16,18,19,21,22,24,26,27,29,30];
 
 // The fort town: a carnivore garrison behind stone walls.
 const FORT = [
@@ -114,6 +118,8 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
   for(const [x,y] of [[4,58],[30,56],[34,49],[3,48],[16,42],[33,36],[6,30],[14,24],[33,24],[5,16],[30,12],[35,4],[9,6],[24,9],[3,37],[36,60]]) put(furniture,x,y,H.PINE);
   for(const [x,y] of [[25,57],[6,54],[22,48],[31,43],[17,36],[5,26],[24,30],[30,17],[11,12],[27,4]]) put(furniture,x,y,H.BOULDER);
   fill(floor,6,42,9,44,H.SCREE);fill(floor,30,28,35,31,H.SCREE);
+  // A spur west to the cliff edge, where a rope ladder drops to the tarn.
+  fill(floor,1,39,10,40,H.ROAD);fill(furniture,0,39,0,40,0);
   put(furniture,22,61,H.SIGN);put(furniture,23,28,H.CAIRN);
   write('pass','highland',HROWS,HIGHLAND_SOLID,m,[
     ['south',...at(19,63).map((v,i)=>i===0?v+8:v)],['from-border',320,1000],['north',320,8],['from-fort',320,36],
@@ -121,6 +127,7 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
     ['raider-1',...at(20,56)],['raider-2',...at(10,44)],['raider-3',...at(28,30)],
     ['courier',...at(7,43)],['camp-pass',...at(33,38)],
     ['inquisitor',...at(22,10)],
+    ['west',8,640],['from-tarn',28,640],['ladder-top',...at(3,38)],
   ]);
 }
 
@@ -162,6 +169,8 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
   scatter(m,110,H.BONES,31,17,(x,y)=>x<43);
   fill(furniture,0,0,55,0,H.ROCK);fill(furniture,0,39,55,39,H.ROCK);fill(furniture,0,0,0,39,H.ROCK);fill(furniture,55,0,55,39,H.ROCK);
   fill(furniture,0,19,0,20,0);fill(floor,0,19,43,20,H.ROAD);
+  // The drove road comes up from the downs to a gate in the south.
+  fill(furniture,20,39,21,39,0);fill(floor,20,32,21,39,H.ROAD);
   // Old trenches across the field.
   fill(floor,6,8,30,9,H.TRENCH);fill(floor,10,30,38,31,H.TRENCH);fill(floor,22,24,23,34,H.TRENCH);
   // Grave mounds in rows, and the open pits.
@@ -179,6 +188,7 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
     ['vulture',...at(32,11)],['ghoul-1',...at(16,28)],['ghoul-2',...at(36,21)],
     ['tent',...at(20,6)],['graves',...at(12,14)],['pit',...at(31,16)],['tracks',...at(41,18)],['ravine',...at(43,19)],
     ...[44,45,46,47].flatMap((x,i)=>[[`gap-${i*2+1}`,...at(x,19)],[`gap-${i*2+2}`,...at(x,20)]]),
+    ['south',336,632],['from-drove',336,600],['drove-gate',336,616],
   ]);
 }
 
@@ -216,5 +226,51 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
   write('ossuary','highland',HROWS,HIGHLAND_SOLID,m,[
     ['up',...at(15,19).map((v,i)=>i===0?v+8:v)],['spawn',256,288],
     ['hyena',...at(15,8)],['den',...at(15,9)],['ledger',...at(20,6)],['shelves',...at(8,11)],
+  ]);
+}
+
+// The high tarn: a frozen lake under the pass, reached up the smugglers' stair from the weir.
+{
+  const m=grid(44,32,H.HEATHER);const {floor,furniture,put,fill}=m;
+  scatter(m,60,H.SNOW,23,11,()=>true);
+  fill(furniture,0,0,43,0,H.ROCK);fill(furniture,0,31,43,31,H.ROCK);fill(furniture,0,0,0,31,H.ROCK);fill(furniture,43,0,43,31,H.ROCK);
+  // Up the stair from the weir in the south-west; the rope ladder up to the pass on the east cliff.
+  fill(furniture,4,31,5,31,0);fill(floor,4,26,5,31,H.SCREE);
+  fill(furniture,43,14,43,15,0);fill(floor,38,14,42,15,H.SCREE);
+  fill(furniture,40,1,42,13,H.ROCK);fill(furniture,40,16,42,30,H.ROCK);
+  // The lake, frozen hard; a hole cut for fishing; a body under the ice.
+  fill(floor,12,8,34,24,H.ICE);put(furniture,22,16,H.HOLE);put(floor,28,12,H.FROZEN);put(floor,29,12,H.FROZEN);
+  // The trapper's hut on the north-east shore.
+  fill(furniture,34,3,38,6,H.HUT);
+  for(const [x,y] of [[3,4],[8,3],[6,12],[3,18],[9,27],[15,4],[31,28],[37,24],[24,28],[2,9]]) put(furniture,x,y,H.PINE);
+  for(const [x,y] of [[10,21],[36,18],[19,5]]) put(furniture,x,y,H.BOULDER);
+  put(furniture,7,24,H.CAIRN);
+  write('tarn','highland',HROWS,HIGHLAND_SOLID,m,[
+    ['stair',80,504],['from-weir',80,472],['ladder',696,240],['from-pass',660,240],
+    ['tarn-spot',...at(22,17)],['ice-body',...at(28,13)],['trapper',...at(36,8)],['camp-tarn',...at(33,9)],['tarn-cairn',...at(7,25)],
+    ['hound-1',...at(18,11)],['hound-2',...at(30,20)],['raider-1',...at(10,16)],
+  ]);
+}
+
+// The drove road: up from the downs to the battlefield's south gate, past the drovers' shelter and a raider camp.
+{
+  const m=grid(56,24,H.HEATHER);const {floor,furniture,put,fill}=m;
+  scatter(m,70,H.STONES,29,13,()=>true);
+  fill(furniture,0,0,55,0,H.ROCK);fill(furniture,0,23,55,23,H.ROCK);fill(furniture,0,0,0,23,H.ROCK);fill(furniture,55,0,55,23,H.ROCK);
+  fill(furniture,0,10,0,11,0);fill(furniture,44,0,45,0,0);
+  // The road: east from the downs, then north up to the gate.
+  fill(floor,0,10,45,11,H.ROAD);fill(floor,44,0,45,11,H.ROAD);
+  // The drovers' shelter, by the road.
+  put(furniture,14,7,H.TENT);put(furniture,15,7,H.TENT);put(furniture,17,8,H.CAIRN);
+  // The raider camp in the south-east hollow, behind a ring of boulders.
+  for(const [x,y] of [[38,14],[39,14],[44,14],[45,14],[37,15],[37,16],[46,15],[46,17],[37,19],[46,19],[38,20],[45,20]]) put(furniture,x,y,H.BOULDER);
+  put(furniture,41,17,H.TENT);put(furniture,43,18,H.BANNER);
+  for(const [x,y] of [[5,4],[9,17],[22,3],[27,19],[33,5],[50,6],[52,17],[24,14],[6,20]]) put(furniture,x,y,H.PINE);
+  put(furniture,30,9,H.SIGN);
+  write('drove','highland',HROWS,HIGHLAND_SOLID,m,[
+    ['west',8,168],['from-downs',28,168],['north',712,8],['from-battlefield',712,40],
+    ['drover',...at(16,9)],['sheep-a',...at(12,8)],['sheep-b',...at(19,6)],['sheep-c',...at(20,8)],['drove-cairn',...at(17,9)],['drove-sign',...at(30,10)],
+    ['raider-1',...at(40,16)],['raider-2',...at(43,16)],['hound-1',...at(28,14)],['raider-stash',...at(42,19)],
+    ['gate-1',712,24],['gate-2',728,24],
   ]);
 }

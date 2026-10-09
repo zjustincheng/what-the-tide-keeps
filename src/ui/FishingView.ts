@@ -9,6 +9,7 @@ const STRUGGLE = 4000;
 const FISH_ART: Record<FishId, string> = {
   minnow: '<svg viewBox="0 0 16 8" width="32" height="16" shape-rendering="crispEdges"><path fill="#9aa6a8" d="M3 2h8v4H3z"/><path fill="#c8d0d0" d="M4 2h6v2H4z"/><path fill="#7a8688" d="M0 1h3v6H0z"/><path fill="#141414" d="M9 3h1v1H9z"/></svg>',
   perch: '<svg viewBox="0 0 20 10" width="40" height="20" shape-rendering="crispEdges"><path fill="#8a8a4a" d="M4 2h12v6H4z"/><path fill="#b8a85a" d="M5 6h10v2H5z"/><path fill="#4a4a2a" d="M7 2h1v4H7zM10 2h1v4h-1zM13 2h1v4h-1z"/><path fill="#a85a3a" d="M0 1h4v8H0zM7 0h5v2H7z"/><path fill="#141414" d="M14 4h1v1h-1z"/></svg>',
+  char: '<svg viewBox="0 0 20 8" width="40" height="16" shape-rendering="crispEdges"><path fill="#5a6a6a" d="M3 2h12v4H3z"/><path fill="#c85a3a" d="M4 5h10v1H4z"/><path fill="#e8e0d0" d="M5 3h1v1H5zM9 2h1v1H9zM12 3h1v1h-1z"/><path fill="#4a5a5a" d="M0 1h3v6H0zM15 2h3v4h-3z"/><path fill="#141414" d="M16 3h1v1h-1z"/></svg>',
   eel: '<svg viewBox="0 0 28 8" width="56" height="16" shape-rendering="crispEdges"><path fill="#2a3428" d="M2 3h22v3H2z"/><path fill="#3e4a38" d="M4 3h18v1H4z"/><path fill="#2a3428" d="M22 2h5v4h-5zM0 4h3v1H0z"/><path fill="#c8b870" d="M25 3h1v1h-1z"/></svg>',
 };
 

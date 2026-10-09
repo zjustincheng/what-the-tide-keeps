@@ -9,6 +9,12 @@ export const pass: Dialogue = {
   cairn: { speaker: 'A CAIRN', prompt: 'Examine the cairn', lines: [
     'A cairn for the garrison dead, one stone each. It is taller than you, and nobody has knocked it down.',
   ] },
+  // A shortcut opened from above: the rope ladder down to the tarn.
+  'ladder-top': { speaker: 'THE CLIFF EDGE', prompt: 'Examine the rope ladder', hiddenIf: [{ flag: 'ladder-down' }], lines: [
+    'A rope ladder, coiled and lashed to an iron ring at the cliff edge. Far below, a frozen lake.',
+  ], choices: [
+    { text: 'Untie it and let it down.', ends: true, lines: ['It unrolls all the way down to the scree above the tarn. Now there is a way down, and a way up.'], then: { set: 'ladder-down' } },
+  ] },
   // A letter carried through the highlands is lost if the party wipes, and goes back to the body.
   courier: { speaker: 'A COURIER', prompt: 'Search the body', hiddenIf: [{ has: 'letter' }, { flag: 'letter-delivered' }], lines: [
     'A courier in church grey, face down in the snow. Not raiders: nothing has been taken.',
@@ -67,7 +73,12 @@ export const fort: Dialogue = {
     'The market\'s a night thing, mostly. For you I\'m open.',
     'Salts, firepots, smoked fish. Meat, for those who ask properly. You don\'t look like you\'re asking.',
     'I\'ll buy fish, too. Fish is worth something up here.',
-  ], then: { shop: 'fence' } },
+  ], then: { shop: 'fence' }, choices: [
+    { text: 'A delivery, from the weir.', if: { has: 'crate' }, ends: true, lines: [
+      'She pries the lid up an inch, sniffs, and presses it shut again.',
+      '"Salt cod. The church would hang us both. Here." You receive 20 coins.',
+    ], then: { take: 'crate', earn: 20, set: 'crate-delivered' } },
+  ] },
   board: { speaker: 'THE NOTICE BOARD', prompt: 'Read the notice board', lines: [
     'CHURCH OF THE COVENANT. By order, the highland fish ration is reduced, for the good of all. Complaints to the quartermaster.',
     'Under it, rows of scratched lines. Somebody has been counting the days.',
@@ -126,6 +137,12 @@ export const battlefield: Dialogue = {
   ] },
   tracks: { speaker: 'DRAG MARKS', prompt: 'Examine the tracks', lines: [
     'Drag marks in the frost, heading east to the ravine. Whatever carried the dead didn\'t care how.',
+  ] },
+  // A shortcut opened from this side: the drovers' gate down to the downs.
+  'drove-gate': { speaker: 'THE DROVERS\' GATE', prompt: 'Examine the gate', hiddenIf: [{ flag: 'drove-gate-open' }], lines: [
+    'A drovers\' gate at the bottom of the field, barred on this side with a beam. The track beyond runs down toward the downs.',
+  ], choices: [
+    { text: 'Lift the bar.', ends: true, lines: ['The beam is frozen into its brackets. It comes free with a crack. Now the road runs both ways.'], then: { set: 'drove-gate-open' } },
   ] },
   // Some gates no spell opens: only a companion can.
   ravine: { speaker: 'THE RAVINE', prompt: 'Examine the bridge', lines: [
@@ -268,3 +285,66 @@ export const ossuary: Dialogue = {
 battlefield.vulture.variants![0].choices = battlefield.vulture.choices;
 // Coming back to the monk with the key in hand, the same replies stand.
 abbey.monk.variants![0].choices = abbey.monk.choices;
+
+// The high tarn: a frozen lake under the pass, a trapper, and what the ice keeps.
+export const tarn: Dialogue = {
+  trapper: { speaker: 'THE TRAPPER', prompt: 'Speak to the trapper', lines: [
+    'Mind the ice by the middle. It held her too, until it didn\'t.',
+  ], variants: [{ if: { flag: 'ring-returned' }, lines: [
+    'The ice will go in a month. I\'ll be here.',
+  ] }], choices: [
+    { text: 'Held who?', lines: [
+      'My partner. Forty winters on this lake. She went through last spring, and it closed over her.',
+      'When the light\'s right I can see her from the shore. I can\'t make myself go out there.',
+    ] },
+    { text: 'Give him the ring.', if: { has: 'ring' }, ends: true, lines: [
+      'He holds it for a long time without saying anything.',
+      '"Take this. It was hers. Better on someone moving." He gives you a band of dark iron, cold as the lake.',
+      'The Frost ring is a keepsake. Only the vulture can wear it.',
+    ], then: { take: 'ring', set: 'ring-returned', find: 'frost-ring' } },
+    { text: 'What is up the cliff?', lines: [
+      'The pass. The garrison road. There\'s a rope ladder, if someone up there has let it down.',
+      'Nobody has, since the inquisitor came through asking who uses it.',
+    ] },
+    { text: 'Who else comes this way?', lines: [
+      'Otters. Smugglers. Once, last winter, a man with no fur, going down. He asked me how long a body keeps in ice.',
+      'I told him. He thanked me like it was good news.',
+    ] },
+  ] },
+  'ice-body': { speaker: 'UNDER THE ICE', prompt: 'Look through the ice', hiddenIf: [{ has: 'ring' }, { flag: 'ring-returned' }], lines: [
+    'Under the ice, a lynx in a trapper\'s coat, eyes open. A ring on one finger.',
+  ], choices: [
+    { text: 'Break the ice and take the ring.', ends: true, lines: [
+      'You break through with a rock. The cold takes your breath. You take the ring and let the water close over her again.',
+    ], then: { give: 'ring' } },
+  ] },
+  'tarn-cairn': { speaker: 'A CAIRN', prompt: 'Examine the cairn', lines: [
+    'A cairn for the ones the lake kept. Seven stones. The newest has a ring scratched into it.',
+  ] },
+};
+
+// The drove road between the downs and the battlefield gate.
+export const drove: Dialogue = {
+  drover: { speaker: 'THE DROVER', prompt: 'Speak to the wolf', lines: [
+    'Drover. I take the ram\'s lambs and the downs\' wool up to the fort, and bring back coin they won\'t touch with their hooves.',
+    'The herbivores won\'t drive their own flocks up to a carnivore fort. So they pay a wolf to do it. Nobody sees the joke but me.',
+  ], variants: [{ if: { flag: 'drove-gate-open' }, lines: [
+    'Gate\'s open. That\'s a day off every trip. I owe you a drink I\'ll never buy you.',
+  ] }], choices: [
+    { text: 'Raiders?', lines: ['In the hollow to the south-east. They take a sheep a trip and leave me the rest, so I keep coming. Practical people.'] },
+    { text: 'Why is the gate at the top barred?', if: { not: { flag: 'drove-gate-open' } }, lines: ['The garrison bars it from their side. Lift it from up there sometime and I\'ll be a day quicker.'] },
+    { text: 'Who else uses this road?', lines: [
+      'Me. Sheep. Lately a man with no fur, going up toward the abbey with a sack that wasn\'t wool.',
+    ] },
+  ] },
+  'drove-cairn': { speaker: 'THE DROVERS\' CAIRN', prompt: 'Examine the cairn', lines: [
+    'Every drover adds a stone going up. The bottom stones are carved with wolves. The top ones with nothing.',
+  ] },
+  'drove-sign': { speaker: 'A SIGNPOST', prompt: 'Read the signpost', lines: [
+    'THE DROVE ROAD. West: the downs. North: the battlefield gate, and the fort.',
+  ] },
+  'raider-stash': { speaker: 'THE RAIDERS\' TENT', prompt: 'Search the tent', hiddenIf: [{ flag: 'drover-cache' }], lines: [
+    'Under the raiders\' bedding: a purse of mixed coin, some of it church, and a firepot wrapped in a sheepskin.',
+    'You receive 12 coins and a firepot.',
+  ], then: { earn: 12, supply: 'firepot', set: 'drover-cache' } },
+};

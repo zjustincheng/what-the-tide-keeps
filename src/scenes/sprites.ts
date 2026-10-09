@@ -28,6 +28,13 @@ const VILLAGERS: Record<string, Villager> = {
   sow: { fur: 0x9a7a6a, muzzle: 0xc8a090, cloth: 0x4a3a30, trim: 0x6a4a3a, ears: 'pointed' },
   kid: { fur: 0xd8ccb0, muzzle: 0x8a7a68, cloth: 0x6a7a5a, trim: 0xb8a988, ears: 'horns', child: true },
   monk: { fur: 0xc8c0b0, muzzle: 0x7a6e60, cloth: 0x3a3430, trim: 0x5a5048, ears: 'horns' },
+  // The weir: the fishery's goose, the otters, and a mink smuggler. The tarn's trapper and the drove road's wolf.
+  goose: { fur: 0xe8e4d8, muzzle: 0xd8903a, cloth: 0x4a5a6a, trim: 0xc8b878, ears: 'wool' },
+  'otter-elder': { fur: 0x5a4030, muzzle: 0xa89078, cloth: 0x3a4a44, trim: 0x6a6a5a, ears: 'pointed' },
+  'otter-kit': { fur: 0x6a4a30, muzzle: 0xb8a088, cloth: 0x4a5a50, trim: 0x7a7a6a, ears: 'pointed', child: true },
+  mink: { fur: 0x2e2420, muzzle: 0x8a7a6a, cloth: 0x4a3a28, trim: 0x8a6a3a, ears: 'pointed' },
+  trapper: { fur: 0xa88a60, muzzle: 0xe0d4bc, cloth: 0x5a4a3a, trim: 0xc8ccc8, ears: 'pointed' },
+  drover: { fur: 0x7a7a74, muzzle: 0xc0b8a8, cloth: 0x5a4a30, trim: 0x8a3a30, ears: 'pointed' },
   // The fort town in the highlands: a carnivore garrison, and the herbivores who trade there.
   sergeant: { fur: 0x6a6a6a, muzzle: 0xb8b0a0, cloth: 0x4a3a34, trim: 0x8a3a30, ears: 'pointed' },
   quartermaster: { fur: 0x3a3a38, muzzle: 0xe0dcd0, cloth: 0x5a5040, trim: 0x8a7a5a, ears: 'pointed' },
@@ -101,6 +108,18 @@ export function createSprites(scene: Phaser.Scene) {
   const crow = scene.make.graphics({ x: 0, y: 0 });
   crow.fillStyle(0x0e0f10).fillRect(0, 2, 3, 1).fillRect(2, 1, 4, 3).fillRect(5, 2, 3, 1).fillRect(3, 0, 2, 1);
   crow.generateTexture('crow', 8, 4); crow.destroy();
+  // The fishery's cage on the weir: iron bars standing in the river.
+  const cage = scene.make.graphics({ x: 0, y: 0 });
+  cage.fillStyle(0x2a2a2e).fillRect(0, 0, 18, 2).fillRect(0, 18, 18, 2);
+  for (const x of [0, 4, 8, 12, 16]) cage.fillStyle(0x3a3a40).fillRect(x, 0, 2, 20);
+  cage.fillStyle(0x6a6a70).fillRect(7, 8, 4, 4);
+  cage.generateTexture('cage', 18, 20); cage.destroy();
+  // The drovers' gate: a five-bar gate with a beam across it.
+  const gate = scene.make.graphics({ x: 0, y: 0 });
+  for (const y of [2, 6, 10, 14]) gate.fillStyle(0x6a5236).fillRect(0, y, 16, 2);
+  gate.fillStyle(0x4a3828).fillRect(0, 0, 2, 16).fillRect(14, 0, 2, 16);
+  gate.fillStyle(0x3a2e22).fillRect(0, 7, 16, 3);
+  gate.generateTexture('gate', 16, 16); gate.destroy();
   // Charred beams across the lane to the burned farm.
   const barricade = scene.make.graphics({ x: 0, y: 0 });
   barricade.fillStyle(0x1e1814).fillRect(0, 5, 16, 6);

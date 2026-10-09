@@ -301,6 +301,14 @@ Once the boar is dead the priest has new orders: bodies are going missing from t
 
 The vulture's note teaches **anchors**. Once she has joined, every rest at a fire, bed, or cot offers to **write a memory down**. A written memory can't be chosen when the next wipe takes something; after that death it has to be written again. There is one slot. Anchors are saved with the memories in `tide-keeps.memory.v1`.
 
+## A connected world
+
+The regions are joined in more than one place, and some links only open from the far side, so the world folds back on itself:
+
+- **The weir**, up the path north from the fen's meadow, is the otters' country. The church fishery's goose warden has caged the otter's brother for poaching eels his family has taken for a hundred years. Pay the warden 15 coins, or bring the bear to lean on his hut, and open the cage. The old otter gives you the **Weir hook** (a keepsake: hits 2 harder, shows 1 more mana) and shows you the smugglers' stair. Her kit remembers the man with no fur asking how many fish the church takes. A mink smuggler will give you a crate to carry to the weasel in the fort's alley, a two-region errand worth 20 coins; it's lost if you die on the way. The eel weir can be fished, and marsh lights and one of Wetherby's drowned guard the banks.
+- **The high tarn**, up the smugglers' stair, is a frozen lake under the pass. Cut fishing holds **mountain char**, the most valuable fish, found nowhere else. The trapper's partner lies under the ice; bring him her ring and he gives you the **Frost ring** (the vulture's keepsake: 7 more health, hits 1 softer). Hounds and a raider hunt on the ice. A rope ladder climbs to the middle of the pass, but it can only be let down from the pass side.
+- **The drove road** runs from the downs, east up the chalk, to the battlefield's south gate. A wolf drover takes herbivores' sheep up to the carnivores' fort for them, and remembers a man with no fur carrying a sack toward the abbey. Raiders camp in a ring of boulders with a stash of stolen coin. The gate at the top is barred from the battlefield side: lift the bar from there and the road opens both ways.
+
 ## Death and memory
 
 The hero begins with eight of his ten memories; his home and his name were lost before the game starts. A party wipe wakes him at the cot, where he must choose one held memory to forget before he can move. Each memory shows what forgetting it costs and the Hollow perk that replaces it:
@@ -373,6 +381,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/buildings.spec.ts` — entering the hall, tannery, and mill.
 - `tests/music.spec.ts` — themes per place and battle, muting, volume, and levels.
 - `tests/rules/themes.test.ts` — every theme fits its loop and range.
+- `tests/connected.spec.ts` and `tests/rules/connected.test.ts` — the weir, the tarn, the drove road, and their shortcuts.
 - `tests/preboss.spec.ts` and `tests/rules/preboss.test.ts` — what has to be done before the boar and the hyena, and their conversations.
 - `tests/alive.spec.ts` — enemies chasing and giving up, and fighters reacting in battle.
 - `tests/highlands.spec.ts` — the pass and its ambushes, the courier's letter, the vulture's duel and note, the bridge, anchors, the deserters, the hyena, and the inquisitor.

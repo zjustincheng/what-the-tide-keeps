@@ -1843,6 +1843,26 @@
               "value": true
             }
           ]
+        },
+        {
+          "id": 29,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 30,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
         }
       ]
     }

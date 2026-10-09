@@ -61,7 +61,9 @@ const at=(x,y)=>[x*16+8,y*16+8];
   fill(furniture,0,0,59,0,BORDER);fill(furniture,0,39,59,39,BORDER);fill(furniture,0,0,0,39,BORDER);fill(furniture,59,0,59,39,BORDER);
   // In from the fields on the west, the chalk path forks for the tower, the hut, and the barrow.
   fill(furniture,0,19,0,20,0);fill(floor,0,19,47,20,PATH);
-  fill(floor,30,9,31,18,PATH);fill(floor,22,21,23,29,PATH);fill(floor,46,21,47,24,PATH);
+  fill(floor,30,9,31,18,PATH);
+  // East up the slope to the drove road.
+  fill(floor,48,19,55,20,PATH);fill(floor,54,9,55,20,PATH);fill(floor,54,9,59,10,PATH);fill(furniture,59,9,59,10,0);fill(floor,22,21,23,29,PATH);fill(floor,46,21,47,24,PATH);
   put(furniture,3,17,SIGN);
   // The watchtower: a broken ring of wall with the doorway on the south side.
   fill(furniture,25,2,36,2,TOWER);fill(furniture,25,2,25,8,TOWER);fill(furniture,36,2,36,8,TOWER);fill(furniture,25,8,36,8,TOWER);
@@ -87,7 +89,7 @@ const at=(x,y)=>[x*16+8,y*16+8];
     ['ram',...at(49,19)],['kid',...at(53,19)],['hut',...at(50,18)],['camp-downs',...at(44,22)],['fold',...at(54,25)],['sheep-1',...at(55,24)],['sheep-2',...at(54,26)],
     ['dewpond-spot',...at(40,24)],
     ['barrow-door',368,472],['from-barrow',368,456],
-    ['figure',...at(42,33)],['cairn',...at(8,31)],
+    ['figure',...at(42,33)],['east',952,160],['from-drove',932,160],['cairn',...at(8,31)],
     ['hound-west',...at(12,13)],['hound-east',...at(46,33)],
   ]);
 }

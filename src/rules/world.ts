@@ -10,13 +10,14 @@ import { FISH_IDS, NO_CATCH } from './fishing.ts';
 import type { Catch } from './fishing';
 
 // Carried items are lost on a wipe and go back to where they were found.
-export type Item = 'bell' | 'letter' | 'note';
+export type Item = 'bell' | 'letter' | 'note' | 'crate' | 'ring';
 export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated' | 'pests-field' | 'pests-yard' | 'writ-given' | 'bear-free' | 'vulture-free'
   | 'sheep-woods' | 'sheep-orchard' | 'sheep-yard' | 'sheep-reward' | 'barrel-bought' | 'squid-freed' | 'swarm-slain' | 'bounty-paid'
   | 'warden-slain' | 'leech-slain'
   | 'followers-spared' | 'followers-reported' | 'followers-paid' | 'fishmonger-angry' | 'stall-cowed' | 'stood-count' | 'inn-room' | 'reeve-pardon'
   | 'hounds-fed' | 'pack-slain' | 'ram-paid' | 'barrow-coins' | 'sluice-open' | 'drowned-slain' | 'otter-trusted' | 'otter-reported' | 'otter-paid'
   | 'vulture-met' | 'anchors-known' | 'letter-delivered' | 'bridge-lowered' | 'pair-slain' | 'hyena-slain' | 'ration-ledger' | 'merchant-thanked'
+  | 'brother-freed' | 'warden-bribed' | 'crate-delivered' | 'ring-returned' | 'ladder-down' | 'drove-gate-open' | 'drover-cache'
   | 'burn-order-seen' | 'kid-found' | 'lane-open' | 'boar-challenged' | 'dead-1' | 'dead-2' | 'dead-3' | 'ossuary-key' | 'hyena-challenged';
 // Things worth keeping: keepsakes and grimoires. Once found, they are kept through every death; carried items are not.
 export type Found = KeepsakeId | BookId;
@@ -27,13 +28,14 @@ export type Wounds = Readonly<Partial<Record<MemberId, number>>>;
 export type Drained = Readonly<Partial<Record<MemberId, number>>>;
 // deaths: how many times the party has fallen since the game began; the church keeps count.
 export type World = Readonly<{ flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number }>;
-export const ITEMS: readonly Item[] = ['bell', 'letter', 'note'];
+export const ITEMS: readonly Item[] = ['bell', 'letter', 'note', 'crate', 'ring'];
 export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
   'sheep-woods', 'sheep-orchard', 'sheep-yard', 'sheep-reward', 'barrel-bought', 'squid-freed', 'swarm-slain', 'bounty-paid',
   'warden-slain', 'leech-slain',
   'followers-spared', 'followers-reported', 'followers-paid', 'fishmonger-angry', 'stall-cowed', 'stood-count', 'inn-room', 'reeve-pardon',
   'hounds-fed', 'pack-slain', 'ram-paid', 'barrow-coins', 'sluice-open', 'drowned-slain', 'otter-trusted', 'otter-reported', 'otter-paid',
   'vulture-met', 'anchors-known', 'letter-delivered', 'bridge-lowered', 'pair-slain', 'hyena-slain', 'ration-ledger', 'merchant-thanked',
+  'brother-freed', 'warden-bribed', 'crate-delivered', 'ring-returned', 'ladder-down', 'drove-gate-open', 'drover-cache',
   'burn-order-seen', 'kid-found', 'lane-open', 'boar-challenged', 'dead-1', 'dead-2', 'dead-3', 'ossuary-key', 'hyena-challenged'];
 // A favor spell: a small everyday spell a villager trades for help. It opens the hedge on the border road.
 export const BRAMBLES = "Bramble's leave";
@@ -59,7 +61,7 @@ export function holds(context: Context, condition: Condition): boolean {
   if ('all' in condition) return condition.all.every(each => holds(context, each));
   if ('any' in condition) return condition.any.some(each => holds(context, each));
   if ('coins' in condition) return context.world.coins >= condition.coins;
-  if ('fish' in condition) return FISH_IDS.reduce((total, fish) => total + context.world.fish[fish], 0) >= condition.fish;
+  if ('fish' in condition) return FISH_IDS.reduce((total, fish) => total + (context.world.fish[fish] ?? 0), 0) >= condition.fish;
   if ('forgot' in condition) return context.lost.includes(condition.forgot);
   if ('has' in condition) return context.world.carried.includes(condition.has);
   if ('flag' in condition) return context.world.flags.includes(condition.flag);
@@ -87,7 +89,8 @@ export function apply(context: Context, effect: Effect): Context {
 export function feed(caught: Catch, count: number): Catch {
   const left = { ...caught };
   for (const fish of FISH_IDS) {
-    const given = Math.min(left[fish], count);
+    const given = Math.min(left[fish] ?? 0, count);
+    if (!given) continue;
     left[fish] -= given; count -= given;
   }
   return left;

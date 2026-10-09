@@ -7,8 +7,8 @@ import { fields } from '../content/fields';
 import { town } from '../content/town';
 import { hall, inn, millInside, tannery } from '../content/interiors';
 import { barrow, downs } from '../content/downs';
-import { fen } from '../content/fen';
-import { abbey, barracks, battlefield, fort, ossuary, pass } from '../content/highlands';
+import { fen, weir } from '../content/fen';
+import { abbey, barracks, battlefield, drove, fort, ossuary, pass, tarn } from '../content/highlands';
 import type { Encounter } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
@@ -246,6 +246,7 @@ export const DOWNS: Area = {
   exits: {
     west: { to: 'farmland', spawn: 'from-downs', prompt: 'Go back down to the fields' },
     'barrow-door': { to: 'barrow', spawn: 'spawn', prompt: 'Squeeze past the slab into the barrow' },
+    east: { to: 'drove', spawn: 'from-downs', prompt: 'Take the drove road up toward the highlands' },
   },
   decorate(scene) {
     // Wind moving through the grass in long pale bands.
@@ -277,7 +278,10 @@ export const FEN: Area = {
     { point: 'chapel-cache', texture: 'cache', hiddenIf: [{ owns: 'drowned-psalter' }, { not: { flag: 'drowned-slain' } }] },
   ],
   fishing: { 'fen-spot': 'fen' },
-  exits: { south: { to: 'farmland', spawn: 'from-fen', prompt: 'Follow the stream back down to the mill' } },
+  exits: {
+    south: { to: 'farmland', spawn: 'from-fen', prompt: 'Follow the stream back down to the mill' },
+    north: { to: 'weir', spawn: 'from-fen', prompt: 'Follow the path up to the weir' },
+  },
   decorate(scene) {
     // Mist lying on the water.
     for (let i = 0; i < 14; i++) {
@@ -312,6 +316,9 @@ export const PASS: Area = {
   exits: {
     south: { to: 'border-road', spawn: 'from-pass', prompt: 'Go back down to the border road' },
     north: { to: 'fort', spawn: 'from-pass', prompt: 'Walk up to the fort gate' },
+    // The ladder down to the tarn, once it has been let down from this side.
+    west: { to: 'tarn', spawn: 'from-pass', prompt: 'Climb down the rope ladder to the tarn', requires: { flag: 'ladder-down' },
+      barred: { speaker: 'THE CLIFF EDGE', lines: ['The rope ladder is still coiled and tied off at the edge.'] } },
   },
   decorate: scene => snowfall(scene, 640, 1024),
 };
@@ -344,6 +351,9 @@ export const BATTLEFIELD: Area = {
   exits: {
     west: { to: 'fort', spawn: 'from-battlefield', prompt: 'Climb back up to the fort' },
     east: { to: 'abbey', spawn: 'from-battlefield', prompt: 'Follow the drag marks to the abbey' },
+    // The drovers' gate, opened from this side, down to the drove road and the downs.
+    south: { to: 'drove', spawn: 'from-battlefield', prompt: 'Take the drove road down to the downs', requires: { flag: 'drove-gate-open' },
+      barred: { speaker: 'THE DROVERS\' GATE', lines: ['The gate is still barred.'] } },
   },
   decorate: scene => snowfall(scene, 896, 640),
 };
@@ -374,4 +384,72 @@ export const OSSUARY: Area = {
   exits: { up: { to: 'abbey', spawn: 'from-ossuary', prompt: 'Climb back up to the abbey' } },
 };
 
-export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY];
+// The weir above the fen: the otters' country, the church fishery, and the smugglers' stair up to the highlands.
+export const WEIR: Area = {
+  key: 'weir', map: 'weir', tileset: 'fen', music: 'wilds', region: 'THE FARMLAND', place: 'The weir', time: 'Grey afternoon', dialogue: weir,
+  ground: 'grass', surfaces: { 2: 'water', 3: 'wood', 21: 'stone' }, grade: { saturation: -0.45, brightness: 0.72, vignette: 0.55 },
+  npcs: [
+    { point: 'warden', texture: 'goose' }, { point: 'brother', texture: 'otter-kit', hiddenIf: [{ flag: 'brother-freed' }] },
+    { point: 'elder', texture: 'otter-elder' }, { point: 'kin', texture: 'otter-kit' }, { point: 'smuggler', texture: 'mink' },
+  ],
+  enemies: [
+    { point: 'wisp-1', encounter: 'wisp' }, { point: 'wisp-2', encounter: 'wisp', ambush: true },
+    // Wetherby's drowned don't all stay down.
+    { point: 'drowned-1', encounter: 'ghoul', ambush: true },
+  ],
+  assets: ['ghoul'],
+  props: [{ point: 'cage', texture: 'cage', solid: true, hiddenIf: [{ flag: 'brother-freed' }] }],
+  fishing: { 'weir-spot': 'weir' },
+  exits: {
+    south: { to: 'fen', spawn: 'from-weir', prompt: 'Go back down to the fen' },
+    stair: { to: 'tarn', spawn: 'from-weir', prompt: 'Climb the smugglers\' stair', requires: { flag: 'brother-freed' },
+      barred: { speaker: 'THE CLIFF', lines: ['Willow roots hang over a crack in the rock. If there is a way up, only the otters know it.'] } },
+  },
+  decorate(scene) {
+    for (let i = 0; i < 10; i++) {
+      const mist = scene.add.rectangle(20 + (i * 151) % 620, 40 + (i * 97) % 460, 130, 18, 0xc0c8c4, 0.08).setDepth(5);
+      scene.tweens.add({ targets: mist, x: mist.x - 40, alpha: 0.03, duration: 6500 + i * 500, yoyo: true, repeat: -1 });
+    }
+  },
+};
+// The high tarn: a frozen lake under the pass, linking the otters' stair to the garrison road.
+export const TARN: Area = {
+  ...HIGHLAND_GROUND, key: 'tarn', map: 'tarn', music: 'highlands', place: 'The high tarn', time: 'Late afternoon', dialogue: tarn, grade: COLD,
+  surfaces: { ...HIGHLAND_GROUND.surfaces, 29: 'stone', 32: 'stone' },
+  npcs: [{ point: 'trapper', texture: 'trapper' }],
+  enemies: [
+    { point: 'hound-1', encounter: 'hound', ambush: true }, { point: 'hound-2', encounter: 'hound', ambush: true },
+    { point: 'raider-1', encounter: 'raider', ambush: true },
+  ],
+  props: [{ point: 'camp-tarn', texture: 'campfire', hiddenIf: [] }],
+  fishing: { 'tarn-spot': 'tarn' },
+  camps: { 'camp-tarn': { prompt: 'Rest by the trapper\'s fire', cost: 3, lines: ['The trapper lets you sleep by his fire for a few coins. The ice groans all night.'] } },
+  exits: {
+    stair: { to: 'weir', spawn: 'from-tarn', prompt: 'Go down the smugglers\' stair' },
+    ladder: { to: 'pass', spawn: 'from-tarn', prompt: 'Climb the rope ladder to the pass', requires: { flag: 'ladder-down' },
+      barred: { speaker: 'THE CLIFF', lines: ['A rope ladder hangs from the cliff above, pulled up and tied off out of reach.'] } },
+  },
+  decorate: scene => snowfall(scene, 704, 512),
+};
+// The drove road: the downs to the battlefield gate, the long way round to the highlands.
+export const DROVE: Area = {
+  ...HIGHLAND_GROUND, key: 'drove', map: 'drove', music: 'highlands', place: 'The drove road', time: 'Midday', dialogue: drove,
+  grade: { saturation: -0.35, brightness: 0.84, vignette: 0.45 },
+  npcs: [{ point: 'drover', texture: 'drover' }],
+  enemies: [
+    { point: 'raider-1', encounter: 'raider', ambush: true }, { point: 'raider-2', encounter: 'raider', ambush: true },
+    { point: 'hound-1', encounter: 'hound', ambush: true },
+  ],
+  props: [
+    ...(['a', 'b', 'c'] as const).map(id => ({ point: `sheep-${id}`, texture: 'sheep', solid: true, hiddenIf: [] })),
+    { point: 'raider-stash', texture: 'cache', hiddenIf: [{ flag: 'drover-cache' as const }] },
+    ...[1, 2].map(i => ({ point: `gate-${i}`, texture: 'gate', solid: true, hiddenIf: [{ flag: 'drove-gate-open' as const }] })),
+  ],
+  exits: {
+    west: { to: 'downs', spawn: 'from-drove', prompt: 'Go back down to the downs' },
+    north: { to: 'battlefield', spawn: 'from-drove', prompt: 'Go through the gate to the battlefield', requires: { flag: 'drove-gate-open' },
+      barred: { speaker: 'THE DROVERS\' GATE', lines: ['A five-bar gate across the road, barred from the far side with a heavy beam.'] } },
+  },
+};
+
+export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE];

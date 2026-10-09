@@ -53,7 +53,7 @@ test('reeling as the marker crosses the gold lands a fish, which sells in Millbr
   await expect(page.locator('.fishing-leaper svg')).toHaveCount(1);
   await page.getByRole('button', { name: 'Done' }).click();
   const caught = await page.evaluate(() => JSON.parse(localStorage.getItem('tide-keeps.world.v1')!).fish);
-  const value = caught.minnow * 2 + caught.perch * 3 + caught.eel * 6;
+  const value = caught.minnow * 2 + caught.perch * 3 + caught.eel * 6 + (caught.char ?? 0) * 9;
   expect(value).toBeGreaterThan(0);
   await visit(page, 'town');
   await place(page, 'town', 328, 184);

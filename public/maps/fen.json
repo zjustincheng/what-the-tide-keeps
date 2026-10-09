@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 46,
+  "nextobjectid": 48,
   "layers": [
     {
       "id": 1,
@@ -61,6 +61,8 @@
         1,
         1,
         1,
+        2,
+        2,
         1,
         1,
         1,
@@ -115,6 +117,8 @@
         1,
         1,
         1,
+        2,
+        2,
         1,
         1,
         1,
@@ -169,12 +173,8 @@
         1,
         1,
         1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
+        2,
+        2,
         1,
         1,
         1,
@@ -2314,6 +2314,8 @@
         12,
         12,
         12,
+        0,
+        0,
         12,
         12,
         12,
@@ -2332,8 +2334,6 @@
         12,
         12,
         12,
-        12,
-        12,
         4,
         4,
         4,
@@ -2370,8 +2370,8 @@
         4,
         4,
         4,
-        4,
-        4,
+        0,
+        0,
         4,
         4,
         4,
@@ -5068,6 +5068,30 @@
           "rotation": 0,
           "visible": true,
           "point": true
+        },
+        {
+          "id": 46,
+          "name": "north",
+          "type": "",
+          "x": 608,
+          "y": 8,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 47,
+          "name": "from-weir",
+          "type": "",
+          "x": 608,
+          "y": 40,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
         }
       ]
     }
@@ -5208,6 +5232,46 @@
         },
         {
           "id": 16,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 17,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 18,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 19,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 21,
           "properties": [
             {
               "name": "collides",
