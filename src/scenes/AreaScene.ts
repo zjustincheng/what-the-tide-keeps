@@ -8,7 +8,7 @@ import type { Condition, Context, Effect, ShopId } from '../rules/world';
 import type { Choice, Conversation } from '../content/dialogue';
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
 import { loadMemory, saveMemory } from '../storage/memory';
-import { loadWorld, saveWorld } from '../storage/world';
+import { keepClock, loadWorld, saveWorld } from '../storage/world';
 import { BattleView } from '../ui/BattleView';
 import { ResurrectionView } from '../ui/ResurrectionView';
 import { AnchorView } from '../ui/AnchorView';
@@ -37,11 +37,12 @@ import type { Surface } from '../audio/effects';
 import { battleTheme } from '../audio/themes';
 import { reclaim, settle } from '../rules/spells';
 import { createSprites } from './sprites';
+import { advance, darkness, NIGHT, phase, timeName } from '../rules/clock';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 type Point = { name: string; x: number; y: number };
 type Prop = { sprite: Phaser.Physics.Arcade.Sprite; hiddenIf: Condition[]; shadow?: Phaser.GameObjects.Ellipse };
-type Foe = { encounter: Encounter; defeat?: Effect; fledAt?: number; ambush?: boolean; hidden?: boolean; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container;
+type Foe = { encounter: Encounter; defeat?: Effect; fledAt?: number; ambush?: boolean; lurks?: boolean; hidden?: boolean; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container;
   home: { x: number; y: number }; phase: number; point: string; waves?: number };
 // Ordinary enemies come after the hero once he is in sight, a little slower than he walks; bosses and guardians hold their ground.
 // sight and speed are in pixels and pixels per second. The hero walks at 70.
@@ -118,6 +119,10 @@ export class AreaScene extends Phaser.Scene {
   // Hiding the party's mana: slower and silent, unseen by enemies, and a first strike on anyone walked into.
   private sneaking = false;
   private lastDrain = 0;
+  // The time of day, turning while the hero explores; written with the next save.
+  private clock = 0;
+  private lastClockShown = 0;
+  private shading?: { color?: Phaser.FX.ColorMatrix; vignette?: Phaser.FX.Vignette; wash: Phaser.GameObjects.Rectangle; glows: Phaser.GameObjects.Image[] };
   private forage: { point: string; sprite: Phaser.GameObjects.Image }[] = [];
 
   constructor(private area: Area) { super(area.key); }
@@ -202,7 +207,8 @@ export class AreaScene extends Phaser.Scene {
     this.bindControls();
     element('location-region').textContent = this.area.region;
     element('location-place').textContent = `/ ${this.area.place}`;
-    element('location-time').textContent = loadWorld().night ? 'Night' : this.area.time;
+    this.clock = loadWorld().clock ?? 0;
+    this.showClock();
     element('game').setAttribute('aria-label', `${this.area.place} map. Move with WASD or arrow keys. Press E or Space to interact.`);
     this.cameras.main.fadeIn(650, 16, 27, 24);
     music.play(this.area.music);
@@ -210,6 +216,8 @@ export class AreaScene extends Phaser.Scene {
     // A wipe that was not yet paid for, such as one interrupted by a reload, is still owed.
     if (loadMemory().pending) this.wake();
     this.events.once('shutdown', () => {
+      // Leaving an area keeps the time it is.
+      if (!loadMemory().pending) saved = saveWorld(loadWorld());
       this.pendingShop = undefined; this.pendingRest = undefined;
       this.cleanup.abort();
       this.overlay?.destroy();
@@ -221,28 +229,70 @@ export class AreaScene extends Phaser.Scene {
   // The world is drained and cold: a desaturating, darkening grade with a heavy vignette.
   // Without WebGL, a dark wash over the view stands in for it.
   private grade() {
-    const night = Boolean(loadWorld().night);
-    const base = this.area.grade ?? {};
-    // Night is darker, colder, and closes in.
-    const { saturation = -0.5, brightness = 0.72, vignette = 0.45 } = night
-      ? { saturation: (base.saturation ?? -0.5) - 0.2, brightness: (base.brightness ?? 0.72) * 0.55, vignette: Math.min(0.95, (base.vignette ?? 0.45) + 0.3) }
-      : base;
     const camera = this.cameras.main;
-    if (night) {
-      this.add.rectangle(0, 0, camera.width, camera.height, 0x0a1a3a, 0.28).setOrigin(0).setScrollFactor(0).setDepth(49).setBlendMode(Phaser.BlendModes.MULTIPLY);
-      // Fires are the only warm light.
-      for (const { sprite } of this.props) if (sprite.texture.key === 'campfire') {
-        const glow = this.add.image(sprite.x, sprite.y, 'firelight').setDepth(48).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.9);
-        this.tweens.add({ targets: glow, alpha: 0.65, scale: 0.94, duration: 900, yoyo: true, repeat: -1 });
-      }
-    }
-    if (this.renderer.type === Phaser.WEBGL && camera.postFX) {
-      const color = camera.postFX.addColorMatrix();
-      color.saturate(saturation);
-      color.brightness(brightness, true);
-      camera.postFX.addVignette(0.5, 0.5, 0.82, vignette);
-    } else {
-      this.add.rectangle(0, 0, camera.width, camera.height, 0x05090a, 0.38).setOrigin(0).setScrollFactor(0).setDepth(50);
+    const webgl = this.renderer.type === Phaser.WEBGL && Boolean(camera.postFX);
+    // Night is a cold blue over everything; without WebGL a plain dark wash stands in for the whole grade.
+    const wash = webgl
+      ? this.add.rectangle(0, 0, camera.width, camera.height, 0x0a1a3a, 0).setOrigin(0).setScrollFactor(0).setDepth(49).setBlendMode(Phaser.BlendModes.MULTIPLY)
+      : this.add.rectangle(0, 0, camera.width, camera.height, 0x05090a, 0.38).setOrigin(0).setScrollFactor(0).setDepth(50);
+    // Fires are the only warm light after dark.
+    const glows = this.props.filter(({ sprite }) => sprite.texture.key === 'campfire').map(({ sprite }) => {
+      const glow = this.add.image(sprite.x, sprite.y, 'firelight').setDepth(48).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0);
+      this.tweens.add({ targets: glow, scale: 0.94, duration: 900, yoyo: true, repeat: -1 });
+      return glow;
+    });
+    this.shaded = -1;
+    this.shading = webgl
+      ? { color: camera.postFX.addColorMatrix(), vignette: camera.postFX.addVignette(0.5, 0.5, 0.82, 0.45), wash, glows }
+      : { wash, glows };
+    this.shade();
+  }
+
+  // The world is drained and cold: a desaturating, darkening grade with a heavy vignette, and darker, colder, and closer as night comes on.
+  private shaded = -1;
+  private shade() {
+    if (!this.shading) return;
+    const dark = darkness(this.clock);
+    // Only redo the grade when it has visibly changed.
+    if (Math.abs(dark - this.shaded) < 0.01) return;
+    this.shaded = dark;
+    const base = this.area.grade ?? {};
+    const saturation = (base.saturation ?? -0.5) - 0.2 * dark;
+    const brightness = (base.brightness ?? 0.72) * (1 - 0.45 * dark);
+    const vignette = Math.min(0.95, (base.vignette ?? 0.45) + 0.3 * dark);
+    const { color, vignette: edge, wash, glows } = this.shading;
+    if (color) {
+      color.reset(); color.saturate(saturation); color.brightness(brightness, true);
+      edge!.strength = vignette;
+      wash.setAlpha(0.28 * dark);
+    } else wash.setAlpha(0.38 + 0.35 * dark);
+    for (const glow of glows) glow.setAlpha(0.9 * dark);
+  }
+
+  private showClock() {
+    const name = timeName(this.clock);
+    element('location-time').textContent = name;
+    element('clock').setAttribute('aria-label', `Time of day: ${name}`);
+    element('clock').querySelector<HTMLElement>('.clock-hand')!.style.transform = `rotate(${this.clock * 360}deg)`;
+  }
+
+  // Time passes while exploring. When night falls or lifts, the world changes around the hero: the market opens, enemies hide.
+  private passTime(delta: number, time: number) {
+    const before = phase(this.clock);
+    this.clock = advance(this.clock, delta);
+    const night = phase(this.clock) === 'night';
+    const turned = (before === 'night') !== night;
+    keepClock(this.clock);
+    this.shade();
+    if (time - this.lastClockShown > 1000) { this.lastClockShown = time; this.showClock(); }
+    if (!turned) return;
+    saved = saveWorld({ ...loadWorld(), night });
+    this.showClock();
+    this.notice(night ? 'NIGHT FALLS' : 'DAWN');
+    this.refreshProps();
+    for (const foe of this.foes) {
+      foe.ambush = foe.lurks || (night && Boolean(CHASE[foe.encounter]));
+      if (!foe.ambush && foe.hidden) { foe.hidden = false; this.tweens.killTweensOf([foe.sprite]); foe.sprite.setAlpha(1); foe.signature.setAlpha(1); }
     }
   }
 
@@ -329,7 +379,7 @@ export class AreaScene extends Phaser.Scene {
     const mana = this.add.text(0, veiled ? -24 : -23, `◇ ${enemyMana(createBattle(encounter))}`, { fontFamily: 'monospace', fontSize: '8px', color: veiled ? '#b7d3c7' : '#dbc58b' }).setOrigin(0.5);
     const signature = this.add.container(at.x, at.y, [ring, mana]).setDepth(5);
     this.tweens.add({ targets: ring, alpha: veiled ? 0.15 : 0.35, duration: veiled ? 1400 : 1000, yoyo: true, repeat: -1 });
-    const foe: Foe = { encounter, sprite, signature, defeat, ambush, home: { x: at.x, y: at.y }, phase: this.foes.length * 1.7, point, waves };
+    const foe: Foe = { encounter, sprite, signature, defeat, ambush, lurks, home: { x: at.x, y: at.y }, phase: this.foes.length * 1.7, point, waves };
     this.foes.push(foe);
     this.physics.add.overlap(this.player, sprite, () => this.beginBattle(foe));
   }
@@ -582,7 +632,7 @@ export class AreaScene extends Phaser.Scene {
     // Resting heals every wound and brings the area's enemies back, so the area starts over around the fire.
     if(camp && !this.leaving) {
       PICKED.clear();
-      music.effect('rest'); const cost=this.area.camps?.[camp]?.cost ?? 0; saved=saveWorld(rest({ ...loadWorld(), coins: Math.max(0, loadWorld().coins-cost), night: this.pendingNight }));
+      music.effect('rest'); const cost=this.area.camps?.[camp]?.cost ?? 0; saved=saveWorld(rest({ ...loadWorld(), coins: Math.max(0, loadWorld().coins-cost), night: this.pendingNight, clock: this.pendingNight ? NIGHT : 0 }));
       const sleep=()=>{ this.leaving=true; this.cameras.main.fadeOut(400,16,27,24); this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.restart({spawn:camp})); };
       // Once the vulture has shown how, a memory can be written down before sleeping.
       if(loadWorld().flags.includes('anchors-known')) this.writeDown(sleep); else sleep();
@@ -812,9 +862,10 @@ export class AreaScene extends Phaser.Scene {
     element('game').focus({preventScroll:true});
   }
 
-  update(time: number) {
+  update(time: number, delta: number) {
     if(!this.player) return;
     if(this.overlay || this.leaving) { this.player.setVelocity(0); return; }
+    if(!this.active) this.passTime(delta, time);
     const pressed=(direction:Direction,...keys:string[])=>this.held.has(direction)||keys.some(key=>this.keys[key].isDown);
     let x=Number(pressed('right','D','RIGHT'))-Number(pressed('left','A','LEFT'));
     let y=Number(pressed('down','S','DOWN'))-Number(pressed('up','W','UP'));

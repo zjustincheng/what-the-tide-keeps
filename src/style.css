@@ -145,10 +145,36 @@ h1 {
   background:#bdaf78;
   transform:rotate(45deg);
 }
-.time {
+.clock-wrap {
   margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.time {
   letter-spacing:.2px;
   color:#8a9a8e;
+}
+/* The day dial: dawn at the top, day, then dusk, then night, with a hand that turns as the hero explores. */
+.clock {
+  position:relative;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  border:1px solid #4a5a4e;
+  background:conic-gradient(#a89252 0 180deg, #8a4a32 180deg 270deg, #1c2638 270deg 360deg);
+  flex:none;
+}
+.clock-hand {
+  position:absolute;
+  left:50%;
+  top:2px;
+  width:2px;
+  height:8px;
+  margin-left:-1px;
+  background:#e8e2cc;
+  transform-origin:50% 8px;
+  box-shadow:0 0 2px #000;
 }
 #game {
   width:100%;

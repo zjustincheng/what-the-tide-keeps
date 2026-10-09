@@ -32,9 +32,10 @@ export type Wounds = Readonly<Partial<Record<MemberId, number>>>;
 export type Drained = Readonly<Partial<Record<MemberId, number>>>;
 // deaths: how many times the party has fallen since the game began; the church keeps count.
 // pantry: herbs, mushrooms, and berries foraged for cooking. Like fish, they are lost on a wipe.
-// night: whether it is dark. The hero chooses when he sleeps whether to wake at dawn or at dusk.
+// night: whether it is dark. clock: how far through the day it is, 0 to 1 from dawn (see clock.ts); night follows it.
+// The hero chooses when he sleeps whether to wake at dawn or at nightfall.
 // tempered: keepsakes the fort's smith has tempered; kept for good, like the keepsakes themselves.
-export type World = Readonly<{ night?: boolean; tempered?: readonly KeepsakeId[]; flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number; pantry?: Pantry }>;
+export type World = Readonly<{ night?: boolean; clock?: number; tempered?: readonly KeepsakeId[]; flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number; pantry?: Pantry }>;
 export const ITEMS: readonly Item[] = ['bell', 'letter', 'note', 'crate', 'ring', 'shrine-stone', 'raven-letter', 'sealed-order'];
 export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
   'sheep-woods', 'sheep-orchard', 'sheep-yard', 'sheep-reward', 'barrel-bought', 'squid-freed', 'swarm-slain', 'bounty-paid',
@@ -94,7 +95,7 @@ export function apply(context: Context, effect: Effect): Context {
       flags: [...world.flags, ...[effect.set ?? []].flat().filter((flag, i, all) => !world.flags.includes(flag) && all.indexOf(flag) === i)],
       found: effect.find && !world.found.includes(effect.find) ? [...world.found, effect.find] : world.found,
       coins: Math.max(0, world.coins + (effect.earn ?? 0) - (effect.pay ?? 0)),
-      supplies: effect.supply ? { ...world.supplies, [effect.supply]: world.supplies[effect.supply] + 1 } : world.supplies, fish: effect.feed ? feed(world.fish, effect.feed) : world.fish, deaths: world.deaths, pantry: world.pantry, night: world.night, tempered: world.tempered, wounds: effect.rest ? {} : world.wounds, drained: effect.rest ? {} : world.drained,
+      supplies: effect.supply ? { ...world.supplies, [effect.supply]: world.supplies[effect.supply] + 1 } : world.supplies, fish: effect.feed ? feed(world.fish, effect.feed) : world.fish, deaths: world.deaths, pantry: world.pantry, night: world.night, clock: world.clock, tempered: world.tempered, wounds: effect.rest ? {} : world.wounds, drained: effect.rest ? {} : world.drained,
     },
     studied: effect.learn && !studied.includes(effect.learn) ? [...studied, effect.learn] : studied,
   };
@@ -117,7 +118,7 @@ export function roster(world: World): MemberId[] {
 export function drop(world: World): World {
   // The church sends the party back out whole, and adds a line to the ledger.
   // The church wakes him at dawn.
-  return { ...world, carried: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, pantry: NO_PANTRY, wounds: {}, drained: {}, deaths: world.deaths + 1, night: false };
+  return { ...world, carried: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, pantry: NO_PANTRY, wounds: {}, drained: {}, deaths: world.deaths + 1, night: false, clock: 0 };
 }
 
 // Running from a fight drops half the coins carried, rounded in the enemy's favour.

@@ -367,7 +367,9 @@ The regions are joined in more than one place, and some links only open from the
 
 ## Day and night
 
-Every fire, bed, and cot asks whether to **sleep until dawn or until dark**. Night lasts until you sleep it off, or until you die and the church wakes you at dawn. At night the world is darker and colder, fires are the only warm light, the clock in the top bar reads Night, and **every ordinary enemy hunts unseen**, like an ambusher, and sees further. Saved with the world (`night` in `tide-keeps.world.v1`).
+The day turns on its own while you explore, as in Don't Starve: a full day is eight minutes of walking about, and the clock stops in conversations, menus, and fights. A dial in the top bar shows where you are in it: day (half the dial), then dusk, then night, with the name of the hour beside it. Dusk dims the world; at nightfall **"Night falls"** shows and the world changes around you: the night market opens, the stall shutters, and **every ordinary enemy hunts unseen**, like an ambusher, and sees further. Fires are the only warm light. Dawn undoes it all. Every fire, bed, and cot also lets you **sleep until dawn or until dark**, and dying wakes you at the church at dawn.
+
+The time is saved with the world (`clock`, 0 to 1 from dawn, and `night`, in `tide-keeps.world.v1`; rules in `src/rules/clock.ts`). It is kept in memory as it turns and written with the game's ordinary saves, at nightfall and dawn, and when you leave an area, never on a timer of its own.
 
 - **The night market.** After dark, a pine marten opens the shuttered stall behind Millbrook's tannery: a Night cloak (+20% dodge timing, shows 1 less mana, 3 less health), a Smuggled blade (hits 3 harder, shows 2 more mana), the **Banned hymnal** (a grimoire teaching Hush, a quick, cheap snare), and smelling salts at the fair price.
 - **Gear in shops.** By day the fort's goat sells a Garrison buckler (7 more health; hits softer and dodges harder), and the capital's apothecary a Saint's medal (4 more health, shows less mana; hiding costs more). Bought gear is kept for good, like found keepsakes.

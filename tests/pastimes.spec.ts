@@ -165,3 +165,14 @@ test('the bestiary writes down what you have fought, what it did, and how often 
   await expect(page.locator('.bestiary')).toContainText('beaten 1×');
   await expect(page.locator('.bestiary')).toContainText('Mandible strike');
 });
+
+test('the day turns on its own while exploring: the dial moves, and night falls and opens the night market', async ({ page }) => {
+  // A moment before nightfall, beside the shuttered stall.
+  await start(page, { flags: ['boar-defeated'], coins: 50, clock: 0.742 }, 'town', 'spawn');
+  await place(page, 'town', 440, 330);
+  await expect(page.locator('#location-time')).toHaveText('Dusk');
+  await expect(page.locator('#location-time')).toHaveText('Night', { timeout: 15000 });
+  await expect(page.locator('#clock')).toHaveAttribute('aria-label', 'Time of day: Night');
+  await expect(page.locator('#prompt')).toContainText('Speak to the marten');
+  expect(JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.world.v1')))!).night).toBe(true);
+});

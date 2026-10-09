@@ -24,7 +24,6 @@ export type Area = {
   tileset: string;
   region: string;
   place: string;
-  time: string;
   // Where the hero may walk; the whole map when omitted. Larger maps scroll with the hero.
   bounds?: [x: number, y: number, width: number, height: number];
   dialogue: Dialogue;
@@ -62,7 +61,7 @@ export type Area = {
 const PRACTICE = typeof location !== 'undefined' && new URLSearchParams(location.search).has('practice');
 
 export const CHURCH: Area = {
-  key: 'church', map: 'church', tileset: 'church', music: 'church', region: 'THE CAPITAL', place: 'Church of the Covenant', time: 'Before dawn',
+  key: 'church', map: 'church', tileset: 'church', music: 'church', region: 'THE CAPITAL', place: 'Church of the Covenant',
   bounds: [32, 48, 448, 304], dialogue: { ...church, ...churchLore }, ground: 'stone',
   // Candlelight keeps a little warmth in the church; everywhere else is colder.
   grade: { saturation: -0.35, brightness: 0.78, vignette: 0.5 },
@@ -97,7 +96,7 @@ export const CHURCH: Area = {
 const GUARDED: Partial<Record<string, Flag>> = { 'shrine-cache': 'warden-slain', 'ford-cache': 'leech-slain' };
 
 export const FARMLAND: Area = {
-  key: 'farmland', map: 'farmland', tileset: 'fields', music: 'fields', region: 'THE FARMLAND', place: 'The fields', time: 'Dawn',
+  key: 'farmland', map: 'farmland', tileset: 'fields', music: 'fields', region: 'THE FARMLAND', place: 'The fields',
   dialogue: { ...fields, ...fieldsLore }, assets: ['bear', 'nymph', 'votive'],
   ground: 'grass', surfaces: { 3: 'dirt', 16: 'wood', 17: 'water', 27: 'leaves' },
   npcs: [{ point: 'bear', texture: 'bear', hiddenIf: [{ flag: 'bear-free' }] }, { point: 'miller', texture: 'miller' }, { point: 'heron', texture: 'heron' }, { point: 'shepherd', texture: 'shepherd' },
@@ -160,7 +159,7 @@ export const FARMLAND: Area = {
 };
 
 export const TOWN: Area = {
-  key: 'town', map: 'town', tileset: 'town', music: 'town', region: 'THE FARMLAND', place: 'Millbrook', time: 'Morning',
+  key: 'town', map: 'town', tileset: 'town', music: 'town', region: 'THE FARMLAND', place: 'Millbrook',
   dialogue: { ...town, ...townLore }, enemies: [], ground: 'stone', surfaces: { 3: 'grass', 4: 'dirt' },
   npcs: [...['reeve', 'innkeeper', 'shopkeeper', 'child', 'fishmonger', 'fox', 'scribe'].map(name => ({ point: name, texture: name })),
     // The night market opens behind the tannery after dark.
@@ -184,7 +183,7 @@ export const TOWN: Area = {
 };
 
 export const BORDER_ROAD: Area = {
-  key: 'border-road', map: 'border-road', tileset: 'border', music: 'wilds', region: 'THE FARMLAND', place: 'The border road', time: 'Midday',
+  key: 'border-road', map: 'border-road', tileset: 'border', music: 'wilds', region: 'THE FARMLAND', place: 'The border road',
   dialogue: border, enemies: [{ point: 'follower', encounter: 'acolyte', hiddenIf: [{ flag: 'boar-defeated' }] }], ground: 'grass', surfaces: { 2: 'dirt' },
   npcs: [{ point: 'driver', texture: 'driver' }, { point: 'guard', texture: 'guard' }, { point: 'sister', texture: 'sow', hiddenIf: [{ flag: 'boar-defeated' }] }],
   camps: { 'camp-border': { prompt: 'Rest by the fire', cost: 4, lines: ['The carters let you sit at their fire. Nobody talks much.'] } },
@@ -205,7 +204,7 @@ export const BORDER_ROAD: Area = {
 };
 
 export const BOAR_FARM: Area = {
-  key: 'boar-farm', map: 'boar-farm', tileset: 'ash', music: 'wilds', region: 'THE FARMLAND', place: 'The burned farm', time: 'Afternoon',
+  key: 'boar-farm', map: 'boar-farm', tileset: 'ash', music: 'wilds', region: 'THE FARMLAND', place: 'The burned farm',
   dialogue: farm, assets: ['badger', 'rat'],
   // The boar talks before he fights; once challenged, he stands up to fight.
   npcs: [{ point: 'boar', texture: 'boar', hiddenIf: [{ flag: 'boar-challenged' }, { flag: 'boar-defeated' }] }], ground: 'dirt', surfaces: { 1: 'grass' },
@@ -231,21 +230,21 @@ export const BOAR_FARM: Area = {
 // Building interiors: small rooms in the dark, lit warmer than the fields outside.
 const INDOORS: Pick<Area, 'region' | 'tileset' | 'grade' | 'enemies' | 'music' | 'ground' | 'surfaces'> = { region: 'THE FARMLAND', tileset: 'interior', music: 'hearth', grade: { saturation: -0.3, brightness: 0.74, vignette: 0.55 }, enemies: [],
   ground: 'wood', surfaces: { 3: 'stone', 19: 'straw', 23: 'straw' } };
-export const INN: Area = { ...INDOORS, key: 'inn', map: 'inn', place: 'Millbrook · The inn', time: 'Morning', dialogue: { ...inn, ...innLore },
+export const INN: Area = { ...INDOORS, key: 'inn', map: 'inn', place: 'Millbrook · The inn', dialogue: { ...inn, ...innLore },
   npcs: [{ point: 'drinker', texture: 'drinker' }, { point: 'patron', texture: 'patron' }, { point: 'marine', texture: 'marine' }],
   camps: { bed: { prompt: 'Sleep in the bed', noCooking: true, lines: ['You sleep in a real bed for the first time you can remember. Your wounds close and your mana returns.'] } },
   exits: { out: { to: 'town', spawn: 'from-inn', prompt: 'Go back outside' } } };
-export const HALL: Area = { ...INDOORS, key: 'hall', map: 'hall', place: "Millbrook · The reeve's hall", time: 'Morning', dialogue: hall,
+export const HALL: Area = { ...INDOORS, key: 'hall', map: 'hall', place: "Millbrook · The reeve's hall", dialogue: hall,
   npcs: [{ point: 'clerk', texture: 'clerk' }], exits: { out: { to: 'town', spawn: 'from-hall', prompt: 'Go back outside' } } };
-export const TANNERY: Area = { ...INDOORS, key: 'tannery', map: 'tannery', place: 'Millbrook · The tannery', time: 'Morning', dialogue: tannery,
+export const TANNERY: Area = { ...INDOORS, key: 'tannery', map: 'tannery', place: 'Millbrook · The tannery', dialogue: tannery,
   npcs: [{ point: 'tanner', texture: 'tanner' }], exits: { out: { to: 'town', spawn: 'from-tannery', prompt: 'Go back outside' } } };
-export const MILL: Area = { ...INDOORS, key: 'mill-inside', map: 'mill-inside', place: 'The mill', time: 'Dawn', dialogue: millInside,
+export const MILL: Area = { ...INDOORS, key: 'mill-inside', map: 'mill-inside', place: 'The mill', dialogue: millInside,
   npcs: [], exits: { out: { to: 'farmland', spawn: 'from-mill', prompt: 'Go back outside' } } };
 
 // The downs, east of the fields: the ram's lambs, the hounds who take them, and the barrow where the hounds den.
 const PACK_GONE = [{ flag: 'pack-slain' as const }, { flag: 'hounds-fed' as const }];
 export const DOWNS: Area = {
-  key: 'downs', map: 'downs', tileset: 'downs', music: 'fields', region: 'THE FARMLAND', place: 'The downs', time: 'Late morning',
+  key: 'downs', map: 'downs', tileset: 'downs', music: 'fields', region: 'THE FARMLAND', place: 'The downs',
   dialogue: { ...downs, ...downsLore }, assets: ['hound'], ground: 'grass', surfaces: { 3: 'dirt', 7: 'stone', 11: 'dirt', 25: 'dirt', 26: 'dirt' },
   grade: { saturation: -0.3, brightness: 0.86, vignette: 0.4 },
   npcs: [{ point: 'ram', texture: 'ram' }, { point: 'kid', texture: 'kid' }, { point: 'bard', texture: 'bard' }],
@@ -280,7 +279,7 @@ export const DOWNS: Area = {
   },
 };
 export const BARROW: Area = {
-  key: 'barrow', map: 'barrow', tileset: 'downs', music: 'wilds', region: 'THE FARMLAND', place: 'The barrow', time: 'Late morning',
+  key: 'barrow', map: 'barrow', tileset: 'downs', music: 'wilds', region: 'THE FARMLAND', place: 'The barrow',
   dialogue: barrow, enemies: [], ground: 'stone', surfaces: { 22: 'straw' }, grade: { saturation: -0.4, brightness: 0.62, vignette: 0.7 },
   npcs: [{ point: 'hound-mother', texture: 'hound-mother', hiddenIf: PACK_GONE }],
   exits: { out: { to: 'downs', spawn: 'from-barrow', prompt: 'Go back out into the light' } },
@@ -288,7 +287,7 @@ export const BARROW: Area = {
 
 // The fen, upstream of the mill, over the drowned hamlet. The sluice drains it enough to reach the chapel.
 export const FEN: Area = {
-  key: 'fen', map: 'fen', tileset: 'fen', music: 'wilds', region: 'THE FARMLAND', place: 'The fen', time: 'Grey afternoon',
+  key: 'fen', map: 'fen', tileset: 'fen', music: 'wilds', region: 'THE FARMLAND', place: 'The fen',
   dialogue: fen, ground: 'grass', surfaces: { 2: 'water', 3: 'wood', 10: 'water' }, grade: { saturation: -0.45, brightness: 0.7, vignette: 0.55 },
   npcs: [{ point: 'otter', texture: 'otter', hiddenIf: [{ flag: 'otter-reported' }] }],
   enemies: [
@@ -329,7 +328,7 @@ const snowfall = (scene: Phaser.Scene, width: number, height: number) => {
   }
 };
 export const PASS: Area = {
-  ...HIGHLAND_GROUND, key: 'pass', map: 'pass', music: 'highlands', place: 'The high pass', time: 'Morning', dialogue: pass, grade: COLD,
+  ...HIGHLAND_GROUND, key: 'pass', map: 'pass', music: 'highlands', place: 'The high pass', dialogue: pass, grade: COLD,
   npcs: [],
   enemies: [
     { point: 'raider-1', encounter: 'raider', ambush: true }, { point: 'raider-2', encounter: 'raider', ambush: true }, { point: 'raider-3', encounter: 'raider', ambush: true, waves: 2 },
@@ -349,7 +348,7 @@ export const PASS: Area = {
   decorate: scene => snowfall(scene, 640, 1024),
 };
 export const FORT: Area = {
-  key: 'fort', map: 'fort', tileset: 'fort', music: 'highlands', region: 'THE HIGHLANDS', place: 'The fort town', time: 'Morning', dialogue: { ...fort, ...fortLore },
+  key: 'fort', map: 'fort', tileset: 'fort', music: 'highlands', region: 'THE HIGHLANDS', place: 'The fort town', dialogue: { ...fort, ...fortLore },
   ground: 'dirt', surfaces: { 2: 'stone', 5: 'stone', 20: 'grass', 22: 'water' }, grade: COLD, enemies: [],
   npcs: [...['sergeant', 'quartermaster', 'lynx', 'veteran', 'merchant', 'fence', 'chaplain', 'raven', 'teacher'].map(name => ({ point: name, texture: name })),
     // The schoolmistress's two pupils, sitting for a lesson in the square.
@@ -364,10 +363,10 @@ export const FORT: Area = {
   },
   decorate: scene => snowfall(scene, 768, 576),
 };
-export const BARRACKS: Area = { ...INDOORS, region: 'THE HIGHLANDS', key: 'barracks', map: 'barracks', place: 'The fort · Barracks', time: 'Morning', dialogue: barracks,
+export const BARRACKS: Area = { ...INDOORS, region: 'THE HIGHLANDS', key: 'barracks', map: 'barracks', place: 'The fort · Barracks', dialogue: barracks,
   npcs: [], exits: { out: { to: 'fort', spawn: 'from-barracks', prompt: 'Go back outside' } } };
 export const BATTLEFIELD: Area = {
-  ...HIGHLAND_GROUND, key: 'battlefield', map: 'battlefield', music: 'highlands', place: 'The old battlefield', time: 'Afternoon', dialogue: battlefield,
+  ...HIGHLAND_GROUND, key: 'battlefield', map: 'battlefield', music: 'highlands', place: 'The old battlefield', dialogue: battlefield,
   grade: { saturation: -0.5, brightness: 0.74, vignette: 0.55 }, assets: ['ghoul'],
   // The vulture takes the hero for a grave thief and fights him once, unless he comes carrying her own note. After that she will talk.
   npcs: [{ point: 'vulture', texture: 'vulture', hiddenIf: [{ not: { any: [{ flag: 'vulture-met' }, { has: 'note' }] } }, { flag: 'vulture-free' }] }],
@@ -387,7 +386,7 @@ export const BATTLEFIELD: Area = {
   decorate: scene => snowfall(scene, 896, 640),
 };
 export const ABBEY: Area = {
-  ...HIGHLAND_GROUND, key: 'abbey', map: 'abbey', music: 'wilds', place: 'The ruined abbey', time: 'Dusk', dialogue: abbey, grade: COLD,
+  ...HIGHLAND_GROUND, key: 'abbey', map: 'abbey', music: 'wilds', place: 'The ruined abbey', dialogue: abbey, grade: COLD,
   npcs: [{ point: 'monk', texture: 'monk', hiddenIf: [{ flag: 'hyena-slain' }] }], assets: ['brute'],
   // The lesson fight: a spell and a heavy blow in the same round.
   enemies: [{ point: 'pair', encounter: 'pair', hiddenIf: [{ flag: 'pair-slain' }], defeat: { set: 'pair-slain' } }],
@@ -405,7 +404,7 @@ export const ABBEY: Area = {
   decorate: scene => snowfall(scene, 640, 480),
 };
 export const OSSUARY: Area = {
-  ...HIGHLAND_GROUND, key: 'ossuary', map: 'ossuary', music: 'wilds', place: 'The ossuary', time: 'Dusk', dialogue: ossuary,
+  ...HIGHLAND_GROUND, key: 'ossuary', map: 'ossuary', music: 'wilds', place: 'The ossuary', dialogue: ossuary,
   ground: 'stone', grade: { saturation: -0.45, brightness: 0.6, vignette: 0.75 }, assets: ['ghoul'],
   npcs: [{ point: 'hyena', texture: 'hyena', hiddenIf: [{ flag: 'hyena-challenged' }, { flag: 'hyena-slain' }] }],
   enemies: [{ point: 'hyena', encounter: 'hyena', hiddenIf: [{ flag: 'hyena-slain' }, { not: { flag: 'hyena-challenged' } }], defeat: { set: 'hyena-slain' } }],
@@ -416,7 +415,7 @@ export const OSSUARY: Area = {
 
 // The weir above the fen: the otters' country, the church fishery, and the smugglers' stair up to the highlands.
 export const WEIR: Area = {
-  key: 'weir', map: 'weir', tileset: 'fen', music: 'wilds', region: 'THE FARMLAND', place: 'The weir', time: 'Grey afternoon', dialogue: { ...weir, ...weirLore },
+  key: 'weir', map: 'weir', tileset: 'fen', music: 'wilds', region: 'THE FARMLAND', place: 'The weir', dialogue: { ...weir, ...weirLore },
   ground: 'grass', surfaces: { 2: 'water', 3: 'wood', 21: 'stone' }, grade: { saturation: -0.45, brightness: 0.72, vignette: 0.55 },
   npcs: [
     { point: 'warden', texture: 'goose' }, { point: 'brother', texture: 'otter-kit', hiddenIf: [{ flag: 'brother-freed' }] },
@@ -445,7 +444,7 @@ export const WEIR: Area = {
 };
 // The high tarn: a frozen lake under the pass, linking the otters' stair to the garrison road.
 export const TARN: Area = {
-  ...HIGHLAND_GROUND, key: 'tarn', map: 'tarn', music: 'highlands', place: 'The high tarn', time: 'Late afternoon', dialogue: tarn, grade: COLD,
+  ...HIGHLAND_GROUND, key: 'tarn', map: 'tarn', music: 'highlands', place: 'The high tarn', dialogue: tarn, grade: COLD,
   surfaces: { ...HIGHLAND_GROUND.surfaces, 29: 'stone', 32: 'stone' },
   npcs: [{ point: 'trapper', texture: 'trapper' }],
   enemies: [
@@ -465,7 +464,7 @@ export const TARN: Area = {
 };
 // The drove road: the downs to the battlefield gate, the long way round to the highlands.
 export const DROVE: Area = {
-  ...HIGHLAND_GROUND, key: 'drove', map: 'drove', music: 'highlands', place: 'The drove road', time: 'Midday', dialogue: drove,
+  ...HIGHLAND_GROUND, key: 'drove', map: 'drove', music: 'highlands', place: 'The drove road', dialogue: drove,
   grade: { saturation: -0.35, brightness: 0.84, vignette: 0.45 },
   npcs: [{ point: 'drover', texture: 'drover' }],
   forage: { 'forage-1': 'berry' },
@@ -489,7 +488,7 @@ export const DROVE: Area = {
 // The capital: the square outside the church, the harbour below, and the hall where the feast was held. Nobody fights here.
 const CITY = { saturation: -0.35, brightness: 0.8, vignette: 0.5 };
 export const SQUARE: Area = {
-  key: 'square', map: 'square', tileset: 'city', music: 'town', region: 'THE CAPITAL', place: 'The church square', time: 'Noon', dialogue: square,
+  key: 'square', map: 'square', tileset: 'city', music: 'town', region: 'THE CAPITAL', place: 'The church square', dialogue: square,
   ground: 'stone', surfaces: { 1: 'stone', 2: 'stone', 11: 'stone' }, grade: CITY, enemies: [],
   npcs: [
     { point: 'crier', texture: 'crier' }, { point: 'broadsheets', texture: 'broadsheet' }, { point: 'lamplighter', texture: 'lamplighter' },
@@ -503,7 +502,7 @@ export const SQUARE: Area = {
   },
 };
 export const HARBOUR: Area = {
-  key: 'harbour', map: 'harbour', tileset: 'city', music: 'town', region: 'THE CAPITAL', place: 'The harbour', time: 'Afternoon', dialogue: harbour,
+  key: 'harbour', map: 'harbour', tileset: 'city', music: 'town', region: 'THE CAPITAL', place: 'The harbour', dialogue: harbour,
   ground: 'stone', surfaces: { 15: 'wood', 11: 'stone' }, grade: CITY, enemies: [],
   npcs: [
     { point: 'fishwife', texture: 'fishwife' }, { point: 'crab', texture: 'crab', hiddenIf: [{ flag: 'crab-freed' }] },
@@ -521,7 +520,7 @@ export const HARBOUR: Area = {
   },
 };
 export const FEAST_HALL: Area = {
-  ...INDOORS, region: 'THE CAPITAL', music: 'church', key: 'feast-hall', map: 'feast-hall', place: 'The hall of the Long Table', time: 'Afternoon', dialogue: feastHall,
+  ...INDOORS, region: 'THE CAPITAL', music: 'church', key: 'feast-hall', map: 'feast-hall', place: 'The hall of the Long Table', dialogue: feastHall,
   grade: { saturation: -0.45, brightness: 0.66, vignette: 0.65 }, ground: 'stone',
   npcs: [{ point: 'cleaner', texture: 'cleaner' }],
   props: ([1, 2, 3] as const).map(i => ({ point: `kraken-${i}`, texture: 'kraken-arm', solid: true, hiddenIf: [] })),
@@ -530,7 +529,7 @@ export const FEAST_HALL: Area = {
 
 // The old border fort above the fort town.
 export const BORDER_KEEP: Area = {
-  ...HIGHLAND_GROUND, key: 'border-keep', map: 'border-keep', music: 'highlands', place: 'The old border fort', time: 'Dusk', dialogue: keep,
+  ...HIGHLAND_GROUND, key: 'border-keep', map: 'border-keep', music: 'highlands', place: 'The old border fort', dialogue: keep,
   grade: { saturation: -0.45, brightness: 0.74, vignette: 0.55 }, npcs: [], assets: ['lieutenant'],
   enemies: [
     { point: 'hound-1', encounter: 'hound', ambush: true }, { point: 'hound-2', encounter: 'hound', ambush: true },
@@ -546,7 +545,7 @@ export const BORDER_KEEP: Area = {
 
 // The rookery road, up toward the mountain holds, where the harriers have the road now.
 export const ROOKERY_ROAD: Area = {
-  ...HIGHLAND_GROUND, key: 'rookery-road', map: 'rookery-road', music: 'highlands', place: 'The rookery road', time: 'Evening', dialogue: rookery,
+  ...HIGHLAND_GROUND, key: 'rookery-road', map: 'rookery-road', music: 'highlands', place: 'The rookery road', dialogue: rookery,
   grade: { saturation: -0.45, brightness: 0.76, vignette: 0.55 }, npcs: [],
   enemies: [
     { point: 'harrier-1', encounter: 'harrier' }, { point: 'harrier-2', encounter: 'harrier', waves: 2 },
