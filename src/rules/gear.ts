@@ -2,7 +2,7 @@
 import type { MemberId } from './battle';
 
 export type KeepsakeId = 'cracked-mirror' | 'crow-feather' | 'covenant-token' | 'yoke-peg' | 'wool-charm' | 'boar-tusk' | 'iron-collar' | 'famine-spoon' | 'weir-hook' | 'frost-ring' | 'tide-shell'
-  | 'garrison-buckler' | 'saints-medal' | 'night-cloak' | 'smuggled-blade';
+  | 'garrison-buckler' | 'saints-medal' | 'night-cloak' | 'smuggled-blade' | 'raven-quill';
 // What a keepsake changes about its holder in battle.
 // agility: in hundredths of a hero's dodge windows; +15 makes every window 15% wider.
 export type Mods = Readonly<{ health: number; damage: number; reveal: number; suppressCost: number; shown: number; agility: number }>;
@@ -34,6 +34,8 @@ export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; ef
     effect: '7 more health.', drawback: 'Attacks hit 1 softer.', mods: { health: 7, damage: -1 } },
   'tide-shell': { name: 'Tide shell',
     effect: '3 more health, and dodges come easier (+20% timing).', drawback: 'Attacks hit 1 softer.', mods: { health: 3, agility: 20, damage: -1 } },
+  'raven-quill': { name: 'Raven\'s quill', holder: 'vulture',
+    effect: 'Dodges come much easier (+25% timing), and attacks hit 1 harder.', drawback: '3 less health.', mods: { agility: 25, damage: 1, health: -3 } },
   // Sold rather than found.
   'garrison-buckler': { name: 'Garrison buckler',
     effect: '7 more health.', drawback: 'Attacks hit 1 softer, and dodging is harder (-10% timing).', mods: { health: 7, damage: -1, agility: -10 } },

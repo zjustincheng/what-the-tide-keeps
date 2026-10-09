@@ -206,6 +206,18 @@ export const fortLore: Dialogue = {
     { text: 'What will you do now?', lines: [
       'Wait. Eat garrison fish, which I hate. Hope someone sends something worth carrying.',
     ] },
+    { text: 'I\'ll carry a letter to the holds.', if: { all: [{ not: { has: 'raven-letter' } }, { not: { flag: 'letter-left' } }] }, ends: true, lines: [
+      'She looks at you for a while, then takes a letter from under her wing, sealed in black.',
+      '"Up the rookery road, past the old border fort. If nobody answers, slide it under the gate. Someone always reads what\'s slid under."',
+      '"The harriers have the road now. Don\'t die with it. It\'s the only copy."',
+    ], then: { give: 'raven-letter' } },
+    { text: 'I found this on a courier in the ice.', if: { has: 'sealed-order' }, ends: true, lines: [
+      'She reads it twice, and then she holds the seal up to the light.',
+      '"No house signed this. That isn\'t a crest. It\'s an egg: a cuckoo\'s. Someone is wearing a house\'s name like a borrowed coat, and closing the holds with it."',
+      '"The courier in the ice was my sister. She was carrying the truth down, and the road kept her."',
+      'She pulls a long quill from her own wing and gives it to you. "For your vulture. She\'ll know what to do with it."',
+      'Found: Raven\'s quill.',
+    ], then: { take: 'sealed-order', set: 'order-read', find: 'raven-quill' } },
   ] },
   teacher: { speaker: 'A WOLF SCHOOLMISTRESS', prompt: 'Speak to the schoolmistress', lines: [
     'Sit still, both of you. Not you, convict. Them.',

@@ -205,3 +205,26 @@ test('the old border fort: the captain holds the lantern, and the smith tempers 
   await talk(page);
   expect(JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.world.v1')))!).flags).toEqual(expect.arrayContaining(['captain-slain', 'lantern']));
 });
+
+test('the rookery road: the raven\'s letter goes under the holds\' gate, and her sister\'s order comes back down', async ({ page }) => {
+  await start(page, { ...BEAR, flags: ['bear-free', 'boar-defeated', 'vulture-free', 'captain-slain'] }, 'fort', 'from-pass');
+  await go(page, 'fort', 344, 216, 'Speak to the raven');
+  await talk(page, 'I\'ll carry a letter to the holds');
+  await go(page, 'fort', 384, 24, 'Climb to the old border fort', 'border-keep');
+  await go(page, 'border-keep', 64, 20, 'Climb the rookery road', 'rookery-road');
+  // The courier in the falls: her satchel.
+  await go(page, 'rookery-road', 472, 232, 'Look into the ice');
+  await talk(page, 'Break the ice and take the satchel');
+  await go(page, 'rookery-road', 408, 72, 'Examine the gate');
+  await talk(page, 'Slide the raven\'s letter under the gate');
+  let world = JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.world.v1')))!);
+  expect(world.flags).toContain('letter-left');
+  expect(world.carried).toEqual(['sealed-order']);
+  // Back to the raven with the order.
+  await start(page, { ...BEAR, flags: world.flags, carried: world.carried }, 'fort', 'from-pass');
+  await go(page, 'fort', 344, 216, 'Speak to the raven');
+  await talk(page, 'I found this on a courier in the ice');
+  world = JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.world.v1')))!);
+  expect(world.found).toContain('raven-quill');
+  expect(world.carried).toEqual([]);
+});

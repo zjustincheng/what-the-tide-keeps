@@ -35,6 +35,10 @@ export const fort: Dialogue = {
       'You\'re a reptile with a brand. Half my garrison has a brand.',
       'Up here, the ones who get stared at are behind the wall.',
     ] },
+    { text: 'What happens to deserters?', lines: [
+      'Up at the old border fort? Nothing. We stopped going up. They\'ll starve or they\'ll come down.',
+      'Either way the paperwork\'s the same. I fill it in now and leave the date blank.',
+    ] },
     { text: 'What happened on the battlefield?', lines: [
       'A border war, before the Covenant. Both sides buried each other\'s dead in the same ground.',
       'Now something is digging them up again.',
@@ -52,10 +56,19 @@ export const fort: Dialogue = {
   ] }], choices: [
     { text: 'Why is there less fish?', lines: ['Ask the church. It\'s their fish. Everything we eat comes up that road with their seal on it.'] },
     { text: 'Who is in the line?', lines: ['Garrison families. Soldiers eat in the barracks. Their children eat here, if there\'s any left.'] },
+    { text: 'What if the cart stops coming?', lines: [
+      'Then the families eat first, then the soldiers. Then the soldiers eat whatever\'s left.',
+      'I\'ve seen a garrison get to that third part once, as a boy. I won\'t again. I keep a knife for it. Not for them.',
+    ] },
   ] },
   lynx: { speaker: 'A LYNX IN THE LINE', prompt: 'Speak to the lynx', lines: [
     'Don\'t push in. I\'ve been here since before it was light.',
     'My cubs eat first. I eat if there\'s anything left. Mostly there isn\'t.',
+  ], choices: [
+    { text: 'What do they eat when there\'s none?', lines: [
+      'I tell them stories about fish. Big ones. They fall asleep before the end.',
+      'The little one has stopped asking for the end.',
+    ] },
   ] },
   veteran: { speaker: 'AN OLD WOLF', prompt: 'Speak to the old wolf', lines: [
     'Going down to the battlefield? I was on it, before the Covenant. The wrong side, they say now.',
@@ -382,4 +395,31 @@ export const keep: Dialogue = {
     'It\'s heavy. It\'s the kind of light she can\'t put out.',
     'Found: the signal lantern.',
   ], then: { set: 'lantern' } },
+};
+
+// The rookery road up toward the mountain holds, and the holds' shut gate.
+export const rookery: Dialogue = {
+  'holds-gate': { speaker: 'THE HOLDS\' GATE', prompt: 'Examine the gate', lines: [
+    'A gate of black stone set across the road, taller than the wall it sits in. Painted across it, fresh: BY ORDER OF THE HOUSE.',
+    'You knock. The sound goes up the cliff and doesn\'t come back.',
+  ], variants: [{ if: { flag: 'letter-left' }, lines: [
+    'The gate. The raven\'s letter is gone from under it. Someone on the other side took it in, and didn\'t answer.',
+  ] }], choices: [
+    { text: 'Slide the raven\'s letter under the gate.', if: { has: 'raven-letter' }, ends: true, lines: [
+      'You slide it under. For a long moment, nothing.',
+      'Then the letter is drawn through from the other side, slowly, the way you would pull a splinter.',
+    ], then: { take: 'raven-letter', set: 'letter-left' } },
+  ] },
+  'frozen-courier': { speaker: 'IN THE FALLS', prompt: 'Look into the ice', hiddenIf: [{ has: 'sealed-order' }, { flag: 'order-read' }], lines: [
+    'A raven courier, frozen into the falls with her wings half open, as if she was still flying when the water stopped.',
+    'Her satchel is within reach of the ice\'s edge.',
+  ], choices: [
+    { text: 'Break the ice and take the satchel.', ends: true, lines: [
+      'Inside, one order, unsigned, sealed in yellow wax. The seal is not a crest. It is an egg.',
+      'It would be lost if you fell.',
+    ], then: { give: 'sealed-order' } },
+  ] },
+  shelter: { speaker: 'A COURIERS\' CAIRN', prompt: 'Examine the cairn', lines: [
+    'A cairn with a hollow in it, out of the wind, where couriers waited out storms. Someone has scratched a tally inside: days without a bird going up. It is a long tally.',
+  ] },
 };

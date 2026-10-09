@@ -22,6 +22,11 @@ export const fields: Dialogue = {
     'Keep back from him. And from me.',
     'The church sends me a convict, the church takes the flour. The key stays on my belt until the reeve says otherwise, in writing.',
     'Go and ask the reeve in Millbrook what he wants for it.',
+  ], choices: [
+    { text: 'What happened to the heron\'s mother?', lines: [
+      'I sent for the watch. The pond is licensed. She was taking pike. The watch took her.',
+      'I didn\'t ask where. You don\'t, with the watch. Her daughter fishes my stream now and looks at me while she does it.',
+    ] },
   ], variants: [{ if: { all: [{ flag: 'sluice-open' }, { any: [{ flag: 'bear-free' }, { not: { flag: 'writ-given' } }] }] }, lines: [
     'The stream\'s dropped a foot. Somebody\'s been at the sluice up in the fen.',
     'The wheel\'s barely turning. If I find out who, the reeve hears about it.',

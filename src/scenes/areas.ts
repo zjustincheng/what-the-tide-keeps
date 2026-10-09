@@ -10,7 +10,7 @@ import { hall, inn, millInside, tannery } from '../content/interiors';
 import { barrow, downs } from '../content/downs';
 import { fen, weir } from '../content/fen';
 import { feastHall, harbour, square } from '../content/capital';
-import { abbey, barracks, battlefield, drove, fort, keep, ossuary, pass, tarn } from '../content/highlands';
+import { abbey, barracks, battlefield, drove, fort, keep, ossuary, pass, rookery, tarn } from '../content/highlands';
 import type { Encounter } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
@@ -537,8 +537,26 @@ export const BORDER_KEEP: Area = {
     { point: 'captain', encounter: 'captain', hiddenIf: [{ flag: 'captain-slain' }], defeat: { set: 'captain-slain' } },
   ],
   props: [{ point: 'lantern', texture: 'cache', hiddenIf: [{ not: { flag: 'captain-slain' } }, { flag: 'lantern' }] }],
-  exits: { south: { to: 'fort', spawn: 'from-keep', prompt: 'Go back down to the fort town' } },
+  exits: {
+    south: { to: 'fort', spawn: 'from-keep', prompt: 'Go back down to the fort town' },
+    north: { to: 'rookery-road', spawn: 'from-keep', prompt: 'Climb the rookery road' },
+  },
   decorate: scene => snowfall(scene, 640, 544),
 };
 
-export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP];
+// The rookery road, up toward the mountain holds, where the harriers have the road now.
+export const ROOKERY_ROAD: Area = {
+  ...HIGHLAND_GROUND, key: 'rookery-road', map: 'rookery-road', music: 'highlands', place: 'The rookery road', time: 'Evening', dialogue: rookery,
+  grade: { saturation: -0.45, brightness: 0.76, vignette: 0.55 }, npcs: [],
+  enemies: [
+    { point: 'harrier-1', encounter: 'harrier' }, { point: 'harrier-2', encounter: 'harrier', waves: 2 },
+    { point: 'hound-1', encounter: 'hound', ambush: true },
+  ],
+  props: [{ point: 'frozen-courier', texture: 'courier', hiddenIf: [] }, { point: 'camp-rookery', texture: 'campfire', hiddenIf: [] }],
+  forage: { 'forage-1': 'herb' },
+  camps: { 'camp-rookery': { prompt: 'Rest in the couriers\' shelter', cost: 4, lines: ['You burn the last of someone\'s kindling in the couriers\' cairn. The wind never stops all night.'] } },
+  exits: { south: { to: 'border-keep', spawn: 'from-rookery', prompt: 'Go back down to the old border fort' } },
+  decorate: scene => snowfall(scene, 576, 768),
+};
+
+export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD];

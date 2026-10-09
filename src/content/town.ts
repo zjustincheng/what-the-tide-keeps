@@ -49,6 +49,11 @@ export const town: Dialogue = {
   ] }] },
   innkeeper: { speaker: 'THE INNKEEPER', prompt: 'Speak to the innkeeper', lines: [
     'We\'re full.',
+  ], choices: [
+    { text: 'Why won\'t you rent to me?', lines: [
+      'The last convict who slept here woke screaming a name that wasn\'t his, every night for a month.',
+      'Then the church came for him and he went quiet. I washed those sheets myself. I don\'t want to again.',
+    ] },
   ], variants: [{ if: { flag: 'boar-defeated' }, lines: [
     'A room\'s come free. Don\'t make me regret it.',
   ], choices: [
@@ -142,6 +147,10 @@ const reeveReplies: Choice[] = [
   { text: 'I did not kill anyone.', if: { not: { forgot: 'trial' } }, lines: ['Everyone in my lockup says that.'] },
   { text: 'Why am I branded?', if: { forgot: 'trial' }, lines: [
     'You don\'t know? They say you killed the king.',
+  ] },
+  { text: 'What happens to the carnivore quarter if the fish stops?', lines: [
+    'The gate locks from our side. That\'s what it\'s for.',
+    'I signed that order too, years ago. It\'s in a drawer, dated, waiting. Every reeve before me signed one.',
   ] },
   // He says exactly what is left to do for the writ.
   { text: 'You signed the order to burn the boar out.', if: { all: [{ flag: 'burn-order-seen' }, { not: { flag: 'boar-defeated' } }] }, lines: [

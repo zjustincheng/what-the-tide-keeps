@@ -13,14 +13,14 @@ import type { WaystoneId } from './waystones';
 import type { Catch } from './fishing';
 
 // Carried items are lost on a wipe and go back to where they were found.
-export type Item = 'bell' | 'letter' | 'note' | 'crate' | 'ring' | 'shrine-stone';
+export type Item = 'bell' | 'letter' | 'note' | 'crate' | 'ring' | 'shrine-stone' | 'raven-letter' | 'sealed-order';
 export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated' | 'pests-field' | 'pests-yard' | 'writ-given' | 'bear-free' | 'vulture-free'
   | 'sheep-woods' | 'sheep-orchard' | 'sheep-yard' | 'sheep-reward' | 'barrel-bought' | 'squid-freed' | 'swarm-slain' | 'bounty-paid'
   | 'warden-slain' | 'leech-slain'
   | 'followers-spared' | 'followers-reported' | 'followers-paid' | 'fishmonger-angry' | 'stall-cowed' | 'stood-count' | 'inn-room' | 'reeve-pardon'
   | 'hounds-fed' | 'pack-slain' | 'ram-paid' | 'barrow-coins' | 'sluice-open' | 'drowned-slain' | 'otter-trusted' | 'otter-reported' | 'otter-paid'
   | 'vulture-met' | 'anchors-known' | 'letter-delivered' | 'bridge-lowered' | 'pair-slain' | 'hyena-slain' | 'ration-ledger' | 'merchant-thanked'
-  | 'captain-slain' | 'lantern' | 'hall-key' | 'crab-freed' | 'old-roads' | 'way-crossroads' | 'way-millbrook' | 'way-downs' | 'way-weir' | 'way-fort' | 'way-square'
+  | 'captain-slain' | 'lantern' | 'letter-left' | 'order-read' | 'hall-key' | 'crab-freed' | 'old-roads' | 'way-crossroads' | 'way-millbrook' | 'way-downs' | 'way-weir' | 'way-fort' | 'way-square'
   | 'brother-freed' | 'warden-bribed' | 'crate-delivered' | 'ring-returned' | 'ladder-down' | 'drove-gate-open' | 'drover-cache'
   | 'burn-order-seen' | 'kid-found' | 'lane-open' | 'boar-challenged' | 'dead-1' | 'dead-2' | 'dead-3' | 'ossuary-key' | 'hyena-challenged';
 // Things worth keeping: keepsakes and grimoires. Once found, they are kept through every death; carried items are not.
@@ -35,14 +35,14 @@ export type Drained = Readonly<Partial<Record<MemberId, number>>>;
 // night: whether it is dark. The hero chooses when he sleeps whether to wake at dawn or at dusk.
 // tempered: keepsakes the fort's smith has tempered; kept for good, like the keepsakes themselves.
 export type World = Readonly<{ night?: boolean; tempered?: readonly KeepsakeId[]; flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number; pantry?: Pantry }>;
-export const ITEMS: readonly Item[] = ['bell', 'letter', 'note', 'crate', 'ring', 'shrine-stone'];
+export const ITEMS: readonly Item[] = ['bell', 'letter', 'note', 'crate', 'ring', 'shrine-stone', 'raven-letter', 'sealed-order'];
 export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
   'sheep-woods', 'sheep-orchard', 'sheep-yard', 'sheep-reward', 'barrel-bought', 'squid-freed', 'swarm-slain', 'bounty-paid',
   'warden-slain', 'leech-slain',
   'followers-spared', 'followers-reported', 'followers-paid', 'fishmonger-angry', 'stall-cowed', 'stood-count', 'inn-room', 'reeve-pardon',
   'hounds-fed', 'pack-slain', 'ram-paid', 'barrow-coins', 'sluice-open', 'drowned-slain', 'otter-trusted', 'otter-reported', 'otter-paid',
   'vulture-met', 'anchors-known', 'letter-delivered', 'bridge-lowered', 'pair-slain', 'hyena-slain', 'ration-ledger', 'merchant-thanked',
-  'captain-slain', 'lantern', 'hall-key', 'crab-freed', 'old-roads', 'way-crossroads', 'way-millbrook', 'way-downs', 'way-weir', 'way-fort', 'way-square',
+  'captain-slain', 'lantern', 'letter-left', 'order-read', 'hall-key', 'crab-freed', 'old-roads', 'way-crossroads', 'way-millbrook', 'way-downs', 'way-weir', 'way-fort', 'way-square',
   'brother-freed', 'warden-bribed', 'crate-delivered', 'ring-returned', 'ladder-down', 'drove-gate-open', 'drover-cache',
   'burn-order-seen', 'kid-found', 'lane-open', 'boar-challenged', 'dead-1', 'dead-2', 'dead-3', 'ossuary-key', 'hyena-challenged'];
 // A favor spell: a small everyday spell a villager trades for help. It opens the hedge on the border road.

@@ -43,6 +43,15 @@ const priestReplies: Choice[] = [
     'He cleans each cut with salt water. It stings, then it does not.',
     'Your wounds close.',
   ], then: { rest: true } },
+  // Once the hero is back from the boar, the priest says more than she did.
+  { text: 'What happens to the ones who forget everything?', if: { flag: 'boar-defeated' }, lines: [
+    'They\'re still useful. The ledger doesn\'t ask what anyone remembers.',
+    'I try not to ask either. One of them called me mother for a year. I let him.',
+  ] },
+  { text: 'Who reads the ledger?', if: { flag: 'boar-defeated' }, lines: [
+    'The church in the capital. Someone there underlines names. I don\'t know why some and not others.',
+    'Yours is underlined twice.',
+  ] },
   { text: 'I should go.', ends: true, lines: ['Go on, then. Try to come back on your feet.'] },
 ];
 church.priest.choices = priestReplies;

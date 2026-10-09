@@ -334,6 +334,12 @@ The fort's **smith** tempers keepsakes, once each, for 30 coins: a tempered keep
 
 Some fights come in **waves**: the raider camp on the drove road and the raider on the high switchback each send a second raider when the first falls.
 
+### The rookery road
+
+From a gap above the old border fort's west wall, the couriers' road climbs toward the mountain holds, past frozen falls, to a black gate painted BY ORDER OF THE HOUSE. **Harriers** hold the road now; their stoop can't be guarded, only dodged, and one comes in two waves. The raven courier in the fort town asks you to carry her last letter up and slide it under the gate (it's the only copy; lost if you fall). In the falls, her sister is frozen mid-flight with an unsigned order sealed in a cuckoo's egg. Bring it back to the raven for the **Raven's quill** (vulture: much easier dodges, +1 damage, −3 health).
+
+People you already know have darker things to say if you ask: the priest (once you're back from the boar), the reeve, the miller, the innkeeper, the sergeant, the quartermaster, and the lynx in the bread line.
+
 ### Anchors
 
 The vulture's note teaches **anchors**. Once she has joined, every rest at a fire, bed, or cot offers to **write a memory down**. A written memory can't be chosen when the next wipe takes something; after that death it has to be written again. There is one slot. Anchors are saved with the memories in `tide-keeps.memory.v1`.

@@ -306,6 +306,8 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
   fill(furniture,0,0,39,0,H.ROCK);fill(furniture,0,33,39,33,H.ROCK);fill(furniture,0,0,0,33,H.ROCK);fill(furniture,39,0,39,33,H.ROCK);
   // Up from the fort town in the south.
   fill(furniture,19,33,20,33,0);fill(floor,19,22,20,33,H.ROAD);
+  // Up past the west wall, a track climbs to the rookery road.
+  fill(furniture,3,0,4,0,0);fill(floor,3,0,4,3,H.ROAD);
   // The keep: outer walls, broken in places; the gate on the south side.
   fill(furniture,8,4,31,4,H.AWALL);fill(furniture,8,21,31,21,H.AWALL);fill(furniture,8,4,8,21,H.AWALL);fill(furniture,31,4,31,21,H.AWALL);
   fill(furniture,19,21,20,21,0);fill(furniture,8,12,8,13,0);
@@ -323,6 +325,30 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
     ['south',328,536],['from-fort',328,512],
     ['hound-1',...at(6,24)],['hound-2',...at(33,22)],
     ['captain',...at(26,10)],['lantern',...at(29,8)],
-    ['archive',...at(12,8)],['roll',...at(14,6)],['camp',...at(24,19)],['banner',...at(18,15)],['keep-gate',...at(19,22)],
+    ['north',64,8],['from-rookery',64,36],['archive',...at(12,8)],['roll',...at(14,6)],['camp',...at(24,19)],['banner',...at(18,15)],['keep-gate',...at(19,22)],
+  ]);
+}
+
+// The rookery road: the couriers' road up toward the mountain holds, ending at the holds' shut gate.
+{
+  const m=grid(36,48,H.HEATHER);const {floor,furniture,put,fill}=m;
+  snowfield(m,()=>true,0.0,7.3);
+  fill(furniture,0,0,35,0,H.ROCK);fill(furniture,0,47,35,47,H.ROCK);fill(furniture,0,0,0,47,H.ROCK);fill(furniture,35,0,35,47,H.ROCK);
+  fill(furniture,4,47,5,47,0);
+  // Switchbacks up the cliff, between bands of rock.
+  fill(floor,4,40,5,47,H.ROAD);fill(floor,4,39,28,40,H.ROAD);fill(floor,27,27,28,40,H.ROAD);fill(floor,8,26,28,27,H.ROAD);fill(floor,8,13,9,27,H.ROAD);fill(floor,8,12,26,13,H.ROAD);fill(floor,25,4,26,13,H.ROAD);
+  fill(furniture,1,33,34,34,H.ROCK);fill(furniture,27,33,28,34,0);
+  fill(furniture,1,19,34,20,H.ROCK);fill(furniture,8,19,9,20,0);
+  // The frozen falls down the east side, and the courier caught in them.
+  fill(floor,31,1,33,32,H.ICE);for(let y=2;y<32;y+=3) put(floor,32,y,H.FROZEN);
+  // The holds' gate at the top: a wall across the road, shut.
+  fill(furniture,14,2,34,2,H.AWALL);fill(furniture,14,1,14,2,H.AWALL);put(furniture,25,2,H.AWALL);put(furniture,26,2,H.AWALL);
+  for(const [x,y] of [[3,30],[14,30],[20,36],[30,44],[5,10],[18,8],[3,24],[22,23],[12,44]]) put(furniture,x,y,H.PINE);
+  for(const [x,y] of [[16,37],[11,29],[20,15],[6,43]]) put(furniture,x,y,H.BOULDER);
+  put(furniture,15,24,H.CAIRN);
+  write('rookery-road','highland',HROWS,HIGHLAND_SOLID,m,[
+    ['south',80,760],['from-keep',80,736],
+    ['holds-gate',...at(25,3)],['frozen-courier',...at(30,14)],['shelter',...at(15,25)],['camp-rookery',...at(13,23)],
+    ['harrier-1',...at(18,39)],['harrier-2',...at(14,12)],['hound-1',...at(22,26)],['forage-1',...at(24,36)],
   ]);
 }

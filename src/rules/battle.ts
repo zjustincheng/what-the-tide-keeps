@@ -11,7 +11,7 @@ import type { Drained, Wounds } from './world';
 export type MemberId = 'chameleon' | 'bear' | 'vulture';
 export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze' | 'gather';
 export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm' | 'warden' | 'leech' | 'hound' | 'pack' | 'wisp' | 'drowned'
-  | 'raider' | 'ghoul' | 'vulture' | 'pair' | 'hyena' | 'inquisitor' | 'captain';
+  | 'raider' | 'ghoul' | 'vulture' | 'pair' | 'hyena' | 'inquisitor' | 'captain' | 'harrier';
 export const SPELL = 'Salt lance';
 // Each caster's spell. Until a spell is studied (analyzed, or survived once) its name is hidden, it can't be dodged,
 // and no barrier stops it. Once studied, it can be seen coming, dodged, and barred.
@@ -132,6 +132,9 @@ export const ENEMIES = {
     opening: 'The hyena looks up from the bones. "Nobody comes down here to pray." Behind her, the dead she keeps get up.' },
   captain: { name: 'Deserter captain', short: 'captain', health: 124, mana: 8, veiled: true,
     opening: 'A wolf in a garrison coat with the badges cut off stands up from the inner yard\'s fire. "Nobody\'s coming for that lantern. Nobody\'s coming for us." His lieutenant draws.' },
+  // The rookery road: hawks who rob the couriers' road from the air.
+  harrier: { name: 'Harrier', short: 'harrier', health: 58, mana: 6, veiled: false,
+    opening: 'A harrier drops out of the wind with its talons open. It has been living off this road a long time.' },
   inquisitor: { name: 'The inquisitor', short: 'inquisitor', health: 600, mana: 60, veiled: false,
     opening: 'The largest signature you have ever felt. A ram in grey, the royal seal at his collar. "Convict. You are a long way from your church." You cannot win this. Run.' },
 } as const satisfies Record<Encounter, unknown>;
@@ -420,6 +423,9 @@ function plainIntent(battle: Battle): Move & { tell: string } {
         ? { name: 'Frenzy', type: 'physical', tell: `She doesn't stop. Three blows, each one hungrier.${fed}`, damage: 4 + Math.floor(battle.fury / 2), hits: 3, piercing: 2, window: { perfect: 50, graze: 120 } }
         : { name: 'Rend', type: 'physical', tell: `She comes in low.${fed}`, damage: 9 + battle.fury, piercing: 3 + Math.floor(battle.fury / 2), window: { perfect: 50, graze: 120 } };
   }
+  if (battle.encounter === 'harrier') return battle.round % 2 === 0
+    ? { name: 'Stoop', type: 'physical', tell: 'It climbs into the wind and folds. A dive no guard will stop is coming.', damage: 11, unblockable: true, window: { perfect: 45, graze: 120 } }
+    : { name: 'Rake', type: 'physical', tell: 'It rakes past, low, twice.', damage: 4, hits: 2 };
   if (battle.encounter === 'captain') {
     // A volley every third round, an execution blow when someone is down, a sabre otherwise.
     if (battle.round % 3 === 0) return { name: 'Volley', type: 'physical', tell: 'He calls the volley. Three bolts from the walls, one after another, and no guard will stop them.', damage: 5, hits: 3, unblockable: true, window: { perfect: 50, graze: 130 } };
