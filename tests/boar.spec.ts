@@ -80,3 +80,19 @@ test('fighting the boar directly frees the grain and changes the farmland', asyn
   await expect(page.locator('#dialogue-text')).toContainText('The carts went through at dawn.');
   expect(errors).toEqual([]);
 });
+
+test('at half health the boar turns: a new name, a second stage, and a charge every round', async ({ page }) => {
+  await meetBoar(page);
+  await expect(page.locator('#battle-title')).toHaveText('Stand together.');
+  await page.evaluate(async () => {
+    const { game } = await import('/src/main.ts');
+    const view = game.scene.getScenes(true)[0].overlay;
+    view.state = { ...view.state, enemy: { ...view.state.enemy, health: Math.floor(view.state.enemy.maxHealth / 2) + 2 } };
+    view.render();
+  });
+  await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
+  await expect(page.locator('#battle-title')).toHaveText('The boar, cornered.');
+  await expect(page.locator('.battle-heading .eyebrow')).toHaveText('SECOND STAGE');
+  await expect(page.locator('.battle-log')).toContainText('Not like this. Not twice.');
+  await expect(page.locator('#enemy-intent')).toContainText('A charge is coming');
+});

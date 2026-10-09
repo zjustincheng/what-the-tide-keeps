@@ -735,3 +735,10 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
 @media (prefers-reduced-motion: reduce) {
   .fighter img, .fighter.is-acting img, .fighter.is-hit img { animation: none; }
 }
+
+/* A boss in its second stage burns redder and moves faster. */
+.battle[data-stage="2"] .enemy-fighter[data-foe="0"] img { filter: saturate(.9) brightness(.95) sepia(.5) hue-rotate(-30deg) saturate(2.2); animation-duration: 1.4s; }
+.battle[data-stage="2"] .battle-heading .eyebrow { color: #d88a6a; letter-spacing: .3em; }
+@keyframes turning { 0% { transform: scale(1); } 30% { transform: scale(1.25) translateY(-4px); } 60% { transform: scale(.95); } 100% { transform: scale(1); } }
+.fighter.is-turning img { animation: turning .6s ease-out; }
+@media (prefers-reduced-motion: reduce) { .fighter.is-turning img { animation: none; } }

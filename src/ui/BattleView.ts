@@ -1,4 +1,4 @@
-import { act, canAct, canCast, canFlee, canUse, cast, flee, GATHER, SURVIVE, useSupply, warded, condition, cost, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
+import { act, canAct, canCast, canFlee, canUse, cast, flee, GATHER, STAGES, SURVIVE, useSupply, warded, condition, cost, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
 import type { Action, Battle, BattleOptions, Dodge, Fighter, Foe, MemberId, Encounter } from '../rules/battle';
 import { checkSequence, SPELLS } from '../rules/spells';
 import { BOUNTY, SUPPLIES, SUPPLY_IDS } from '../rules/economy';
@@ -325,6 +325,7 @@ export class BattleView {
     const now = new Map<string, number>([
       ...state.party.flatMap(member => [[`hp:${member.id}`, member.health], [`act:${member.id}`, Number(member.acted)]] as [string, number][]),
       ['hp:0', state.enemy.health], ...state.followers.map((follower, index) => [`hp:${index + 1}`, follower.health] as [string, number]),
+      ['stage', state.stage],
     ]);
     const play = (target: Element | null, name: string) => {
       if (!target) return;
@@ -338,6 +339,8 @@ export class BattleView {
       const fighter = kind === 'hp' && /^\d+$/.test(who) ? this.root.querySelector(`[data-foe="${who}"] .fighter, .fighter[data-foe="${who}"]`) : this.root.querySelector(`.member-card[data-member="${who}"] .party-fighter`);
       if (kind === 'hp' && value < before) play(fighter, 'is-hit');
       if (kind === 'act' && value > before) play(fighter, 'is-acting');
+      // A boss turning to its second stage roars.
+      if (key === 'stage' && value > before) { music.effect('roar'); play(this.root.querySelector('.fighter[data-foe="0"]'), 'is-turning'); }
     }
     this.seen = now;
   }
@@ -348,6 +351,11 @@ export class BattleView {
     const done = state.phase === 'victory' || state.phase === 'defeat' || state.phase === 'fled';
     const remaining = state.party.filter(member => member.health > 0 && !member.acted).length;
     this.root.dataset.phase = state.phase;
+    // In its second stage a boss gets a new name, and the screen says so.
+    const stage = state.stage === 2 ? STAGES[state.encounter] : undefined;
+    this.root.dataset.stage = String(state.stage);
+    this.get('#battle-title').textContent = stage ? `${stage.title}.` : 'Stand together.';
+    this.get('.battle-heading .eyebrow').textContent = stage ? 'SECOND STAGE' : 'THE CONDEMNED';
     this.get('#battle-turn').textContent = done ? (state.phase === 'fled' ? 'You run. Half your coins scatter behind you.' : state.phase === 'victory' ? `${SURVIVE[state.encounter] ? 'You lived through it.' : `It falls quiet. You find ${BOUNTY[state.encounter]} coins.`}${state.party.some(member => member.health < member.maxHealth) ? ' Your wounds will linger until you rest at a fire.' : ''}` : 'The party falls.')
       : `Round ${state.round} · ${state.phase === 'player' ? `${remaining} actions remaining` : 'The enemy moves'}`;
     this.get('#enemy-condition').textContent = condition(state.enemy);

@@ -56,6 +56,8 @@ export type Battle = Readonly<{
   step: number;
   // A snared main enemy loses its next move.
   snared: boolean;
+  // Bosses change once they are down to half health.
+  stage: 1 | 2;
   // Supplies brought into the fight; whatever is left goes back into the pack.
   supplies: Supplies;
   log: readonly string[];
@@ -131,6 +133,38 @@ const CASTERS: readonly Encounter[] = ['acolyte', 'pair'];
 // How much stronger the hyena grows with every body she feeds on, and with anyone falling at all, on either side.
 export const FEED = 5;
 export const FRENZY = 2;
+// Second stages: when a boss first drops to half health, it changes. enter applies the change on the spot.
+export const STAGES: Partial<Record<Encounter, { title: string; line: string; enter?: (battle: Battle) => Partial<Battle> }>> = {
+  boar: { title: 'The boar, cornered', line: 'The boar staggers, then plants his feet. "Not like this. Not twice." He will charge every round now.',
+    enter: battle => ({ fury: battle.fury + 4 }) },
+  warden: { title: 'The warden, unbound', line: 'The censer cracks open. Both votives flare up again, and the warden stops waiting between judgements.',
+    enter: battle => ({ followers: battle.followers.map(follower => ({ ...follower, health: follower.maxHealth })) }) },
+  leech: { title: 'The mire leech, shedding', line: 'Its skin splits and slides off. Underneath it is raw, and hungrier.',
+    enter: battle => ({ enemy: { ...battle.enemy, health: Math.min(battle.enemy.maxHealth, battle.enemy.health + Math.round(battle.enemy.maxHealth * 0.15)) } }) },
+  swarm: { title: 'The swarm-mother, airborne', line: 'She tears free of the branches and takes the air. Her brood rises with her.',
+    enter: battle => ({ followers: battle.followers.map(follower => ({ ...follower, health: follower.maxHealth })) }) },
+  pack: { title: 'The pack leader, howling', line: 'He throws back his head and howls. The fallen get up, and every rush will come with the whole pack.',
+    enter: battle => ({ followers: battle.followers.map(follower => ({ ...follower, health: follower.maxHealth })) }) },
+  drowned: { title: 'The drowned, the bell freed', line: 'The rope snaps. The bell comes up out of the water in its arms, and it swings it.' },
+  hyena: { title: 'The hyena, not laughing', line: 'She stops laughing. She turns on her own dead and eats them where they stand.',
+    enter: battle => {
+      const eaten = battle.followers.filter(follower => follower.health > 0 && !follower.eaten).length;
+      return {
+        followers: battle.followers.map(follower => follower.health > 0 && !follower.eaten ? { ...follower, health: 0, eaten: true } : follower),
+        fury: battle.fury + eaten * FRENZY,
+        enemy: { ...battle.enemy, health: Math.min(battle.enemy.maxHealth, battle.enemy.health + eaten * 6) },
+      };
+    } },
+};
+export const STAGE_AT = 0.5;
+
+// After any blow the party lands, a boss at half health or less moves to its second stage, once.
+function staged(battle: Battle): Battle {
+  const stage = STAGES[battle.encounter];
+  if (!stage || battle.stage === 2 || battle.enemy.health <= 0 || battle.enemy.health > battle.enemy.maxHealth * STAGE_AT || battle.phase === 'victory') return battle;
+  return { ...battle, ...stage.enter?.(battle), stage: 2, log: [...battle.log, stage.line] };
+}
+
 // Followers who give up once their leader falls. Everyone else fights until the last of them is down.
 export const YIELDING: Partial<Record<Encounter, true>> = { boar: true, hyena: true };
 export const FURY_PER_HIT = 3;
@@ -173,7 +207,7 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
     party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10)].filter(member => roster.includes(member.id)),
     enemy: { health: scaled(ENEMIES[encounter].health), maxHealth: scaled(ENEMIES[encounter].health), mana: ENEMIES[encounter].mana, maxMana: ENEMIES[encounter].mana },
     followers: (FOLLOWERS[encounter] ?? []).map(({ name, health }) => ({ name, health: scaled(health), maxHealth: scaled(health), mana: 4, maxMana: 4 })),
-    fury: 0, step: 0, snared: false, supplies,
+    fury: 0, step: 0, snared: false, stage: 1, supplies,
     log: [ENEMIES[encounter].opening, ...(ambush ? ['Ambush! It moves before you can.'] : [])],
   };
 }
@@ -244,26 +278,26 @@ export function intent(battle: Battle): Move & { tell: string } {
   }
   if (battle.encounter === 'boar') {
     const fury = battle.fury ? ` His fury burns · ${battle.fury} will drive through any guard.` : '';
-    return battle.round % 2 === 0
+    return battle.round % 2 === 0 || battle.stage === 2
       ? { name: 'Tusk charge', type: 'physical', tell: `He lowers his tusks and paws the ash. A charge is coming, fast.${fury}`, damage: 10 + battle.fury, piercing: battle.fury, window: { perfect: 45, graze: 120 } }
       : { name: 'Shoulder blow', type: 'physical', tell: `He squares his shoulders.${fury}`, damage: 4 + battle.fury, piercing: battle.fury };
   }
   if (battle.encounter === 'warden') {
     if (battle.round % 4 === 0) return { name: 'Rekindle', type: 'physical', tell: 'It lifts its censer to the dark wicks. The votives will burn again.', damage: 0, revive: true };
-    return battle.round % 3 === 0
+    return battle.round % (battle.stage === 2 ? 2 : 3) === 0
       ? { name: 'Judgement', type: 'physical', tell: 'It raises the censer high. Judgement falls next. It cannot be dodged, and no guard will hold all of it.', damage: 14, piercing: 7, undodgeable: true }
       : { name: 'Censer swing', type: 'physical', tell: 'The censer swings on its chain.', damage: 6 };
   }
-  if (battle.encounter === 'leech') return battle.round % 3 === 0
+  if (battle.encounter === 'leech') return battle.round % (battle.stage === 2 ? 2 : 3) === 0
     ? { name: 'Coil', type: 'physical', tell: 'It draws its whole length back into a coil. It cannot be dodged.', damage: 13, undodgeable: true }
-    : { name: 'Latch', type: 'physical', tell: 'Its mouth opens toward you. Whatever it takes, it keeps.', damage: 8, drain: true, window: { perfect: 60, graze: 150 } };
+    : { name: 'Latch', type: 'physical', tell: 'Its mouth opens toward you. Whatever it takes, it keeps.', damage: battle.stage === 2 ? 11 : 8, drain: true, window: { perfect: 60, graze: 150 } };
   if (battle.encounter === 'hound') return battle.round % 2 === 0
     ? { name: 'Lunge', type: 'physical', tell: 'It drops onto its haunches. A lunge is coming, fast.', damage: 12, piercing: 3, window: { perfect: 50, graze: 130 } }
     : { name: 'Snap', type: 'physical', tell: 'It circles, snapping.', damage: 6 };
   if (battle.encounter === 'pack') {
     // The rush grows with every hound still standing: thin the pack first.
     const hounds = battle.followers.filter(follower => follower.health > 0).length;
-    return battle.round % 3 === 0
+    return battle.round % (battle.stage === 2 ? 2 : 3) === 0
       ? { name: 'Pack rush', type: 'physical', tell: `He barks once and ${hounds ? 'the pack goes for you together' : 'comes alone'}. It cannot be dodged.`, damage: 5 + 4 * hounds, undodgeable: true }
       : { name: 'Throat bite', type: 'physical', tell: 'He drops low. He will go for the throat, fast.', damage: 8, window: { perfect: 50, graze: 130 } };
   }
@@ -271,6 +305,7 @@ export function intent(battle: Battle): Move & { tell: string } {
     ? { name: 'Flare', type: 'physical', tell: 'The light gutters, then swells. A flare is coming, and it comes very fast.', damage: 7, window: { perfect: 35, graze: 90 } }
     : { name: 'Flicker', type: 'physical', tell: 'The light flickers at the edge of your eye.', damage: 3 };
   if (battle.encounter === 'drowned') {
+    if (battle.stage === 2 && battle.round % 2 === 0) return { name: 'Bell swing', type: 'physical', tell: 'It swings the bell itself. It cannot be dodged, and no guard will hold all of it.', damage: 12, piercing: 5, undodgeable: true };
     if (battle.round % 3 === 0) return { name: 'Toll', type: 'physical', tell: 'It hauls on the rope. The sunken bell will toll. It cannot be dodged, and no guard will hold all of it.', damage: 10, piercing: 4, undodgeable: true };
     return battle.round % 3 === 2
       ? { name: 'Pull under', type: 'physical', tell: 'It lets go of the rope and reaches for you. It will try to pull someone under.', damage: 12, window: { perfect: 45, graze: 110 } }
@@ -295,17 +330,19 @@ export function intent(battle: Battle): Move & { tell: string } {
     const fed = battle.fury ? ` She has fed · ${battle.fury} more on every blow.` : '';
     if (battle.round % 3 === 0 && battle.followers.some(follower => follower.health <= 0 && !follower.eaten))
       return { name: 'Raise', type: 'physical', tell: `She calls the dead up again.${fed}`, damage: 0, revive: true };
-    if (battle.round % 2 === 0 && bodies(battle).length)
+    if ((battle.round % 2 === 0 || battle.stage === 2) && bodies(battle).length)
       return { name: 'Feed', type: 'physical', tell: `She turns toward the fallen. She will feed this turn unless a barrier covers the body.${fed}`, damage: 0, feed: true };
-    return battle.round % 3 === 0
-      ? { name: 'Laughing lunge', type: 'physical', tell: `She starts to laugh. She will lunge, very fast, and most of it will go through a guard.${fed}`, damage: 14 + battle.fury, piercing: 7 + Math.floor(battle.fury / 2), window: { perfect: 35, graze: 95 } }
+    return battle.round % (battle.stage === 2 ? 2 : 3) === 0
+      ? { name: battle.stage === 2 ? 'Lunge' : 'Laughing lunge', type: 'physical', tell: `She starts to laugh. She will lunge, very fast, and most of it will go through a guard.${fed}`, damage: 14 + battle.fury, piercing: 7 + Math.floor(battle.fury / 2), window: { perfect: 35, graze: 95 } }
       : { name: 'Rend', type: 'physical', tell: `She comes in low.${fed}`, damage: 9 + battle.fury, piercing: 3 + Math.floor(battle.fury / 2), window: { perfect: 50, graze: 120 } };
   }
   if (battle.encounter === 'inquisitor')
     return { name: 'Verdict', type: 'physical', tell: 'He does not hurry. The verdict cannot be dodged.', damage: 14, undodgeable: true };
   if (battle.encounter === 'swarm') return battle.round % 3 === 0
     ? { name: 'Brood call', type: 'physical', tell: 'She shrills, and the brood answers. Fallen nymphs will rise again.', damage: 0, revive: true }
-    : { name: 'Wing buffet', type: 'physical', tell: 'Her wings rattle. A buffet is coming.', damage: 5 };
+    : battle.stage === 2
+      ? { name: 'Dive', type: 'physical', tell: 'She folds her wings and drops. A dive is coming, fast.', damage: 9, window: { perfect: 45, graze: 120 } }
+      : { name: 'Wing buffet', type: 'physical', tell: 'Her wings rattle. A buffet is coming.', damage: 5 };
   if (battle.encounter === 'weevil') return battle.round % 3 === 0
     ? { name: 'Rolling charge', type: 'physical' as const, tell: 'It tucks its snout and rocks back. A rolling charge is coming. It cannot be dodged.', damage: 9, undodgeable: true }
     : { name: 'Snout jab', type: 'physical' as const, tell: 'Its snout lowers. It will jab.', damage: 3 };
@@ -415,12 +452,12 @@ export function useSupply(battle: Battle, actor: MemberId, supply: SupplyId, tar
     : hit?.blocked ? `The firepot bursts against the candlelight. The warden is untouched while its votives burn.`
     : hit?.shielded ? `The boar throws himself in front of the ${aimed}. The firepot bursts against him instead, and his fury grows.`
     : `${MEMBERS[actor].name} throws a firepot. It bursts across the ${aimed}.`;
-  return {
+  return staged({
     ...battle, party, enemy, followers: hit?.followers ?? battle.followers, fury: hit?.fury ?? battle.fury,
     supplies: { ...battle.supplies, [supply]: battle.supplies[supply] - 1 },
     phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
     log: [...battle.log, message, ...fallen(battle, after), ...(victory ? ['The signature flickers out. It is quiet again.'] : [])],
-  };
+  });
 }
 
 export function canCast(battle: Battle, actor: MemberId, foe: Foe = 0): boolean {
@@ -456,12 +493,12 @@ export function cast(battle: Battle, actor: MemberId, success: boolean, foe: Foe
     : spell.kind === 'ward' ? `${MEMBERS[actor].name} casts ${spell.name}. Stone settles over everyone still standing.`
     : `${MEMBERS[actor].name} casts ${spell.name}. Thorns bind the ${ENEMIES[battle.encounter].short} where it stands.`;
   const allActed = party.every(member => member.health <= 0 || member.acted);
-  return {
+  return staged({
     ...battle, party, enemy, followers: hit?.followers ?? battle.followers, fury: hit?.fury ?? battle.fury,
     snared: battle.snared || (success && spell.kind === 'snare' && enemy.health > 0),
     phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
     log: [...battle.log, message, ...fallen(battle, after), ...(victory ? ['The signature flickers out. It is quiet again.'] : [])],
-  };
+  });
 }
 
 export function act(battle: Battle, actor: MemberId, action: Action, target: MemberId = actor, foe: Foe = 0): Battle {
@@ -496,10 +533,10 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
     : actor === 'vulture' ? 'Vulture steadies her aim. Her next attack will strike harder.'
     : actor === 'bear' && target !== actor ? `Bear steps in front of ${MEMBERS[target].name}.`
     : `${definition.name} plants their feet and guards.`;
-  return {
+  return staged({
     ...battle, party, enemy, followers, fury, studied: action === 'analyze' ? [SPELL] : battle.studied, phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
     log: [...battle.log, message, ...fallen(battle, after), ...(victory ? ['The signature flickers out. It is quiet again.'] : [])],
-  };
+  });
 }
 
 // Dodging is timed by the player, never rolled. Times are milliseconds from the moment the blow lands.

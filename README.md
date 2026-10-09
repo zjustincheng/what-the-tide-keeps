@@ -263,6 +263,16 @@ The road ends at the boar's burned farm, where he waits between his followers, a
 
 Nothing marks the quest. A carried item is lost on a wipe and returns to where it was found. The opened hedge and learned spells persist, saved in `tide-keeps.world.v1` and the grimoire.
 
+Every boss has a **second stage**. The first time a hit takes it to half health it turns: the battle title changes, SECOND STAGE shows above it, the boss burns redder and moves faster, and it roars (`STAGES` in `src/rules/battle.ts`):
+
+- **The boar, cornered:** gains fury and charges every round.
+- **The warden, unbound:** both votives flare up again, and Judgement falls every other round.
+- **The mire leech, shedding:** sheds its skin and heals, bites harder, and coils every other round.
+- **The swarm-mother, airborne:** her brood rises again and she dives at you, fast.
+- **The pack leader, howling:** the fallen hounds get up, and he rushes with the whole pack every other round.
+- **The drowned, the bell freed:** swings the bell itself every other round, harder than the toll.
+- **The hyena, not laughing:** eats her own standing dead on the spot, then feeds every round there is a body and lunges every other round.
+
 Ordinary enemies notice the hero when he comes close and come after him, a little slower than he walks; they give up and go back if he gets far enough away (`CHASE` in `src/scenes/AreaScene.ts`). Bosses and guardians hold their ground. Ambushers hide their mana: besides the highland raiders, the downs hounds, the battlefield's raised dead, a weevil in the dark woods, and one of the fen's marsh lights strike first if they reach you unseen. People breathe and turn to look at the hero as he passes, enemies bob and face him, and in battle every fighter breathes, heroes hop when they act, and anyone hit flinches.
 
 Every fight is optional except the boar. Leaving an area and coming back respawns its enemies. A wipe anywhere wakes the party at the church cot, and **Return to the cot** works from any area.

@@ -5,7 +5,7 @@ export type Effect =
   | 'blip' | 'select' | 'open' | 'door' | 'find' | 'coins' | 'rest' | `step-${Surface}`
   | 'cast-line' | 'plop' | 'splash' | 'catch'
   | 'lash' | 'maul' | 'talons' | 'hit' | 'block' | 'barrier' | 'dodge' | 'graze'
-  | 'key' | 'spell' | 'fizzle' | 'heal' | 'gather' | 'victory' | 'defeat';
+  | 'key' | 'spell' | 'fizzle' | 'heal' | 'gather' | 'victory' | 'defeat' | 'roar';
 
 // pitch shifts tonal effects by semitones, so each speaker's voice blips at their own pitch.
 export function playEffect(context: BaseAudioContext, out: AudioNode, noise: AudioBuffer, name: Effect, pitch = 0) {
@@ -88,6 +88,8 @@ export function playEffect(context: BaseAudioContext, out: AudioNode, noise: Aud
     heal: () => [0, 4, 7, 12].forEach(step => tone('triangle', 392 * 2 ** (step / 12), 392 * 2 ** (step / 12), 0.02 * step, 1.2, 0.07, 2400)),
     gather: () => { tone('sine', 220, 440, 0, 0.6, 0.12); ping(880, 0.4, 0.6, 0.07, 2); },
     victory: () => [[0, 0], [4, 0.16], [7, 0.32], [12, 0.48]].forEach(([step, at]) => { tone('sawtooth', 392 * 2 ** (step / 12), 392 * 2 ** (step / 12), at, 0.9, 0.05, 1600); ping(784 * 2 ** (step / 12), at, 0.8, 0.04); }),
+    // A boss turning: a low growl swelling under a rush of noise.
+    roar: () => { tone('sawtooth', 70, 110, 0, 0.9, 0.12, 700); tone('sawtooth', 104, 150, 0.05, 0.8, 0.08, 900); hiss('bandpass', 400, 1600, 0, 0.9, 0.16, 1.5); },
     defeat: () => { tone('sawtooth', 110, 55, 0, 2.2, 0.08, 500); tone('sine', 220, 110, 0, 2, 0.06); },
   };
   effects[name]();

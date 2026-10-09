@@ -26,13 +26,14 @@ test('the shrine warden cannot be harmed while its votives burn, and relights th
 });
 
 test('the mire leech heals by what it takes, so dodging or guarding starves it', () => {
-  const hurt: Battle = { ...createBattle('leech'), enemy: { ...createBattle('leech').enemy, health: 30 } };
+  // Already in her second stage, so the hits below don't set it off.
+  const hurt: Battle = { ...createBattle('leech'), stage: 2, enemy: { ...createBattle('leech').enemy, health: 30 } };
   const exposed = act(act(act(hurt, 'chameleon', 'attack'), 'bear', 'attack'), 'vulture', 'attack');
   assert.equal(intent(exposed).name, 'Latch');
   const fed = strike(exposed, 'miss');
-  assert.equal(fed.enemy.health, exposed.enemy.health + 8);
+  assert.equal(fed.enemy.health, exposed.enemy.health + intent(exposed).damage);
   assert.ok(fed.log.includes('The leech swells with what it took.'));
-  assert.equal(strike(exposed, 'graze').enemy.health, exposed.enemy.health + 4);
+  assert.equal(strike(exposed, 'graze').enemy.health, exposed.enemy.health + Math.ceil(intent(exposed).damage / 2));
   assert.equal(strike(exposed, 'perfect').enemy.health, exposed.enemy.health, 'nothing taken, nothing gained');
   const guarded = act(act(act(hurt, 'bear', 'support'), 'chameleon', 'attack'), 'vulture', 'attack');
   assert.equal(resolveEnemy(guarded).enemy.health, guarded.enemy.health);

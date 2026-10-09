@@ -27,7 +27,8 @@ test('fighting the boar directly wins; clearing his followers first is the trap'
   let direct = createBattle('boar');
   while (direct.phase === 'player') direct = round(direct, 0);
   assert.equal(direct.phase, 'victory');
-  assert.ok(direct.party.every(member => member.health === member.maxHealth));
+  // Cornered, his fury drives through the bear's guard, but everyone walks away.
+  assert.ok(direct.party.every(member => member.health > 0));
   let trap = createBattle('boar');
   while (trap.phase === 'player') trap = round(trap, 1);
   assert.equal(trap.phase, 'defeat');
