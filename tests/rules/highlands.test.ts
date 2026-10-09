@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { act, createBattle, FEED, intent, nextStrike, resolveEnemy, SPELL, strike } from '../../src/rules/battle.ts';
+import { act, createBattle, FEED, FRENZY, intent, nextStrike, resolveEnemy, SPELL, strike } from '../../src/rules/battle.ts';
 
 test('an ambush gives the enemy the first turn', () => {
   const battle = createBattle('raider', [], { ambush: true });
@@ -33,14 +33,14 @@ test('the hexer and the brute land a spell and a heavy physical blow in the same
   battle = strike(battle);
   const second = nextStrike(battle)!;
   assert.equal(second.move.name, "brute's pick");
-  assert.equal(second.move.damage, 7);
+  assert.equal(second.move.damage, 8);
   // The hexer's spell can be analyzed like the exile's.
   assert.equal(act(createBattle('pair'), 'chameleon', 'analyze').studied.includes(SPELL), true);
 });
 
 test('the hyena feeds on the fallen and grows stronger, unless a barrier covers the body', () => {
   const start = createBattle('hyena', [], { roster: ['chameleon', 'bear'] });
-  const fallen = { ...start, round: 3, phase: 'enemy' as const, party: start.party.map(member => member.id === 'bear' ? { ...member, health: 0 } : member) };
+  const fallen = { ...start, round: 2, phase: 'enemy' as const, party: start.party.map(member => member.id === 'bear' ? { ...member, health: 0 } : member) };
   assert.equal(intent(fallen).feed, true);
   const fed = strike(fallen);
   assert.equal(fed.fury, FEED);
@@ -88,4 +88,16 @@ test('joining takes back your own grimoire from whoever carried it', async () =>
   const { reclaim } = await import('../../src/rules/spells.ts');
   assert.deepEqual(reclaim({ chameleon: 'windward', bear: 'riverstone', vulture: null }, 'vulture'), { chameleon: 'thornwork', bear: 'riverstone', vulture: 'windward' });
   assert.deepEqual(reclaim({ chameleon: 'pond-primer', bear: 'riverstone', vulture: null }, 'vulture'), { chameleon: 'pond-primer', bear: 'riverstone', vulture: 'windward' });
+});
+
+test('anyone falling makes the hyena stronger, on either side', () => {
+  const start = createBattle('hyena', [], { roster: ['chameleon', 'bear'] });
+  // A ghoul cut down feeds her frenzy.
+  const weak = { ...start, followers: start.followers.map((follower, index) => index === 0 ? { ...follower, health: 1 } : follower) };
+  assert.equal(act(weak, 'chameleon', 'attack', 'chameleon', 1).fury, FRENZY);
+  // So does a hero going down to her blow.
+  const frail = { ...start, round: 1, phase: 'enemy' as const, party: start.party.map(member => ({ ...member, health: 1 })) };
+  const after = strike(frail);
+  assert.equal(after.fury, FRENZY);
+  assert.match(after.log.join(' '), /only makes her stronger/);
 });

@@ -86,25 +86,25 @@ export const ENEMIES = {
   swarm: { name: 'Swarm-mother', short: 'swarm-mother', health: 64, mana: 4, veiled: false,
     opening: 'Something the size of a cart unfolds in the dark between the trees. Her brood drops from the branches around her.' },
   // The downs: hounds gone hungry since the Covenant closed the commons to them.
-  hound: { name: 'Starved hound', short: 'hound', health: 40, mana: 2, veiled: false,
+  hound: { name: 'Starved hound', short: 'hound', health: 52, mana: 2, veiled: false,
     opening: 'A hound comes out of the gorse with its ribs showing. It does not bark.' },
-  pack: { name: 'Pack leader', short: 'pack leader', health: 74, mana: 4, veiled: false,
+  pack: { name: 'Pack leader', short: 'pack leader', health: 100, mana: 4, veiled: false,
     opening: 'The leader steps out of the broken tower. Two of his pack come round behind you.' },
   // The fen, over the drowned hamlet.
   wisp: { name: 'Marsh light', short: 'light', health: 34, mana: 8, veiled: false,
     opening: 'A pale light hangs over the water, the height of a lantern held by someone short. Nobody is holding it.' },
-  drowned: { name: 'The drowned', short: 'drowned', health: 84, mana: 5, veiled: false,
+  drowned: { name: 'The drowned', short: 'drowned', health: 118, mana: 5, veiled: false,
     opening: 'Something in a rotted cassock stands up out of the chapel water. The bell rope is still in its hands.' },
   // The highlands: raiders who hide their mana, the dead who will not stay buried, and the people who make them rise.
-  raider: { name: 'Highland raider', short: 'raider', health: 46, mana: 6, veiled: true,
+  raider: { name: 'Highland raider', short: 'raider', health: 64, mana: 6, veiled: true,
     opening: 'There was nothing on the road a moment ago. Now a raider is standing in it, and the blade is already moving.' },
-  ghoul: { name: 'Raised dead', short: 'dead', health: 38, mana: 0, veiled: false,
+  ghoul: { name: 'Raised dead', short: 'dead', health: 56, mana: 0, veiled: false,
     opening: 'Something that was buried here gets up. It is still wearing a garrison coat.' },
   vulture: { name: 'The vulture', short: 'vulture', health: 60, mana: 10, veiled: false,
     opening: 'A vulture in a gravedigger\'s sash drops from the dead tree. "Grave thief," she says, and does not wait for an answer. You only need to live through this.' },
-  pair: { name: 'Deserter hexer', short: 'hexer', health: 44, mana: 14, veiled: false,
+  pair: { name: 'Deserter hexer', short: 'hexer', health: 54, mana: 14, veiled: false,
     opening: 'Two deserters step out of the abbey gate: a hexer with ink on his hands, and a brute with a pick. They have done this together before.' },
-  hyena: { name: 'The hyena', short: 'hyena', health: 90, mana: 8, veiled: false,
+  hyena: { name: 'The hyena', short: 'hyena', health: 165, mana: 8, veiled: false,
     opening: 'The hyena looks up from the bones. "Nobody comes down here to pray." Behind her, the dead she keeps get up.' },
   inquisitor: { name: 'The inquisitor', short: 'inquisitor', health: 600, mana: 60, veiled: false,
     opening: 'The largest signature you have ever felt. A ram in grey, the royal seal at his collar. "Convict. You are a long way from your church." You cannot win this. Run.' },
@@ -120,16 +120,17 @@ export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; healt
   // The pack fights for its leader and goes on fighting without him.
   pack: [{ name: 'Hound', health: 14, weapon: 'bite' }, { name: 'Hound', health: 14, weapon: 'bite' }],
   // The hexer's brute hits hard and physically, in the same round the hexer casts.
-  pair: [{ name: 'Brute', health: 30, weapon: 'pick', damage: 7 }],
+  pair: [{ name: 'Brute', health: 38, weapon: 'pick', damage: 8 }],
   // The hyena's dead get up again, unless she has eaten them.
-  hyena: [{ name: 'Ghoul', health: 14, weapon: 'claws' }, { name: 'Ghoul', health: 14, weapon: 'claws' }],
+  hyena: [{ name: 'Ghoul', health: 24, weapon: 'claws', damage: 5 }, { name: 'Ghoul', health: 24, weapon: 'claws', damage: 5 }],
 };
 // Fights the party only has to live through: the enemy cannot fall, and the fight ends after this many rounds.
 export const SURVIVE: Partial<Record<Encounter, number>> = { vulture: 3 };
 // Enemies that cast a studied spell, which can be analyzed and barred.
 const CASTERS: readonly Encounter[] = ['acolyte', 'pair'];
-// How much stronger the hyena grows with every body she feeds on.
-export const FEED = 4;
+// How much stronger the hyena grows with every body she feeds on, and with anyone falling at all, on either side.
+export const FEED = 5;
+export const FRENZY = 2;
 // Followers who give up once their leader falls. Everyone else fights until the last of them is down.
 export const YIELDING: Partial<Record<Encounter, true>> = { boar: true, hyena: true };
 export const FURY_PER_HIT = 3;
@@ -257,8 +258,8 @@ export function intent(battle: Battle): Move & { tell: string } {
     ? { name: 'Coil', type: 'physical', tell: 'It draws its whole length back into a coil. It cannot be dodged.', damage: 13, undodgeable: true }
     : { name: 'Latch', type: 'physical', tell: 'Its mouth opens toward you. Whatever it takes, it keeps.', damage: 8, drain: true, window: { perfect: 60, graze: 150 } };
   if (battle.encounter === 'hound') return battle.round % 2 === 0
-    ? { name: 'Lunge', type: 'physical', tell: 'It drops onto its haunches. A lunge is coming, fast.', damage: 8, window: { perfect: 55, graze: 140 } }
-    : { name: 'Snap', type: 'physical', tell: 'It circles, snapping.', damage: 3 };
+    ? { name: 'Lunge', type: 'physical', tell: 'It drops onto its haunches. A lunge is coming, fast.', damage: 12, piercing: 3, window: { perfect: 50, graze: 130 } }
+    : { name: 'Snap', type: 'physical', tell: 'It circles, snapping.', damage: 6 };
   if (battle.encounter === 'pack') {
     // The rush grows with every hound still standing: thin the pack first.
     const hounds = battle.followers.filter(follower => follower.health > 0).length;
@@ -276,11 +277,11 @@ export function intent(battle: Battle): Move & { tell: string } {
       : { name: 'Grasp', type: 'physical', tell: 'Cold hands come up out of the water.', damage: 5 };
   }
   if (battle.encounter === 'raider') return battle.round % 2 === 0
-    ? { name: 'Ambush cut', type: 'physical', tell: 'It drops out of sight again. The next cut comes from nowhere, fast.', damage: 9, window: { perfect: 45, graze: 120 } }
-    : { name: 'Hatchet', type: 'physical', tell: 'A hatchet comes up.', damage: 5 };
+    ? { name: 'Ambush cut', type: 'physical', tell: 'It drops out of sight again. The next cut comes from nowhere, fast, and a guard won\'t stop all of it.', damage: 13, piercing: 4, window: { perfect: 40, graze: 110 } }
+    : { name: 'Hatchet', type: 'physical', tell: 'A hatchet comes up.', damage: 8 };
   if (battle.encounter === 'ghoul') return battle.round % 3 === 0
-    ? { name: 'Gnaw', type: 'physical', tell: 'Its jaw hangs open. Whatever it bites, it keeps.', damage: 7, drain: true }
-    : { name: 'Claw', type: 'physical', tell: 'It reaches for you.', damage: 4 };
+    ? { name: 'Gnaw', type: 'physical', tell: 'Its jaw hangs open. Whatever it bites, it keeps, and a guard won\'t stop all of it.', damage: 11, piercing: 3, drain: true }
+    : { name: 'Claw', type: 'physical', tell: 'It reaches for you.', damage: 7 };
   if (battle.encounter === 'vulture') return battle.round % 3 === 0
     ? { name: 'Stoop', type: 'physical', tell: 'She climbs out of reach. She will drop on you, fast.', damage: 10, window: { perfect: 45, graze: 120 } }
     : { name: 'Talon rake', type: 'physical', tell: 'Her talons come forward.', damage: 6 };
@@ -292,11 +293,13 @@ export function intent(battle: Battle): Move & { tell: string } {
   }
   if (battle.encounter === 'hyena') {
     const fed = battle.fury ? ` She has fed · ${battle.fury} more on every blow.` : '';
-    if (battle.round % 4 === 0 && battle.followers.some(follower => follower.health <= 0 && !follower.eaten))
+    if (battle.round % 3 === 0 && battle.followers.some(follower => follower.health <= 0 && !follower.eaten))
       return { name: 'Raise', type: 'physical', tell: `She calls the dead up again.${fed}`, damage: 0, revive: true };
-    if (battle.round % 3 === 0 && bodies(battle).length)
+    if (battle.round % 2 === 0 && bodies(battle).length)
       return { name: 'Feed', type: 'physical', tell: `She turns toward the fallen. She will feed this turn unless a barrier covers the body.${fed}`, damage: 0, feed: true };
-    return { name: 'Rend', type: 'physical', tell: `She comes in low.${fed}`, damage: 6 + battle.fury, piercing: Math.floor(battle.fury / 2) };
+    return battle.round % 3 === 0
+      ? { name: 'Laughing lunge', type: 'physical', tell: `She starts to laugh. She will lunge, very fast, and most of it will go through a guard.${fed}`, damage: 14 + battle.fury, piercing: 7 + Math.floor(battle.fury / 2), window: { perfect: 35, graze: 95 } }
+      : { name: 'Rend', type: 'physical', tell: `She comes in low.${fed}`, damage: 9 + battle.fury, piercing: 3 + Math.floor(battle.fury / 2), window: { perfect: 50, graze: 120 } };
   }
   if (battle.encounter === 'inquisitor')
     return { name: 'Verdict', type: 'physical', tell: 'He does not hurry. The verdict cannot be dodged.', damage: 14, undodgeable: true };
@@ -376,7 +379,9 @@ function land(battle: Battle, damage: number, foe: Foe) {
   const followers = foe > 0 && !shielded
     ? battle.followers.map((follower, index) => index === foe - 1 ? { ...follower, health: Math.max(0, follower.health - damage) } : follower)
     : battle.followers;
-  return { enemy, followers, fury: battle.fury + (shielded ? FURY_PER_HIT : 0), shielded, blocked };
+  // Anyone falling feeds the hyena's frenzy, her own dead included.
+  const fell = battle.encounter === 'hyena' ? followers.filter((follower, index) => follower.health === 0 && battle.followers[index].health > 0).length : 0;
+  return { enemy, followers, fury: battle.fury + (shielded ? FURY_PER_HIT : 0) + fell * FRENZY, shielded, blocked };
 }
 
 export function canUse(battle: Battle, actor: MemberId, supply: SupplyId, target: MemberId = actor, foe: Foe = 0): boolean {
@@ -550,7 +555,7 @@ export function strike(battle: Battle, dodge: Dodge = 'miss'): Battle {
     const after = {
       ...battle, followers, step: battle.step + 1,
       fury: battle.fury + (body ? FEED : 0),
-      enemy: body ? { ...battle.enemy, health: Math.min(battle.enemy.maxHealth, battle.enemy.health + 8) } : battle.enemy,
+      enemy: body ? { ...battle.enemy, health: Math.min(battle.enemy.maxHealth, battle.enemy.health + 18) } : battle.enemy,
       log: [...battle.log, ...(warded.length ? [`She circles ${warded.join(' and ')}, but the barrier holds her off.`] : []),
         body ? `The hyena feeds on ${eaten}. She gets up stronger.` : 'She finds nothing she can reach.'],
     };
@@ -577,7 +582,8 @@ export function strike(battle: Battle, dodge: Dodge = 'miss'): Battle {
     : guarded ? `${MEMBERS[guarded.id].name} turns aside the ${move.name.toLowerCase()}${guarded.id !== target.id ? ` aimed at ${name}` : ''}.${damage ? ` His fury drives through anyway${avoided === 'graze' ? ', though only just' : ''}${downed ? `, and ${name} falls` : ''}.` : ''}`
     : avoided === 'graze' ? `${name} half twists away. The ${move.name.toLowerCase()} only grazes them.${downed ? ' They fall.' : ''}`
     : `The ${move.name.toLowerCase()} catches ${name}.${downed ? ' They fall.' : ''}`;
-  const after = { ...battle, party, enemy, step: battle.step + 1, log: [...battle.log, message, ...(enemy.health > battle.enemy.health ? [`The ${ENEMIES[battle.encounter].short} swells with what it took.`] : [])] };
+  const frenzy = battle.encounter === 'hyena' && downed ? FRENZY : 0;
+  const after = { ...battle, party, enemy, fury: battle.fury + frenzy, step: battle.step + 1, log: [...battle.log, message, ...(enemy.health > battle.enemy.health ? [`The ${ENEMIES[battle.encounter].short} swells with what it took.`] : []), ...(frenzy ? ['The hyena laughs. Someone falling only makes her stronger.'] : [])] };
   const done = party.every(member => member.health === 0) || !enemyMoves(battle)[battle.step + 1];
   return done ? enemyTurnEnds(after) : after;
 }
