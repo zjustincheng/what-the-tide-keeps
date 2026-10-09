@@ -3,15 +3,19 @@ import type { Encounter } from './battle';
 import type { Flag, World } from './world';
 import { catchValue, NO_CATCH } from './fishing.ts';
 
-export type SupplyId = 'smoked-fish' | 'smelling-salts' | 'firepot';
+export type SupplyId = 'smoked-fish' | 'smelling-salts' | 'firepot' | 'fish-stew' | 'herb-salve' | 'trail-cake';
 export type Supplies = Readonly<Record<SupplyId, number>>;
-export const NO_SUPPLIES: Supplies = { 'smoked-fish': 0, 'smelling-salts': 0, firepot: 0 };
+export const NO_SUPPLIES: Supplies = { 'smoked-fish': 0, 'smelling-salts': 0, firepot: 0, 'fish-stew': 0, 'herb-salve': 0, 'trail-cake': 0 };
 
 // Supplies are used in battle as a hero's action. Like coins, they are lost on a wipe.
 export const SUPPLIES: Record<SupplyId, { name: string; price: number; target: 'ally' | 'fallen' | 'enemy'; power: number; text: string }> = {
   'smoked-fish': { name: 'Smoked fish', price: 3, target: 'ally', power: 10, text: 'One standing ally recovers 10 health.' },
   'smelling-salts': { name: 'Smelling salts', price: 5, target: 'fallen', power: 8, text: 'A fallen ally gets back up with 8 health.' },
   firepot: { name: 'Firepot', price: 4, target: 'enemy', power: 10, text: 'Thrown at one enemy for 10 damage.' },
+  // Cooked at a campfire, never sold.
+  'fish-stew': { name: 'Fish stew', price: 6, target: 'ally', power: 18, text: 'One standing ally recovers 18 health.' },
+  'herb-salve': { name: 'Herb salve', price: 8, target: 'fallen', power: 14, text: 'A fallen ally gets back up with 14 health.' },
+  'trail-cake': { name: 'Trail cake', price: 2, target: 'ally', power: 7, text: 'One standing ally recovers 7 health.' },
 };
 export const SUPPLY_IDS = Object.keys(SUPPLIES) as SupplyId[];
 

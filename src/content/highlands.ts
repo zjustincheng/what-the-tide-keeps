@@ -60,6 +60,9 @@ export const fort: Dialogue = {
   veteran: { speaker: 'AN OLD WOLF', prompt: 'Speak to the old wolf', lines: [
     'Going down to the battlefield? I was on it, before the Covenant. The wrong side, they say now.',
     'The vulture down there\'s been clearing it since spring. Talks to the dead. Writes things on her arm so she knows who she is in the morning.',
+  ], choices: [
+    { text: 'Play bones. (10 coins)', if: { coins: 10 }, ends: true, lines: ['"Garrison rules. No crying."'], then: { dice: 10 } },
+    { text: 'Where did you fight?', lines: ['On the ground below the east gate. Both sides buried each other\'s dead in it, after. Nobody remembers who won.'] },
   ] },
   // Up here the herbivores are the frightened ones, and too frightened to overcharge.
   merchant: { speaker: 'A GOAT BEHIND THE BARS', prompt: 'Speak to the goat', lines: [

@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 13,
+  "nextobjectid": 14,
   "layers": [
     {
       "id": 1,
@@ -2975,6 +2975,18 @@
         },
         {
           "id": 10,
+          "name": "forage-1",
+          "type": "",
+          "x": 104,
+          "y": 328,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 11,
           "name": "hound-1",
           "type": "",
           "x": 296,
@@ -2986,7 +2998,7 @@
           "point": true
         },
         {
-          "id": 11,
+          "id": 12,
           "name": "hound-2",
           "type": "",
           "x": 488,
@@ -2998,7 +3010,7 @@
           "point": true
         },
         {
-          "id": 12,
+          "id": 13,
           "name": "raider-1",
           "type": "",
           "x": 168,

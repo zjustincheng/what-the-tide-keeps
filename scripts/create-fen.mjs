@@ -81,7 +81,7 @@ const points=[
   ['drowned',...at(6,4)],['chapel-cache',...at(8,4)],['bell',...at(5,5)],
   // Each tile of the causeway is under water until the sluice opens.
   ...[7,8].flatMap(y=>Array.from({length:12},(_,i)=>[14+i,y])).map(([x,y],i)=>[`flood-${i+1}`,...at(x,y)]),
-  ['willow-sign',...at(31,8)],['north',608,8],['from-weir',608,40],
+  ['willow-sign',...at(31,8)],['forage-1',...at(41,13)],['forage-2',...at(24,26)],['north',608,8],['from-weir',608,40],
 ];
 const layer=(name,data,id)=>({id,name,type:'tilelayer',width:w,height:h,x:0,y:0,opacity:1,visible:true,data});
 const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
@@ -116,7 +116,7 @@ writeFileSync('public/maps/fen.json',JSON.stringify(map,null,2)+'\n');
     ['south',248,504],['from-fen',248,480],['stair',128,8],['from-tarn',128,72],
     ['warden',...at(28,13)],['weir-sign',...at(24,14)],['cage',...at(19,14)],['brother',...at(19,14)],
     ['elder',...at(6,19)],['kin',...at(4,21)],['holt-traps',...at(8,21)],
-    ['smuggler',...at(14,25)],['ferry',...at(12,28)],['weir-spot',...at(24,22)],
+    ['smuggler',...at(14,25)],['ferry',...at(12,28)],['forage-1',...at(30,20)],['forage-2',...at(4,13)],['weir-spot',...at(24,22)],
     ['wisp-1',...at(32,24)],['wisp-2',...at(6,10)],['drowned-1',...at(11,7)],
   ];
   const layer=(name,data,id)=>({id,name,type:'tilelayer',width:W,height:Hh,x:0,y:0,opacity:1,visible:true,data});

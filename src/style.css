@@ -742,3 +742,22 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
 @keyframes turning { 0% { transform: scale(1); } 30% { transform: scale(1.25) translateY(-4px); } 60% { transform: scale(.95); } 100% { transform: scale(1); } }
 .fighter.is-turning img { animation: turning .6s ease-out; }
 @media (prefers-reduced-motion: reduce) { .fighter.is-turning img { animation: none; } }
+
+/* Cooking, the journal, and bones. */
+.recipes { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; max-width: 520px; width: 100%; }
+.recipes button { width: 100%; text-align: left; display: grid; gap: 2px; padding: 8px 12px; }
+.recipes small { color: #a8b29a; font-size: 12px; }
+.journal-entries { max-width: 560px; width: 100%; max-height: 52vh; overflow-y: auto; margin-bottom: 12px; text-align: left; }
+.journal-entries details { border-bottom: 1px solid #2c3a31; padding: 6px 0; }
+.journal-entries summary { cursor: pointer; font: 14px Georgia, serif; color: #e0d8c0; }
+.journal-entries summary small { color: #8a948a; font: 11px ui-monospace, monospace; margin-left: 6px; }
+.journal-entries h3 { margin: 10px 0 4px; font: 12px ui-monospace, monospace; letter-spacing: .08em; color: #c8b878; }
+.journal-entries p { margin: 0 0 6px; font: 14px/1.5 Georgia, serif; color: #cfd6c4; }
+.dice-row { display: flex; gap: 10px; justify-content: center; margin: 8px 0; }
+.die { font-size: 46px; line-height: 1; display: inline-flex; flex-direction: column; align-items: center; padding: 4px 10px; color: #e8e0c8; }
+.die small { font: 10px ui-monospace, monospace; color: #a8b29a; }
+button.die[aria-pressed="true"] { border-color: #bc755e; color: #d8a890; }
+.dice-hand { margin: 2px 0; font: 13px ui-monospace, monospace; color: #c8b878; }
+.dice-result { font: 16px Georgia, serif; color: #e8e0c8; }
+.sneaking-badge { position: absolute; left: 50%; top: 52px; transform: translateX(-50%); padding: 3px 10px; font: 11px ui-monospace, monospace; letter-spacing: .1em; color: #b7d3c7; border: 1px solid #4a6a60; background: #0e1a17cc; pointer-events: none; }
+.sneaking-badge[hidden] { display: none; }

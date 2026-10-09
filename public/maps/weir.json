@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 18,
+  "nextobjectid": 20,
   "layers": [
     {
       "id": 1,
@@ -2767,6 +2767,30 @@
         },
         {
           "id": 14,
+          "name": "forage-1",
+          "type": "",
+          "x": 488,
+          "y": 328,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 15,
+          "name": "forage-2",
+          "type": "",
+          "x": 72,
+          "y": 216,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 16,
           "name": "weir-spot",
           "type": "",
           "x": 392,
@@ -2778,7 +2802,7 @@
           "point": true
         },
         {
-          "id": 15,
+          "id": 17,
           "name": "wisp-1",
           "type": "",
           "x": 520,
@@ -2790,7 +2814,7 @@
           "point": true
         },
         {
-          "id": 16,
+          "id": 18,
           "name": "wisp-2",
           "type": "",
           "x": 104,
@@ -2802,7 +2826,7 @@
           "point": true
         },
         {
-          "id": 17,
+          "id": 19,
           "name": "drowned-1",
           "type": "",
           "x": 184,

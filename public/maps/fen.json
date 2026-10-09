@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 48,
+  "nextobjectid": 50,
   "layers": [
     {
       "id": 1,
@@ -5071,6 +5071,30 @@
         },
         {
           "id": 46,
+          "name": "forage-1",
+          "type": "",
+          "x": 664,
+          "y": 216,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 47,
+          "name": "forage-2",
+          "type": "",
+          "x": 392,
+          "y": 424,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 48,
           "name": "north",
           "type": "",
           "x": 608,
@@ -5082,7 +5106,7 @@
           "point": true
         },
         {
-          "id": 47,
+          "id": 49,
           "name": "from-weir",
           "type": "",
           "x": 608,

@@ -309,6 +309,14 @@ The regions are joined in more than one place, and some links only open from the
 - **The high tarn**, up the smugglers' stair, is a frozen lake under the pass. Cut fishing holds **mountain char**, the most valuable fish, found nowhere else. The trapper's partner lies under the ice; bring him her ring and he gives you the **Frost ring** (the vulture's keepsake: 7 more health, hits 1 softer). Hounds and a raider hunt on the ice. A rope ladder climbs to the middle of the pass, but it can only be let down from the pass side.
 - **The drove road** runs from the downs, east up the chalk, to the battlefield's south gate. A wolf drover takes herbivores' sheep up to the carnivores' fort for them, and remembers a man with no fur carrying a sack toward the abbey. Raiders camp in a ring of boulders with a stash of stolen coin. The gate at the top is barred from the battlefield side: lift the bar from there and the road opens both ways.
 
+## Besides fighting
+
+- **Hiding your mana (Q, or Hide on a touch screen).** As the guideline describes, the party can suppress its mana to slip past. While hidden, the hero walks slower and silently, ordinary enemies don't notice him until he's almost on them, and ambushers can't vanish before he sees them. Walk into an enemy while hidden and it loses its first move. A badge over the map shows when your mana is hidden.
+- **Foraging.** Wild thyme, field mushrooms, and hedge berries grow around the farmland, the downs, the fen, the weir, the pass, the tarn, and the drove road. Pick them with E; they grow back after you rest. Like fish, they're lost on a wipe.
+- **Cooking.** A campfire now asks whether to cook or sleep (a bed or the church cot still just sleeps). Cooking turns fish and forage into supplies: smoked fish (1 fish), **fish stew** (2 fish and thyme, heals 18), **herb salve** (2 thyme and a mushroom, revives with 14), and **trail cake** (2 berries, heals 7). Rules are in `src/rules/cooking.ts`.
+- **The journal (J, or Journal in Settings).** Every answer someone gives when you ask them something is written down, grouped by who said it and where. It's paper, so it survives every death, and it's kept in `tide-keeps.journal.v1`.
+- **Bones.** A dice game you can bet on: 5 coins with the carter in Millbrook's inn, 10 with the old wolf in the fort. Throw three dice, choose which to throw again once, then the house throws. Three of a kind beats a pair beats a plain total (`src/rules/dice.ts`).
+
 ## The world, as people tell it
 
 Some people carry the world's history rather than the plot. Each has several things to ask about (`src/content/lore.ts`):
@@ -395,6 +403,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/buildings.spec.ts` — entering the hall, tannery, and mill.
 - `tests/music.spec.ts` — themes per place and battle, muting, volume, and levels.
 - `tests/rules/themes.test.ts` — every theme fits its loop and range.
+- `tests/pastimes.spec.ts` and `tests/rules/pastimes.test.ts` — foraging and cooking, hiding your mana, the journal, and bones.
 - `tests/lore.spec.ts` and `tests/rules/lore.test.ts` — the keepers of lore and what they know.
 - `tests/connected.spec.ts` and `tests/rules/connected.test.ts` — the weir, the tarn, the drove road, and their shortcuts.
 - `tests/preboss.spec.ts` and `tests/rules/preboss.test.ts` — what has to be done before the boar and the hyena, and their conversations.

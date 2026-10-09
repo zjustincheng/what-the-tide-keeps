@@ -11,6 +11,7 @@ export const inn: Dialogue = {
       'He drinks half of it at once.',
       '"The ford\'s no good either. Lost a mule there in the spring. Something under the water took it, and the water went dark after."',
     ], then: { pay: 2 } },
+    { text: 'Play him at bones. (5 coins)', if: { coins: 5 }, ends: true, lines: ['He brightens and shakes three dice out of his sleeve.'], then: { dice: 5 } },
     { text: 'Leave him be.', ends: true, lines: ['He doesn\'t notice.'] },
   ] },
   patron: { speaker: 'A RABBIT BY THE FIRE', prompt: 'Speak to the rabbit', lines: [

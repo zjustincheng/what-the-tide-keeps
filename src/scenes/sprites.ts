@@ -121,6 +121,24 @@ export function createSprites(scene: Phaser.Scene) {
   const crow = scene.make.graphics({ x: 0, y: 0 });
   crow.fillStyle(0x0e0f10).fillRect(0, 2, 3, 1).fillRect(2, 1, 4, 3).fillRect(5, 2, 3, 1).fillRect(3, 0, 2, 1);
   crow.generateTexture('crow', 8, 4); crow.destroy();
+  // Things that grow wild and can be picked: thyme, mushrooms, and hedge berries.
+  const herb = scene.make.graphics({ x: 0, y: 0 });
+  herb.fillStyle(0x3e5a32).fillRect(3, 6, 2, 6).fillRect(7, 3, 2, 9).fillRect(11, 5, 2, 7);
+  herb.fillStyle(0x6a8a4a).fillRect(2, 5, 4, 2).fillRect(6, 2, 4, 2).fillRect(10, 4, 4, 2);
+  herb.fillStyle(0xb89ac8).fillRect(7, 1, 2, 1).fillRect(3, 4, 1, 1).fillRect(12, 3, 1, 1);
+  herb.generateTexture('herb', 16, 12); herb.destroy();
+  const mushroom = scene.make.graphics({ x: 0, y: 0 });
+  mushroom.fillStyle(0xd8ccb0).fillRect(5, 7, 3, 5).fillRect(11, 8, 2, 4);
+  mushroom.fillStyle(0x9a6a4a).fillRect(2, 4, 9, 4).fillRect(3, 3, 7, 1);
+  mushroom.fillStyle(0xb8865a).fillRect(9, 6, 6, 3);
+  mushroom.fillStyle(0xe8dcc0).fillRect(4, 5, 1, 1).fillRect(8, 4, 1, 1);
+  mushroom.generateTexture('mushroom', 16, 12); mushroom.destroy();
+  const berry = scene.make.graphics({ x: 0, y: 0 });
+  berry.fillStyle(0x2e4a2a).fillRect(1, 3, 14, 9);
+  berry.fillStyle(0x3e5a32).fillRect(3, 2, 10, 2);
+  berry.fillStyle(0x7a2a3a).fillRect(3, 5, 2, 2).fillRect(8, 4, 2, 2).fillRect(11, 7, 2, 2).fillRect(5, 9, 2, 2);
+  berry.fillStyle(0xc85a6a).fillRect(3, 5, 1, 1).fillRect(8, 4, 1, 1).fillRect(11, 7, 1, 1);
+  berry.generateTexture('berry', 16, 12); berry.destroy();
   // The fishery's cage on the weir: iron bars standing in the river.
   const cage = scene.make.graphics({ x: 0, y: 0 });
   cage.fillStyle(0x2a2a2e).fillRect(0, 0, 18, 2).fillRect(0, 18, 18, 2);

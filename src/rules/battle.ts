@@ -187,11 +187,11 @@ export type BattleOptions = Readonly<{
   hollow?: Hollow; gear?: Gear; books?: Books; roster?: readonly MemberId[]; supplies?: Supplies;
   // Damage and spent mana carried in from earlier fights, until the party rests.
   wounds?: Wounds; drained?: Drained;
-  // An ambush gives the enemy the first turn.
-  ambush?: boolean;
+  // An ambush gives the enemy the first turn. A surprise, from a hero with hidden mana, costs the enemy its first move.
+  ambush?: boolean; surprise?: boolean;
 }>;
 export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], options: BattleOptions = {}): Battle {
-  const { hollow = UNHOLLOWED, gear, books = STARTING_BOOKS, roster = MEMBER_IDS, supplies = NO_SUPPLIES, wounds = {}, drained = {}, ambush = false } = options;
+  const { hollow = UNHOLLOWED, gear, books = STARTING_BOOKS, roster = MEMBER_IDS, supplies = NO_SUPPLIES, wounds = {}, drained = {}, ambush = false, surprise = false } = options;
   const member = (id: MemberId, base: number, mana: number): Member => {
     const worn = gear ? mods(gear, id) : NO_MODS;
     const maxHealth = Math.max(1, base + worn.health);
@@ -207,8 +207,8 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
     party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10)].filter(member => roster.includes(member.id)),
     enemy: { health: scaled(ENEMIES[encounter].health), maxHealth: scaled(ENEMIES[encounter].health), mana: ENEMIES[encounter].mana, maxMana: ENEMIES[encounter].mana },
     followers: (FOLLOWERS[encounter] ?? []).map(({ name, health }) => ({ name, health: scaled(health), maxHealth: scaled(health), mana: 4, maxMana: 4 })),
-    fury: 0, step: 0, snared: false, stage: 1, supplies,
-    log: [ENEMIES[encounter].opening, ...(ambush ? ['Ambush! It moves before you can.'] : [])],
+    fury: 0, step: 0, snared: surprise && !ambush, stage: 1, supplies,
+    log: [ENEMIES[encounter].opening, ...(ambush ? ['Ambush! It moves before you can.'] : surprise ? ['It never saw you coming. It loses its first move.'] : [])],
   };
 }
 

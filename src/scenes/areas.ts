@@ -15,6 +15,7 @@ import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
 import type { ThemeId } from '../audio/themes';
 import type { Surface } from '../audio/effects';
+import type { IngredientId } from '../rules/cooking';
 
 export type Area = {
   key: string;
@@ -41,7 +42,10 @@ export type Area = {
   fishing?: Record<string, SpotId>;
   // Places to rest: resting heals every wound and brings the area's enemies back.
   // cost: coins for wood and a place by the fire; the church cot is free.
-  camps?: Record<string, { prompt: string; lines: string[]; cost?: number }>;
+  // noCooking: a bed or a cot, where the hero can sleep but not cook.
+  camps?: Record<string, { prompt: string; lines: string[]; cost?: number; noCooking?: true }>;
+  // Things growing wild that can be picked, by point; they grow back after the hero rests.
+  forage?: Record<string, IngredientId>;
   // What the ground is made of, for footsteps: ground everywhere, except floor tiles listed in surfaces (by tile number in the map).
   ground: Surface;
   surfaces?: Partial<Record<number, Surface>>;
@@ -63,7 +67,7 @@ export const CHURCH: Area = {
   npcs: [{ point: 'priest', texture: 'priest' }, { point: 'novice', texture: 'novice' }],
   enemies: PRACTICE ? [{ point: 'encounter', encounter: 'locust' }, { point: 'exile', encounter: 'acolyte' }] : [],
   exits: { door: { to: 'farmland', spawn: 'spawn', prompt: 'Step outside' } },
-  camps: { spawn: { prompt: 'Rest on the cot', lines: ['You lie down on the cot. The priest\'s candle burns down while you sleep, and you wake whole.'] } },
+  camps: { spawn: { prompt: 'Rest on the cot', noCooking: true, lines: ['You lie down on the cot. The priest\'s candle burns down while you sleep, and you wake whole.'] } },
   decorate(scene) {
     // Soft window light, hand placed in the same coordinates as the Tiled room.
     const light = scene.add.graphics().setDepth(2);
@@ -116,6 +120,7 @@ export const FARMLAND: Area = {
     ...(['woods', 'orchard', 'yard'] as const).map(where => ({ point: `sheep-${where}`, texture: 'sheep', solid: true, hiddenIf: [{ flag: `sheep-${where}` as const }] })),
   ],
   fishing: { 'pond-spot': 'pond', 'stream-spot': 'stream' },
+  forage: { 'forage-1': 'herb', 'forage-2': 'mushroom', 'forage-3': 'berry', 'forage-4': 'herb', 'forage-5': 'mushroom' },
   camps: {
     'camp-fields': { prompt: 'Rest by the fire', cost: 4, lines: ['The shepherds\' fire ring at the crossroads. You sleep until the ache goes out of you.', 'By morning the fields have filled up again.'] },
     'camp-woods': { prompt: 'Rest by the fire', cost: 3, lines: ['You get the old fire going again and sleep under the grey tent.', 'Something is moving in the trees again.'] },
@@ -214,7 +219,7 @@ const INDOORS: Pick<Area, 'region' | 'tileset' | 'grade' | 'enemies' | 'music' |
   ground: 'wood', surfaces: { 3: 'stone', 19: 'straw', 23: 'straw' } };
 export const INN: Area = { ...INDOORS, key: 'inn', map: 'inn', place: 'Millbrook · The inn', time: 'Morning', dialogue: { ...inn, ...innLore },
   npcs: [{ point: 'drinker', texture: 'drinker' }, { point: 'patron', texture: 'patron' }, { point: 'marine', texture: 'marine' }],
-  camps: { bed: { prompt: 'Sleep in the bed', lines: ['You sleep in a real bed for the first time you can remember. Your wounds close and your mana returns.'] } },
+  camps: { bed: { prompt: 'Sleep in the bed', noCooking: true, lines: ['You sleep in a real bed for the first time you can remember. Your wounds close and your mana returns.'] } },
   exits: { out: { to: 'town', spawn: 'from-inn', prompt: 'Go back outside' } } };
 export const HALL: Area = { ...INDOORS, key: 'hall', map: 'hall', place: "Millbrook · The reeve's hall", time: 'Morning', dialogue: hall,
   npcs: [{ point: 'clerk', texture: 'clerk' }], exits: { out: { to: 'town', spawn: 'from-hall', prompt: 'Go back outside' } } };
@@ -244,6 +249,8 @@ export const DOWNS: Area = {
     { point: 'sheep-2', texture: 'sheep', solid: true, hiddenIf: [] },
   ],
   fishing: { 'dewpond-spot': 'dewpond' },
+  // Wild thyme on the chalk, hawthorn berries, and a ring of mushrooms.
+  forage: { 'forage-1': 'herb', 'forage-2': 'herb', 'forage-3': 'berry', 'forage-4': 'mushroom' },
   camps: { 'camp-downs': { prompt: 'Rest by the fire', cost: 3, lines: ['The ram lets you sit at his fold fire for a few coins. The wind on the downs never stops.'] } },
   exits: {
     west: { to: 'farmland', spawn: 'from-downs', prompt: 'Go back down to the fields' },
@@ -280,6 +287,7 @@ export const FEN: Area = {
     { point: 'chapel-cache', texture: 'cache', hiddenIf: [{ owns: 'drowned-psalter' }, { not: { flag: 'drowned-slain' } }] },
   ],
   fishing: { 'fen-spot': 'fen' },
+  forage: { 'forage-1': 'mushroom', 'forage-2': 'herb' },
   exits: {
     south: { to: 'farmland', spawn: 'from-fen', prompt: 'Follow the stream back down to the mill' },
     north: { to: 'weir', spawn: 'from-fen', prompt: 'Follow the path up to the weir' },
@@ -314,6 +322,7 @@ export const PASS: Area = {
     { point: 'inquisitor', encounter: 'inquisitor', hiddenIf: [{ not: { flag: 'hyena-slain' } }] },
   ],
   props: [{ point: 'courier', texture: 'courier', hiddenIf: [] }, { point: 'camp-pass', texture: 'campfire', hiddenIf: [] }],
+  forage: { 'forage-1': 'herb' },
   camps: { 'camp-pass': { prompt: 'Rest by the fire', cost: 4, lines: ['A ring of stones out of the wind. You pay a passing carter for wood and sleep with your back to the rock.'] } },
   exits: {
     south: { to: 'border-road', spawn: 'from-pass', prompt: 'Go back down to the border road' },
@@ -402,6 +411,7 @@ export const WEIR: Area = {
   assets: ['ghoul'],
   props: [{ point: 'cage', texture: 'cage', solid: true, hiddenIf: [{ flag: 'brother-freed' }] }],
   fishing: { 'weir-spot': 'weir' },
+  forage: { 'forage-1': 'berry', 'forage-2': 'herb' },
   exits: {
     south: { to: 'fen', spawn: 'from-weir', prompt: 'Go back down to the fen' },
     stair: { to: 'tarn', spawn: 'from-weir', prompt: 'Climb the smugglers\' stair', requires: { flag: 'brother-freed' },
@@ -425,6 +435,7 @@ export const TARN: Area = {
   ],
   props: [{ point: 'camp-tarn', texture: 'campfire', hiddenIf: [] }],
   fishing: { 'tarn-spot': 'tarn' },
+  forage: { 'forage-1': 'mushroom' },
   camps: { 'camp-tarn': { prompt: 'Rest by the trapper\'s fire', cost: 3, lines: ['The trapper lets you sleep by his fire for a few coins. The ice groans all night.'] } },
   exits: {
     stair: { to: 'weir', spawn: 'from-tarn', prompt: 'Go down the smugglers\' stair' },
@@ -438,6 +449,7 @@ export const DROVE: Area = {
   ...HIGHLAND_GROUND, key: 'drove', map: 'drove', music: 'highlands', place: 'The drove road', time: 'Midday', dialogue: drove,
   grade: { saturation: -0.35, brightness: 0.84, vignette: 0.45 },
   npcs: [{ point: 'drover', texture: 'drover' }],
+  forage: { 'forage-1': 'berry' },
   enemies: [
     { point: 'raider-1', encounter: 'raider', ambush: true }, { point: 'raider-2', encounter: 'raider', ambush: true },
     { point: 'hound-1', encounter: 'hound', ambush: true },

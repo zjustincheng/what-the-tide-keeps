@@ -3,6 +3,8 @@ import { BOOK_IDS } from '../rules/spells';
 import { NO_SUPPLIES, SUPPLY_IDS } from '../rules/economy';
 import { FISH_IDS, NO_CATCH } from '../rules/fishing';
 import { createWorld, FLAGS, ITEMS } from '../rules/world';
+import { INGREDIENT_IDS } from '../rules/cooking';
+import type { Pantry } from '../rules/cooking';
 import type { Flag, Item, World } from '../rules/world';
 
 const KEY = 'tide-keeps.world.v1';
@@ -20,7 +22,7 @@ function parse(raw: string | null): World | undefined {
   if (raw === null) return undefined;
   const saved: unknown = JSON.parse(raw);
   if (typeof saved !== 'object' || saved === null) return undefined;
-  const { flags, carried, found = [], coins = 0, supplies = {}, fish = {}, wounds = {}, drained = {}, deaths = 0 } = saved as Record<string, unknown>;
+  const { flags, carried, found = [], coins = 0, supplies = {}, fish = {}, wounds = {}, drained = {}, deaths = 0, pantry = {} } = saved as Record<string, unknown>;
   if (!Array.isArray(flags) || !Array.isArray(carried) || !Array.isArray(found)) return undefined;
   return {
     flags: FLAGS.filter((flag): flag is Flag => flags.includes(flag)), carried: ITEMS.filter((item): item is Item => carried.includes(item)),
@@ -37,6 +39,10 @@ function parse(raw: string | null): World | undefined {
     wounds: perMember(wounds),
     drained: perMember(drained),
     deaths: typeof deaths === 'number' && deaths >= 0 ? Math.floor(deaths) : 0,
+    pantry: Object.fromEntries(INGREDIENT_IDS.map(id => {
+      const count = (pantry as Record<string, unknown>)?.[id];
+      return [id, typeof count === 'number' && count > 0 ? Math.floor(count) : 0];
+    })) as Pantry,
   };
 }
 

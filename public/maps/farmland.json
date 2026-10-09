@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 56,
+  "nextobjectid": 61,
   "layers": [
     {
       "id": 1,
@@ -6711,6 +6711,66 @@
         },
         {
           "id": 44,
+          "name": "forage-1",
+          "type": "",
+          "x": 232,
+          "y": 504,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 45,
+          "name": "forage-2",
+          "type": "",
+          "x": 88,
+          "y": 600,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 46,
+          "name": "forage-3",
+          "type": "",
+          "x": 424,
+          "y": 520,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 47,
+          "name": "forage-4",
+          "type": "",
+          "x": 680,
+          "y": 328,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 48,
+          "name": "forage-5",
+          "type": "",
+          "x": 104,
+          "y": 648,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 49,
           "name": "carter",
           "type": "",
           "x": 632,
@@ -6722,7 +6782,7 @@
           "point": true
         },
         {
-          "id": 45,
+          "id": 50,
           "name": "beekeeper",
           "type": "",
           "x": 840,
@@ -6734,7 +6794,7 @@
           "point": true
         },
         {
-          "id": 46,
+          "id": 51,
           "name": "downs",
           "type": "",
           "x": 1016,
@@ -6746,7 +6806,7 @@
           "point": true
         },
         {
-          "id": 47,
+          "id": 52,
           "name": "from-downs",
           "type": "",
           "x": 992,
@@ -6758,7 +6818,7 @@
           "point": true
         },
         {
-          "id": 48,
+          "id": 53,
           "name": "upstream",
           "type": "",
           "x": 224,
@@ -6770,7 +6830,7 @@
           "point": true
         },
         {
-          "id": 49,
+          "id": 54,
           "name": "from-fen",
           "type": "",
           "x": 224,
@@ -6782,7 +6842,7 @@
           "point": true
         },
         {
-          "id": 50,
+          "id": 55,
           "name": "water-1",
           "type": "",
           "x": 168,
@@ -6794,7 +6854,7 @@
           "point": true
         },
         {
-          "id": 51,
+          "id": 56,
           "name": "water-2",
           "type": "",
           "x": 184,
@@ -6806,7 +6866,7 @@
           "point": true
         },
         {
-          "id": 52,
+          "id": 57,
           "name": "water-3",
           "type": "",
           "x": 200,
@@ -6818,7 +6878,7 @@
           "point": true
         },
         {
-          "id": 53,
+          "id": 58,
           "name": "water-4",
           "type": "",
           "x": 168,
@@ -6830,7 +6890,7 @@
           "point": true
         },
         {
-          "id": 54,
+          "id": 59,
           "name": "water-5",
           "type": "",
           "x": 184,
@@ -6842,7 +6902,7 @@
           "point": true
         },
         {
-          "id": 55,
+          "id": 60,
           "name": "water-6",
           "type": "",
           "x": 200,

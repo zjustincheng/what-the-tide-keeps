@@ -149,7 +149,7 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
     ['raider-1',...at(20,56)],['raider-2',...at(10,44)],['raider-3',...at(28,30)],
     ['courier',...at(7,43)],['camp-pass',...at(33,38)],
     ['inquisitor',...at(22,10)],
-    ['west',8,640],['from-tarn',28,640],['ladder-top',...at(3,38)],
+    ['west',8,640],['from-tarn',28,640],['ladder-top',...at(3,38)],['forage-1',...at(30,24)],
   ]);
 }
 
@@ -269,7 +269,7 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
   put(furniture,7,24,H.CAIRN);
   write('tarn','highland',HROWS,HIGHLAND_SOLID,m,[
     ['stair',80,504],['from-weir',80,472],['ladder',696,240],['from-pass',660,240],
-    ['tarn-spot',...at(22,17)],['ice-body',...at(28,13)],['trapper',...at(36,8)],['camp-tarn',...at(33,9)],['tarn-cairn',...at(7,25)],
+    ['tarn-spot',...at(22,17)],['ice-body',...at(28,13)],['trapper',...at(36,8)],['camp-tarn',...at(33,9)],['tarn-cairn',...at(7,25)],['forage-1',...at(6,20)],
     ['hound-1',...at(18,11)],['hound-2',...at(30,20)],['raider-1',...at(10,16)],
   ]);
 }
@@ -292,7 +292,7 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
   write('drove','highland',HROWS,HIGHLAND_SOLID,m,[
     ['west',8,168],['from-downs',28,168],['north',712,8],['from-battlefield',712,40],
     ['drover',...at(16,9)],['sheep-a',...at(12,8)],['sheep-b',...at(19,6)],['sheep-c',...at(20,8)],['drove-cairn',...at(17,9)],['drove-sign',...at(30,10)],
-    ['raider-1',...at(40,16)],['raider-2',...at(43,16)],['hound-1',...at(28,14)],['raider-stash',...at(42,19)],
+    ['raider-1',...at(40,16)],['raider-2',...at(43,16)],['hound-1',...at(28,14)],['raider-stash',...at(42,19)],['forage-1',...at(24,18)],
     ['gate-1',712,24],['gate-2',728,24],
   ]);
 }

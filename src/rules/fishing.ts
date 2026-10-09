@@ -54,3 +54,18 @@ export function addCatch(caught: Catch, fish: FishId): Catch {
 export function catchValue(caught: Catch): number {
   return FISH_IDS.reduce((total, fish) => total + (caught[fish] ?? 0) * FISH[fish].value, 0);
 }
+
+// Handing over fish gives up the smallest first.
+export function feed(caught: Catch, count: number): Catch {
+  const left = { ...caught };
+  for (const fish of FISH_IDS) {
+    const given = Math.min(left[fish] ?? 0, count);
+    if (!given) continue;
+    left[fish] -= given; count -= given;
+  }
+  return left;
+}
+
+export function fishCount(caught: Catch): number {
+  return FISH_IDS.reduce((total, fish) => total + (caught[fish] ?? 0), 0);
+}

@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 17,
+  "nextobjectid": 18,
   "layers": [
     {
       "id": 1,
@@ -2907,6 +2907,18 @@
         },
         {
           "id": 15,
+          "name": "forage-1",
+          "type": "",
+          "x": 392,
+          "y": 296,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 16,
           "name": "gate-1",
           "type": "",
           "x": 712,
@@ -2918,7 +2930,7 @@
           "point": true
         },
         {
-          "id": 16,
+          "id": 17,
           "name": "gate-2",
           "type": "",
           "x": 728,

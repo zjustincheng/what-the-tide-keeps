@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 24,
+  "nextobjectid": 28,
   "layers": [
     {
       "id": 1,
@@ -5103,6 +5103,54 @@
         },
         {
           "id": 22,
+          "name": "forage-1",
+          "type": "",
+          "x": 328,
+          "y": 200,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 23,
+          "name": "forage-2",
+          "type": "",
+          "x": 648,
+          "y": 136,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 24,
+          "name": "forage-3",
+          "type": "",
+          "x": 632,
+          "y": 296,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 25,
+          "name": "forage-4",
+          "type": "",
+          "x": 424,
+          "y": 424,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 26,
           "name": "hound-west",
           "type": "",
           "x": 200,
@@ -5114,7 +5162,7 @@
           "point": true
         },
         {
-          "id": 23,
+          "id": 27,
           "name": "hound-east",
           "type": "",
           "x": 744,

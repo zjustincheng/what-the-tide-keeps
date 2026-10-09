@@ -6,7 +6,9 @@ import type { BookId } from './spells';
 import type { MemberId } from './battle';
 import { NO_SUPPLIES } from './economy.ts';
 import type { Supplies, SupplyId } from './economy';
-import { FISH_IDS, NO_CATCH } from './fishing.ts';
+import { feed, FISH_IDS, NO_CATCH } from './fishing.ts';
+import { NO_PANTRY } from './cooking.ts';
+import type { Pantry } from './cooking';
 import type { Catch } from './fishing';
 
 // Carried items are lost on a wipe and go back to where they were found.
@@ -27,7 +29,8 @@ export type Wounds = Readonly<Partial<Record<MemberId, number>>>;
 // Drained: mana each hero has spent and not yet recovered. Like wounds, it lasts until rest.
 export type Drained = Readonly<Partial<Record<MemberId, number>>>;
 // deaths: how many times the party has fallen since the game began; the church keeps count.
-export type World = Readonly<{ flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number }>;
+// pantry: herbs, mushrooms, and berries foraged for cooking. Like fish, they are lost on a wipe.
+export type World = Readonly<{ flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number; pantry?: Pantry }>;
 export const ITEMS: readonly Item[] = ['bell', 'letter', 'note', 'crate', 'ring'];
 export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
   'sheep-woods', 'sheep-orchard', 'sheep-yard', 'sheep-reward', 'barrel-bought', 'squid-freed', 'swarm-slain', 'bounty-paid',
@@ -49,11 +52,13 @@ export type Condition = { forgot: MemoryId } | { has: Item } | { flag: Flag } | 
   | { fish: number };
 // shop names a shop to open once the conversation ends.
 // pay spends coins; supply hands over one of a supply.
-export type Effect = { give?: Item; take?: Item; set?: Flag | readonly Flag[]; learn?: string; find?: Found; earn?: number; pay?: number; feed?: number; supply?: SupplyId; shop?: ShopId; rest?: true };
+export type Effect = { give?: Item; take?: Item; set?: Flag | readonly Flag[]; learn?: string; find?: Found; earn?: number; pay?: number; feed?: number; supply?: SupplyId;
+  // Handled by the scene, not the story: camp sleeps at the fire, cook opens the cooking, dice starts a game of bones for that stake.
+  camp?: true; cook?: true; dice?: number; shop?: ShopId; rest?: true };
 export type ShopId = 'stall' | 'reeve' | 'fishmonger' | 'merchant' | 'fence';
 
 export function createWorld(): World {
-  return { flags: [], carried: [], found: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, wounds: {}, drained: {}, deaths: 0 };
+  return { flags: [], carried: [], found: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, wounds: {}, drained: {}, deaths: 0, pantry: NO_PANTRY };
 }
 
 export function holds(context: Context, condition: Condition): boolean {
@@ -79,22 +84,13 @@ export function apply(context: Context, effect: Effect): Context {
       flags: [...world.flags, ...[effect.set ?? []].flat().filter((flag, i, all) => !world.flags.includes(flag) && all.indexOf(flag) === i)],
       found: effect.find && !world.found.includes(effect.find) ? [...world.found, effect.find] : world.found,
       coins: Math.max(0, world.coins + (effect.earn ?? 0) - (effect.pay ?? 0)),
-      supplies: effect.supply ? { ...world.supplies, [effect.supply]: world.supplies[effect.supply] + 1 } : world.supplies, fish: effect.feed ? feed(world.fish, effect.feed) : world.fish, deaths: world.deaths, wounds: effect.rest ? {} : world.wounds, drained: effect.rest ? {} : world.drained,
+      supplies: effect.supply ? { ...world.supplies, [effect.supply]: world.supplies[effect.supply] + 1 } : world.supplies, fish: effect.feed ? feed(world.fish, effect.feed) : world.fish, deaths: world.deaths, pantry: world.pantry, wounds: effect.rest ? {} : world.wounds, drained: effect.rest ? {} : world.drained,
     },
     studied: effect.learn && !studied.includes(effect.learn) ? [...studied, effect.learn] : studied,
   };
 }
 
-// Handing over fish gives up the smallest first.
-export function feed(caught: Catch, count: number): Catch {
-  const left = { ...caught };
-  for (const fish of FISH_IDS) {
-    const given = Math.min(left[fish] ?? 0, count);
-    if (!given) continue;
-    left[fish] -= given; count -= given;
-  }
-  return left;
-}
+export { feed } from './fishing.ts';
 
 // Resting at a campfire closes every wound and restores every hero's mana.
 export function rest(world: World): World {
@@ -110,7 +106,7 @@ export function roster(world: World): MemberId[] {
 // Things carried, coins, supplies, fish, and wounds gathered since the last death are lost on a wipe. Flags, like opened shortcuts, persist.
 export function drop(world: World): World {
   // The church sends the party back out whole, and adds a line to the ledger.
-  return { ...world, carried: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, wounds: {}, drained: {}, deaths: world.deaths + 1 };
+  return { ...world, carried: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, pantry: NO_PANTRY, wounds: {}, drained: {}, deaths: world.deaths + 1 };
 }
 
 // Running from a fight drops half the coins carried, rounded in the enemy's favour.

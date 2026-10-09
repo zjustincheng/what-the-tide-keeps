@@ -60,6 +60,8 @@ test('wounds linger after a won fight until the hero rests at a campfire', async
   await place(page, 'farmland', 600, 410);
   await expect(page.locator('#prompt')).toContainText('Rest by the fire');
   await page.keyboard.press('e');
+  // A fire offers cooking or sleep.
+  await page.getByRole('button', { name: '2. Sleep. (4 coins)' }).click();
   await expect(page.locator('#dialogue-text')).toHaveText('You pay 4 coins for wood and a place by the fire.');
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.locator('#dialogue-text')).toContainText('You sleep until the ache goes out of you.');
