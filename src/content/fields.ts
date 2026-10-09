@@ -3,7 +3,7 @@ import type { Dialogue } from './dialogue';
 // The open farmland south of the church. Names are placeholders.
 export const fields: Dialogue = {
   sign: { speaker: 'A WAYMARK', prompt: 'Read the waymark', lines: [
-    'South: Millbrook. West: the mill, over the stream. East: the old shrine, and the field track to the border.',
+    'South: Millbrook. West: the mill, over the stream. East: the hay yard, and the field track that bends south to the border road.',
     'Someone has carved a lizard under it, and a rope.',
   ] },
   bell: { speaker: 'THE TRAMPLED CLEARING', prompt: 'Pick up the bell', hiddenIf: [{ has: 'bell' }, { flag: 'lamb-thanked' }], lines: [
@@ -86,6 +86,9 @@ export const fields: Dialogue = {
   'sheep-yard': { speaker: 'A LOST SHEEP', prompt: 'Call the sheep', hiddenIf: [{ flag: 'sheep-yard' }], lines: [
     'A sheep pressed against the hay yard fence, blood dried in its fleece. Not its own. It goes when you call.',
   ], then: { set: 'sheep-yard' } },
+  waymark: { speaker: 'A WAYMARK', prompt: 'Read the waymark', lines: [
+    'The track bends south here. BORDER ROAD, it says, with an arrow. The shrine is off to the south-east, past the stones.',
+  ] },
   log: { speaker: 'A FALLEN OAK', prompt: 'Examine the fallen oak', lines: [
     'A fallen oak lies across the path into the woods, roots and all. It is too big to climb.',
     'The only other way in is across the ford.',

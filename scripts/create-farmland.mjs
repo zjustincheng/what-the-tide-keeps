@@ -52,8 +52,10 @@ fill(furniture,0,0,w-1,1,TREE);fill(furniture,22,0,41,2,WALL);put(furniture,31,2
 fill(furniture,0,0,0,h-1,TREE);fill(furniture,w-1,0,w-1,h-1,TREE);fill(furniture,0,h-1,w-1,h-1,TREE);
 fill(furniture,30,h-1,33,h-1,0);fill(furniture,w-1,40,w-1,41,0);
 // The high road south to Millbrook, and a cross track from the mill to the shrine.
-fill(floor,30,3,33,h-1,ROAD);fill(floor,1,22,w-1,23,ROAD);fill(floor,46,24,47,41,ROAD);fill(floor,46,40,w-1,41,ROAD);
+fill(floor,30,3,33,h-1,ROAD);fill(floor,1,22,47,23,ROAD);fill(floor,46,24,47,41,ROAD);fill(floor,46,40,w-1,41,ROAD);
 put(furniture,34,20,SIGN);
+// Where the track bends south for the border, a second waymark.
+put(furniture,48,21,SIGN);
 // The mill stream runs the whole length of the west, crossed by a bridge and, further south, a ford.
 fill(furniture,10,0,11,h-1,RIVER);fill(furniture,12,0,12,h-1,REEDS);
 fill(furniture,10,22,12,23,0);fill(floor,10,22,12,23,BRIDGE);
@@ -93,7 +95,7 @@ const points=[
   ['bear',104,232],['miller',56,216],['heron',296,600],['camp',104,616],['camp-cache',56,616],['weevil-woods',136,656],
   ['weevil-orchard',728,200],['orchard-cache',920,104],['weevil-yard',664,488],
   ['shrine',888,504],['shrine-cache',888,568],['exile',888,456],['ford-cache',216,680],['pond-spot',392,512],['stream-spot',216,224],
-  ['shepherd',440,696],['sheep-woods',104,472],['sheep-orchard',616,248],['sheep-yard',744,520],['swarm',72,712],['stream-bank',216,392],['camp-fields',600,392],['camp-woods',88,584],['gibbet',440,344],['bones',120,696],['warden',888,568],['leech',184,648],['mill-door',88,196],['from-mill',88,210],['log',112,424],
+  ['shepherd',440,696],['sheep-woods',104,472],['sheep-orchard',616,248],['sheep-yard',744,520],['swarm',72,712],['stream-bank',216,392],['camp-fields',600,392],['camp-woods',88,584],['gibbet',440,344],['bones',120,696],['warden',888,568],['leech',184,648],['mill-door',88,196],['from-mill',88,210],['log',112,424],['waymark',776,360],
   ['water-1',168,628],['water-2',184,628],['water-3',200,628],['water-4',168,668],['water-5',184,668],['water-6',200,668],
 ];
 const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
