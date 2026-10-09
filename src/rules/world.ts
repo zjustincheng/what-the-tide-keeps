@@ -19,6 +19,7 @@ export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated' | 'pests-fiel
   | 'followers-spared' | 'followers-reported' | 'followers-paid' | 'fishmonger-angry' | 'stall-cowed' | 'stood-count' | 'inn-room' | 'reeve-pardon'
   | 'hounds-fed' | 'pack-slain' | 'ram-paid' | 'barrow-coins' | 'sluice-open' | 'drowned-slain' | 'otter-trusted' | 'otter-reported' | 'otter-paid'
   | 'vulture-met' | 'anchors-known' | 'letter-delivered' | 'bridge-lowered' | 'pair-slain' | 'hyena-slain' | 'ration-ledger' | 'merchant-thanked'
+  | 'hall-key' | 'crab-freed'
   | 'brother-freed' | 'warden-bribed' | 'crate-delivered' | 'ring-returned' | 'ladder-down' | 'drove-gate-open' | 'drover-cache'
   | 'burn-order-seen' | 'kid-found' | 'lane-open' | 'boar-challenged' | 'dead-1' | 'dead-2' | 'dead-3' | 'ossuary-key' | 'hyena-challenged';
 // Things worth keeping: keepsakes and grimoires. Once found, they are kept through every death; carried items are not.
@@ -38,6 +39,7 @@ export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defea
   'followers-spared', 'followers-reported', 'followers-paid', 'fishmonger-angry', 'stall-cowed', 'stood-count', 'inn-room', 'reeve-pardon',
   'hounds-fed', 'pack-slain', 'ram-paid', 'barrow-coins', 'sluice-open', 'drowned-slain', 'otter-trusted', 'otter-reported', 'otter-paid',
   'vulture-met', 'anchors-known', 'letter-delivered', 'bridge-lowered', 'pair-slain', 'hyena-slain', 'ration-ledger', 'merchant-thanked',
+  'hall-key', 'crab-freed',
   'brother-freed', 'warden-bribed', 'crate-delivered', 'ring-returned', 'ladder-down', 'drove-gate-open', 'drover-cache',
   'burn-order-seen', 'kid-found', 'lane-open', 'boar-challenged', 'dead-1', 'dead-2', 'dead-3', 'ossuary-key', 'hyena-challenged'];
 // A favor spell: a small everyday spell a villager trades for help. It opens the hedge on the border road.
@@ -55,7 +57,7 @@ export type Condition = { forgot: MemoryId } | { has: Item } | { flag: Flag } | 
 export type Effect = { give?: Item; take?: Item; set?: Flag | readonly Flag[]; learn?: string; find?: Found; earn?: number; pay?: number; feed?: number; supply?: SupplyId;
   // Handled by the scene, not the story: camp sleeps at the fire, cook opens the cooking, dice starts a game of bones for that stake.
   camp?: true; cook?: true; dice?: number; shop?: ShopId; rest?: true };
-export type ShopId = 'stall' | 'reeve' | 'fishmonger' | 'merchant' | 'fence';
+export type ShopId = 'stall' | 'reeve' | 'fishmonger' | 'merchant' | 'fence' | 'apothecary';
 
 export function createWorld(): World {
   return { flags: [], carried: [], found: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, wounds: {}, drained: {}, deaths: 0, pantry: NO_PANTRY };

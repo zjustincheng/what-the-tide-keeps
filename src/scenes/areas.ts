@@ -9,6 +9,7 @@ import { town } from '../content/town';
 import { hall, inn, millInside, tannery } from '../content/interiors';
 import { barrow, downs } from '../content/downs';
 import { fen, weir } from '../content/fen';
+import { feastHall, harbour, square } from '../content/capital';
 import { abbey, barracks, battlefield, drove, fort, ossuary, pass, tarn } from '../content/highlands';
 import type { Encounter } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
@@ -66,7 +67,11 @@ export const CHURCH: Area = {
   grade: { saturation: -0.35, brightness: 0.78, vignette: 0.5 },
   npcs: [{ point: 'priest', texture: 'priest' }, { point: 'novice', texture: 'novice' }],
   enemies: PRACTICE ? [{ point: 'encounter', encounter: 'locust' }, { point: 'exile', encounter: 'acolyte' }] : [],
-  exits: { door: { to: 'farmland', spawn: 'spawn', prompt: 'Step outside' } },
+  exits: {
+    door: { to: 'farmland', spawn: 'spawn', prompt: 'Step outside' },
+    // The side door opens on the capital.
+    'west-door': { to: 'square', spawn: 'from-church', prompt: 'Go out into the city' },
+  },
   camps: { spawn: { prompt: 'Rest on the cot', noCooking: true, lines: ['You lie down on the cot. The priest\'s candle burns down while you sleep, and you wake whole.'] } },
   decorate(scene) {
     // Soft window light, hand placed in the same coordinates as the Tiled room.
@@ -473,4 +478,46 @@ export const DROVE: Area = {
   },
 };
 
-export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE];
+// The capital: the square outside the church, the harbour below, and the hall where the feast was held. Nobody fights here.
+const CITY = { saturation: -0.35, brightness: 0.8, vignette: 0.5 };
+export const SQUARE: Area = {
+  key: 'square', map: 'square', tileset: 'city', music: 'town', region: 'THE CAPITAL', place: 'The church square', time: 'Noon', dialogue: square,
+  ground: 'stone', surfaces: { 1: 'stone', 2: 'stone', 11: 'stone' }, grade: CITY, enemies: [],
+  npcs: [
+    { point: 'crier', texture: 'crier' }, { point: 'broadsheets', texture: 'broadsheet' }, { point: 'lamplighter', texture: 'lamplighter' },
+    { point: 'guard-square', texture: 'guard' }, { point: 'apothecary', texture: 'apothecary' }, { point: 'citizen', texture: 'citizen' },
+  ],
+  exits: {
+    east: { to: 'church', spawn: 'from-square', prompt: 'Go back into the church' },
+    south: { to: 'harbour', spawn: 'from-square', prompt: 'Go down to the harbour' },
+    'hall-door': { to: 'feast-hall', spawn: 'spawn', prompt: 'Enter the hall of the Long Table', requires: { flag: 'hall-key' },
+      barred: { speaker: 'THE HALL OF THE LONG TABLE', lines: ['The bronze doors are chained. A notice: CLOSED BY ORDER OF THE REGENCY.', 'Under the chain there is a smaller lock, for the staff.'] } },
+  },
+};
+export const HARBOUR: Area = {
+  key: 'harbour', map: 'harbour', tileset: 'city', music: 'town', region: 'THE CAPITAL', place: 'The harbour', time: 'Afternoon', dialogue: harbour,
+  ground: 'stone', surfaces: { 15: 'wood', 11: 'stone' }, grade: CITY, enemies: [],
+  npcs: [
+    { point: 'fishwife', texture: 'fishwife' }, { point: 'crab', texture: 'crab', hiddenIf: [{ flag: 'crab-freed' }] },
+    { point: 'harbourmaster', texture: 'harbourmaster' }, { point: 'steward', texture: 'steward' }, { point: 'dockhand', texture: 'carter' },
+  ],
+  props: [{ point: 'kraken-arm', texture: 'kraken-arm-long', solid: true, hiddenIf: [] }],
+  fishing: { 'harbour-spot': 'stream' },
+  exits: { north: { to: 'square', spawn: 'from-harbour', prompt: 'Climb the steps to the square' } },
+  decorate(scene) {
+    // Gulls wheeling over the water.
+    for (let i = 0; i < 6; i++) {
+      const gull = scene.add.image(80 + (i * 131) % 640, 380 + (i * 37) % 80, 'crow').setDepth(6).setTint(0xe8e8e4).setAlpha(0.8);
+      scene.tweens.add({ targets: gull, x: gull.x + 60 - (i % 3) * 40, y: gull.y - 20 + (i % 2) * 30, duration: 3600 + i * 400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+  },
+};
+export const FEAST_HALL: Area = {
+  ...INDOORS, region: 'THE CAPITAL', music: 'church', key: 'feast-hall', map: 'feast-hall', place: 'The hall of the Long Table', time: 'Afternoon', dialogue: feastHall,
+  grade: { saturation: -0.45, brightness: 0.66, vignette: 0.65 }, ground: 'stone',
+  npcs: [{ point: 'cleaner', texture: 'cleaner' }],
+  props: ([1, 2, 3] as const).map(i => ({ point: `kraken-${i}`, texture: 'kraken-arm', solid: true, hiddenIf: [] })),
+  exits: { out: { to: 'square', spawn: 'from-hall', prompt: 'Go back out to the square' } },
+};
+
+export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL];

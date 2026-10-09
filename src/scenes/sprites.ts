@@ -36,6 +36,17 @@ const VILLAGERS: Record<string, Villager> = {
   mink: { fur: 0x2e2420, muzzle: 0x8a7a6a, cloth: 0x4a3a28, trim: 0x8a6a3a, ears: 'pointed' },
   trapper: { fur: 0xa88a60, muzzle: 0xe0d4bc, cloth: 0x5a4a3a, trim: 0xc8ccc8, ears: 'pointed' },
   drover: { fur: 0x7a7a74, muzzle: 0xc0b8a8, cloth: 0x5a4a30, trim: 0x8a3a30, ears: 'pointed' },
+  // The capital: the square's people, the harbour's, and the hall's last cleaner.
+  crier: { fur: 0xd8d0bc, muzzle: 0x8a7a6a, cloth: 0x6a2a2a, trim: 0xd8c878, ears: 'horns' },
+  broadsheet: { fur: 0xc8b8a0, muzzle: 0xe8dcc8, cloth: 0x5a6a7a, trim: 0xd8d0b8, ears: 'long', child: true },
+  lamplighter: { fur: 0x3a3430, muzzle: 0xc89888, cloth: 0x4a4a3a, trim: 0xe8c870, ears: 'none' },
+  apothecary: { fur: 0x8a7a5a, muzzle: 0xd8c890, cloth: 0x3a4a3a, trim: 0xc8b878, ears: 'pointed' },
+  citizen: { fur: 0xb8946a, muzzle: 0xe8d8c0, cloth: 0x5a4a5a, trim: 0xa89888, ears: 'long' },
+  fishwife: { fur: 0xe8e8e4, muzzle: 0xe8b83a, cloth: 0x5a6a6a, trim: 0x8aa0a8, ears: 'none' },
+  crab: { fur: 0xb84a2a, muzzle: 0xd87a4a, cloth: 0x8a3a20, trim: 0xe8c8a8, ears: 'none' },
+  harbourmaster: { fur: 0x5a6a4a, muzzle: 0x8a8a6a, cloth: 0x2a3a4a, trim: 0xc8b878, ears: 'none' },
+  steward: { fur: 0x8a5a3a, muzzle: 0xe8d8c0, cloth: 0x3a2a2a, trim: 0xb89a5a, ears: 'pointed' },
+  cleaner: { fur: 0xe0e0dc, muzzle: 0x2a2a28, cloth: 0x6a6a5a, trim: 0x8a8a7a, ears: 'pointed' },
   // Keepers of the world's history.
   novice: { fur: 0xb8946a, muzzle: 0xe8d8c0, cloth: 0x8a8a7a, trim: 0xb8b69b, ears: 'long' },
   pilgrim: { fur: 0x6a7a5a, muzzle: 0x8a8a6a, cloth: 0x6a5a44, trim: 0xb8a070, ears: 'none' },
@@ -169,6 +180,23 @@ export function createSprites(scene: Phaser.Scene) {
   berry.fillStyle(0x7a2a3a).fillRect(3, 5, 2, 2).fillRect(8, 4, 2, 2).fillRect(11, 7, 2, 2).fillRect(5, 9, 2, 2);
   berry.fillStyle(0xc85a6a).fillRect(3, 5, 1, 1).fillRect(8, 4, 1, 1).fillRect(11, 7, 1, 1);
   berry.generateTexture('berry', 16, 12); berry.destroy();
+  // One of the kraken's arms: grey, ridged, studded with suckers.
+  const arm = scene.make.graphics({ x: 0, y: 0 });
+  arm.fillStyle(0x4a5050).fillRect(0, 5, 44, 8);
+  arm.fillStyle(0x6a7070).fillRect(0, 5, 44, 3);
+  arm.fillStyle(0x4a5050).fillRect(40, 3, 8, 6).fillRect(46, 1, 2, 4);
+  for (const x of [3, 9, 15, 21, 27, 33]) arm.fillStyle(0xb8a898).fillRect(x, 10, 3, 3);
+  arm.fillStyle(0x2a3030).fillRect(0, 12, 44, 1);
+  arm.generateTexture('kraken-arm', 48, 14); arm.destroy();
+  // The one nailed along the harbour quay: as long as a street.
+  const long = scene.make.graphics({ x: 0, y: 0 });
+  long.fillStyle(0x4a5050).fillRect(0, 6, 150, 12);
+  long.fillStyle(0x6a7070).fillRect(0, 6, 150, 4);
+  long.fillStyle(0x4a5050).fillRect(146, 4, 10, 8).fillRect(154, 2, 4, 5).fillRect(157, 0, 3, 3);
+  for (let x = 4; x < 146; x += 9) long.fillStyle(0xb8a898).fillRect(x, 13, 4, 4).fillStyle(0x8a7a6a).fillRect(x + 1, 14, 2, 2);
+  long.fillStyle(0x2a3030).fillRect(0, 17, 150, 1);
+  for (const x of [20, 70, 120]) long.fillStyle(0x5a4630).fillRect(x, 2, 3, 18);
+  long.generateTexture('kraken-arm-long', 160, 20); long.destroy();
   // The fishery's cage on the weir: iron bars standing in the river.
   const cage = scene.make.graphics({ x: 0, y: 0 });
   cage.fillStyle(0x2a2a2e).fillRect(0, 0, 18, 2).fillRect(0, 18, 18, 2);

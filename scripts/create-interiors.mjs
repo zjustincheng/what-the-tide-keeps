@@ -103,3 +103,18 @@ const at=(x,y)=>[x*16+8,y*16+8];
   r.put(r.furniture,11,7,CABINET);r.put(r.furniture,12,7,CABINET);r.put(r.furniture,19,7,BARREL);
   write('barracks',r,[['spawn',...at(r.door,15)],['out',...at(r.door,17)],['bunk',...at(22,14)],['roll',...at(12,8)],['stove',...at(15,7)]]);
 }
+// The hall of the Long Table, where the feast was held: the long table down the middle, the rulers' table across the top,
+// five seats for the heroes at the far end, the cupbearer's sideboard by the door, and the kraken hung from the rafters.
+{
+  const r=room(4,6,27,18,STONE);
+  r.put(r.furniture,15,5,HEARTH);r.put(r.furniture,16,5,HEARTH);[7,11,20,24].forEach(x=>r.put(r.furniture,x,5,WINDOW));
+  r.fill(r.furniture,11,7,20,7,TABLE);
+  r.fill(r.furniture,7,11,22,12,TABLE);
+  for(let x=7;x<=22;x+=2){r.put(r.floor,x,10,STOOL);r.put(r.floor,x,13,STOOL);}
+  for(const y of [9,10,11,12,13]) r.put(r.floor,26,y,STOOL);
+  r.fill(r.furniture,5,7,6,7,COUNTER);r.put(r.furniture,5,8,BARREL);
+  r.fill(r.floor,12,15,19,17,RUG);
+  write('feast-hall',r,[['spawn',...at(r.door,17)],['out',...at(r.door,19)],
+    ['long-table',...at(14,10)],['rulers-table',...at(15,8)],['five-seats',...at(25,11)],['sideboard',...at(7,8)],
+    ['kraken-1',...at(10,11)],['kraken-2',...at(16,12)],['kraken-3',...at(21,11)],['cleaner',...at(23,15)]]);
+}

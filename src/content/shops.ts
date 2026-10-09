@@ -24,6 +24,12 @@ export const SHOPS: Record<ShopId, { title: string; note: string; wares: Ware[] 
     note: 'Fair prices, for a market that isn\'t supposed to exist. She buys fish, too.',
     wares: [{ sellCatch: true }, { supply: 'smelling-salts', fair: true }, { supply: 'firepot', fair: true }],
   },
+  // The capital charges the branded the same as anywhere in the farmland.
+  apothecary: {
+    title: 'The apothecary',
+    note: 'Church-licensed remedies, priced on a schedule for the branded.',
+    wares: [{ supply: 'smelling-salts' }, { supply: 'smoked-fish' }, { supply: 'firepot' }],
+  },
   reeve: {
     title: 'The reeve',
     note: 'A writ can be earned, or the fine can be paid.',

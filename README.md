@@ -305,6 +305,14 @@ Once the boar is dead the priest has new orders: bodies are going missing from t
 
 The vulture's note teaches **anchors**. Once she has joined, every rest at a fire, bed, or cot offers to **write a memory down**. A written memory can't be chosen when the next wipe takes something; after that death it has to be written again. There is one slot. Anchors are saved with the memories in `tide-keeps.memory.v1`.
 
+## The capital
+
+The church has a side door in its west wall, out into the capital. Nobody fights here; it's a place for listening.
+
+- **The church square.** A bronze statue of the five heroes with every face chiselled off, the chameleon's first. A fountain of salt water piped up from the harbour. The hall of the Long Table, chained shut by the regency. The alchemists' wing behind a gate whose church seal is renewed every week. A crier reading the regency council's proclamations, a child selling broadsheets about the feast murders, a lamplighter who saw the alchemists' gate opened the night of the feast, an old doe whose son held the doors, a church guard who keeps an eye on you, and a licensed apothecary who charges the branded double.
+- **The harbour**, down the steps. The wall rebuilt where the kraken came over, its ribs still in the water, and one of its arms nailed along the quay. The last shrine, where the fish come ashore, with an answer carved on its sea side. Fishing off the pier. A gull fishwife keeps a crab woman in a market tank: buy her for 20 coins and let her go, and she leaves you the **Tide shell** (a keepsake: 5 more health, shows 1 less mana, hits 1 softer). The old turtle harbourmaster remembers the kraken and the church's ships that sail past the headland and come back empty. A seal dockhand, and a dismissed steward of the feast hall: buy him a drink and he tells you about the hooded cupbearer nobody hired, and gives you the hall's staff key.
+- **The hall of the Long Table.** The feast was never cleared. The long table with its stains, the rulers' chairs over scrubbed stone, the five stools at the far end, the cupbearer's sideboard with a gilded cup beneath it (the twin of the one at the boar's farm), and the kraken's arms still hanging from the rafters. What you see of your own seat depends on whether you still remember the feast. An old cleaner saw the cupbearer climb down from one of the alchemists' carts that afternoon, the first carts through that gate in twenty years.
+
 ## A connected world
 
 The regions are joined in more than one place, and some links only open from the far side, so the world folds back on itself:
@@ -376,6 +384,8 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/audio/music.ts` — the synthesised instruments, reverb, scheduler, and crossfades.
 - `src/audio/effects.ts` — the synthesised sound effects.
 - `src/storage/settings.ts` — volumes, mute, and how the party display is shown.
+- `scripts/create-capital.mjs` — the city tileset, the church square, and the harbour.
+- `src/content/capital.ts` — what is said and found in the capital.
 - `scripts/create-highlands.mjs` — the highland and fort tilesets, and the pass, fort town, battlefield, abbey, and ossuary.
 - `src/content/highlands.ts` — everything said and found in the highlands.
 - `src/ui/AnchorView.ts` — writing a memory down at a fire.
@@ -407,6 +417,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/buildings.spec.ts` — entering the hall, tannery, and mill.
 - `tests/music.spec.ts` — themes per place and battle, muting, volume, and levels.
 - `tests/rules/themes.test.ts` — every theme fits its loop and range.
+- `tests/capital.spec.ts` — the capital: the square, the harbour, the steward's key, the crab, and the feast hall.
 - `tests/pastimes.spec.ts` and `tests/rules/pastimes.test.ts` — foraging and cooking, hiding your mana, the journal, and bones.
 - `tests/lore.spec.ts` and `tests/rules/lore.test.ts` — the keepers of lore and what they know.
 - `tests/connected.spec.ts` and `tests/rules/connected.test.ts` — the weir, the tarn, the drove road, and their shortcuts.

@@ -1,7 +1,7 @@
 // Pure equipment rules: keepsakes and the slots that hold them. No Phaser, DOM, or storage.
 import type { MemberId } from './battle';
 
-export type KeepsakeId = 'cracked-mirror' | 'crow-feather' | 'covenant-token' | 'yoke-peg' | 'wool-charm' | 'boar-tusk' | 'iron-collar' | 'famine-spoon' | 'weir-hook' | 'frost-ring';
+export type KeepsakeId = 'cracked-mirror' | 'crow-feather' | 'covenant-token' | 'yoke-peg' | 'wool-charm' | 'boar-tusk' | 'iron-collar' | 'famine-spoon' | 'weir-hook' | 'frost-ring' | 'tide-shell';
 // What a keepsake changes about its holder in battle.
 export type Mods = Readonly<{ health: number; damage: number; reveal: number; suppressCost: number; shown: number }>;
 export type Gear = Readonly<Record<MemberId, readonly KeepsakeId[]>>;
@@ -30,6 +30,8 @@ export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; ef
     effect: 'Attacks hit 2 harder.', drawback: 'Shows 1 more mana.', mods: { damage: 2, shown: 1 } },
   'frost-ring': { name: 'Frost ring', holder: 'vulture',
     effect: '7 more health.', drawback: 'Attacks hit 1 softer.', mods: { health: 7, damage: -1 } },
+  'tide-shell': { name: 'Tide shell',
+    effect: '5 more health, and shows 1 less mana.', drawback: 'Attacks hit 1 softer.', mods: { health: 5, shown: -1, damage: -1 } },
   'famine-spoon': { name: 'Famine spoon',
     effect: 'Shows 3 less mana, so enemies watch the others.', drawback: '3 less health.', mods: { shown: -3, health: -3 } },
 };
