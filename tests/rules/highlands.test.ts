@@ -102,21 +102,24 @@ test('anyone falling makes the hyena stronger, on either side', () => {
   assert.match(after.log.join(' '), /only makes her stronger/);
 });
 
-test('bosses change at half health, once', async () => {
-  const { STAGES, STAGE_AT } = await import('../../src/rules/battle.ts');
+test('a boss brought down for the first time rises into its second stage, and the second time it stays down', async () => {
+  const { STAGES, RISE } = await import('../../src/rules/battle.ts');
   for (const encounter of Object.keys(STAGES) as (keyof typeof STAGES)[]) {
     const start = createBattle(encounter, [], { roster: ['chameleon'] });
-    const near = { ...start, enemy: { ...start.enemy, health: Math.floor(start.enemy.maxHealth * STAGE_AT) + 3 }, followers: start.followers.map(follower => ({ ...follower, health: encounter === 'warden' ? 0 : follower.health })) };
-    assert.equal(near.stage, 1);
-    const hit = act(near, 'chameleon', 'attack');
+    const last = { ...start, enemy: { ...start.enemy, health: 1 }, followers: start.followers.map(follower => ({ ...follower, health: encounter === 'warden' ? 0 : follower.health })) };
+    const hit = act(last, 'chameleon', 'attack');
     assert.equal(hit.stage, 2, encounter);
+    assert.notEqual(hit.phase, 'victory', encounter);
+    assert.ok(hit.enemy.health >= Math.round(hit.enemy.maxHealth * (STAGES[encounter]!.rise ?? RISE)), encounter);
     assert.equal(hit.log.at(-1), STAGES[encounter]!.line);
+    assert.ok(!hit.log.includes('The signature flickers out. It is quiet again.'));
+    // Brought down again, it stays down.
+    const again = act({ ...hit, phase: 'player', party: hit.party.map(member => ({ ...member, acted: false })), enemy: { ...hit.enemy, health: 1 }, followers: hit.followers.map(follower => ({ ...follower, health: 0 })) }, 'chameleon', 'attack');
+    assert.equal(again.phase, 'victory', encounter);
   }
-  // The hyena eats her own standing dead when she turns.
+  // The hyena eats her own standing dead when she rises.
   const hyena = createBattle('hyena', [], { roster: ['chameleon'] });
-  const turned = act({ ...hyena, enemy: { ...hyena.enemy, health: Math.floor(hyena.enemy.maxHealth / 2) + 3 } }, 'chameleon', 'attack');
+  const turned = act({ ...hyena, enemy: { ...hyena.enemy, health: 1 } }, 'chameleon', 'attack');
   assert.ok(turned.followers.every(follower => follower.eaten));
   assert.equal(turned.fury, 2 * FRENZY);
-  // A boss that has turned does not turn again.
-  assert.equal(act({ ...turned, party: turned.party.map(member => ({ ...member, acted: false })), phase: 'player' }, 'chameleon', 'attack').log.filter(line => line === turned.log.at(-1)).length, 1);
 });

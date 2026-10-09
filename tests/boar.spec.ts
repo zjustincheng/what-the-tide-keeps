@@ -54,13 +54,17 @@ test('fighting the boar directly frees the grain and changes the farmland', asyn
   page.on('pageerror', error => errors.push(error.message));
   await meetBoar(page);
   // The bear guards; the others strike the boar himself.
+  // When he first goes down, he gets back up after a short scene; click through it whenever it plays.
+  const throughScene = async () => { while (await page.locator('.cutscene').count()) await page.locator('.cutscene-next').click(); };
   for (let round = 1; await page.locator('.battle').getAttribute('data-phase') !== 'victory'; round++) {
-    expect(round).toBeLessThan(10);
+    expect(round).toBeLessThan(16);
     await expect(page.locator('#battle-turn')).toHaveText(`Round ${round} · 3 actions remaining`);
-    await page.getByRole('button', { name: 'Bear support', exact: true }).click();
-    await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
-    if (await page.locator('.battle').getAttribute('data-phase') === 'player') await page.getByRole('button', { name: 'Vulture attack', exact: true }).click();
-    await expect(page.locator('.battle')).not.toHaveAttribute('data-phase', 'enemy');
+    for (const action of ['Bear support', 'Chameleon attack', 'Vulture attack']) {
+      await throughScene();
+      if (await page.locator('.battle').getAttribute('data-phase') === 'player') await page.getByRole('button', { name: action, exact: true }).click();
+    }
+    await throughScene();
+    await expect(page.locator('.battle')).not.toHaveAttribute('data-phase', 'enemy', { timeout: 20000 });
   }
   await expect(page.locator('.battle')).toHaveAttribute('data-phase', 'victory');
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
@@ -89,18 +93,29 @@ test('fighting the boar directly frees the grain and changes the farmland', asyn
   expect(errors).toEqual([]);
 });
 
-test('at half health the boar turns: a new name, a second stage, and a charge every round', async ({ page }) => {
+test('brought down the first time, the boar gets back up after a scene, as his second stage', async ({ page }) => {
   await meetBoar(page);
   await expect(page.locator('#battle-title')).toHaveText('Stand together.');
   await page.evaluate(async () => {
     const { game } = await import('/src/main.ts');
     const view = game.scene.getScenes(true)[0].overlay;
-    view.state = { ...view.state, enemy: { ...view.state.enemy, health: Math.floor(view.state.enemy.maxHealth / 2) + 2 } };
+    view.state = { ...view.state, enemy: { ...view.state.enemy, health: 1 } };
     view.render();
   });
   await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
+  // The scene plays line by line before anything else moves.
+  const scene = page.locator('.cutscene');
+  await expect(scene).toHaveAttribute('aria-label', 'The boar, cornered');
+  await expect(scene.locator('.cutscene-line')).toHaveText('The boar goes down on his knees in the ash of his own house.');
+  await scene.getByRole('button', { name: /Continue/ }).click();
+  await expect(scene.locator('.cutscene-speaker')).toHaveText('THE BADGER');
+  await scene.getByRole('button', { name: /Continue/ }).click();
+  await expect(scene.locator('.cutscene-line')).toHaveText('I stayed down last time.');
+  await scene.getByRole('button', { name: /Continue/ }).click();
+  await scene.getByRole('button', { name: /Continue/ }).click();
+  await expect(scene).toHaveCount(0);
   await expect(page.locator('#battle-title')).toHaveText('The boar, cornered.');
   await expect(page.locator('.battle-heading .eyebrow')).toHaveText('SECOND STAGE');
-  await expect(page.locator('.battle-log')).toContainText('Not like this. Not twice.');
+  await expect(page.getByRole('meter', { name: 'The boar health' })).not.toHaveAttribute('aria-valuenow', '0');
   await expect(page.locator('#enemy-intent')).toContainText('A charge is coming');
 });

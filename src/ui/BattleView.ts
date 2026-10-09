@@ -24,6 +24,8 @@ export class BattleView {
   private prompt?: { impact: number; answer: (dodge: Dodge, early?: boolean) => void };
   // Set while a spell is being typed.
   private casting?: (key: number) => void;
+  // The stage the screen last showed, so a boss's rising scene plays when it changes during the fight.
+  private shownStage: 1 | 2 = 1;
 
   constructor(heroImage: string, onFinish: (won: boolean, state: Battle) => void, encounter: Encounter = 'locust', options: BattleOptions = {}) {
     this.onFinish = onFinish;
@@ -232,7 +234,10 @@ export class BattleView {
   }
 
   private afterAction() {
+    const before = this.shownStage;
     this.persist(); this.render();
+    // A boss brought down for the first time gets back up: play its scene before anything else moves.
+    if (before === 1 && this.state.stage === 2 && STAGES[this.state.encounter]) { this.playScene(() => this.afterAction()); return; }
     this.ended();
     if (this.state.phase === 'enemy') {
       this.root.focus({ preventScroll: true });
@@ -340,13 +345,52 @@ export class BattleView {
       if (kind === 'hp' && value < before) play(fighter, 'is-hit');
       if (kind === 'act' && value > before) play(fighter, 'is-acting');
       // A boss turning to its second stage roars.
-      if (key === 'stage' && value > before) { music.effect('roar'); play(this.root.querySelector('.fighter[data-foe="0"]'), 'is-turning'); }
     }
     this.seen = now;
   }
 
+  // A short scene, line by line, while the fight holds still. Nothing else can be pressed until it ends.
+  private playScene(then: () => void) {
+    const stage = STAGES[this.state.encounter]!;
+    const scene = document.createElement('div');
+    scene.className = 'cutscene';
+    scene.setAttribute('role', 'dialog');
+    scene.setAttribute('aria-label', stage.title);
+    scene.innerHTML = `<img src="${import.meta.env.BASE_URL}assets/${this.state.encounter}.svg" alt="" /><p class="cutscene-speaker"></p><p class="cutscene-line" aria-live="polite"></p><button type="button" class="cutscene-next">Continue <span>↵</span></button>`;
+    this.root.append(scene);
+    this.root.classList.add('in-cutscene');
+    const block = this.casting;
+    this.casting = () => {};
+    let index = 0;
+    const show = () => {
+      const { who, line } = stage.scene[index];
+      scene.querySelector('.cutscene-speaker')!.textContent = who;
+      scene.querySelector('.cutscene-line')!.textContent = line;
+      scene.classList.toggle('narration', !who);
+      if (who) music.effect('blip', -6);
+    };
+    const next = () => {
+      index++;
+      if (index < stage.scene.length) { show(); return; }
+      scene.remove();
+      this.root.classList.remove('in-cutscene');
+      this.casting = block;
+      // It stands back up: a roar, and the boss swells as it rises.
+      music.effect('roar');
+      const fighter = this.root.querySelector('.fighter[data-foe="0"]');
+      fighter?.classList.add('is-turning');
+      setTimeout(() => fighter?.classList.remove('is-turning'), 600);
+      then();
+    };
+    const button = scene.querySelector<HTMLButtonElement>('.cutscene-next')!;
+    button.addEventListener('click', next, { signal: this.cleanup.signal });
+    show();
+    button.focus({ preventScroll: true });
+  }
+
   private render() {
     this.animateChanges();
+    this.shownStage = this.state.stage;
     const state = this.state;
     const done = state.phase === 'victory' || state.phase === 'defeat' || state.phase === 'fled';
     const remaining = state.party.filter(member => member.health > 0 && !member.acted).length;

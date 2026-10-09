@@ -47,8 +47,9 @@ test('quests are told, not marked: the shepherd, the barrel, and the bounty', ()
 
 test("killing the swarm-mother does not end the fight while her brood still stands", async () => {
   const { canAct, won } = await import('../../src/rules/battle.ts');
+  // In her second stage, so falling is final.
   let battle = createBattle('swarm');
-  battle = { ...battle, enemy: { ...battle.enemy, health: 1 } };
+  battle = { ...battle, stage: 2, enemy: { ...battle.enemy, health: 1 } };
   battle = act(battle, 'vulture', 'attack');
   assert.equal(battle.enemy.health, 0);
   assert.equal(battle.phase, 'player', 'the nymphs fight on');
@@ -67,7 +68,8 @@ test("killing the swarm-mother does not end the fight while her brood still stan
 
 test('the boar’s followers yield the moment he falls', () => {
   let battle = createBattle('boar');
-  battle = act({ ...battle, enemy: { ...battle.enemy, health: 1 } }, 'vulture', 'attack');
+  // In his second stage, so falling is final.
+  battle = act({ ...battle, stage: 2, enemy: { ...battle.enemy, health: 1 } }, 'vulture', 'attack');
   assert.equal(battle.phase, 'victory');
   assert.ok(battle.followers.every(follower => follower.health > 0));
 });

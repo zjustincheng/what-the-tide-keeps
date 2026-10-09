@@ -106,7 +106,7 @@ export const ENEMIES = {
     opening: 'A vulture in a gravedigger\'s sash drops from the dead tree. "Grave thief," she says, and does not wait for an answer. You only need to live through this.' },
   pair: { name: 'Deserter hexer', short: 'hexer', health: 54, mana: 14, veiled: false,
     opening: 'Two deserters step out of the abbey gate: a hexer with ink on his hands, and a brute with a pick. They have done this together before.' },
-  hyena: { name: 'The hyena', short: 'hyena', health: 165, mana: 8, veiled: false,
+  hyena: { name: 'The hyena', short: 'hyena', health: 130, mana: 8, veiled: false,
     opening: 'The hyena looks up from the bones. "Nobody comes down here to pray." Behind her, the dead she keeps get up.' },
   inquisitor: { name: 'The inquisitor', short: 'inquisitor', health: 600, mana: 60, veiled: false,
     opening: 'The largest signature you have ever felt. A ram in grey, the royal seal at his collar. "Convict. You are a long way from your church." You cannot win this. Run.' },
@@ -134,20 +134,44 @@ const CASTERS: readonly Encounter[] = ['acolyte', 'pair'];
 export const FEED = 5;
 export const FRENZY = 2;
 // Second stages: when a boss first drops to half health, it changes. enter applies the change on the spot.
-export const STAGES: Partial<Record<Encounter, { title: string; line: string; enter?: (battle: Battle) => Partial<Battle> }>> = {
-  boar: { title: 'The boar, cornered', line: 'The boar staggers, then plants his feet. "Not like this. Not twice." He will charge every round now.',
-    enter: battle => ({ fury: battle.fury + 4 }) },
-  warden: { title: 'The warden, unbound', line: 'The censer cracks open. Both votives flare up again, and the warden stops waiting between judgements.',
-    enter: battle => ({ followers: battle.followers.map(follower => ({ ...follower, health: follower.maxHealth })) }) },
-  leech: { title: 'The mire leech, shedding', line: 'Its skin splits and slides off. Underneath it is raw, and hungrier.',
-    enter: battle => ({ enemy: { ...battle.enemy, health: Math.min(battle.enemy.maxHealth, battle.enemy.health + Math.round(battle.enemy.maxHealth * 0.15)) } }) },
-  swarm: { title: 'The swarm-mother, airborne', line: 'She tears free of the branches and takes the air. Her brood rises with her.',
-    enter: battle => ({ followers: battle.followers.map(follower => ({ ...follower, health: follower.maxHealth })) }) },
-  pack: { title: 'The pack leader, howling', line: 'He throws back his head and howls. The fallen get up, and every rush will come with the whole pack.',
-    enter: battle => ({ followers: battle.followers.map(follower => ({ ...follower, health: follower.maxHealth })) }) },
-  drowned: { title: 'The drowned, the bell freed', line: 'The rope snaps. The bell comes up out of the water in its arms, and it swings it.' },
-  hyena: { title: 'The hyena, not laughing', line: 'She stops laughing. She turns on her own dead and eats them where they stand.',
-    enter: battle => {
+// Second stages: the first time a boss falls, it doesn't stay down. A short scene plays, it gets back up with RISE of its health,
+// and it fights on as something worse. enter applies anything else that changes. who '' is narration; anyone else speaks.
+export type SceneLine = Readonly<{ who: string; line: string }>;
+// rise: a share of its health the boss gets back, when it differs from RISE.
+export const STAGES: Partial<Record<Encounter, { title: string; line: string; scene: readonly SceneLine[]; rise?: number; enter?: (battle: Battle) => Partial<Battle> }>> = {
+  boar: { title: 'The boar, cornered', line: 'The boar gets back up out of the ash. He will charge every round now.', scene: [
+    { who: '', line: 'The boar goes down on his knees in the ash of his own house.' },
+    { who: 'THE BADGER', line: 'Stay down! It\'s done. Stay down!' },
+    { who: 'THE BOAR', line: 'I stayed down last time.' },
+    { who: '', line: 'He gets up. Smoke is rising off his bristles.' },
+  ], enter: battle => ({ fury: battle.fury + 4 }) },
+  warden: { title: 'The warden, unbound', line: 'The warden stands back up inside the votives\' light.', rise: 0.3, scene: [
+    { who: '', line: 'The warden folds over its censer and is still.' },
+    { who: '', line: 'Then the censer cracks open. Whatever is inside it is still burning.' },
+    { who: '', line: 'Both votives flare up at once, and the warden rises inside their light. It no longer waits between judgements.' },
+  ], enter: battle => ({ followers: battle.followers.map(follower => ({ ...follower, health: follower.maxHealth })) }) },
+  leech: { title: 'The mire leech, shedding', line: 'The leech crawls out of its own skin, hungrier.', scene: [
+    { who: '', line: 'The leech goes slack in the silt.' },
+    { who: '', line: 'Its skin splits down the middle, and something crawls out of it: raw, wet, and hungrier than before.' },
+  ] },
+  swarm: { title: 'The swarm-mother, airborne', line: 'The swarm-mother takes to the air, and her brood rises with her.', scene: [
+    { who: '', line: 'The swarm-mother drops out of the branches. Her brood screams.' },
+    { who: '', line: 'The husk on the ground splits. She tears free of it and takes the air, and every fallen nymph rises with her.' },
+  ], enter: battle => ({ followers: battle.followers.map(follower => ({ ...follower, health: follower.maxHealth })) }) },
+  pack: { title: 'The pack leader, howling', line: 'The pack leader howls, and his pack gets up with him.', scene: [
+    { who: '', line: 'The leader goes down, and the pack stops where it stands.' },
+    { who: '', line: 'Then he throws back his head and howls, and the fallen hounds get up with him. Every rush will come with the whole pack.' },
+  ], enter: battle => ({ followers: battle.followers.map(follower => ({ ...follower, health: follower.maxHealth })) }) },
+  drowned: { title: 'The drowned, the bell freed', line: 'The drowned rises with the bell in its arms.', scene: [
+    { who: '', line: 'It sinks back into the chapel water. The bell rope goes slack.' },
+    { who: '', line: 'Then the rope snaps, and it comes up out of the water with the bell itself in its arms.' },
+  ] },
+  hyena: { title: 'The hyena, not laughing', line: 'The hyena gets up, and eats her own dead to do it.', rise: 0.4, scene: [
+    { who: '', line: 'The hyena falls among her bones, laughing.' },
+    { who: '', line: 'Then she stops laughing.' },
+    { who: 'THE HYENA', line: 'You still don\'t understand. I don\'t stay dead. Nobody down here does.' },
+    { who: '', line: 'She turns on her own dead and eats them where they stand.' },
+  ], enter: battle => {
       const eaten = battle.followers.filter(follower => follower.health > 0 && !follower.eaten).length;
       return {
         followers: battle.followers.map(follower => follower.health > 0 && !follower.eaten ? { ...follower, health: 0, eaten: true } : follower),
@@ -156,13 +180,22 @@ export const STAGES: Partial<Record<Encounter, { title: string; line: string; en
       };
     } },
 };
-export const STAGE_AT = 0.5;
+// How much of its health a boss gets back when it rises.
+export const RISE = 0.5;
+const QUIET = 'The signature flickers out. It is quiet again.';
 
-// After any blow the party lands, a boss at half health or less moves to its second stage, once.
+// After any blow the party lands, a boss brought down for the first time rises into its second stage instead of falling.
 function staged(battle: Battle): Battle {
   const stage = STAGES[battle.encounter];
-  if (!stage || battle.stage === 2 || battle.enemy.health <= 0 || battle.enemy.health > battle.enemy.maxHealth * STAGE_AT || battle.phase === 'victory') return battle;
-  return { ...battle, ...stage.enter?.(battle), stage: 2, log: [...battle.log, stage.line] };
+  if (!stage || battle.stage === 2 || battle.enemy.health > 0) return battle;
+  const allActed = battle.party.every(member => member.health <= 0 || member.acted);
+  const risen: Battle = {
+    ...battle, stage: 2, phase: allActed ? 'enemy' : 'player',
+    enemy: { ...battle.enemy, health: Math.round(battle.enemy.maxHealth * (stage.rise ?? RISE)) },
+    // It didn't fall after all: no victory, and no followers fighting on without it.
+    log: [...battle.log.filter(line => line !== QUIET && !/ falls\. The .* fight on\.$/.test(line)), stage.line],
+  };
+  return { ...risen, ...stage.enter?.(risen) };
 }
 
 // Followers who give up once their leader falls. Everyone else fights until the last of them is down.
@@ -456,7 +489,7 @@ export function useSupply(battle: Battle, actor: MemberId, supply: SupplyId, tar
     ...battle, party, enemy, followers: hit?.followers ?? battle.followers, fury: hit?.fury ?? battle.fury,
     supplies: { ...battle.supplies, [supply]: battle.supplies[supply] - 1 },
     phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
-    log: [...battle.log, message, ...fallen(battle, after), ...(victory ? ['The signature flickers out. It is quiet again.'] : [])],
+    log: [...battle.log, message, ...fallen(battle, after), ...(victory ? [QUIET] : [])],
   });
 }
 
@@ -497,7 +530,7 @@ export function cast(battle: Battle, actor: MemberId, success: boolean, foe: Foe
     ...battle, party, enemy, followers: hit?.followers ?? battle.followers, fury: hit?.fury ?? battle.fury,
     snared: battle.snared || (success && spell.kind === 'snare' && enemy.health > 0),
     phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
-    log: [...battle.log, message, ...fallen(battle, after), ...(victory ? ['The signature flickers out. It is quiet again.'] : [])],
+    log: [...battle.log, message, ...fallen(battle, after), ...(victory ? [QUIET] : [])],
   });
 }
 
@@ -535,7 +568,7 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
     : `${definition.name} plants their feet and guards.`;
   return staged({
     ...battle, party, enemy, followers, fury, studied: action === 'analyze' ? [SPELL] : battle.studied, phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
-    log: [...battle.log, message, ...fallen(battle, after), ...(victory ? ['The signature flickers out. It is quiet again.'] : [])],
+    log: [...battle.log, message, ...fallen(battle, after), ...(victory ? [QUIET] : [])],
   });
 }
 

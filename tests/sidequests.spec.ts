@@ -77,11 +77,11 @@ test('the swarm-mother waits deep in the woods, and the reeve pays her bounty', 
   await expect(page.getByRole('heading', { name: 'Swarm-mother' })).toBeVisible();
   await page.keyboard.up('s');
   await expect(page.getByRole('heading', { name: 'Nymph' })).toHaveCount(2);
-  // Felling the mother first leaves her brood fighting.
+  // Felling the mother in her second stage, for good, still leaves her brood fighting.
   await page.evaluate(async () => {
     const { game } = await import('/src/main.ts');
     const view = game.scene.getScenes(true)[0].overlay;
-    view.state = { ...view.state, enemy: { ...view.state.enemy, health: 1 } };
+    view.state = { ...view.state, stage: 2, enemy: { ...view.state.enemy, health: 1 } };
     view.render();
   });
   await page.getByRole('combobox', { name: 'Attack target' }).selectOption({ label: 'Swarm-mother' });

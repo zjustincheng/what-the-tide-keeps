@@ -270,7 +270,7 @@ The road ends at the boar's burned farm, where he waits between his followers, a
 
 Nothing marks the quest. A carried item is lost on a wipe and returns to where it was found. The opened hedge and learned spells persist, saved in `tide-keeps.world.v1` and the grimoire.
 
-Every boss has a **second stage**. The first time a hit takes it to half health it turns: the battle title changes, SECOND STAGE shows above it, the boss burns redder and moves faster, and it roars (`STAGES` in `src/rules/battle.ts`):
+Every boss has a **second stage**. The first time a boss is brought down, it doesn't stay down: the fight stops for a short scene, told line by line over the boss's art (the boar's badger begging him to stay down, the hyena explaining that nobody down here stays dead). Then it gets back up with half its health (the warden with less, the hyena with a little less) and fights on as something worse: the battle title changes, SECOND STAGE shows above it, the boss burns redder and moves faster, and it roars. The second time it falls, it stays down (`STAGES` in `src/rules/battle.ts`):
 
 - **The boar, cornered:** gains fury and charges every round.
 - **The warden, unbound:** both votives flare up again, and Judgement falls every other round.

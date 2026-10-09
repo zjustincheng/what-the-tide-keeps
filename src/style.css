@@ -761,3 +761,12 @@ button.die[aria-pressed="true"] { border-color: #bc755e; color: #d8a890; }
 .dice-result { font: 16px Georgia, serif; color: #e8e0c8; }
 .sneaking-badge { position: absolute; left: 50%; top: 52px; transform: translateX(-50%); padding: 3px 10px; font: 11px ui-monospace, monospace; letter-spacing: .1em; color: #b7d3c7; border: 1px solid #4a6a60; background: #0e1a17cc; pointer-events: none; }
 .sneaking-badge[hidden] { display: none; }
+
+/* A boss's rising scene, over the fight. */
+.battle.in-cutscene > :not(.cutscene) { pointer-events: none; filter: brightness(.45); }
+.cutscene { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px; background: radial-gradient(ellipse at 50% 45%, #1a120ecc, #070909ee 70%); text-align: center; }
+.cutscene img { height: 120px; image-rendering: pixelated; filter: saturate(.7) brightness(.8) sepia(.3) hue-rotate(-20deg); animation: breathe 2.2s ease-in-out infinite; transform-origin: 50% 100%; }
+.cutscene-speaker { margin: 0; min-height: 1em; font: 11px ui-monospace, monospace; letter-spacing: .25em; color: #d88a6a; }
+.cutscene-line { margin: 0; max-width: 520px; font: 18px/1.5 Georgia, serif; color: #e8e0c8; }
+.cutscene.narration .cutscene-line { font-style: italic; color: #c8c0a8; }
+.cutscene-next { margin-top: 6px; }
