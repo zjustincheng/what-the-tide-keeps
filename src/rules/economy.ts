@@ -1,6 +1,10 @@
 // Pure money and supply rules. No Phaser, DOM, or storage.
 import type { Encounter } from './battle';
-import type { Flag, World } from './world';
+import type { Flag, Found, World } from './world';
+import { KEEPSAKES } from './gear.ts';
+import type { KeepsakeId } from './gear';
+import { BOOKS, SPELLS } from './spells.ts';
+import type { BookId } from './spells';
 import { catchValue, NO_CATCH } from './fishing.ts';
 
 export type SupplyId = 'smoked-fish' | 'smelling-salts' | 'firepot' | 'fish-stew' | 'herb-salve' | 'trail-cake';
@@ -24,13 +28,22 @@ export const BOUNTY: Record<Encounter, number> = { locust: 4, weevil: 5, acolyte
 
 // Something for sale: a supply, or a one-time deed that sets a story flag.
 // A shop can also buy: sellCatch trades every fish in the pack for coins.
-// fair: sold at the citizen's price whatever the buyer's brand.
-export type Ware = { supply: SupplyId; fair?: true } | { deed: Flag; name: string; text: string; price: number } | { sellCatch: true };
+// fair: sold at the citizen's price whatever the buyer's brand. gear: a keepsake or grimoire, kept for good once bought.
+export type Ware = { supply: SupplyId; fair?: true } | { deed: Flag; name: string; text: string; price: number } | { sellCatch: true } | { gear: Found; price: number };
+
+export function gearName(id: Found): string {
+  return id in KEEPSAKES ? KEEPSAKES[id as KeepsakeId].name : BOOKS[id as BookId].name;
+}
+export function gearText(id: Found): string {
+  if (id in KEEPSAKES) { const keepsake = KEEPSAKES[id as KeepsakeId]; return `${keepsake.effect} ${keepsake.drawback}`; }
+  const spell = SPELLS[BOOKS[id as BookId].spell];
+  return `A grimoire. Teaches ${spell.name}: ${spell.text}`;
+}
 
 // Shops overcharge the branded convict: triple the citizen's price, double once the boar is beaten and the town thaws.
 export function price(world: World, ware: Ware): number {
   if ('sellCatch' in ware) return catchValue(world.fish);
-  if ('deed' in ware) return ware.price;
+  if ('deed' in ware || 'gear' in ware) return ware.price;
   // With the reeve's letter of good conduct, the hero pays what a citizen pays.
   if (ware.fair || world.flags.includes('reeve-pardon')) return SUPPLIES[ware.supply].price;
   // Leaning on the stallholder with the bear at your back gets the same as the thaw.
@@ -40,6 +53,7 @@ export function price(world: World, ware: Ware): number {
 export function canBuy(world: World, ware: Ware): boolean {
   if ('sellCatch' in ware) return catchValue(world.fish) > 0;
   if ('deed' in ware && world.flags.includes(ware.deed)) return false;
+  if ('gear' in ware && world.found.includes(ware.gear)) return false;
   return world.coins >= price(world, ware);
 }
 
@@ -48,6 +62,7 @@ export function buy(world: World, ware: Ware): World {
   if ('sellCatch' in ware) return { ...world, coins: world.coins + catchValue(world.fish), fish: NO_CATCH };
   const coins = world.coins - price(world, ware);
   if ('deed' in ware) return { ...world, coins, flags: [...world.flags, ware.deed] };
+  if ('gear' in ware) return { ...world, coins, found: [...world.found, ware.gear] };
   return { ...world, coins, supplies: { ...world.supplies, [ware.supply]: world.supplies[ware.supply] + 1 } };
 }
 

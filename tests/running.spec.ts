@@ -47,7 +47,7 @@ test('resting at a campfire costs coins', async ({ page }) => {
   await place(page, 'farmland', 600, 410);
   await expect(page.locator('#prompt')).toContainText('Rest by the fire (4 coins)');
   await page.keyboard.press('e');
-  await page.getByRole('button', { name: '2. Sleep. (4 coins)' }).click();
+  await page.getByRole('button', { name: '2. Sleep until dawn. (4 coins)' }).click();
   await expect(page.locator('#dialogue-text')).toHaveText('Wood and a place by the fire cost 4 coins. You have 3.');
   await page.keyboard.press('Escape');
   await expect(page.locator('#purse')).toHaveText('3 coins');

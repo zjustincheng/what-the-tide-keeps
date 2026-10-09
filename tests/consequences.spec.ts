@@ -94,6 +94,7 @@ test('coin gets the hero past the innkeeper to a bed that heals the party', asyn
   await place(page, 'inn', 152, 232);
   await expect(page.locator('#prompt')).toContainText('Sleep in the bed');
   await page.keyboard.press('e');
+  await page.getByRole('button', { name: '1. Sleep until dawn.' }).click();
   await finish(page);
   await expect(page.getByRole('group', { name: 'Party' }).getByRole('meter', { name: 'Chameleon health', exact: true })).toHaveAttribute('aria-valuetext', '20 of 20');
 });

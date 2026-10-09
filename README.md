@@ -344,6 +344,13 @@ The regions are joined in more than one place, and some links only open from the
 - **The high tarn**, up the smugglers' stair, is a frozen lake under the pass. Cut fishing holds **mountain char**, the most valuable fish, found nowhere else. The trapper's partner lies under the ice; bring him her ring and he gives you the **Frost ring** (the vulture's keepsake: 7 more health, hits 1 softer). Hounds and a raider hunt on the ice. A rope ladder climbs to the middle of the pass, but it can only be let down from the pass side.
 - **The drove road** runs from the downs, east up the chalk, to the battlefield's south gate. A wolf drover takes herbivores' sheep up to the carnivores' fort for them, and remembers a man with no fur carrying a sack toward the abbey. Raiders camp in a ring of boulders with a stash of stolen coin. The gate at the top is barred from the battlefield side: lift the bar from there and the road opens both ways.
 
+## Day and night
+
+Every fire, bed, and cot asks whether to **sleep until dawn or until dark**. Night lasts until you sleep it off, or until you die and the church wakes you at dawn. At night the world is darker and colder, fires are the only warm light, the clock in the top bar reads Night, and **every ordinary enemy hunts unseen**, like an ambusher, and sees further. Saved with the world (`night` in `tide-keeps.world.v1`).
+
+- **The night market.** After dark, a pine marten opens the shuttered stall behind Millbrook's tannery: a Night cloak (+20% dodge timing, shows 1 less mana, 3 less health), a Smuggled blade (hits 3 harder, shows 2 more mana), the **Banned hymnal** (a grimoire teaching Hush, a quick, cheap snare), and smelling salts at the fair price.
+- **Gear in shops.** By day the fort's goat sells a Garrison buckler (7 more health; hits softer and dodges harder), and the capital's apothecary a Saint's medal (4 more health, shows less mana; hiding costs more). Bought gear is kept for good, like found keepsakes.
+
 ## Besides fighting
 
 - **Hiding your mana (Q, or Hide on a touch screen).** As the guideline describes, the party can suppress its mana to slip past. Holding it down costs every hero a point of mana every few seconds; when the hero runs dry, his mana shows again, and he can't hide with none. While hidden, the hero walks slower and silently, ordinary enemies don't notice him until he's almost on them, and ambushers can't vanish before he sees them. Walk into an enemy while hidden and it loses its first move. A badge over the map shows when your mana is hidden.

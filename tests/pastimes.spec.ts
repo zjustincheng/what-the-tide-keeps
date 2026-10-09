@@ -111,3 +111,38 @@ test('hiding costs mana over time, and the enemy punishes a hero who takes too l
   await expect(page.getByRole('heading', { name: 'Crop locust' })).toBeVisible({ timeout: 5000 });
   await expect(page.getByRole('log')).toContainText('You hesitate.', { timeout: 20000 });
 });
+
+test('sleeping until dark brings night: the clock says so, and the night market opens behind the tannery', async ({ page }) => {
+  await start(page, { flags: ['boar-defeated'], coins: 50 }, 'town', 'spawn');
+  // By day the stall behind the tannery is shuttered.
+  await place(page, 'town', 440, 330);
+  await expect(page.locator('#prompt')).toContainText('Examine the stall');
+  // Sleep until dark at the crossroads fire.
+  await page.evaluate(async () => {
+    const { game } = await import('/src/main.ts');
+    game.scene.getScene('town').scene.start('farmland', { spawn: 'spawn' });
+  });
+  await expect.poll(() => at(page, 'farmland')).not.toBeNull();
+  await place(page, 'farmland', 600, 410);
+  await expect(page.locator('#prompt')).toContainText('Rest by the fire');
+  await page.keyboard.press('e');
+  await page.getByRole('button', { name: /Sleep until dark/ }).click();
+  while (await page.locator('#dialogue').isVisible()) await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.locator('#location-time')).toHaveText('Night');
+  expect((await saved(page)).night).toBe(true);
+  await page.evaluate(async () => {
+    const { game } = await import('/src/main.ts');
+    game.scene.getScenes(true)[0].scene.start('town', { spawn: 'spawn' });
+  });
+  await expect.poll(() => at(page, 'town')).not.toBeNull();
+  await place(page, 'town', 456, 348);
+  await expect(page.locator('#prompt')).toContainText('Speak to the marten');
+  await page.keyboard.press('e');
+  while (await page.locator('#dialogue').isVisible()) {
+    if (await page.locator('#choices').isVisible()) await page.keyboard.press('Escape');
+    else await page.getByRole('button', { name: 'Continue' }).click();
+  }
+  await expect(page.getByRole('heading', { name: 'The shuttered stall, open' })).toBeVisible();
+  await page.getByRole('button', { name: 'Buy Night cloak' }).click();
+  expect((await saved(page)).found).toContain('night-cloak');
+});

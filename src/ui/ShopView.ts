@@ -1,12 +1,12 @@
 import { SHOPS } from '../content/shops';
-import { buy, canBuy, price, SUPPLIES } from '../rules/economy';
+import { buy, canBuy, gearName, gearText, price, SUPPLIES } from '../rules/economy';
 import type { Ware } from '../rules/economy';
 import { FISH, FISH_IDS } from '../rules/fishing';
 import type { ShopId, World } from '../rules/world';
 import { music } from '../audio/music';
 
-const name = (ware: Ware) => 'sellCatch' in ware ? 'Your catch' : 'deed' in ware ? ware.name : SUPPLIES[ware.supply].name;
-const text = (ware: Ware) => 'sellCatch' in ware ? 'Every fish in your pack.' : 'deed' in ware ? ware.text : SUPPLIES[ware.supply].text;
+const name = (ware: Ware) => 'sellCatch' in ware ? 'Your catch' : 'deed' in ware ? ware.name : 'gear' in ware ? gearName(ware.gear) : SUPPLIES[ware.supply].name;
+const text = (ware: Ware) => 'sellCatch' in ware ? 'Every fish in your pack.' : 'deed' in ware ? ware.text : 'gear' in ware ? gearText(ware.gear) : SUPPLIES[ware.supply].text;
 
 // A shopkeeper's wares. Coins and supplies bought here are lost on a wipe.
 export class ShopView {
@@ -53,7 +53,7 @@ export class ShopView {
     this.root.querySelector('.purse')!.textContent = `You carry ${this.world.coins} coins.`;
     SHOPS[this.shop].wares.forEach((ware, index) => {
       const row = this.root.querySelector<HTMLElement>(`[data-ware="${index}"]`)!;
-      const done = 'deed' in ware && this.world.flags.includes(ware.deed);
+      const done = ('deed' in ware && this.world.flags.includes(ware.deed)) || ('gear' in ware && this.world.found.includes(ware.gear));
       const button = row.querySelector<HTMLButtonElement>('button')!;
       button.textContent = 'sellCatch' in ware ? `Sell for ${price(this.world, ware)}` : done ? 'Bought' : `${price(this.world, ware)} coins`;
       if ('sellCatch' in ware) button.setAttribute('aria-label', 'Sell your catch');

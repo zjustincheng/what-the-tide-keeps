@@ -17,7 +17,7 @@ export const SHOPS: Record<ShopId, { title: string; note: string; wares: Ware[] 
   merchant: {
     title: 'The goat behind the bars',
     note: 'He passes everything through the bars at arm\'s length. The board price, and no haggling.',
-    wares: [{ supply: 'smoked-fish', fair: true }, { supply: 'smelling-salts', fair: true }, { supply: 'firepot', fair: true }],
+    wares: [{ supply: 'smoked-fish', fair: true }, { supply: 'smelling-salts', fair: true }, { supply: 'firepot', fair: true }, { gear: 'garrison-buckler', price: 25 }],
   },
   fence: {
     title: 'The weasel in the alley',
@@ -28,7 +28,13 @@ export const SHOPS: Record<ShopId, { title: string; note: string; wares: Ware[] 
   apothecary: {
     title: 'The apothecary',
     note: 'Church-licensed remedies, priced on a schedule for the branded.',
-    wares: [{ supply: 'smelling-salts' }, { supply: 'smoked-fish' }, { supply: 'firepot' }],
+    wares: [{ supply: 'smelling-salts' }, { supply: 'smoked-fish' }, { supply: 'firepot' }, { gear: 'saints-medal', price: 40 }],
+  },
+  // After dark, behind the tannery: things the church would rather nobody owned.
+  'night-market': {
+    title: 'The shuttered stall, open',
+    note: 'Lamplight through the slats. No prices chalked anywhere. She tells you, and you pay.',
+    wares: [{ gear: 'night-cloak', price: 30 }, { gear: 'smuggled-blade', price: 35 }, { gear: 'banned-hymnal', price: 60 }, { supply: 'smelling-salts', fair: true }],
   },
   reeve: {
     title: 'The reeve',

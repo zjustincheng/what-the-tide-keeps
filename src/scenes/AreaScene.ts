@@ -106,6 +106,7 @@ export class AreaScene extends Phaser.Scene {
   private pendingRest?: string;
   private pendingFight?: Foe;
   private pendingCook = false;
+  private pendingNight = false;
   private pendingDice?: { stake: number; opponent: string };
   private campPoint?: string;
   // Hiding the party's mana: slower and silent, unseen by enemies, and a first strike on anyone walked into.
@@ -186,7 +187,7 @@ export class AreaScene extends Phaser.Scene {
     this.bindControls();
     element('location-region').textContent = this.area.region;
     element('location-place').textContent = `/ ${this.area.place}`;
-    element('location-time').textContent = this.area.time;
+    element('location-time').textContent = loadWorld().night ? 'Night' : this.area.time;
     element('game').setAttribute('aria-label', `${this.area.place} map. Move with WASD or arrow keys. Press E or Space to interact.`);
     this.cameras.main.fadeIn(650, 16, 27, 24);
     music.play(this.area.music);
@@ -205,8 +206,21 @@ export class AreaScene extends Phaser.Scene {
   // The world is drained and cold: a desaturating, darkening grade with a heavy vignette.
   // Without WebGL, a dark wash over the view stands in for it.
   private grade() {
-    const { saturation = -0.5, brightness = 0.72, vignette = 0.45 } = this.area.grade ?? {};
+    const night = Boolean(loadWorld().night);
+    const base = this.area.grade ?? {};
+    // Night is darker, colder, and closes in.
+    const { saturation = -0.5, brightness = 0.72, vignette = 0.45 } = night
+      ? { saturation: (base.saturation ?? -0.5) - 0.2, brightness: (base.brightness ?? 0.72) * 0.55, vignette: Math.min(0.95, (base.vignette ?? 0.45) + 0.3) }
+      : base;
     const camera = this.cameras.main;
+    if (night) {
+      this.add.rectangle(0, 0, camera.width, camera.height, 0x0a1a3a, 0.28).setOrigin(0).setScrollFactor(0).setDepth(49).setBlendMode(Phaser.BlendModes.MULTIPLY);
+      // Fires are the only warm light.
+      for (const { sprite } of this.props) if (sprite.texture.key === 'campfire') {
+        const glow = this.add.image(sprite.x, sprite.y, 'firelight').setDepth(48).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.9);
+        this.tweens.add({ targets: glow, alpha: 0.65, scale: 0.94, duration: 900, yoyo: true, repeat: -1 });
+      }
+    }
     if (this.renderer.type === Phaser.WEBGL && camera.postFX) {
       const color = camera.postFX.addColorMatrix();
       color.saturate(saturation);
@@ -281,7 +295,9 @@ export class AreaScene extends Phaser.Scene {
       }
   }
 
-  private createFoe(at: Point, { encounter, defeat, ambush, point }: Area['enemies'][number]) {
+  private createFoe(at: Point, { encounter, defeat, ambush: lurks, point }: Area['enemies'][number]) {
+    // At night every ordinary enemy hunts unseen.
+    const ambush = lurks || (Boolean(loadWorld().night) && Boolean(CHASE[encounter]));
     const [width, height, x, y] = BODY[encounter];
     // Chasers move, so they need a body that collides with the walls; the rest stand where they are.
     const sprite = (CHASE[encounter] ? this.physics.add.sprite(at.x, at.y, encounter) : this.physics.add.staticSprite(at.x, at.y, encounter)).setDepth(4);
@@ -366,14 +382,15 @@ export class AreaScene extends Phaser.Scene {
       const cost=camp.cost ?? 0;
       const sleep=[...(cost ? [`You pay ${cost} coins for wood and a place by the fire.`] : []), ...camp.lines];
       this.campPoint=this.nearby.name;
-      // A fire can be cooked at as well as slept by; a bed or a cot cannot.
-      if(camp.noCooking) {
-        if(cost && coins<cost) this.say({ speaker: 'REST', lines: [`Wood and a place by the fire cost ${cost} coins. You have ${coins}.`] }, 'hero');
-        else { this.pendingRest=this.nearby.name; this.say({ speaker: 'REST', lines: sleep }, 'hero'); }
-      } else this.say({ speaker: 'THE FIRE', lines: ['The fire is going. You could cook something, or sleep.'], choices: [
-        { text: 'Cook something.', ends: true, lines: [], then: { cook: true } },
-        ...(cost && coins<cost ? [{ text: `Sleep. (${cost} coins)`, lines: [`Wood and a place by the fire cost ${cost} coins. You have ${coins}.`] }]
-          : [{ text: cost ? `Sleep. (${cost} coins)` : 'Sleep.', ends: true, lines: sleep, then: { camp: true } as Effect }]),
+      // Sleep until dawn or until dark; a fire can be cooked at as well, a bed or a cot cannot.
+      const price=cost ? ` (${cost} coins)` : '';
+      const night=Boolean(loadWorld().night);
+      const sleepUntil=(until: 'dawn' | 'dusk')=>cost && coins<cost
+        ? { text: `Sleep until ${until==='dawn' ? 'dawn' : 'dark'}.${price}`, lines: [`Wood and a place by the fire cost ${cost} coins. You have ${coins}.`] }
+        : { text: `Sleep until ${until==='dawn' ? 'dawn' : 'dark'}.${price}`, ends: true, lines: [...sleep, until==='dusk' ? 'You wake as the light goes.' : 'You wake to grey morning.'], then: { camp: until } as Effect };
+      this.say({ speaker: camp.noCooking ? 'REST' : 'THE FIRE', lines: [camp.noCooking ? (night ? 'It is dark out.' : 'It is still light out.') : `The fire is going${night ? ', and it is the only light for a long way' : ''}. You could cook something, or sleep.`], choices: [
+        ...(camp.noCooking ? [] : [{ text: 'Cook something.', ends: true, lines: [], then: { cook: true } as Effect }]),
+        sleepUntil('dawn'), sleepUntil('dusk'),
       ] }, 'hero');
       element('prompt').textContent='';
       this.player.setVelocity(0);
@@ -471,7 +488,7 @@ export class AreaScene extends Phaser.Scene {
   private effect(then?: Effect) {
     if(!then) return;
     if(then.cook) this.pendingCook=true;
-    if(then.camp) this.pendingRest=this.campPoint;
+    if(then.camp) { this.pendingRest=this.campPoint; this.pendingNight=then.camp==='dusk'; }
     if(then.dice) this.pendingDice={ stake: then.dice, opponent: (this.active?.speaker ?? 'the house').toLowerCase().replace(/^(a|an|the) /, 'the ') };
     if(then.shop) this.pendingShop=then.shop;
     if(then.find || then.learn || then.give) music.effect('find');
@@ -521,7 +538,7 @@ export class AreaScene extends Phaser.Scene {
     // Resting heals every wound and brings the area's enemies back, so the area starts over around the fire.
     if(camp && !this.leaving) {
       PICKED.clear();
-      music.effect('rest'); const cost=this.area.camps?.[camp]?.cost ?? 0; saved=saveWorld(rest({ ...loadWorld(), coins: Math.max(0, loadWorld().coins-cost) }));
+      music.effect('rest'); const cost=this.area.camps?.[camp]?.cost ?? 0; saved=saveWorld(rest({ ...loadWorld(), coins: Math.max(0, loadWorld().coins-cost), night: this.pendingNight }));
       const sleep=()=>{ this.leaving=true; this.cameras.main.fadeOut(400,16,27,24); this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.restart({spawn:camp})); };
       // Once the vulture has shown how, a memory can be written down before sleeping.
       if(loadWorld().flags.includes('anchors-known')) this.writeDown(sleep); else sleep();
@@ -781,7 +798,8 @@ export class AreaScene extends Phaser.Scene {
         // Talking stops the world; a foe just fled from gives the hero a moment and goes home.
         const resting=this.active || (foe.fledAt!==undefined && this.time.now-foe.fledAt<2500);
         // A hero with hidden mana is only noticed when he is almost on top of them.
-        const hunting=!resting && toHero<(this.sneaking ? 22 : chase.sight) && fromHome<LEASH;
+        const sight=chase.sight*(loadWorld().night ? 1.3 : 1);
+        const hunting=!resting && toHero<(this.sneaking ? 22 : sight) && fromHome<LEASH;
         if(hunting) this.physics.moveTo(foe.sprite,this.player.x,this.player.y,chase.speed);
         else if(!this.active && fromHome>3) this.physics.moveTo(foe.sprite,foe.home.x,foe.home.y,chase.speed*0.6);
         else foe.sprite.setVelocity(0);

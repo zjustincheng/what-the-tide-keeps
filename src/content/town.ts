@@ -110,9 +110,20 @@ export const town: Dialogue = {
   stocks: { speaker: 'THE STOCKS', prompt: 'Examine the stocks', lines: [
     'Stocks in the middle of the market square, where everyone can see. Empty today. The stones under them have not been scrubbed.',
   ] },
-  stall: { speaker: 'A SHUTTERED STALL', prompt: 'Examine the stall', lines: [
+  // By day, shutters and a chalk mark. After dark, the night market.
+  stall: { speaker: 'A SHUTTERED STALL', prompt: 'Examine the stall', hiddenIf: [{ night: true }], lines: [
     'A stall behind the tannery, shuttered. Chalked on the boards: AFTER DARK.',
-    'The night market is not built yet.',
+  ] },
+  'night-trader': { speaker: 'A PINE MARTEN', prompt: 'Speak to the marten', hiddenIf: [{ night: false }], lines: [
+    'The shutters are up, and lamplight comes through the slats.',
+    '"Don\'t touch, don\'t haggle, don\'t tell the reeve."',
+  ], then: { shop: 'night-market' }, choices: [
+    { text: 'What is this place?', lines: [
+      'The stall the town pretends is empty. By day, it is.',
+      'By night it sells what the church won\'t license: blades, cloaks, and books with the wrong hymns in them.',
+    ] },
+    { text: 'Who buys?', lines: ['Everyone who swears they don\'t. The reeve\'s clerk bought a hymnal last month. Ask him what it says. He\'ll go white.'] },
+    { text: 'Where does it come from?', lines: ['Up the river, mostly, under fish. The sea doesn\'t care what the church licenses.'] },
   ] },
 };
 

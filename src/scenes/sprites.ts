@@ -47,6 +47,7 @@ const VILLAGERS: Record<string, Villager> = {
   harbourmaster: { fur: 0x5a6a4a, muzzle: 0x8a8a6a, cloth: 0x2a3a4a, trim: 0xc8b878, ears: 'none' },
   steward: { fur: 0x8a5a3a, muzzle: 0xe8d8c0, cloth: 0x3a2a2a, trim: 0xb89a5a, ears: 'pointed' },
   cleaner: { fur: 0xe0e0dc, muzzle: 0x2a2a28, cloth: 0x6a6a5a, trim: 0x8a8a7a, ears: 'pointed' },
+  marten: { fur: 0x5a3a24, muzzle: 0xe8c890, cloth: 0x2a2a30, trim: 0xb89a5a, ears: 'pointed' },
   // Keepers of the world's history.
   novice: { fur: 0xb8946a, muzzle: 0xe8d8c0, cloth: 0x8a8a7a, trim: 0xb8b69b, ears: 'long' },
   pilgrim: { fur: 0x6a7a5a, muzzle: 0x8a8a6a, cloth: 0x6a5a44, trim: 0xb8a070, ears: 'none' },
@@ -162,6 +163,12 @@ export function createSprites(scene: Phaser.Scene) {
   altar.fillStyle(0xf0b34a).fillRect(5, 2, 1, 1).fillRect(10, 2, 1, 1);
   altar.fillStyle(0x8a8a7a).fillRect(7, 1, 2, 5).fillRect(6, 2, 4, 1);
   altar.generateTexture('altar', 16, 16); altar.destroy();
+  // Firelight: a soft warm glow that fades to nothing at its edge.
+  const glow = scene.textures.createCanvas('firelight', 128, 128)!;
+  const ctx = glow.getContext();
+  const light = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  light.addColorStop(0, 'rgba(240,170,80,0.55)'); light.addColorStop(0.45, 'rgba(220,130,60,0.22)'); light.addColorStop(1, 'rgba(200,110,50,0)');
+  ctx.fillStyle = light; ctx.fillRect(0, 0, 128, 128); glow.refresh();
   // Things that grow wild and can be picked: thyme, mushrooms, and hedge berries.
   const herb = scene.make.graphics({ x: 0, y: 0 });
   herb.fillStyle(0x3e5a32).fillRect(3, 6, 2, 6).fillRect(7, 3, 2, 9).fillRect(11, 5, 2, 7);
