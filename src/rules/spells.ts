@@ -38,6 +38,29 @@ export function carry(books: Books, owned: readonly BookId[], member: MemberId, 
   return next;
 }
 
+// A companion's own grimoire stays theirs until they join, so nobody can borrow it first.
+// Once they have joined, a companion left without a grimoire gets their own back if nobody is carrying it.
+export function settle(books: Books, roster: readonly MemberId[]): Books {
+  const reserved = (Object.keys(STARTING_BOOKS) as MemberId[]).filter(member => !roster.includes(member));
+  const held = Object.fromEntries((Object.entries(books) as [MemberId, BookId | null][]).map(([member, book]) =>
+    [member, reserved.includes(member) ? STARTING_BOOKS[member] : book && reserved.some(other => STARTING_BOOKS[other] === book) ? null : book])) as Record<MemberId, BookId | null>;
+  for (const member of roster) {
+    const own = STARTING_BOOKS[member];
+    if (!held[member] && own && !Object.values(held).includes(own)) held[member] = own;
+  }
+  return held;
+}
+
+// A companion who has just joined takes their own grimoire back, whoever was carrying it; that hero gets their own back if it is free.
+export function reclaim(books: Books, member: MemberId): Books {
+  const own = STARTING_BOOKS[member];
+  if (!own || books[member] === own) return books;
+  const holder = (Object.keys(books) as MemberId[]).find(other => books[other] === own);
+  const next = { ...books, [member]: own } as Record<MemberId, BookId | null>;
+  if (holder) next[holder] = STARTING_BOOKS[holder] && !Object.values(next).includes(STARTING_BOOKS[holder]) ? STARTING_BOOKS[holder] : null;
+  return next;
+}
+
 // What a player must type: the sequence is fixed for the attempt and checked key by key.
 export function checkSequence(sequence: readonly number[], typed: readonly number[]): 'typing' | 'cast' | 'fizzle' {
   if (typed.some((key, index) => key !== sequence[index])) return 'fizzle';

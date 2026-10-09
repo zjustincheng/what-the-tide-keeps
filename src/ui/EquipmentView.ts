@@ -19,7 +19,8 @@ export class EquipmentView {
   constructor(private gear: Gear, private carried: Books, found: readonly Found[], private party: readonly MemberId[], private hollow: Hollow, heroImage: string, onChange: (gear: Gear, books: Books) => void, onClose: () => void) {
     this.owned = found.filter((id): id is KeepsakeId => id in KEEPSAKES);
     // Each hero's own grimoire is always theirs to carry; others must be found.
-    this.books = BOOK_IDS.filter(id => Object.values(STARTING_BOOKS).includes(id) || found.includes(id));
+    // Only the grimoires of heroes who have joined, and those found along the way.
+    this.books = BOOK_IDS.filter(id => party.some(member => STARTING_BOOKS[member] === id) || found.includes(id));
     this.root = document.createElement('section');
     this.root.className = 'battle equipment';
     this.root.setAttribute('role', 'dialog');

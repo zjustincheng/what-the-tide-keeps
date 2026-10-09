@@ -711,3 +711,27 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
 .flee small { margin-left: 6px; font: 9px ui-monospace, monospace; color: #a88878; }
 .flee[hidden] { display: none; }
 .anchor-actions { display: flex; gap: 8px; justify-content: center; }
+
+/* Fighters are alive: everyone breathes, staggered; heroes hop when they act; anyone hit flinches red. */
+@keyframes breathe { 0%, 100% { transform: translateY(0) scaleY(1); } 50% { transform: translateY(-1px) scaleY(1.035); } }
+@keyframes sway { 0%, 100% { transform: translateX(0) rotate(0); } 50% { transform: translateX(2px) rotate(1deg); } }
+@keyframes hop { 0% { transform: translateY(0); } 35% { transform: translateY(-9px) scale(1.04); } 100% { transform: translateY(0); } }
+@keyframes flinch {
+  0% { transform: translateX(0); filter: saturate(.55) brightness(1.6) sepia(1) hue-rotate(-40deg) saturate(4); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
+.fighter img { transform-origin: 50% 100%; animation: breathe 2.6s ease-in-out infinite; }
+.enemy-fighter img { animation: sway 3.1s ease-in-out infinite; }
+.follower:nth-child(2) .fighter img { animation-delay: -.8s; }
+.follower:nth-child(3) .fighter img { animation-delay: -1.7s; }
+.member-card:nth-child(2) .fighter img { animation-delay: -.9s; animation-duration: 2.9s; }
+.member-card:nth-child(3) .fighter img { animation-delay: -1.6s; animation-duration: 2.3s; }
+.member-card[data-downed="true"] .fighter img { animation: none; transform: rotate(-80deg) translateX(20%); }
+.fighter.is-acting img { animation: hop .4s ease-out; }
+.fighter.is-hit img { animation: flinch .45s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .fighter img, .fighter.is-acting img, .fighter.is-hit img { animation: none; }
+}

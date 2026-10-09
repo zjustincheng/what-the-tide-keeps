@@ -86,13 +86,8 @@ test('the courier\'s letter is lost on a wipe, and pays at the fort when deliver
 
 test('the vulture duel, her note, and writing a memory down', async ({ page }) => {
   await start(page, BEAR, 'fort', 'from-pass');
-  await go(page, 'fort', 152, 168, 'Enter the barracks', 'barracks');
-  await go(page, 'barracks', 352, 232, 'Search the far bunk');
-  await expect(page.locator('#dialogue-text')).toContainText('built for wings');
-  await talk(page);
-  await go(page, 'barracks', 248, 264, 'Go back outside', 'fort');
   await go(page, 'fort', 744, 288, 'Go down to the battlefield', 'battlefield');
-  // She attacks as a grave thief; the duel only has to be survived.
+  // Without her note, she attacks as a grave thief; the duel only has to be survived.
   await place(page, 'battlefield', 520, 236);
   await page.keyboard.down('w');
   await expect(page.getByRole('heading', { name: 'The vulture' })).toBeVisible();
@@ -102,7 +97,17 @@ test('the vulture duel, her note, and writing a memory down', async ({ page }) =
   await page.getByRole('button', { name: 'Bear support' }).click();
   await expect(page.locator('#battle-turn')).toHaveText('You lived through it.', { timeout: 15000 });
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  // Now she talks, and her own note wins her over.
+  await go(page, 'battlefield', 520, 210, 'Speak to the vulture');
+  await talk(page);
+  // Her note is under her old bunk in the barracks.
+  await go(page, 'battlefield', 28, 320, 'Climb back up to the fort', 'fort');
+  await go(page, 'fort', 152, 168, 'Enter the barracks', 'barracks');
+  await go(page, 'barracks', 352, 232, 'Search the far bunk');
+  await expect(page.locator('#dialogue-text')).toContainText('built for wings');
+  await talk(page);
+  await go(page, 'barracks', 248, 264, 'Go back outside', 'fort');
+  await go(page, 'fort', 744, 288, 'Go down to the battlefield', 'battlefield');
+  // Her own note wins her over.
   await go(page, 'battlefield', 520, 210, 'Speak to the vulture');
   await talk(page, 'Give her the note');
   await expect(page.locator('#hud .hud-member')).toHaveCount(3);
@@ -132,6 +137,17 @@ test('the vulture duel, her note, and writing a memory down', async ({ page }) =
   await page.getByRole('radio', { name: /The feast/ }).check();
   await page.getByRole('button', { name: 'Write it down' }).click();
   expect(JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.memory.v1')))!).anchors).toEqual(['feast']);
+});
+
+test('coming to the vulture with her note in hand, there is no fight', async ({ page }) => {
+  await start(page, { ...BEAR, carried: ['note'] }, 'battlefield', 'from-fort');
+  await place(page, 'battlefield', 520, 236);
+  await page.keyboard.down('w'); await page.waitForTimeout(500); await page.keyboard.up('w');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await go(page, 'battlefield', 520, 210, 'Speak to the vulture');
+  await expect(page.locator('#dialogue-text')).toContainText('talons out, then stops');
+  await talk(page, 'Give her the note');
+  await expect(page.locator('#hud .hud-member')).toHaveCount(3);
 });
 
 test('the deserters, the hyena, her ledger, and the inquisitor on the road', async ({ page }) => {

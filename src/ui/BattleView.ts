@@ -318,7 +318,32 @@ export class BattleView {
     this.saved = saveGrimoire(this.state.studied);
   }
 
+  // What each fighter looked like at the last render, so changes can be shown: a flinch when hurt, a hop when acting.
+  private seen = new Map<string, number>();
+  private animateChanges() {
+    const state = this.state;
+    const now = new Map<string, number>([
+      ...state.party.flatMap(member => [[`hp:${member.id}`, member.health], [`act:${member.id}`, Number(member.acted)]] as [string, number][]),
+      ['hp:0', state.enemy.health], ...state.followers.map((follower, index) => [`hp:${index + 1}`, follower.health] as [string, number]),
+    ]);
+    const play = (target: Element | null, name: string) => {
+      if (!target) return;
+      target.classList.remove(name); void (target as HTMLElement).offsetWidth; target.classList.add(name);
+      setTimeout(() => target.classList.remove(name), 500);
+    };
+    for (const [key, value] of now) {
+      const before = this.seen.get(key);
+      if (before === undefined) continue;
+      const [kind, who] = key.split(':');
+      const fighter = kind === 'hp' && /^\d+$/.test(who) ? this.root.querySelector(`[data-foe="${who}"] .fighter, .fighter[data-foe="${who}"]`) : this.root.querySelector(`.member-card[data-member="${who}"] .party-fighter`);
+      if (kind === 'hp' && value < before) play(fighter, 'is-hit');
+      if (kind === 'act' && value > before) play(fighter, 'is-acting');
+    }
+    this.seen = now;
+  }
+
   private render() {
+    this.animateChanges();
     const state = this.state;
     const done = state.phase === 'victory' || state.phase === 'defeat' || state.phase === 'fled';
     const remaining = state.party.filter(member => member.health > 0 && !member.acted).length;

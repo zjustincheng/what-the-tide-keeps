@@ -27,12 +27,24 @@ import type { Area } from './areas';
 import { music } from '../audio/music';
 import type { Surface } from '../audio/effects';
 import { battleTheme } from '../audio/themes';
+import { reclaim, settle } from '../rules/spells';
 import { createSprites } from './sprites';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 type Point = { name: string; x: number; y: number };
 type Prop = { sprite: Phaser.Physics.Arcade.Sprite; hiddenIf: Condition[]; shadow?: Phaser.GameObjects.Ellipse };
-type Foe = { encounter: Encounter; defeat?: Effect; fledAt?: number; ambush?: boolean; hidden?: boolean; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container };
+type Foe = { encounter: Encounter; defeat?: Effect; fledAt?: number; ambush?: boolean; hidden?: boolean; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container;
+  home: { x: number; y: number }; phase: number };
+// Ordinary enemies come after the hero once he is in sight, a little slower than he walks; bosses and guardians hold their ground.
+// sight and speed are in pixels and pixels per second. The hero walks at 70.
+const CHASE: Partial<Record<Encounter, { sight: number; speed: number }>> = {
+  locust: { sight: 90, speed: 44 }, weevil: { sight: 80, speed: 36 }, acolyte: { sight: 96, speed: 40 }, hound: { sight: 120, speed: 58 },
+  wisp: { sight: 100, speed: 50 }, raider: { sight: 110, speed: 52 }, ghoul: { sight: 90, speed: 34 }, inquisitor: { sight: 170, speed: 40 },
+};
+// How far a chaser will follow from where it stands before giving up and going back.
+const LEASH = 200;
+// Creatures that breathe on the map even though they are only props.
+const BREATHING = new Set(['sheep', 'badger', 'rat', 'hyena']);
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 // Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
 const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8], warden: [22, 26, 5, 4], leech: [28, 24, 2, 4], hound: [24, 16, 4, 12], pack: [26, 18, 3, 12], wisp: [14, 14, 9, 9], drowned: [20, 26, 6, 4],
@@ -76,6 +88,8 @@ export class AreaScene extends Phaser.Scene {
   private shadow!: Phaser.GameObjects.Ellipse;
   private foes: Foe[] = [];
   private props: Prop[] = [];
+  private people: Phaser.Physics.Arcade.Sprite[] = [];
+  private walls!: Phaser.Tilemaps.TilemapLayer;
   private overlay?: BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView;
   // A shop to open once the current conversation ends.
   private pendingShop?: ShopId;
@@ -88,7 +102,7 @@ export class AreaScene extends Phaser.Scene {
     // Scene instances are reused, so every visit starts from a clean slate.
     this.arrival = data?.spawn ?? 'spawn';
     this.cleanup = new AbortController();
-    this.held = new Set(); this.foes = []; this.props = []; this.asked = new Set(); this.talked = new Set();
+    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.asked = new Set(); this.talked = new Set();
     this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false; this.pendingShop = undefined; this.pendingRest = undefined;
   }
 
@@ -106,6 +120,7 @@ export class AreaScene extends Phaser.Scene {
     this.floor = map.createLayer('Floor', tiles)!;
     const furniture = map.createLayer('Furniture', tiles)!;
     furniture.setCollisionByProperty({ collides: true });
+    this.walls = furniture;
     this.points = map.getObjectLayer('Points')!.objects.map(p => ({ name: p.name, x: p.x!, y: p.y! }));
     const spawn = this.point(this.arrival);
     createSprites(this);
@@ -122,6 +137,9 @@ export class AreaScene extends Phaser.Scene {
       const npc = this.physics.add.staticSprite(at.x, at.y, texture);
       npc.setSize(10, 8).setOffset(5, 16);
       this.physics.add.collider(this.player, npc);
+      // People breathe, each at their own pace, and look at the hero as he passes.
+      this.breathe(npc);
+      this.people.push(npc);
       // People who can leave, like a freed companion, come and go with story state.
       this.props.push({ sprite: npc, hiddenIf, shadow });
     }
@@ -133,6 +151,7 @@ export class AreaScene extends Phaser.Scene {
       if (solid) this.physics.add.collider(this.player, sprite);
       // Loose things glint so they can be found without a marker.
       else this.tweens.add({ targets: sprite, alpha: 0.55, duration: 900, yoyo: true, repeat: -1 });
+      if (BREATHING.has(texture)) this.breathe(sprite);
       sprite.setDepth(3);
       this.props.push({ sprite, hiddenIf });
     }
@@ -195,21 +214,28 @@ export class AreaScene extends Phaser.Scene {
     }
   }
 
+  // A slow rise and fall, staggered so a crowd doesn't breathe in step.
+  private breathe(sprite: Phaser.GameObjects.Sprite) {
+    this.tweens.add({ targets: sprite, scaleY: 1.04, scaleX: 0.985, duration: 1300 + (this.people.length * 173) % 700, delay: (sprite.x * 7) % 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+  }
+
   private point(name: string): Point {
     return this.points.find(p => p.name === name)!;
   }
 
   private createFoe(at: Point, { encounter, defeat, ambush }: Area['enemies'][number]) {
     const [width, height, x, y] = BODY[encounter];
-    const sprite = this.physics.add.staticSprite(at.x, at.y, encounter).setDepth(4);
+    // Chasers move, so they need a body that collides with the walls; the rest stand where they are.
+    const sprite = (CHASE[encounter] ? this.physics.add.sprite(at.x, at.y, encounter) : this.physics.add.staticSprite(at.x, at.y, encounter)).setDepth(4);
     sprite.setSize(width, height).setOffset(x, y);
+    if (CHASE[encounter]) { sprite.setImmovable(true).setCollideWorldBounds(true); this.physics.add.collider(sprite, this.walls); }
     // Veiled mana reads as a faint, cool shimmer; open mana as a warm ring.
     const veiled = ENEMIES[encounter].veiled;
     const ring = this.add.ellipse(0, veiled ? 5 : 4, veiled ? 34 : 37, veiled ? 18 : 20).setStrokeStyle(1, veiled ? 0x9dbbb4 : 0xd2b675, veiled ? 0.65 : 0.7);
     const mana = this.add.text(0, veiled ? -24 : -23, `◇ ${enemyMana(createBattle(encounter))}`, { fontFamily: 'monospace', fontSize: '8px', color: veiled ? '#b7d3c7' : '#dbc58b' }).setOrigin(0.5);
     const signature = this.add.container(at.x, at.y, [ring, mana]).setDepth(5);
     this.tweens.add({ targets: ring, alpha: veiled ? 0.15 : 0.35, duration: veiled ? 1400 : 1000, yoyo: true, repeat: -1 });
-    const foe: Foe = { encounter, sprite, signature, defeat, ambush };
+    const foe: Foe = { encounter, sprite, signature, defeat, ambush, home: { x: at.x, y: at.y }, phase: this.foes.length * 1.7 };
     this.foes.push(foe);
     this.physics.add.overlap(this.player, sprite, () => this.beginBattle(foe));
   }
@@ -367,8 +393,11 @@ export class AreaScene extends Phaser.Scene {
     if(then.find || then.learn || then.give) music.effect('find');
     if(then.earn || then.pay) music.effect('coins');
     if(then.rest) music.effect('rest');
+    const before=roster(loadWorld());
     const next=apply(this.context(), then);
     saved=saveWorld(next.world)&&saveGrimoire(next.studied);
+    // A companion who has just joined takes their own grimoire back.
+    for(const member of roster(next.world).filter(member=>!before.includes(member))) saved=saveBooks(reclaim(loadBooks(), member)) && saved;
     this.refreshProps();
     this.renderMemory();
   }
@@ -515,7 +544,7 @@ export class AreaScene extends Phaser.Scene {
     element('prompt').textContent = '';
     this.setExplorationEnabled(false);
     music.effect('open');
-    this.overlay = new EquipmentView(loadGear(), loadBooks(), loadWorld().found, roster(loadWorld()), hollow(loadMemory()), this.textures.getBase64('hero'),
+    this.overlay = new EquipmentView(loadGear(), settle(loadBooks(), roster(loadWorld())), loadWorld().found, roster(loadWorld()), hollow(loadMemory()), this.textures.getBase64('hero'),
       (gear, books) => { saved = saveGear(gear) && saveBooks(books); },
       () => { this.overlay?.destroy(); this.overlay = undefined; this.renderMemory(); this.resumeExploration(); });
   }
@@ -555,7 +584,7 @@ export class AreaScene extends Phaser.Scene {
   // The party as it stands: memories, keepsakes, grimoires, companions, supplies, wounds, and spent mana.
   private partyOptions(): BattleOptions {
     const world = loadWorld();
-    return { hollow: hollow(loadMemory()), gear: loadGear(), books: loadBooks(), roster: roster(world), supplies: world.supplies, wounds: world.wounds, drained: world.drained };
+    return { hollow: hollow(loadMemory()), gear: loadGear(), books: settle(loadBooks(), roster(world)), roster: roster(world), supplies: world.supplies, wounds: world.wounds, drained: world.drained };
   }
 
   private toggleHud() {
@@ -602,6 +631,25 @@ export class AreaScene extends Phaser.Scene {
     if(this.active){x=0;y=0;}
     const motion=new Phaser.Math.Vector2(x,y).normalize().scale(70);
     this.player.setVelocity(motion.x,motion.y);
+    // Enemies come alive: they bob where they stand, turn to face the hero, and the ordinary ones give chase.
+    for(const foe of this.foes) {
+      if(!foe.sprite.active) continue;
+      const toHero=Phaser.Math.Distance.Between(this.player.x,this.player.y,foe.sprite.x,foe.sprite.y);
+      const chase=CHASE[foe.encounter];
+      if(chase) {
+        const fromHome=Phaser.Math.Distance.Between(foe.sprite.x,foe.sprite.y,foe.home.x,foe.home.y);
+        // Talking stops the world; a foe just fled from gives the hero a moment and goes home.
+        const resting=this.active || (foe.fledAt!==undefined && this.time.now-foe.fledAt<2500);
+        const hunting=!resting && toHero<chase.sight && fromHome<LEASH;
+        if(hunting) this.physics.moveTo(foe.sprite,this.player.x,this.player.y,chase.speed);
+        else if(!this.active && fromHome>3) this.physics.moveTo(foe.sprite,foe.home.x,foe.home.y,chase.speed*0.6);
+        else foe.sprite.setVelocity(0);
+        foe.signature.setPosition(foe.sprite.x,foe.sprite.y);
+      }
+      if(toHero<150) foe.sprite.setFlipX(this.player.x<foe.sprite.x);
+      foe.sprite.setOrigin(0.5,0.5+Math.sin(time/320+foe.phase)*0.025);
+    }
+    for(const person of this.people) if(person.active && Phaser.Math.Distance.Between(this.player.x,this.player.y,person.x,person.y)<80) person.setFlipX(this.player.x<person.x);
     // Ambushers' signatures flicker out as the hero comes near, and come back once he is clear.
     for(const foe of this.foes) {
       if(!foe.ambush || !foe.sprite.active) continue;
@@ -616,8 +664,8 @@ export class AreaScene extends Phaser.Scene {
     if(x) this.player.setFlipX(x<0);
     this.player.setDepth(4);
     this.shadow.setPosition(this.player.x,this.player.y+9);
-    // A restrained walking bob, while the physics body stays steady.
-    this.player.setOrigin(0.5,0.5+(x||y?Math.sin(time/85)*0.025:0));
+    // A restrained walking bob, or slow breathing when standing still, while the physics body stays steady.
+    this.player.setOrigin(0.5,0.5+(x||y?Math.sin(time/85)*0.025:Math.sin(time/520)*0.012));
     const context=this.context();
     this.nearby=this.points.filter(p=>p.name in this.area.exits || p.name in (this.area.fishing ?? {}) || p.name in (this.area.camps ?? {}) || (p.name in this.area.dialogue
       && !this.area.dialogue[p.name].hiddenIf?.some(condition=>holds(context, condition))))

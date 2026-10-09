@@ -93,7 +93,7 @@ export const FARMLAND: Area = {
   enemies: [
     // The reeve's fields: clearing both earns the writ that frees the bear.
     { point: 'locust', encounter: 'locust', defeat: { set: 'pests-field' } }, { point: 'locust-road', encounter: 'locust' },
-    { point: 'weevil-yard', encounter: 'weevil', defeat: { set: 'pests-yard' } }, { point: 'weevil-orchard', encounter: 'weevil' }, { point: 'weevil-woods', encounter: 'weevil' },
+    { point: 'weevil-yard', encounter: 'weevil', defeat: { set: 'pests-yard' } }, { point: 'weevil-orchard', encounter: 'weevil' }, { point: 'weevil-woods', encounter: 'weevil', ambush: true },
     { point: 'exile', encounter: 'acolyte' },
     { point: 'swarm', encounter: 'swarm', hiddenIf: [{ flag: 'swarm-slain' }], defeat: { set: 'swarm-slain' } },
     // Guardians of the harder keepsakes. Their caches appear only once they are dead.
@@ -225,8 +225,9 @@ export const DOWNS: Area = {
   grade: { saturation: -0.3, brightness: 0.86, vignette: 0.4 },
   npcs: [{ point: 'ram', texture: 'ram' }],
   enemies: [
-    { point: 'hound-west', encounter: 'hound', hiddenIf: [{ flag: 'hounds-fed' }] },
-    { point: 'hound-east', encounter: 'hound', hiddenIf: [{ flag: 'hounds-fed' }] },
+    // Hounds hunt the way hounds do: unseen until they are on you.
+    { point: 'hound-west', encounter: 'hound', hiddenIf: [{ flag: 'hounds-fed' }], ambush: true },
+    { point: 'hound-east', encounter: 'hound', hiddenIf: [{ flag: 'hounds-fed' }], ambush: true },
     { point: 'pack', encounter: 'pack', hiddenIf: PACK_GONE, defeat: { set: 'pack-slain' } },
   ],
   props: [
@@ -263,7 +264,7 @@ export const FEN: Area = {
   dialogue: fen, ground: 'grass', surfaces: { 2: 'water', 3: 'wood', 10: 'water' }, grade: { saturation: -0.45, brightness: 0.7, vignette: 0.55 },
   npcs: [{ point: 'otter', texture: 'otter', hiddenIf: [{ flag: 'otter-reported' }] }],
   enemies: [
-    { point: 'wisp-1', encounter: 'wisp' }, { point: 'wisp-2', encounter: 'wisp' },
+    { point: 'wisp-1', encounter: 'wisp' }, { point: 'wisp-2', encounter: 'wisp', ambush: true },
     { point: 'drowned', encounter: 'drowned', hiddenIf: [{ flag: 'drowned-slain' }], defeat: { set: 'drowned-slain' } },
   ],
   props: [
@@ -328,12 +329,12 @@ export const BARRACKS: Area = { ...INDOORS, region: 'THE HIGHLANDS', key: 'barra
 export const BATTLEFIELD: Area = {
   ...HIGHLAND_GROUND, key: 'battlefield', map: 'battlefield', music: 'highlands', place: 'The old battlefield', time: 'Afternoon', dialogue: battlefield,
   grade: { saturation: -0.5, brightness: 0.74, vignette: 0.55 }, assets: ['ghoul'],
-  // The vulture fights the hero once, as a grave thief; after that she will talk.
-  npcs: [{ point: 'vulture', texture: 'vulture', hiddenIf: [{ not: { flag: 'vulture-met' } }, { flag: 'vulture-free' }] }],
+  // The vulture takes the hero for a grave thief and fights him once, unless he comes carrying her own note. After that she will talk.
+  npcs: [{ point: 'vulture', texture: 'vulture', hiddenIf: [{ not: { any: [{ flag: 'vulture-met' }, { has: 'note' }] } }, { flag: 'vulture-free' }] }],
   enemies: [
-    { point: 'vulture', encounter: 'vulture', hiddenIf: [{ flag: 'vulture-met' }], defeat: { set: 'vulture-met' } },
+    { point: 'vulture', encounter: 'vulture', hiddenIf: [{ flag: 'vulture-met' }, { has: 'note' }], defeat: { set: 'vulture-met' } },
     // The hyena raises the dead; with her gone they stay down.
-    { point: 'ghoul-1', encounter: 'ghoul', hiddenIf: [{ flag: 'hyena-slain' }] }, { point: 'ghoul-2', encounter: 'ghoul', hiddenIf: [{ flag: 'hyena-slain' }] },
+    { point: 'ghoul-1', encounter: 'ghoul', hiddenIf: [{ flag: 'hyena-slain' }], ambush: true }, { point: 'ghoul-2', encounter: 'ghoul', hiddenIf: [{ flag: 'hyena-slain' }], ambush: true },
   ],
   props: Array.from({ length: 8 }, (_, i) => ({ point: `gap-${i + 1}`, texture: 'chasm', solid: true, hiddenIf: [{ flag: 'bridge-lowered' as const }] })),
   exits: {

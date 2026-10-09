@@ -94,10 +94,13 @@ export const barracks: Dialogue = {
 
 export const battlefield: Dialogue = {
   // After the duel she stops attacking, but she does not trust the hero until her own note tells her to.
-  vulture: { speaker: 'THE VULTURE', prompt: 'Speak to the vulture', hiddenIf: [{ not: { flag: 'vulture-met' } }, { flag: 'vulture-free' }], lines: [
+  vulture: { speaker: 'THE VULTURE', prompt: 'Speak to the vulture', hiddenIf: [{ not: { any: [{ flag: 'vulture-met' }, { has: 'note' }] } }, { flag: 'vulture-free' }], lines: [
     'You again. You\'re not a grave thief. You still smell like one.',
     'I don\'t know you. I don\'t know most people. The ones that matter, I write on my arm.',
-  ], choices: [
+  ], variants: [{ if: { not: { flag: 'vulture-met' } }, lines: [
+    'She drops from the dead tree with her talons out, then stops. She is looking at the paper in your hand.',
+    '"That\'s my writing. Where did you get it?"',
+  ] }], choices: [
     { text: 'We were a unit. Five of us.', lines: ['My arm doesn\'t say so.'] },
     { text: 'What is taking the bodies?', lines: [
       'Not me. The drag marks go east, to the ravine. The bridge is up on the far side.',
@@ -180,3 +183,5 @@ export const ossuary: Dialogue = {
     '"Neatly done," the vulture says. She doesn\'t say anything else for a while.',
   ] }] },
 };
+// Meeting her with the note in hand offers the same replies.
+battlefield.vulture.variants![0].choices = battlefield.vulture.choices;

@@ -196,7 +196,7 @@ Each hero carries one grimoire, chosen on the equipment screen, which sets their
 
 Spells have consequences inside a fight. After casting, a grimoire needs time to settle: damage spells can't be cast again the very next round, and Stone ward, Still water, and Bramble snare wait two rounds. The spell button shows when it's ready. Casting also floods the caster's mana into view for the enemy turn (+8 to the mana enemies see), so the enemy turns on the caster unless someone guards them; casting ends hiding. A fizzle triggers the cooldown and the flare too.
 
-Any hero can carry any grimoire, which is how the guideline's "the grimoire is the class" begins: giving the bear the primer makes him the healer. Damage spells follow the same targeting as attacks, so the boar still shields his followers from them. Which hero carries which grimoire is saved in `tide-keeps.books.v1`. These carried grimoires are separate from the shared grimoire of studied enemy spells.
+A companion's own grimoire can't be lent to anyone before they join, and a companion who joins takes theirs back from whoever was carrying it. Any hero can carry any grimoire, which is how the guideline's "the grimoire is the class" begins: giving the bear the primer makes him the healer. Damage spells follow the same targeting as attacks, so the boar still shields his followers from them. Which hero carries which grimoire is saved in `tide-keeps.books.v1`. These carried grimoires are separate from the shared grimoire of studied enemy spells.
 
 ## Dodging
 
@@ -263,6 +263,8 @@ The road ends at the boar's burned farm, where he waits between his followers, a
 
 Nothing marks the quest. A carried item is lost on a wipe and returns to where it was found. The opened hedge and learned spells persist, saved in `tide-keeps.world.v1` and the grimoire.
 
+Ordinary enemies notice the hero when he comes close and come after him, a little slower than he walks; they give up and go back if he gets far enough away (`CHASE` in `src/scenes/AreaScene.ts`). Bosses and guardians hold their ground. Ambushers hide their mana: besides the highland raiders, the downs hounds, the battlefield's raised dead, a weevil in the dark woods, and one of the fen's marsh lights strike first if they reach you unseen. People breathe and turn to look at the hero as he passes, enemies bob and face him, and in battle every fighter breathes, heroes hop when they act, and anyone hit flinches.
+
 Every fight is optional except the boar. Leaving an area and coming back respawns its enemies. A wipe anywhere wakes the party at the church cot, and **Return to the cot** works from any area.
 
 ## The highlands
@@ -272,7 +274,7 @@ Once the boar is dead the priest has new orders: bodies are going missing from t
 - **The high pass.** Switchbacks up through rock bands and snow. **Highland raiders** hide their mana: their signatures show from a distance but flicker out as you come near, and touching one then is an **ambush**, so the fight opens on the enemy's turn. A courier lies dead on a scree ledge with a sealed letter for the fort's quartermaster. It's a carried item, so a wipe loses it and it goes back to the body. There is a fire partway up (4 coins).
 - **The fort town.** A carnivore garrison, where the social order flips: nobody stares at a reptile or a bear, and the frightened ones are the herbivore merchants behind their own wall. A goat sells through the bars at the board price, and a weasel in the alley runs the black market, buying fish and selling salts and firepots at fair prices. Families queue for a fish ration that shrinks every week. Delivering the courier's letter shows the church cut the ration before any unrest, and pays 15 coins. The garrison fire costs 4.
 - **The barracks.** Under the long bunk built for wings, the vulture hid a note in her own hand: TRUST THE CHAMELEON.
-- **The battlefield.** The vulture clears the dead. She doesn't know the hero and attacks him as a grave thief: a duel you only need to **survive for three rounds**, because she cannot be brought down. After that she'll talk but won't trust you. Bring her the note and she joins, as the third party member. The **raised dead** wander the graves, and drag marks lead to a ravine whose bridge is raised on the far side. No spell opens it; ask the vulture and she flies over and drops it.
+- **The battlefield.** The vulture clears the dead. She doesn't know the hero and attacks him as a grave thief: a duel you only need to **survive for three rounds**, because she cannot be brought down. After that she'll talk but won't trust you. Bring her the note and she joins, as the third party member. Come to her already carrying the note and she stops before attacking, and there is no fight. The **raised dead** wander the graves, and drag marks lead to a ravine whose bridge is raised on the far side. No spell opens it; ask the vulture and she flies over and drops it.
 - **The ruined abbey.** Two deserters hold the gate, a hexer and a brute. In the same round the hexer casts Salt lance and the brute swings a heavy pick, so the party has to guard against one and raise a barrier against the other. The hexer's spell can be analyzed like the exile's. A memorial to the winter of no bread stands outside, and the Famine spoon (a keepsake: shows 3 less mana, but 3 less health) is hidden behind the altar.
 - **The ossuary.** The hyena keeps the dead of the famine in its niches. She attacks with two ghouls. Every few rounds she **feeds on a fallen body**, healing and growing stronger for the rest of the fight. A fallen hero is safe only under a barrier, which can now be cast on the fallen, and she will eat her own downed ghouls, which she then can't raise again. Beaten, she tells you why she was exiled, that the man with no fur ate at her table, and that her ledger proves the church cut the fish first. The vulture notices the kingdom punished her with the same work it exiled the hyena for.
 - **Afterwards.** On the pass, a signature far larger than anything so far waits by the road: the inquisitor. He cannot be beaten yet. Run.
@@ -353,6 +355,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/buildings.spec.ts` — entering the hall, tannery, and mill.
 - `tests/music.spec.ts` — themes per place and battle, muting, volume, and levels.
 - `tests/rules/themes.test.ts` — every theme fits its loop and range.
+- `tests/alive.spec.ts` — enemies chasing and giving up, and fighters reacting in battle.
 - `tests/highlands.spec.ts` — the pass and its ambushes, the courier's letter, the vulture's duel and note, the bridge, anchors, the deserters, the hyena, and the inquisitor.
 - `tests/rules/highlands.test.ts` — ambushes, the survival duel, the paired spell and blow, the hyena's feeding, and anchors.
 - `tests/footsteps.spec.ts` — which surface the hero is standing on.

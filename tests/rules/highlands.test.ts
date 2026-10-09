@@ -70,3 +70,22 @@ test('a written-down memory survives the next death, then has to be written agai
   // One slot: writing another replaces it.
   assert.deepEqual(anchor(anchor(memory, 'feast'), 'bear').anchors, ['bear']);
 });
+
+test("a companion's own grimoire cannot be borrowed before they join, and comes back when they do", async () => {
+  const { settle, STARTING_BOOKS } = await import('../../src/rules/spells.ts');
+  // The chameleon took the vulture's Windward before she joined.
+  const borrowed = { chameleon: 'windward' as const, bear: 'riverstone' as const, vulture: null };
+  const before = settle(borrowed, ['chameleon', 'bear']);
+  assert.equal(before.chameleon, 'thornwork', 'he gets his own back');
+  assert.equal(before.vulture, 'windward');
+  assert.deepEqual(settle(borrowed, ['chameleon', 'bear', 'vulture']), { chameleon: 'windward', bear: 'riverstone', vulture: null });
+  // Joined with nothing, she gets Windward back once it is free.
+  assert.deepEqual(settle({ chameleon: 'pond-primer', bear: 'riverstone', vulture: null }, ['chameleon', 'bear', 'vulture']), { chameleon: 'pond-primer', bear: 'riverstone', vulture: 'windward' });
+  assert.deepEqual(settle(STARTING_BOOKS, ['chameleon']), STARTING_BOOKS);
+});
+
+test('joining takes back your own grimoire from whoever carried it', async () => {
+  const { reclaim } = await import('../../src/rules/spells.ts');
+  assert.deepEqual(reclaim({ chameleon: 'windward', bear: 'riverstone', vulture: null }, 'vulture'), { chameleon: 'thornwork', bear: 'riverstone', vulture: 'windward' });
+  assert.deepEqual(reclaim({ chameleon: 'pond-primer', bear: 'riverstone', vulture: null }, 'vulture'), { chameleon: 'pond-primer', bear: 'riverstone', vulture: 'windward' });
+});
