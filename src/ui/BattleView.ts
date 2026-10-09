@@ -1,4 +1,4 @@
-import { act, canAct, canCast, canFlee, canUse, cast, flee, GATHER, useSupply, warded, condition, cost, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
+import { act, canAct, canCast, canFlee, canUse, cast, flee, GATHER, SURVIVE, useSupply, warded, condition, cost, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
 import type { Action, Battle, BattleOptions, Dodge, Fighter, Foe, MemberId, Encounter } from '../rules/battle';
 import { checkSequence, SPELLS } from '../rules/spells';
 import { BOUNTY, SUPPLIES, SUPPLY_IDS } from '../rules/economy';
@@ -122,6 +122,8 @@ export class BattleView {
     }, { signal });
     this.root.tabIndex = -1;
     this.render(); this.focusNext();
+    // An ambush opens on the enemy's turn.
+    if (this.state.phase === 'enemy') { this.root.focus({ preventScroll: true }); this.timer = setTimeout(() => this.enemyTurn(), 900); }
   }
 
   private bindDrag(actor: MemberId) {
@@ -321,7 +323,7 @@ export class BattleView {
     const done = state.phase === 'victory' || state.phase === 'defeat' || state.phase === 'fled';
     const remaining = state.party.filter(member => member.health > 0 && !member.acted).length;
     this.root.dataset.phase = state.phase;
-    this.get('#battle-turn').textContent = done ? (state.phase === 'fled' ? 'You run. Half your coins scatter behind you.' : state.phase === 'victory' ? `It falls quiet. You find ${BOUNTY[state.encounter]} coins.${state.party.some(member => member.health < member.maxHealth) ? ' Your wounds will linger until you rest at a fire.' : ''}` : 'The party falls.')
+    this.get('#battle-turn').textContent = done ? (state.phase === 'fled' ? 'You run. Half your coins scatter behind you.' : state.phase === 'victory' ? `${SURVIVE[state.encounter] ? 'You lived through it.' : `It falls quiet. You find ${BOUNTY[state.encounter]} coins.`}${state.party.some(member => member.health < member.maxHealth) ? ' Your wounds will linger until you rest at a fire.' : ''}` : 'The party falls.')
       : `Round ${state.round} · ${state.phase === 'player' ? `${remaining} actions remaining` : 'The enemy moves'}`;
     this.get('#enemy-condition').textContent = condition(state.enemy);
     this.renderHealth(this.get('.enemy-row .health-bar'), state.enemy);
@@ -337,7 +339,7 @@ export class BattleView {
       if (strike.selectedOptions[0]?.disabled) strike.value = Array.from(strike.options).find(option => !option.disabled)?.value ?? '0';
       strike.disabled = state.phase !== 'player';
     }
-    this.get('#enemy-mana').textContent = `Mana ${enemyMana(state)}${ENEMIES[state.encounter].veiled && !state.enemyRevealed ? ' · veiled' : ''}${state.fury ? ` · Fury ${state.fury}` : ''}${warded(state) ? ' · warded by its votives' : ''}`;
+    this.get('#enemy-mana').textContent = `Mana ${enemyMana(state)}${ENEMIES[state.encounter].veiled && !state.enemyRevealed ? ' · veiled' : ''}${state.fury ? ` · ${state.encounter === 'hyena' ? 'Fed' : 'Fury'} ${state.fury}` : ''}${warded(state) ? ' · warded by its votives' : ''}`;
     const target = enemyTarget(state);
     this.get('#enemy-intent').textContent = done ? '' : state.enemy.health === 0 ? `The ${ENEMIES[state.encounter].short} is down. What stood with it fights on.`
       : state.snared ? 'Snared · thorns hold it. It cannot move this turn.'

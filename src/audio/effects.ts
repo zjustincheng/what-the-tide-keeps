@@ -1,6 +1,6 @@
 // Sound effects, synthesised on the spot: a few oscillators and some noise for each.
 // What the ground underfoot is made of, which sets the sound of each footstep.
-export type Surface = 'grass' | 'dirt' | 'stone' | 'wood' | 'water' | 'leaves' | 'straw';
+export type Surface = 'grass' | 'dirt' | 'stone' | 'wood' | 'water' | 'leaves' | 'straw' | 'snow';
 export type Effect =
   | 'blip' | 'select' | 'open' | 'door' | 'find' | 'coins' | 'rest' | `step-${Surface}`
   | 'cast-line' | 'plop' | 'splash' | 'catch'
@@ -62,6 +62,7 @@ export function playEffect(context: BaseAudioContext, out: AudioNode, noise: Aud
     'step-wood': () => { tone('triangle', 190, 150, 0, 0.1, 0.32); tone('sine', 380, 300, 0, 0.05, 0.1); hiss('bandpass', 900, 700, 0, 0.04, 0.1, 2); },
     'step-water': () => { hiss('lowpass', 2600, 500, 0, 0.2, 0.26); tone('sine', 320, 120, 0.01, 0.09, 0.1); },
     'step-leaves': () => { for (let i = 0; i < 3; i++) hiss('bandpass', 3600, 2400, i * 0.025, 0.035, 0.18, 3); tone('sine', 100, 65, 0, 0.05, 0.08); },
+    'step-snow': () => { hiss('bandpass', 2200, 1100, 0, 0.12, 0.26, 2.5); hiss('lowpass', 700, 300, 0.02, 0.08, 0.12); },
     'step-straw': () => { hiss('bandpass', 2600, 1500, 0, 0.13, 0.22, 1); hiss('highpass', 4000, 3000, 0.04, 0.05, 0.08); },
     open: () => { hiss('bandpass', 600, 1800, 0, 0.18, 0.12, 0.8); tone('sine', 330, 330, 0, 0.12, 0.06); },
     door: () => { hiss('bandpass', 380, 140, 0, 0.45, 0.12, 6); tone('sine', 70, 50, 0.35, 0.2, 0.18); },

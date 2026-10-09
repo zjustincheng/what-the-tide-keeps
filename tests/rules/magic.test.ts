@@ -58,12 +58,13 @@ test('analysis consumes an action and mana; known barriers stop magic but never 
   assert.equal(physical.party[1].health, physical.party[1].maxHealth - 4);
 });
 
-test('barriers cost five, cannot target the fallen, and spells are not learned on a total wipe', () => {
+test('barriers cost five, can cover the fallen, and spells are not learned on a total wipe', () => {
   const initial = createBattle('acolyte');
   const low = { ...initial, party: initial.party.map(member => ({ ...member, mana: 4 })) };
   assert.equal(canAct(low, 'chameleon', 'barrier'), false);
   const fallen = { ...initial, party: initial.party.map(member => ({ ...member, health: member.id === 'bear' ? 1 : 0 })) };
-  assert.equal(canAct(fallen, 'bear', 'barrier', 'vulture'), false);
+  // A barrier over a fallen ally keeps the hyena from feeding on the body.
+  assert.equal(canAct(fallen, 'bear', 'barrier', 'vulture'), true);
   const wipe = resolveEnemy({ ...fallen, round: 2, phase: 'enemy' });
   assert.equal(wipe.phase, 'defeat');
   assert.deepEqual(wipe.studied, []);

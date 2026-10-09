@@ -10,16 +10,19 @@ import type { Supplies, SupplyId } from './economy';
 import type { Drained, Wounds } from './world';
 export type MemberId = 'chameleon' | 'bear' | 'vulture';
 export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze' | 'gather';
-export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm' | 'warden' | 'leech' | 'hound' | 'pack' | 'wisp' | 'drowned';
+export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm' | 'warden' | 'leech' | 'hound' | 'pack' | 'wisp' | 'drowned'
+  | 'raider' | 'ghoul' | 'vulture' | 'pair' | 'hyena' | 'inquisitor';
 export const SPELL = 'Salt lance';
 export type Phase = 'player' | 'enemy' | 'victory' | 'defeat' | 'fled';
 export type Fighter = Readonly<{ health: number; maxHealth: number; mana: number; maxMana: number }>;
-export type Follower = Fighter & Readonly<{ name: string }>;
+// A follower the hyena has fed on is gone for good: it cannot be raised again.
+export type Follower = Fighter & Readonly<{ name: string; eaten?: boolean }>;
 // Who an attack is aimed at: 0 is the main enemy, 1 and up are its followers.
 export type Foe = number;
 // revive: the move raises fallen followers instead of striking. drain: the attacker heals by what it deals.
 // window: this blow's dodge timing, tighter for stronger enemies. undodgeable: only a guard or barrier answers it.
-type Move = { name: string; type: 'physical' | 'spell'; damage: number; piercing?: number; revive?: boolean; drain?: boolean;
+// feed: the hyena feeds on a fallen body instead of striking, unless a barrier covers it.
+type Move = { name: string; type: 'physical' | 'spell'; damage: number; piercing?: number; revive?: boolean; drain?: boolean; feed?: boolean;
   window?: { perfect: number; graze: number }; undodgeable?: boolean };
 export type Member = Fighter & Readonly<{
   id: MemberId;
@@ -92,9 +95,23 @@ export const ENEMIES = {
     opening: 'A pale light hangs over the water, the height of a lantern held by someone short. Nobody is holding it.' },
   drowned: { name: 'The drowned', short: 'drowned', health: 84, mana: 5, veiled: false,
     opening: 'Something in a rotted cassock stands up out of the chapel water. The bell rope is still in its hands.' },
+  // The highlands: raiders who hide their mana, the dead who will not stay buried, and the people who make them rise.
+  raider: { name: 'Highland raider', short: 'raider', health: 46, mana: 6, veiled: true,
+    opening: 'There was nothing on the road a moment ago. Now a raider is standing in it, and the blade is already moving.' },
+  ghoul: { name: 'Raised dead', short: 'dead', health: 38, mana: 0, veiled: false,
+    opening: 'Something that was buried here gets up. It is still wearing a garrison coat.' },
+  vulture: { name: 'The vulture', short: 'vulture', health: 60, mana: 10, veiled: false,
+    opening: 'A vulture in a gravedigger\'s sash drops from the dead tree. "Grave thief," she says, and does not wait for an answer. You only need to live through this.' },
+  pair: { name: 'Deserter hexer', short: 'hexer', health: 44, mana: 14, veiled: false,
+    opening: 'Two deserters step out of the abbey gate: a hexer with ink on his hands, and a brute with a pick. They have done this together before.' },
+  hyena: { name: 'The hyena', short: 'hyena', health: 90, mana: 8, veiled: false,
+    opening: 'The hyena looks up from the bones. "Nobody comes down here to pray." Behind her, the dead she keeps get up.' },
+  inquisitor: { name: 'The inquisitor', short: 'inquisitor', health: 600, mana: 60, veiled: false,
+    opening: 'The largest signature you have ever felt. A ram in grey, the royal seal at his collar. "Convict. You are a long way from your church." You cannot win this. Run.' },
 } as const satisfies Record<Encounter, unknown>;
 // Outcast omnivores who follow the boar. They hide their mana; he shields them with his own body.
-export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; health: number; weapon: string }[]>> = {
+// damage: what each blow does, when it is more than the usual follower's blow.
+export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; health: number; weapon: string; damage?: number }[]>> = {
   boar: [{ name: 'Badger', health: 16, weapon: 'cudgel' }, { name: 'Rat', health: 12, weapon: 'cudgel' }],
   // The swarm-mother's brood can be killed, but she calls them back.
   swarm: [{ name: 'Nymph', health: 10, weapon: 'bite' }, { name: 'Nymph', health: 10, weapon: 'bite' }],
@@ -102,9 +119,19 @@ export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; healt
   warden: [{ name: 'Votive', health: 8, weapon: 'flare' }, { name: 'Votive', health: 8, weapon: 'flare' }],
   // The pack fights for its leader and goes on fighting without him.
   pack: [{ name: 'Hound', health: 14, weapon: 'bite' }, { name: 'Hound', health: 14, weapon: 'bite' }],
+  // The hexer's brute hits hard and physically, in the same round the hexer casts.
+  pair: [{ name: 'Brute', health: 30, weapon: 'pick', damage: 7 }],
+  // The hyena's dead get up again, unless she has eaten them.
+  hyena: [{ name: 'Ghoul', health: 14, weapon: 'claws' }, { name: 'Ghoul', health: 14, weapon: 'claws' }],
 };
+// Fights the party only has to live through: the enemy cannot fall, and the fight ends after this many rounds.
+export const SURVIVE: Partial<Record<Encounter, number>> = { vulture: 3 };
+// Enemies that cast a studied spell, which can be analyzed and barred.
+const CASTERS: readonly Encounter[] = ['acolyte', 'pair'];
+// How much stronger the hyena grows with every body she feeds on.
+export const FEED = 4;
 // Followers who give up once their leader falls. Everyone else fights until the last of them is down.
-export const YIELDING: Partial<Record<Encounter, true>> = { boar: true };
+export const YIELDING: Partial<Record<Encounter, true>> = { boar: true, hyena: true };
 export const FURY_PER_HIT = 3;
 export const FOLLOWER_BLOW = 2;
 export const COST = { attack: 0, support: 0, suppress: 1, barrier: 5, analyze: 2, gather: 0 } as const;
@@ -125,9 +152,11 @@ export type BattleOptions = Readonly<{
   hollow?: Hollow; gear?: Gear; books?: Books; roster?: readonly MemberId[]; supplies?: Supplies;
   // Damage and spent mana carried in from earlier fights, until the party rests.
   wounds?: Wounds; drained?: Drained;
+  // An ambush gives the enemy the first turn.
+  ambush?: boolean;
 }>;
 export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], options: BattleOptions = {}): Battle {
-  const { hollow = UNHOLLOWED, gear, books = STARTING_BOOKS, roster = MEMBER_IDS, supplies = NO_SUPPLIES, wounds = {}, drained = {} } = options;
+  const { hollow = UNHOLLOWED, gear, books = STARTING_BOOKS, roster = MEMBER_IDS, supplies = NO_SUPPLIES, wounds = {}, drained = {}, ambush = false } = options;
   const member = (id: MemberId, base: number, mana: number): Member => {
     const worn = gear ? mods(gear, id) : NO_MODS;
     const maxHealth = Math.max(1, base + worn.health);
@@ -139,12 +168,12 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
   const size = Math.max(1, Math.min(3, roster.length));
   const scaled = (health: number) => Math.round(health * PARTY_SCALE[size - 1]);
   return {
-    round: 1, phase: 'player', encounter, studied: studied.includes(SPELL) ? [SPELL] : [], hollow, enemyRevealed: false,
+    round: 1, phase: ambush ? 'enemy' : 'player', encounter, studied: studied.includes(SPELL) ? [SPELL] : [], hollow, enemyRevealed: false,
     party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10)].filter(member => roster.includes(member.id)),
     enemy: { health: scaled(ENEMIES[encounter].health), maxHealth: scaled(ENEMIES[encounter].health), mana: ENEMIES[encounter].mana, maxMana: ENEMIES[encounter].mana },
     followers: (FOLLOWERS[encounter] ?? []).map(({ name, health }) => ({ name, health: scaled(health), maxHealth: scaled(health), mana: 4, maxMana: 4 })),
     fury: 0, step: 0, snared: false, supplies,
-    log: [ENEMIES[encounter].opening],
+    log: [ENEMIES[encounter].opening, ...(ambush ? ['Ambush! It moves before you can.'] : [])],
   };
 }
 
@@ -189,7 +218,7 @@ export function condition(fighter: Fighter): string {
 }
 
 export function visibleMana(member: Member): number {
-  return member.suppressed ? Math.min(1, member.mana) : member.mana + member.gear.shown + (member.flaring ? FLARE : 0);
+  return member.suppressed ? Math.min(1, member.mana) : Math.max(0, member.mana + member.gear.shown + (member.flaring ? FLARE : 0));
 }
 
 // What an action costs this member, after keepsakes.
@@ -246,6 +275,31 @@ export function intent(battle: Battle): Move & { tell: string } {
       ? { name: 'Pull under', type: 'physical', tell: 'It lets go of the rope and reaches for you. It will try to pull someone under.', damage: 12, window: { perfect: 45, graze: 110 } }
       : { name: 'Grasp', type: 'physical', tell: 'Cold hands come up out of the water.', damage: 5 };
   }
+  if (battle.encounter === 'raider') return battle.round % 2 === 0
+    ? { name: 'Ambush cut', type: 'physical', tell: 'It drops out of sight again. The next cut comes from nowhere, fast.', damage: 9, window: { perfect: 45, graze: 120 } }
+    : { name: 'Hatchet', type: 'physical', tell: 'A hatchet comes up.', damage: 5 };
+  if (battle.encounter === 'ghoul') return battle.round % 3 === 0
+    ? { name: 'Gnaw', type: 'physical', tell: 'Its jaw hangs open. Whatever it bites, it keeps.', damage: 7, drain: true }
+    : { name: 'Claw', type: 'physical', tell: 'It reaches for you.', damage: 4 };
+  if (battle.encounter === 'vulture') return battle.round % 3 === 0
+    ? { name: 'Stoop', type: 'physical', tell: 'She climbs out of reach. She will drop on you, fast.', damage: 10, window: { perfect: 45, graze: 120 } }
+    : { name: 'Talon rake', type: 'physical', tell: 'Her talons come forward.', damage: 6 };
+  if (battle.encounter === 'pair') {
+    const name = battle.studied.includes(SPELL) ? SPELL : '???';
+    return battle.round % 2 === 0
+      ? { name, type: 'spell', tell: `The hexer's hands are moving: ${name}, this turn, while the brute swings his pick. Both will land.`, damage: 14, window: { perfect: 50, graze: 130 } }
+      : { name: 'Knife', type: 'physical', tell: 'The hexer has a knife out. The brute is lifting his pick.', damage: 4 };
+  }
+  if (battle.encounter === 'hyena') {
+    const fed = battle.fury ? ` She has fed · ${battle.fury} more on every blow.` : '';
+    if (battle.round % 4 === 0 && battle.followers.some(follower => follower.health <= 0 && !follower.eaten))
+      return { name: 'Raise', type: 'physical', tell: `She calls the dead up again.${fed}`, damage: 0, revive: true };
+    if (battle.round % 3 === 0 && bodies(battle).length)
+      return { name: 'Feed', type: 'physical', tell: `She turns toward the fallen. She will feed this turn unless a barrier covers the body.${fed}`, damage: 0, feed: true };
+    return { name: 'Rend', type: 'physical', tell: `She comes in low.${fed}`, damage: 6 + battle.fury, piercing: Math.floor(battle.fury / 2) };
+  }
+  if (battle.encounter === 'inquisitor')
+    return { name: 'Verdict', type: 'physical', tell: 'He does not hurry. The verdict cannot be dodged.', damage: 14, undodgeable: true };
   if (battle.encounter === 'swarm') return battle.round % 3 === 0
     ? { name: 'Brood call', type: 'physical', tell: 'She shrills, and the brood answers. Fallen nymphs will rise again.', damage: 0, revive: true }
     : { name: 'Wing buffet', type: 'physical', tell: 'Her wings rattle. A buffet is coming.', damage: 5 };
@@ -255,6 +309,14 @@ export function intent(battle: Battle): Move & { tell: string } {
   return battle.round % 2 === 0
     ? { name: 'Crushing leap', type: 'physical' as const, tell: 'Its hind legs draw tight. A crushing leap is coming.', damage: 10 }
     : { name: 'Mandible strike', type: 'physical' as const, tell: 'Its mandibles part. It will strike.', damage: 4 };
+}
+
+// What the hyena could feed on: fallen heroes no barrier covers, then her own fallen dead.
+export function bodies(battle: Pick<Battle, 'party' | 'followers'>): ({ hero: Member } | { follower: number })[] {
+  return [
+    ...battle.party.filter(member => member.health <= 0 && !member.barrier).map(hero => ({ hero })),
+    ...battle.followers.flatMap((follower, index) => follower.health <= 0 && !follower.eaten ? [{ follower: index }] : []),
+  ];
 }
 
 // Mana ties prefer the bear, then the stable party order. Downed members never draw attacks.
@@ -293,8 +355,9 @@ export function canAct(battle: Battle, actor: MemberId, action: Action, target: 
   if (action === 'attack' && !standing(battle, foe)) return false;
   if (action === 'suppress' && member.suppressed) return false;
   if (action === 'gather' && member.mana >= member.maxMana) return false;
-  if (action === 'analyze' && (battle.encounter !== 'acolyte' || battle.studied.includes(SPELL))) return false;
-  if (action === 'barrier' && !battle.party.some(ally => ally.id === target && ally.health > 0)) return false;
+  if (action === 'analyze' && (!CASTERS.includes(battle.encounter) || battle.studied.includes(SPELL))) return false;
+  // A barrier can cover a fallen ally too, which keeps the hyena off the body.
+  if (action === 'barrier' && !battle.party.some(ally => ally.id === target)) return false;
   if (action === 'support') {
     if (!battle.party.some(member => member.id === target && member.health > 0)) return false;
     if (actor !== 'bear' && target !== actor) return false;
@@ -307,7 +370,9 @@ function land(battle: Battle, damage: number, foe: Foe) {
   const shielded = foe > 0 && battle.encounter === 'boar' && battle.enemy.health > 0;
   const blocked = foe === 0 && warded(battle);
   const dealt = blocked ? 0 : shielded ? Math.floor(damage / 2) : damage;
-  const enemy = foe === 0 || shielded ? { ...battle.enemy, health: Math.max(0, battle.enemy.health - dealt) } : battle.enemy;
+  // An enemy the party only has to survive cannot be brought down.
+  const floor = SURVIVE[battle.encounter] ? 1 : 0;
+  const enemy = foe === 0 || shielded ? { ...battle.enemy, health: Math.max(floor, battle.enemy.health - dealt) } : battle.enemy;
   const followers = foe > 0 && !shielded
     ? battle.followers.map((follower, index) => index === foe - 1 ? { ...follower, health: Math.max(0, follower.health - damage) } : follower)
     : battle.followers;
@@ -448,7 +513,10 @@ export function grade(errorMs: number, move: Move): Dodge {
 function enemyMoves(battle: Battle): Move[] {
   // A fallen leader takes no more turns; its followers do.
   return [...(battle.snared || battle.enemy.health <= 0 ? [] : [intent(battle)]), ...battle.followers.filter(follower => follower.health > 0)
-    .map(follower => ({ name: `${follower.name.toLowerCase()}'s ${FOLLOWERS[battle.encounter]!.find(kind => kind.name === follower.name)!.weapon}`, type: 'physical' as const, damage: FOLLOWER_BLOW }))];
+    .map(follower => {
+      const kind = FOLLOWERS[battle.encounter]!.find(kind => kind.name === follower.name)!;
+      return { name: `${follower.name.toLowerCase()}'s ${kind.weapon}`, type: 'physical' as const, damage: kind.damage ?? FOLLOWER_BLOW };
+    })];
 }
 
 // The next blow of the enemy turn: who it will hit, for how much, and whether it can be dodged.
@@ -473,10 +541,26 @@ export function strike(battle: Battle, dodge: Dodge = 'miss'): Battle {
   if (battle.phase !== 'enemy') return battle;
   const next = nextStrike(battle);
   if (!next) return enemyTurnEnds(battle);
+  if (next.move.feed) {
+    // She feeds on the first body she can reach. A barrier keeps her off a fallen hero.
+    const body = bodies(battle)[0];
+    const followers = body && 'follower' in body ? battle.followers.map((follower, index) => index === body.follower ? { ...follower, eaten: true } : follower) : battle.followers;
+    const eaten = !body ? undefined : 'hero' in body ? MEMBERS[body.hero.id].name : `her own ${battle.followers[body.follower].name.toLowerCase()}`;
+    const warded = battle.party.filter(member => member.health <= 0 && member.barrier).map(member => MEMBERS[member.id].name);
+    const after = {
+      ...battle, followers, step: battle.step + 1,
+      fury: battle.fury + (body ? FEED : 0),
+      enemy: body ? { ...battle.enemy, health: Math.min(battle.enemy.maxHealth, battle.enemy.health + 8) } : battle.enemy,
+      log: [...battle.log, ...(warded.length ? [`She circles ${warded.join(' and ')}, but the barrier holds her off.`] : []),
+        body ? `The hyena feeds on ${eaten}. She gets up stronger.` : 'She finds nothing she can reach.'],
+    };
+    return enemyMoves(after)[after.step] ? after : enemyTurnEnds(after);
+  }
   if (next.move.revive) {
-    const followers = battle.followers.map(follower => follower.health > 0 ? follower : { ...follower, health: follower.maxHealth });
+    const followers = battle.followers.map(follower => follower.health > 0 || follower.eaten ? follower : { ...follower, health: follower.maxHealth });
     const risen = followers.length - battle.followers.filter(follower => follower.health > 0).length;
-    const after = { ...battle, followers, step: battle.step + 1, log: [...battle.log, risen ? `The ${ENEMIES[battle.encounter].short} shrills. ${risen === 1 ? 'A fallen nymph rises' : 'Her fallen brood rises'} again.` : `The ${ENEMIES[battle.encounter].short} shrills, but her brood is already standing.`] };
+    const kin = battle.encounter === 'hyena' ? ['A ghoul gets up', 'Her dead get up', 'her dead are already standing'] : ['A fallen nymph rises', 'Her fallen brood rises', 'her brood is already standing'];
+    const after = { ...battle, followers, step: battle.step + 1, log: [...battle.log, risen ? `The ${ENEMIES[battle.encounter].short} calls. ${risen === 1 ? kin[0] : kin[1]} again.` : `The ${ENEMIES[battle.encounter].short} calls, but ${kin[2]}.`] };
     return enemyMoves(after)[after.step] ? after : enemyTurnEnds(after);
   }
   const { move, target, guarded, blocked } = next;
@@ -505,6 +589,9 @@ function enemyTurnEnds(battle: Battle): Battle {
     mana: !defeat && member.health > 0 ? Math.min(member.maxMana, member.mana + MANA_REGEN) : member.mana,
   }));
   const spell = !battle.snared && battle.enemy.health > 0 && intent(battle).type === 'spell';
+  // A fight the party only had to survive ends once they have.
+  const survived = !defeat && SURVIVE[battle.encounter] !== undefined && battle.round >= SURVIVE[battle.encounter]!;
+  if (survived) return { ...battle, party, step: 0, snared: false, phase: 'victory', log: [...battle.log, 'She lands and folds her wings. "Grave thieves run. You didn\'t."'] };
   return {
     ...battle, party, step: 0, snared: false,
     studied: spell && !defeat ? [SPELL] : battle.studied,

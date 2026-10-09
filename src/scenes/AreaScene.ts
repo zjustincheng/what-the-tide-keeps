@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { createBattle, drainedAfter, enemyMana, ENEMIES, MEMBERS, woundsAfter } from '../rules/battle';
 import type { BattleOptions } from '../rules/battle';
 import type { Encounter } from '../rules/battle';
-import { forget, held, hollow, MEMORY_IDS, wipe } from '../rules/memory';
+import { anchor, forget, held, hollow, MEMORY_IDS, wipe } from '../rules/memory';
 import { apply, conversation, drop, fill, fleeing, holds, replies, rest, roster } from '../rules/world';
 import type { Condition, Context, Effect, ShopId } from '../rules/world';
 import type { Choice, Conversation } from '../content/dialogue';
@@ -11,6 +11,7 @@ import { loadMemory, saveMemory } from '../storage/memory';
 import { loadWorld, saveWorld } from '../storage/world';
 import { BattleView } from '../ui/BattleView';
 import { ResurrectionView } from '../ui/ResurrectionView';
+import { AnchorView } from '../ui/AnchorView';
 import { EquipmentView } from '../ui/EquipmentView';
 import { ShopView } from '../ui/ShopView';
 import { FishingView } from '../ui/FishingView';
@@ -31,10 +32,11 @@ import { createSprites } from './sprites';
 type Direction = 'up' | 'down' | 'left' | 'right';
 type Point = { name: string; x: number; y: number };
 type Prop = { sprite: Phaser.Physics.Arcade.Sprite; hiddenIf: Condition[]; shadow?: Phaser.GameObjects.Ellipse };
-type Foe = { encounter: Encounter; defeat?: Effect; fledAt?: number; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container };
+type Foe = { encounter: Encounter; defeat?: Effect; fledAt?: number; ambush?: boolean; hidden?: boolean; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container };
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 // Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
-const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8], warden: [22, 26, 5, 4], leech: [28, 24, 2, 4], hound: [24, 16, 4, 12], pack: [26, 18, 3, 12], wisp: [14, 14, 9, 9], drowned: [20, 26, 6, 4] };
+const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8], warden: [22, 26, 5, 4], leech: [28, 24, 2, 4], hound: [24, 16, 4, 12], pack: [26, 18, 3, 12], wisp: [14, 14, 9, 9], drowned: [20, 26, 6, 4],
+  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4] };
 // Whether the last save succeeded, shared by every area.
 let saved = true;
 // The way out of a conversation, offered whenever the hero comes back to the replies.
@@ -74,7 +76,7 @@ export class AreaScene extends Phaser.Scene {
   private shadow!: Phaser.GameObjects.Ellipse;
   private foes: Foe[] = [];
   private props: Prop[] = [];
-  private overlay?: BattleView | ResurrectionView | EquipmentView | ShopView | FishingView | SettingsView;
+  private overlay?: BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView;
   // A shop to open once the current conversation ends.
   private pendingShop?: ShopId;
   // A campfire to rest at once the current conversation ends.
@@ -197,7 +199,7 @@ export class AreaScene extends Phaser.Scene {
     return this.points.find(p => p.name === name)!;
   }
 
-  private createFoe(at: Point, { encounter, defeat }: Area['enemies'][number]) {
+  private createFoe(at: Point, { encounter, defeat, ambush }: Area['enemies'][number]) {
     const [width, height, x, y] = BODY[encounter];
     const sprite = this.physics.add.staticSprite(at.x, at.y, encounter).setDepth(4);
     sprite.setSize(width, height).setOffset(x, y);
@@ -207,7 +209,7 @@ export class AreaScene extends Phaser.Scene {
     const mana = this.add.text(0, veiled ? -24 : -23, `◇ ${enemyMana(createBattle(encounter))}`, { fontFamily: 'monospace', fontSize: '8px', color: veiled ? '#b7d3c7' : '#dbc58b' }).setOrigin(0.5);
     const signature = this.add.container(at.x, at.y, [ring, mana]).setDepth(5);
     this.tweens.add({ targets: ring, alpha: veiled ? 0.15 : 0.35, duration: veiled ? 1400 : 1000, yoyo: true, repeat: -1 });
-    const foe = { encounter, sprite, signature, defeat };
+    const foe: Foe = { encounter, sprite, signature, defeat, ambush };
     this.foes.push(foe);
     this.physics.add.overlap(this.player, sprite, () => this.beginBattle(foe));
   }
@@ -398,7 +400,12 @@ export class AreaScene extends Phaser.Scene {
     if(shop) this.openShop(shop);
     const camp=this.pendingRest;this.pendingRest=undefined;
     // Resting heals every wound and brings the area's enemies back, so the area starts over around the fire.
-    if(camp && !this.leaving) { music.effect('rest'); const cost=this.area.camps?.[camp]?.cost ?? 0; saved=saveWorld(rest({ ...loadWorld(), coins: Math.max(0, loadWorld().coins-cost) })); this.leaving=true; this.cameras.main.fadeOut(400,16,27,24); this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.restart({spawn:camp})); }
+    if(camp && !this.leaving) {
+      music.effect('rest'); const cost=this.area.camps?.[camp]?.cost ?? 0; saved=saveWorld(rest({ ...loadWorld(), coins: Math.max(0, loadWorld().coins-cost) }));
+      const sleep=()=>{ this.leaving=true; this.cameras.main.fadeOut(400,16,27,24); this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.restart({spawn:camp})); };
+      // Once the vulture has shown how, a memory can be written down before sleeping.
+      if(loadWorld().flags.includes('anchors-known')) this.writeDown(sleep); else sleep();
+    }
   }
 
   private setExplorationEnabled(enabled: boolean) {
@@ -452,7 +459,7 @@ export class AreaScene extends Phaser.Scene {
         saved = saveMemory(wipe(loadMemory())) && saveWorld(drop(loadWorld()));
         this.scene.start('church');
       }
-    }, foe.encounter, this.partyOptions());
+    }, foe.encounter, { ...this.partyOptions(), ambush: Boolean(foe.ambush && foe.hidden) });
   }
 
   // A shop opens after its keeper has spoken, if there is anything left to sell.
@@ -511,6 +518,21 @@ export class AreaScene extends Phaser.Scene {
     this.overlay = new EquipmentView(loadGear(), loadBooks(), loadWorld().found, roster(loadWorld()), hollow(loadMemory()), this.textures.getBase64('hero'),
       (gear, books) => { saved = saveGear(gear) && saveBooks(books); },
       () => { this.overlay?.destroy(); this.overlay = undefined; this.renderMemory(); this.resumeExploration(); });
+  }
+
+  private writeDown(then: () => void) {
+    this.player.setVelocity(0);
+    this.physics.pause();
+    element('prompt').textContent = '';
+    this.setExplorationEnabled(false);
+    this.overlay = new AnchorView(loadMemory(), id => {
+      this.overlay?.destroy();
+      this.overlay = undefined;
+      if(id) { saved = saveMemory(anchor(loadMemory(), id)); music.effect('select'); }
+      this.setExplorationEnabled(true);
+      this.physics.resume();
+      then();
+    });
   }
 
   private wake() {
@@ -580,6 +602,15 @@ export class AreaScene extends Phaser.Scene {
     if(this.active){x=0;y=0;}
     const motion=new Phaser.Math.Vector2(x,y).normalize().scale(70);
     this.player.setVelocity(motion.x,motion.y);
+    // Ambushers' signatures flicker out as the hero comes near, and come back once he is clear.
+    for(const foe of this.foes) {
+      if(!foe.ambush || !foe.sprite.active) continue;
+      const near=Phaser.Math.Distance.Between(this.player.x,this.player.y,foe.sprite.x,foe.sprite.y)<110;
+      if(near===Boolean(foe.hidden)) continue;
+      foe.hidden=near;
+      this.tweens.killTweensOf([foe.sprite]);
+      this.tweens.add({ targets: [foe.sprite, foe.signature], alpha: near ? { from: 0.3, to: 0 } : 1, duration: near ? 500 : 700, ease: near ? 'Stepped' : 'Linear', easeParams: near ? [4] : undefined });
+    }
     // Footsteps while walking, alternating feet.
     if((x||y) && time-this.lastStep>290) { this.lastStep=time; this.foot=-this.foot; music.effect(`step-${this.surface()}`, this.foot); }
     if(x) this.player.setFlipX(x<0);

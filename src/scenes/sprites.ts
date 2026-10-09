@@ -24,6 +24,13 @@ const VILLAGERS: Record<string, Villager> = {
   ram: { fur: 0xa8a090, muzzle: 0x5a5048, cloth: 0x5a5a40, trim: 0x8a7a5a, ears: 'horns' },
   'hound-mother': { fur: 0x5a524a, muzzle: 0x8a7a68, cloth: 0x3a3530, trim: 0x4a433c, ears: 'pointed' },
   otter: { fur: 0x6a4a30, muzzle: 0xb8a088, cloth: 0x3a4a44, trim: 0x5a6a5a, ears: 'pointed' },
+  // The fort town in the highlands: a carnivore garrison, and the herbivores who trade there.
+  sergeant: { fur: 0x6a6a6a, muzzle: 0xb8b0a0, cloth: 0x4a3a34, trim: 0x8a3a30, ears: 'pointed' },
+  quartermaster: { fur: 0x3a3a38, muzzle: 0xe0dcd0, cloth: 0x5a5040, trim: 0x8a7a5a, ears: 'pointed' },
+  lynx: { fur: 0xb89a70, muzzle: 0xe8dcc4, cloth: 0x5a4a5a, trim: 0x8a7a6a, ears: 'pointed' },
+  veteran: { fur: 0x8a8a84, muzzle: 0xc8c4b8, cloth: 0x3a4038, trim: 0x6a6a5a, ears: 'pointed' },
+  merchant: { fur: 0xd8d0bc, muzzle: 0x8a7a6a, cloth: 0x6a5a7a, trim: 0xc8b878, ears: 'horns' },
+  fence: { fur: 0x7a5a3a, muzzle: 0xe0d0b0, cloth: 0x2e2a28, trim: 0x5a4a3a, ears: 'pointed' },
 };
 
 function villager(scene: Phaser.Scene, key: string, v: Villager) {
@@ -90,6 +97,19 @@ export function createSprites(scene: Phaser.Scene) {
   const crow = scene.make.graphics({ x: 0, y: 0 });
   crow.fillStyle(0x0e0f10).fillRect(0, 2, 3, 1).fillRect(2, 1, 4, 3).fillRect(5, 2, 3, 1).fillRect(3, 0, 2, 1);
   crow.generateTexture('crow', 8, 4); crow.destroy();
+  // The gap where the bridge over the ravine should be.
+  const chasm = scene.make.graphics({ x: 0, y: 0 });
+  chasm.fillStyle(0x08090a).fillRect(0, 0, 16, 16);
+  chasm.fillStyle(0x1a1a18).fillRect(0, 0, 16, 2);
+  chasm.generateTexture('chasm', 16, 16); chasm.destroy();
+  // A courier who did not make it over the pass, under a snowy cloak.
+  const courier = scene.make.graphics({ x: 0, y: 0 });
+  courier.fillStyle(0x3a3a40).fillRect(2, 6, 22, 8);
+  courier.fillStyle(0x5a4a3a).fillRect(4, 5, 16, 7);
+  courier.fillStyle(0xc8ccc8).fillRect(6, 5, 6, 2).fillRect(14, 8, 5, 2);
+  courier.fillStyle(0x6a5a44).fillRect(20, 9, 5, 4);
+  courier.fillStyle(0xd8d0b8).fillRect(9, 12, 6, 3);
+  courier.generateTexture('courier', 26, 16); courier.destroy();
   // Reed beds that hide the otter's run.
   const reeds = scene.make.graphics({ x: 0, y: 0 });
   reeds.fillStyle(0x1a2426).fillRect(0, 10, 16, 6);

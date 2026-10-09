@@ -1,5 +1,5 @@
 import { memories, perks } from '../content/memories';
-import { held, PERKS } from '../rules/memory';
+import { forgettable, PERKS } from '../rules/memory';
 import type { Memory, MemoryId } from '../rules/memory';
 
 // After a wipe the hero must give up one memory before he can stand.
@@ -17,7 +17,8 @@ export class ResurrectionView {
     this.root.innerHTML = `
       <div class="battle-heading"><p class="eyebrow">THE CHURCH OF THE COVENANT</p><h2 id="resurrection-title">The tide takes something.</h2>
       <p class="resurrection-intro">Salt water, a cold stone floor, the priest's voice. Before you can stand, choose what to let go. Something Hollow fills the space it leaves.</p></div>
-      <fieldset class="memory-choices"><legend>Memories you still hold</legend>${held(memory).map(id => `
+      ${(memory.anchors ?? []).length ? `<p class="memories-lost">Written down · ${(memory.anchors ?? []).map(id => memories[id].name).join(' · ')} · kept this time</p>` : ''}
+      <fieldset class="memory-choices"><legend>Memories you still hold</legend>${forgettable(memory).map(id => `
         <label class="memory-choice"><input type="radio" name="memory" value="${id}" />
           <span><strong>${memories[id].name}</strong><small>Forgetting: ${memories[id].cost}</small><small class="perk">${perks[PERKS[id]]}</small></span></label>`).join('')}
       </fieldset>

@@ -94,3 +94,12 @@ const at=(x,y)=>[x*16+8,y*16+8];
   r.put(r.furniture,15,6,WALL);r.put(r.floor,15,7,MAT);
   write('tannery',r,[['spawn',...at(r.door,15)],['out',...at(r.door,17)],['tanner',...at(17,10)],['vats',...at(11,11)],['back-door',...at(15,8)]]);
 }
+// The fort barracks: bunks down both walls, a stove, the garrison roll. The vulture slept by the far wall.
+{
+  const r=room(8,7,23,16,PLANK);
+  r.put(r.furniture,15,6,HEARTH);r.put(r.furniture,10,6,WINDOW);r.put(r.furniture,20,6,WINDOW);
+  for(const y of [8,10,12,14]){r.put(r.furniture,8,y,BED);r.put(r.furniture,23,y,BED);}
+  r.put(r.furniture,14,11,TABLE);r.put(r.furniture,15,11,TABLE);r.put(r.floor,13,11,STOOL);r.put(r.floor,16,11,STOOL);
+  r.put(r.furniture,11,7,CABINET);r.put(r.furniture,12,7,CABINET);r.put(r.furniture,19,7,BARREL);
+  write('barracks',r,[['spawn',...at(r.door,15)],['out',...at(r.door,17)],['bunk',...at(22,14)],['roll',...at(12,8)],['stove',...at(15,7)]]);
+}

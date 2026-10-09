@@ -20,6 +20,7 @@ export const border: Dialogue = {
     'The order came by word of mouth from the border post. I haven\'t seen it written down.',
   ], variants: [{ if: { flag: 'boar-defeated' }, lines: [
     'I went to the border post and asked about the order. Nobody there had heard of it.',
+    'The pass is open, if you\'re going up. The track east of me. Mind the raiders; you won\'t see them coming.',
   ] }] },
   carts: { speaker: 'THE GRAIN CARTS', prompt: 'Examine the carts', lines: [
     'Grain carts, still loaded, turned around to face the farmland.',

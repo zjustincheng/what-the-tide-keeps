@@ -8,6 +8,7 @@ import { town } from '../content/town';
 import { hall, inn, millInside, tannery } from '../content/interiors';
 import { barrow, downs } from '../content/downs';
 import { fen } from '../content/fen';
+import { abbey, barracks, battlefield, fort, ossuary, pass } from '../content/highlands';
 import type { Encounter } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
@@ -27,7 +28,8 @@ export type Area = {
   // People on the map. One whose hiddenIf condition holds has left.
   npcs: { point: string; texture: string; hiddenIf?: Condition[] }[];
   // Enemies respawn on every visit unless hiddenIf holds; defeat applies once the fight is won.
-  enemies: { point: string; encounter: Encounter; hiddenIf?: Condition[]; defeat?: Effect }[];
+  // An ambusher's signature flickers out as the hero comes near, and it strikes first.
+  enemies: { point: string; encounter: Encounter; hiddenIf?: Condition[]; defeat?: Effect; ambush?: true }[];
   // SVG art in public/assets to load, beyond the map, tiles, and enemies.
   assets?: string[];
   // Objects on the map that disappear once any hiddenIf condition holds. Solid ones block the way.
@@ -173,6 +175,9 @@ export const BORDER_ROAD: Area = {
     north: { to: 'town', spawn: 'from-border', prompt: 'Return to Millbrook' },
     east: { to: 'farmland', spawn: 'from-border', prompt: 'Take the field track' },
     south: { to: 'boar-farm', spawn: 'spawn', prompt: 'Follow the smoke' },
+    // The pass to the highlands opens once the carts move again.
+    pass: { to: 'pass', spawn: 'from-border', prompt: 'Take the track up to the pass', requires: { flag: 'boar-defeated' },
+      barred: { speaker: 'THE GUARD', lines: ['The guard steps across the track. "Nobody goes up to the pass while the carts are stopped. Orders."'] } },
   },
 };
 
@@ -277,4 +282,85 @@ export const FEN: Area = {
   },
 };
 
-export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN];
+// The highlands: carnivore country, militarized and distrusted. Every map shares the highland tileset except the fort town.
+const HIGHLAND_GROUND: Pick<Area, 'region' | 'tileset' | 'ground' | 'surfaces'> = {
+  region: 'THE HIGHLANDS', tileset: 'highland', ground: 'grass',
+  surfaces: { 3: 'dirt', 5: 'stone', 7: 'snow', 13: 'stone', 16: 'wood', 18: 'stone', 21: 'stone', 24: 'stone', 26: 'dirt' },
+};
+const COLD = { saturation: -0.4, brightness: 0.8, vignette: 0.5 };
+const snowfall = (scene: Phaser.Scene, width: number, height: number) => {
+  for (let i = 0; i < 40; i++) {
+    const flake = scene.add.rectangle((i * 89) % width, (i * 53) % height, 1, 1, 0xe8eef0, 0.7).setDepth(6);
+    scene.tweens.add({ targets: flake, y: flake.y + 60, x: flake.x - 12, alpha: 0, duration: 3000 + (i % 7) * 400, repeat: -1, delay: i * 90 });
+  }
+};
+export const PASS: Area = {
+  ...HIGHLAND_GROUND, key: 'pass', map: 'pass', music: 'highlands', place: 'The high pass', time: 'Morning', dialogue: pass, grade: COLD,
+  npcs: [],
+  enemies: [
+    { point: 'raider-1', encounter: 'raider', ambush: true }, { point: 'raider-2', encounter: 'raider', ambush: true }, { point: 'raider-3', encounter: 'raider', ambush: true },
+    // After the hyena, something far larger is on the road. It cannot be beaten yet.
+    { point: 'inquisitor', encounter: 'inquisitor', hiddenIf: [{ not: { flag: 'hyena-slain' } }] },
+  ],
+  props: [{ point: 'courier', texture: 'courier', hiddenIf: [] }, { point: 'camp-pass', texture: 'campfire', hiddenIf: [] }],
+  camps: { 'camp-pass': { prompt: 'Rest by the fire', cost: 4, lines: ['A ring of stones out of the wind. You pay a passing carter for wood and sleep with your back to the rock.'] } },
+  exits: {
+    south: { to: 'border-road', spawn: 'from-pass', prompt: 'Go back down to the border road' },
+    north: { to: 'fort', spawn: 'from-pass', prompt: 'Walk up to the fort gate' },
+  },
+  decorate: scene => snowfall(scene, 640, 1024),
+};
+export const FORT: Area = {
+  key: 'fort', map: 'fort', tileset: 'fort', music: 'highlands', region: 'THE HIGHLANDS', place: 'The fort town', time: 'Morning', dialogue: fort,
+  ground: 'dirt', surfaces: { 2: 'stone', 5: 'stone', 20: 'grass', 22: 'water' }, grade: COLD, enemies: [],
+  npcs: ['sergeant', 'quartermaster', 'lynx', 'veteran', 'merchant', 'fence'].map(name => ({ point: name, texture: name })),
+  props: [{ point: 'camp-fort', texture: 'campfire', hiddenIf: [] }],
+  camps: { 'camp-fort': { prompt: 'Rest by the garrison fire', cost: 4, lines: ['The garrison lets you sit at their fire for a few coins. Nobody asks about the brand.'] } },
+  exits: {
+    south: { to: 'pass', spawn: 'from-fort', prompt: 'Go back down the pass' },
+    east: { to: 'battlefield', spawn: 'from-fort', prompt: 'Go down to the battlefield' },
+    'barracks-door': { to: 'barracks', spawn: 'spawn', prompt: 'Enter the barracks' },
+  },
+  decorate: scene => snowfall(scene, 768, 576),
+};
+export const BARRACKS: Area = { ...INDOORS, region: 'THE HIGHLANDS', key: 'barracks', map: 'barracks', place: 'The fort · Barracks', time: 'Morning', dialogue: barracks,
+  npcs: [], exits: { out: { to: 'fort', spawn: 'from-barracks', prompt: 'Go back outside' } } };
+export const BATTLEFIELD: Area = {
+  ...HIGHLAND_GROUND, key: 'battlefield', map: 'battlefield', music: 'highlands', place: 'The old battlefield', time: 'Afternoon', dialogue: battlefield,
+  grade: { saturation: -0.5, brightness: 0.74, vignette: 0.55 }, assets: ['ghoul'],
+  // The vulture fights the hero once, as a grave thief; after that she will talk.
+  npcs: [{ point: 'vulture', texture: 'vulture', hiddenIf: [{ not: { flag: 'vulture-met' } }, { flag: 'vulture-free' }] }],
+  enemies: [
+    { point: 'vulture', encounter: 'vulture', hiddenIf: [{ flag: 'vulture-met' }], defeat: { set: 'vulture-met' } },
+    // The hyena raises the dead; with her gone they stay down.
+    { point: 'ghoul-1', encounter: 'ghoul', hiddenIf: [{ flag: 'hyena-slain' }] }, { point: 'ghoul-2', encounter: 'ghoul', hiddenIf: [{ flag: 'hyena-slain' }] },
+  ],
+  props: Array.from({ length: 8 }, (_, i) => ({ point: `gap-${i + 1}`, texture: 'chasm', solid: true, hiddenIf: [{ flag: 'bridge-lowered' as const }] })),
+  exits: {
+    west: { to: 'fort', spawn: 'from-battlefield', prompt: 'Climb back up to the fort' },
+    east: { to: 'abbey', spawn: 'from-battlefield', prompt: 'Follow the drag marks to the abbey' },
+  },
+  decorate: scene => snowfall(scene, 896, 640),
+};
+export const ABBEY: Area = {
+  ...HIGHLAND_GROUND, key: 'abbey', map: 'abbey', music: 'wilds', place: 'The ruined abbey', time: 'Dusk', dialogue: abbey, grade: COLD,
+  npcs: [], assets: ['brute'],
+  // The lesson fight: a spell and a heavy blow in the same round.
+  enemies: [{ point: 'pair', encounter: 'pair', hiddenIf: [{ flag: 'pair-slain' }], defeat: { set: 'pair-slain' } }],
+  props: [{ point: 'abbey-cache', texture: 'cache', hiddenIf: [{ owns: 'famine-spoon' }] }],
+  exits: {
+    west: { to: 'battlefield', spawn: 'from-abbey', prompt: 'Go back over the ravine' },
+    stair: { to: 'ossuary', spawn: 'spawn', prompt: 'Go down into the ossuary' },
+  },
+  decorate: scene => snowfall(scene, 640, 480),
+};
+export const OSSUARY: Area = {
+  ...HIGHLAND_GROUND, key: 'ossuary', map: 'ossuary', music: 'wilds', place: 'The ossuary', time: 'Dusk', dialogue: ossuary,
+  ground: 'stone', grade: { saturation: -0.45, brightness: 0.6, vignette: 0.75 }, npcs: [], assets: ['ghoul'],
+  enemies: [{ point: 'hyena', encounter: 'hyena', hiddenIf: [{ flag: 'hyena-slain' }], defeat: { set: 'hyena-slain' } }],
+  // Beaten, she lies where she fell and will still talk.
+  props: [{ point: 'den', texture: 'hyena', hiddenIf: [{ not: { flag: 'hyena-slain' } }] }],
+  exits: { up: { to: 'abbey', spawn: 'from-ossuary', prompt: 'Climb back up to the abbey' } },
+};
+
+export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY];

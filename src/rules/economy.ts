@@ -16,18 +16,19 @@ export const SUPPLIES: Record<SupplyId, { name: string; price: number; target: '
 export const SUPPLY_IDS = Object.keys(SUPPLIES) as SupplyId[];
 
 // What a defeated enemy leaves behind.
-export const BOUNTY: Record<Encounter, number> = { locust: 4, weevil: 5, acolyte: 10, boar: 30, swarm: 12, warden: 15, leech: 10, hound: 6, pack: 14, wisp: 5, drowned: 12 };
+export const BOUNTY: Record<Encounter, number> = { locust: 4, weevil: 5, acolyte: 10, boar: 30, swarm: 12, warden: 15, leech: 10, hound: 6, pack: 14, wisp: 5, drowned: 12, raider: 8, ghoul: 5, vulture: 0, pair: 14, hyena: 35, inquisitor: 0 };
 
 // Something for sale: a supply, or a one-time deed that sets a story flag.
 // A shop can also buy: sellCatch trades every fish in the pack for coins.
-export type Ware = { supply: SupplyId } | { deed: Flag; name: string; text: string; price: number } | { sellCatch: true };
+// fair: sold at the citizen's price whatever the buyer's brand.
+export type Ware = { supply: SupplyId; fair?: true } | { deed: Flag; name: string; text: string; price: number } | { sellCatch: true };
 
 // Shops overcharge the branded convict: triple the citizen's price, double once the boar is beaten and the town thaws.
 export function price(world: World, ware: Ware): number {
   if ('sellCatch' in ware) return catchValue(world.fish);
   if ('deed' in ware) return ware.price;
   // With the reeve's letter of good conduct, the hero pays what a citizen pays.
-  if (world.flags.includes('reeve-pardon')) return SUPPLIES[ware.supply].price;
+  if (ware.fair || world.flags.includes('reeve-pardon')) return SUPPLIES[ware.supply].price;
   // Leaning on the stallholder with the bear at your back gets the same as the thaw.
   return SUPPLIES[ware.supply].price * (world.flags.includes('boar-defeated') || world.flags.includes('stall-cowed') ? 2 : 3);
 }

@@ -34,13 +34,15 @@ fill(furniture,3,h-1,13,h-1,TREE);fill(furniture,18,h-1,w-4,h-1,TREE);
 for(const [x,y] of [[6,13],[6,16],[23,13]]){put(furniture,x,y,CART_FRONT);put(furniture,x+1,y,CART_REAR);}
 for(const [x,y] of [[9,13],[9,14],[26,13],[25,17]]) put(furniture,x,y,SACK);
 put(furniture,19,19,MARKER);
+// East, past the guard, the track to the highland pass.
+fill(furniture,w-3,15,w-1,16,0);fill(floor,18,15,w-1,16,ROAD);
 // The south is burned; the boar's farm lies that way.
 for(const [x,y] of [[13,21],[18,22],[12,22],[19,20],[20,22],[11,21]]) put(floor,x,y,SCORCH);
 fill(floor,14,22,17,23,SCORCH);
 const layer=(name,data,id)=>({id,name,type:'tilelayer',width:w,height:h,x:0,y:0,opacity:1,visible:true,data});
 const points=[
   ['spawn',256,40],['north',256,20],['hedge',256,128],['bramble-1',232,152],['bramble-2',248,152],['bramble-3',264,152],['bramble-4',280,152],['bramble-5',232,168],['bramble-6',248,168],['bramble-7',264,168],['bramble-8',280,168],
-  ['driver',152,264],['guard',344,248],['carts',136,232],['marker',312,328],['south',256,372],['from-farm',256,344],['east',504,80],['from-fields',480,80],['camp-border',184,312],['follower',256,296],
+  ['driver',152,264],['guard',344,226],['carts',136,232],['marker',312,328],['south',256,372],['from-farm',256,344],['east',504,80],['from-fields',480,80],['camp-border',184,312],['follower',256,296],['pass',504,256],['from-pass',480,256],
 ];
 const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
   layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([name,x,y],i)=>({id:i+1,name,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],

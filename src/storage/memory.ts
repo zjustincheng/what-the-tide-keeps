@@ -8,11 +8,12 @@ function parse(raw: string | null): Memory | undefined {
   if (raw === null) return undefined;
   const saved: unknown = JSON.parse(raw);
   if (typeof saved !== 'object' || saved === null) return undefined;
-  const { lost, pending } = saved as Record<string, unknown>;
+  const { lost, pending, anchors = [] } = saved as Record<string, unknown>;
   if (!Array.isArray(lost) || typeof pending !== 'boolean') return undefined;
   const ids = MEMORY_IDS.filter(id => lost.includes(id));
   // Keep the order memories were lost in, dropping anything unknown.
-  return { lost: lost.filter((id, index): id is MemoryId => ids.includes(id) && lost.indexOf(id) === index), pending };
+  const kept = lost.filter((id, index): id is MemoryId => ids.includes(id) && lost.indexOf(id) === index);
+  return { lost: kept, pending, anchors: Array.isArray(anchors) ? MEMORY_IDS.filter(id => anchors.includes(id) && !kept.includes(id)) : [] };
 }
 
 export function loadMemory(): Memory {

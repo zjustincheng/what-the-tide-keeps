@@ -710,3 +710,4 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
 .flee { margin-top: 2px; padding: 4px 10px; font: 12px Georgia, serif; background: transparent; border-color: #6a4a3a; color: #d8b8a8; }
 .flee small { margin-left: 6px; font: 9px ui-monospace, monospace; color: #a88878; }
 .flee[hidden] { display: none; }
+.anchor-actions { display: flex; gap: 8px; justify-content: center; }

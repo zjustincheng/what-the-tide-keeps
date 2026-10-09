@@ -7,7 +7,14 @@ export const church: Dialogue = {
     'Easy. Sit up slowly. You were a long time coming back this time.',
     'You asked me to remember something for you, last time. I am sorry. You never told me what it was.',
     'The church has work for you. Grain has stopped reaching the highlands. Take the south door into the farmland and find out why.',
-  ], variants: [{ if: { forgot: 'feast' }, lines: [
+  ], variants: [{ if: { flag: 'hyena-slain' }, lines: [
+    'You came back from the highlands. Most don\'t.',
+    'Whatever you found under that abbey, don\'t tell me. Not in here.',
+  ] }, { if: { flag: 'boar-defeated' }, lines: [
+    'Easy. Sit up slowly. The carts are moving again. The church is grateful, in its way.',
+    'New orders. Bodies are going missing from the old battlefield below the highland fort. The garrison calls whatever takes them grave-eaters. Put them down.',
+    'Take the border road. Past the carts, the guard will let you onto the pass.',
+  ] }, { if: { forgot: 'feast' }, lines: [
     'Easy. Sit up slowly. You were a long time coming back this time.',
     'You used to wake up saying you were framed. You did not say it this time.',
     'The church has work for you. Grain has stopped reaching the highlands. Take the south door into the farmland and find out why.',
@@ -39,4 +46,4 @@ const priestReplies: Choice[] = [
   { text: 'I should go.', ends: true, lines: ['Go on, then. Try to come back on your feet.'] },
 ];
 church.priest.choices = priestReplies;
-church.priest.variants![0].choices = priestReplies;
+for (const variant of church.priest.variants!) variant.choices = priestReplies;
