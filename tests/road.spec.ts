@@ -18,7 +18,7 @@ async function go(page: Page, from: string, x: number, y: number, prompt: string
 }
 
 async function outside(page: Page) {
-  await page.goto('/');
+  await page.goto('/?practice');
   await expect.poll(() => area(page, 'church')).not.toBeNull();
   await page.locator('#game').focus();
   await go(page, 'church', 256, 330, 'Step outside', 'farmland', { x: 512, y: 64 });

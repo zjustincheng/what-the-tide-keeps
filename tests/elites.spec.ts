@@ -12,7 +12,7 @@ const place = (page: Page, key: string, x: number, y: number) => page.evaluate(a
 }, [key, x, y] as const);
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?practice');
   await expect.poll(() => at(page, 'church')).not.toBeNull();
   await page.evaluate(async () => {
     const { game } = await import('/src/main.ts');

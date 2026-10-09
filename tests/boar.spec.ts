@@ -27,7 +27,7 @@ async function meetBoar(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?practice');
   await expect.poll(() => at(page, 'church')).not.toBeNull();
 });
 

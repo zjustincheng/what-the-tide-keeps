@@ -23,7 +23,7 @@ async function talk(page: Page, key: string, x: number, y: number, prompt: strin
 }
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?practice');
   await expect.poll(() => at(page, 'church')).not.toBeNull();
   await page.locator('#game').focus();
 });

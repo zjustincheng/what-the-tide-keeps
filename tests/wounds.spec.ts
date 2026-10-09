@@ -16,7 +16,7 @@ test.use({ storageState: { cookies: [], origins: [] } });
 test('wounds linger after a won fight until the hero rests at a campfire', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto('/');
+  await page.goto('/?practice');
   await expect.poll(() => at(page, 'church')).not.toBeNull();
   await expect(page.getByRole('group', { name: 'Party' }).getByRole('meter', { name: 'Chameleon health', exact: true })).toHaveAttribute('aria-valuetext', '20 of 20');
   await expect(page.locator('.hud-hint')).toHaveCount(0);

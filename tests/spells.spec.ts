@@ -6,7 +6,7 @@ const at = (page: Page, key: string) => page.evaluate(async key => {
   return scene?.sys.isActive() && scene.player?.active ? { x: Math.round(scene.player.x), y: Math.round(scene.player.y) } : null;
 }, key);
 async function enterLocust(page: Page) {
-  await page.goto('/');
+  await page.goto('/?practice');
   await expect.poll(() => at(page, 'church')).not.toBeNull();
   await page.evaluate(async () => {
     const { game } = await import('/src/main.ts');
@@ -66,7 +66,7 @@ test('the on-screen keys cast on a phone', async ({ page }) => {
 });
 
 test("the heron's primer can be given to any hero, who then casts its spell", async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?practice');
   await expect.poll(() => at(page, 'church')).not.toBeNull();
   await page.evaluate(async () => {
     const { game } = await import('/src/main.ts');

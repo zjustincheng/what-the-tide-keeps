@@ -10,7 +10,7 @@ async function position(page: import('@playwright/test').Page) {
 }
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?practice');
   await expect(page.locator('canvas')).toBeVisible();
   await expect.poll(async () => (await position(page)).x).toBe(88);
 });
@@ -53,8 +53,7 @@ test('priest dialogue pauses movement and can be completed', async ({ page }) =>
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.locator('#dialogue-text')).toContainText('You asked me to remember');
   await page.getByRole('button', { name: 'Continue' }).press('Enter');
-  await expect(page.locator('#dialogue-text')).toContainText('grain');
-  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.locator('#dialogue-text')).toContainText('Grain has stopped reaching the highlands');
   await expect(page.locator('#dialogue-text')).toContainText('Take the south door');
   await page.getByRole('button', { name: '4. I should go.' }).click();
   await expect(page.locator('#dialogue-text')).toHaveText('Go on, then. Try to come back on your feet.');
@@ -94,4 +93,13 @@ test('mobile controls move and release without page overflow', async ({ page }) 
   await page.waitForTimeout(150);
   expect((await position(page)).y).toBeCloseTo(stopped.y,1);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+});
+
+test('a normal game has no enemies in the church', async ({ page }) => {
+  await page.goto('/');
+  await expect.poll(() => page.evaluate(async () => {
+    const { game } = await import('/src/main.ts');
+    const church = game.scene.getScene('church');
+    return church?.player ? church.foes.length : -1;
+  })).toBe(0);
 });

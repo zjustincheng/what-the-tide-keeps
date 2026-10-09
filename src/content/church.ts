@@ -6,12 +6,10 @@ export const church: Dialogue = {
   priest: { speaker: 'THE PRIEST', prompt: 'Speak to the priest', lines: [
     'Easy. Sit up slowly. You were a long time coming back this time.',
     'You asked me to remember something for you, last time. I am sorry. You never told me what it was.',
-    'Mind the hooded one by the east wall; it came in to pray and has not. And something crawled in with the grain sacks by the south wall.',
     'The church has work for you. Grain has stopped reaching the highlands. Take the south door into the farmland and find out why.',
   ], variants: [{ if: { forgot: 'feast' }, lines: [
     'Easy. Sit up slowly. You were a long time coming back this time.',
     'You used to wake up saying you were framed. You did not say it this time.',
-    'Mind the hooded one by the east wall; it came in to pray and has not. And something crawled in with the grain sacks by the south wall.',
     'The church has work for you. Grain has stopped reaching the highlands. Take the south door into the farmland and find out why.',
   ] }] },
   ledger: { speaker: 'THE RESURRECTION LEDGER', lines: [

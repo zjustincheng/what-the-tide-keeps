@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
 test.use({ storageState: { cookies: [], origins: [] } });
 
 test('starting over erases progress but keeps preferences, after asking first', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?practice');
   await page.evaluate(() => {
     localStorage.setItem('tide-keeps.world.v1', JSON.stringify({ flags: ['bear-free', 'boar-defeated'], carried: [], found: ['yoke-peg'], coins: 40 }));
     localStorage.setItem('tide-keeps.memory.v1', JSON.stringify({ lost: ['home', 'name', 'feast'], pending: false }));

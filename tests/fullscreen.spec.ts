@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('full screen enlarges the map and can be left again', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.goto('/');
+  await page.goto('/?practice');
   await expect(page.locator('canvas')).toBeVisible();
   await page.getByRole('button', { name: 'Full screen' }).click();
   await expect.poll(() => page.evaluate(() => document.fullscreenElement?.tagName)).toBe('MAIN');
@@ -21,7 +21,7 @@ test('full screen enlarges the map and can be left again', async ({ page }) => {
 });
 
 test('F toggles full screen, and Escape opens settings with the controls', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?practice');
   await expect(page.locator('canvas')).toBeVisible();
   await page.locator('#game').focus();
   await page.keyboard.press('f');

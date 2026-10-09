@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 async function enterLocust(page: Page) {
-  await page.goto('/');
+  await page.goto('/?practice');
   await expect.poll(() => page.evaluate(async () => {
     const { game } = await import('/src/main.ts');
     return Boolean(game.scene.getScene('church')?.player);

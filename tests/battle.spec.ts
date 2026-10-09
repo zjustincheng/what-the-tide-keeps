@@ -14,7 +14,7 @@ async function enterEncounter(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?practice');
   await expect.poll(() => page.evaluate(async () => {
     const path = '/src/main.ts';
     const { game } = await import(/* @vite-ignore */ path);

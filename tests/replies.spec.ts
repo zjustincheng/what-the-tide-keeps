@@ -13,7 +13,7 @@ const place = (page: Page, key: string, x: number, y: number) => page.evaluate(a
 }, [key, x, y] as const);
 // A fresh game, so the chameleon is alone.
 async function start(page: Page, memory?: object, world?: object) {
-  await page.goto('/');
+  await page.goto('/?practice');
   await page.evaluate(([memory, world]) => {
     if (memory) localStorage.setItem('tide-keeps.memory.v1', JSON.stringify(memory));
     if (world) localStorage.setItem('tide-keeps.world.v1', JSON.stringify(world));

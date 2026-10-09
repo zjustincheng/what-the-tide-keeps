@@ -13,7 +13,7 @@ const place = (page: Page, key: string, x: number, y: number) => page.evaluate(a
   game.scene.getScene(key).player.setPosition(x, y);
 }, [key, x, y] as const);
 async function start(page: Page, world: object) {
-  await page.goto('/');
+  await page.goto('/?practice');
   await page.evaluate(world => localStorage.setItem('tide-keeps.world.v1', JSON.stringify(world)), world);
   await page.reload();
   await expect.poll(() => at(page, 'church')).not.toBeNull();

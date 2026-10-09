@@ -45,13 +45,16 @@ export type Area = {
   grade?: { saturation?: number; brightness?: number; vignette?: number };
 };
 
+// The church is safe ground. Its two practice enemies exist only for the automated tests, at /?practice.
+const PRACTICE = typeof location !== 'undefined' && new URLSearchParams(location.search).has('practice');
+
 export const CHURCH: Area = {
   key: 'church', map: 'church', tileset: 'church', music: 'church', region: 'THE CAPITAL', place: 'Church of the Covenant', time: 'Before dawn',
   bounds: [32, 48, 448, 304], dialogue: church,
   // Candlelight keeps a little warmth in the church; everywhere else is colder.
   grade: { saturation: -0.35, brightness: 0.78, vignette: 0.5 },
   npcs: [{ point: 'priest', texture: 'priest' }],
-  enemies: [{ point: 'encounter', encounter: 'locust' }, { point: 'exile', encounter: 'acolyte' }],
+  enemies: PRACTICE ? [{ point: 'encounter', encounter: 'locust' }, { point: 'exile', encounter: 'acolyte' }] : [],
   exits: { door: { to: 'farmland', spawn: 'spawn', prompt: 'Step outside' } },
   camps: { spawn: { prompt: 'Rest on the cot', lines: ['You lie down on the cot. The priest\'s candle burns down while you sleep, and you wake whole.'] } },
   decorate(scene) {

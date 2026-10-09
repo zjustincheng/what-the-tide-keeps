@@ -14,7 +14,7 @@ const at = (page: Page, key: string) => page.evaluate(async key => {
 test('each place has its theme, battles switch to battle music, and the music can be muted and turned down', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto('/');
+  await page.goto('/?practice');
   await expect.poll(() => at(page, 'church')).not.toBeNull();
   // Browsers only allow sound after the player does something.
   expect(await playing(page)).toBeUndefined();
@@ -51,7 +51,7 @@ test('each place has its theme, battles switch to battle music, and the music ca
 });
 
 test('every theme renders with sound and without clipping', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?practice');
   await expect(page.locator('canvas')).toBeVisible();
   const levels = await page.evaluate(async () => {
     const { music } = await import('/src/audio/music.ts');
@@ -69,7 +69,7 @@ test('every theme renders with sound and without clipping', async ({ page }) => 
 const sounded = (page: Page) => page.evaluate(async () => (await import('/src/audio/music.ts')).music.played);
 
 test('talking, attacking, and casting make their sounds', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?practice');
   await expect.poll(() => at(page, 'church')).not.toBeNull();
   await page.evaluate(async () => {
     const { game } = await import('/src/main.ts');
@@ -96,7 +96,7 @@ test('talking, attacking, and casting make their sounds', async ({ page }) => {
 });
 
 test('the party display collapses to portraits and stays that way', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?practice');
   await expect.poll(() => at(page, 'church')).not.toBeNull();
   await expect(page.locator('#hud .hud-name').first()).toBeVisible();
   await page.getByRole('button', { name: 'Hide party details' }).click();
@@ -111,7 +111,7 @@ test('the party display collapses to portraits and stays that way', async ({ pag
 });
 
 test('every sound effect is audible without clipping', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?practice');
   await expect(page.locator('canvas')).toBeVisible();
   const peaks = await page.evaluate(async () => {
     const { playEffect } = await import('/src/audio/effects.ts');
@@ -136,7 +136,7 @@ test('every sound effect is audible without clipping', async ({ page }) => {
 });
 
 test('the music comes back after its engine is shut down, and the top bar shows when it is muted', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?practice');
   await expect.poll(() => at(page, 'church')).not.toBeNull();
   await page.locator('#game').focus();
   await page.keyboard.press('ArrowDown');

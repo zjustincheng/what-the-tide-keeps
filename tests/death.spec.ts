@@ -17,7 +17,7 @@ async function enterLocust(page: Page) {
   await expect(page.getByRole('heading', { name: 'Crop locust' })).toBeVisible();
   await page.keyboard.up('d');
 }
-test.beforeEach(async ({ page }) => { await page.goto('/'); await ready(page); });
+test.beforeEach(async ({ page }) => { await page.goto('/?practice'); await ready(page); });
 
 test('a wipe takes a chosen memory, grants a Hollow perk, and survives reload', async ({ page }) => {
   const errors: string[] = [];
