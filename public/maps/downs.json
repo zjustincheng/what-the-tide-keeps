@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 23,
+  "nextobjectid": 24,
   "layers": [
     {
       "id": 1,
@@ -5091,6 +5091,18 @@
         },
         {
           "id": 21,
+          "name": "bard",
+          "type": "",
+          "x": 168,
+          "y": 504,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 22,
           "name": "hound-west",
           "type": "",
           "x": 200,
@@ -5102,7 +5114,7 @@
           "point": true
         },
         {
-          "id": 22,
+          "id": 23,
           "name": "hound-east",
           "type": "",
           "x": 744,

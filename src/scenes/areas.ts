@@ -2,6 +2,7 @@ import type Phaser from 'phaser';
 import { church } from '../content/church';
 import { farm } from '../content/farm';
 import type { Dialogue } from '../content/dialogue';
+import { churchLore, downsLore, fieldsLore, fortLore, innLore, townLore, weirLore } from '../content/lore';
 import { border } from '../content/border';
 import { fields } from '../content/fields';
 import { town } from '../content/town';
@@ -56,10 +57,10 @@ const PRACTICE = typeof location !== 'undefined' && new URLSearchParams(location
 
 export const CHURCH: Area = {
   key: 'church', map: 'church', tileset: 'church', music: 'church', region: 'THE CAPITAL', place: 'Church of the Covenant', time: 'Before dawn',
-  bounds: [32, 48, 448, 304], dialogue: church, ground: 'stone',
+  bounds: [32, 48, 448, 304], dialogue: { ...church, ...churchLore }, ground: 'stone',
   // Candlelight keeps a little warmth in the church; everywhere else is colder.
   grade: { saturation: -0.35, brightness: 0.78, vignette: 0.5 },
-  npcs: [{ point: 'priest', texture: 'priest' }],
+  npcs: [{ point: 'priest', texture: 'priest' }, { point: 'novice', texture: 'novice' }],
   enemies: PRACTICE ? [{ point: 'encounter', encounter: 'locust' }, { point: 'exile', encounter: 'acolyte' }] : [],
   exits: { door: { to: 'farmland', spawn: 'spawn', prompt: 'Step outside' } },
   camps: { spawn: { prompt: 'Rest on the cot', lines: ['You lie down on the cot. The priest\'s candle burns down while you sleep, and you wake whole.'] } },
@@ -87,9 +88,10 @@ const GUARDED: Partial<Record<string, Flag>> = { 'shrine-cache': 'warden-slain',
 
 export const FARMLAND: Area = {
   key: 'farmland', map: 'farmland', tileset: 'fields', music: 'fields', region: 'THE FARMLAND', place: 'The fields', time: 'Dawn',
-  dialogue: fields, assets: ['bear', 'nymph', 'votive'],
+  dialogue: { ...fields, ...fieldsLore }, assets: ['bear', 'nymph', 'votive'],
   ground: 'grass', surfaces: { 3: 'dirt', 16: 'wood', 17: 'water', 27: 'leaves' },
-  npcs: [{ point: 'bear', texture: 'bear', hiddenIf: [{ flag: 'bear-free' }] }, { point: 'miller', texture: 'miller' }, { point: 'heron', texture: 'heron' }, { point: 'shepherd', texture: 'shepherd' }],
+  npcs: [{ point: 'bear', texture: 'bear', hiddenIf: [{ flag: 'bear-free' }] }, { point: 'miller', texture: 'miller' }, { point: 'heron', texture: 'heron' }, { point: 'shepherd', texture: 'shepherd' },
+    { point: 'pilgrim', texture: 'pilgrim' }, { point: 'carter', texture: 'carter' }, { point: 'beekeeper', texture: 'beekeeper' }],
   enemies: [
     // The reeve's fields: clearing both earns the writ that frees the bear.
     { point: 'locust', encounter: 'locust', defeat: { set: 'pests-field' } }, { point: 'locust-road', encounter: 'locust' },
@@ -142,8 +144,8 @@ export const FARMLAND: Area = {
 
 export const TOWN: Area = {
   key: 'town', map: 'town', tileset: 'town', music: 'town', region: 'THE FARMLAND', place: 'Millbrook', time: 'Morning',
-  dialogue: town, enemies: [], ground: 'stone', surfaces: { 3: 'grass', 4: 'dirt' },
-  npcs: ['reeve', 'innkeeper', 'shopkeeper', 'child', 'fishmonger', 'fox'].map(name => ({ point: name, texture: name })),
+  dialogue: { ...town, ...townLore }, enemies: [], ground: 'stone', surfaces: { 3: 'grass', 4: 'dirt' },
+  npcs: ['reeve', 'innkeeper', 'shopkeeper', 'child', 'fishmonger', 'fox', 'scribe'].map(name => ({ point: name, texture: name })),
   props: [{ point: 'stocks', texture: 'stocks', solid: true, hiddenIf: [] }],
   exits: {
     north: { to: 'farmland', spawn: 'from-town', prompt: 'Return to the fields' },
@@ -210,8 +212,8 @@ export const BOAR_FARM: Area = {
 // Building interiors: small rooms in the dark, lit warmer than the fields outside.
 const INDOORS: Pick<Area, 'region' | 'tileset' | 'grade' | 'enemies' | 'music' | 'ground' | 'surfaces'> = { region: 'THE FARMLAND', tileset: 'interior', music: 'hearth', grade: { saturation: -0.3, brightness: 0.74, vignette: 0.55 }, enemies: [],
   ground: 'wood', surfaces: { 3: 'stone', 19: 'straw', 23: 'straw' } };
-export const INN: Area = { ...INDOORS, key: 'inn', map: 'inn', place: 'Millbrook · The inn', time: 'Morning', dialogue: inn,
-  npcs: [{ point: 'drinker', texture: 'drinker' }, { point: 'patron', texture: 'patron' }],
+export const INN: Area = { ...INDOORS, key: 'inn', map: 'inn', place: 'Millbrook · The inn', time: 'Morning', dialogue: { ...inn, ...innLore },
+  npcs: [{ point: 'drinker', texture: 'drinker' }, { point: 'patron', texture: 'patron' }, { point: 'marine', texture: 'marine' }],
   camps: { bed: { prompt: 'Sleep in the bed', lines: ['You sleep in a real bed for the first time you can remember. Your wounds close and your mana returns.'] } },
   exits: { out: { to: 'town', spawn: 'from-inn', prompt: 'Go back outside' } } };
 export const HALL: Area = { ...INDOORS, key: 'hall', map: 'hall', place: "Millbrook · The reeve's hall", time: 'Morning', dialogue: hall,
@@ -225,9 +227,9 @@ export const MILL: Area = { ...INDOORS, key: 'mill-inside', map: 'mill-inside', 
 const PACK_GONE = [{ flag: 'pack-slain' as const }, { flag: 'hounds-fed' as const }];
 export const DOWNS: Area = {
   key: 'downs', map: 'downs', tileset: 'downs', music: 'fields', region: 'THE FARMLAND', place: 'The downs', time: 'Late morning',
-  dialogue: downs, assets: ['hound'], ground: 'grass', surfaces: { 3: 'dirt', 7: 'stone', 11: 'dirt', 25: 'dirt', 26: 'dirt' },
+  dialogue: { ...downs, ...downsLore }, assets: ['hound'], ground: 'grass', surfaces: { 3: 'dirt', 7: 'stone', 11: 'dirt', 25: 'dirt', 26: 'dirt' },
   grade: { saturation: -0.3, brightness: 0.86, vignette: 0.4 },
-  npcs: [{ point: 'ram', texture: 'ram' }, { point: 'kid', texture: 'kid' }],
+  npcs: [{ point: 'ram', texture: 'ram' }, { point: 'kid', texture: 'kid' }, { point: 'bard', texture: 'bard' }],
   enemies: [
     // Hounds hunt the way hounds do: unseen until they are on you.
     { point: 'hound-west', encounter: 'hound', hiddenIf: [{ flag: 'hounds-fed' }], ambush: true },
@@ -323,9 +325,9 @@ export const PASS: Area = {
   decorate: scene => snowfall(scene, 640, 1024),
 };
 export const FORT: Area = {
-  key: 'fort', map: 'fort', tileset: 'fort', music: 'highlands', region: 'THE HIGHLANDS', place: 'The fort town', time: 'Morning', dialogue: fort,
+  key: 'fort', map: 'fort', tileset: 'fort', music: 'highlands', region: 'THE HIGHLANDS', place: 'The fort town', time: 'Morning', dialogue: { ...fort, ...fortLore },
   ground: 'dirt', surfaces: { 2: 'stone', 5: 'stone', 20: 'grass', 22: 'water' }, grade: COLD, enemies: [],
-  npcs: ['sergeant', 'quartermaster', 'lynx', 'veteran', 'merchant', 'fence'].map(name => ({ point: name, texture: name })),
+  npcs: ['sergeant', 'quartermaster', 'lynx', 'veteran', 'merchant', 'fence', 'chaplain', 'raven', 'teacher'].map(name => ({ point: name, texture: name })),
   props: [{ point: 'camp-fort', texture: 'campfire', hiddenIf: [] }],
   camps: { 'camp-fort': { prompt: 'Rest by the garrison fire', cost: 4, lines: ['The garrison lets you sit at their fire for a few coins. Nobody asks about the brand.'] } },
   exits: {
@@ -386,11 +388,11 @@ export const OSSUARY: Area = {
 
 // The weir above the fen: the otters' country, the church fishery, and the smugglers' stair up to the highlands.
 export const WEIR: Area = {
-  key: 'weir', map: 'weir', tileset: 'fen', music: 'wilds', region: 'THE FARMLAND', place: 'The weir', time: 'Grey afternoon', dialogue: weir,
+  key: 'weir', map: 'weir', tileset: 'fen', music: 'wilds', region: 'THE FARMLAND', place: 'The weir', time: 'Grey afternoon', dialogue: { ...weir, ...weirLore },
   ground: 'grass', surfaces: { 2: 'water', 3: 'wood', 21: 'stone' }, grade: { saturation: -0.45, brightness: 0.72, vignette: 0.55 },
   npcs: [
     { point: 'warden', texture: 'goose' }, { point: 'brother', texture: 'otter-kit', hiddenIf: [{ flag: 'brother-freed' }] },
-    { point: 'elder', texture: 'otter-elder' }, { point: 'kin', texture: 'otter-kit' }, { point: 'smuggler', texture: 'mink' },
+    { point: 'elder', texture: 'otter-elder' }, { point: 'kin', texture: 'otter-kit' }, { point: 'smuggler', texture: 'mink' }, { point: 'ferry', texture: 'ferry' },
   ],
   enemies: [
     { point: 'wisp-1', encounter: 'wisp' }, { point: 'wisp-2', encounter: 'wisp', ambush: true },

@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 17,
+  "nextobjectid": 18,
   "layers": [
     {
       "id": 1,
@@ -2755,6 +2755,18 @@
         },
         {
           "id": 13,
+          "name": "ferry",
+          "type": "",
+          "x": 200,
+          "y": 456,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 14,
           "name": "weir-spot",
           "type": "",
           "x": 392,
@@ -2766,7 +2778,7 @@
           "point": true
         },
         {
-          "id": 14,
+          "id": 15,
           "name": "wisp-1",
           "type": "",
           "x": 520,
@@ -2778,7 +2790,7 @@
           "point": true
         },
         {
-          "id": 15,
+          "id": 16,
           "name": "wisp-2",
           "type": "",
           "x": 104,
@@ -2790,7 +2802,7 @@
           "point": true
         },
         {
-          "id": 16,
+          "id": 17,
           "name": "drowned-1",
           "type": "",
           "x": 184,

@@ -89,7 +89,7 @@ const at=(x,y)=>[x*16+8,y*16+8];
     ['ram',...at(49,19)],['kid',...at(53,19)],['hut',...at(50,18)],['camp-downs',...at(44,22)],['fold',...at(54,25)],['sheep-1',...at(55,24)],['sheep-2',...at(54,26)],
     ['dewpond-spot',...at(40,24)],
     ['barrow-door',368,472],['from-barrow',368,456],
-    ['figure',...at(42,33)],['east',952,160],['from-drove',932,160],['cairn',...at(8,31)],
+    ['figure',...at(42,33)],['east',952,160],['from-drove',932,160],['cairn',...at(8,31)],['bard',...at(10,31)],
     ['hound-west',...at(12,13)],['hound-east',...at(46,33)],
   ]);
 }

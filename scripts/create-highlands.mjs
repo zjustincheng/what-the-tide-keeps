@@ -181,7 +181,7 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
     ['barracks-door',...at(9,9)],['from-barracks',...at(9,10)],
     ['sergeant',...at(21,31)],['quartermaster',...at(35,9)],['lynx',...at(34,12)],['veteran',...at(37,12)],
     ['merchant',218,440],['fence',...at(40,27)],
-    ['board',...at(19,13)],['hooks',...at(40,25)],['camp-fort',...at(28,18)],
+    ['board',...at(19,13)],['chaplain',...at(6,11)],['raven',...at(42,14)],['teacher',...at(21,20)],['hooks',...at(40,25)],['camp-fort',...at(28,18)],
   ]);
 }
 

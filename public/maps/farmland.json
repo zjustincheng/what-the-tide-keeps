@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 53,
+  "nextobjectid": 56,
   "layers": [
     {
       "id": 1,
@@ -6699,6 +6699,42 @@
         },
         {
           "id": 43,
+          "name": "pilgrim",
+          "type": "",
+          "x": 792,
+          "y": 504,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 44,
+          "name": "carter",
+          "type": "",
+          "x": 632,
+          "y": 408,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 45,
+          "name": "beekeeper",
+          "type": "",
+          "x": 840,
+          "y": 120,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 46,
           "name": "downs",
           "type": "",
           "x": 1016,
@@ -6710,7 +6746,7 @@
           "point": true
         },
         {
-          "id": 44,
+          "id": 47,
           "name": "from-downs",
           "type": "",
           "x": 992,
@@ -6722,7 +6758,7 @@
           "point": true
         },
         {
-          "id": 45,
+          "id": 48,
           "name": "upstream",
           "type": "",
           "x": 224,
@@ -6734,7 +6770,7 @@
           "point": true
         },
         {
-          "id": 46,
+          "id": 49,
           "name": "from-fen",
           "type": "",
           "x": 224,
@@ -6746,7 +6782,7 @@
           "point": true
         },
         {
-          "id": 47,
+          "id": 50,
           "name": "water-1",
           "type": "",
           "x": 168,
@@ -6758,7 +6794,7 @@
           "point": true
         },
         {
-          "id": 48,
+          "id": 51,
           "name": "water-2",
           "type": "",
           "x": 184,
@@ -6770,7 +6806,7 @@
           "point": true
         },
         {
-          "id": 49,
+          "id": 52,
           "name": "water-3",
           "type": "",
           "x": 200,
@@ -6782,7 +6818,7 @@
           "point": true
         },
         {
-          "id": 50,
+          "id": 53,
           "name": "water-4",
           "type": "",
           "x": 168,
@@ -6794,7 +6830,7 @@
           "point": true
         },
         {
-          "id": 51,
+          "id": 54,
           "name": "water-5",
           "type": "",
           "x": 184,
@@ -6806,7 +6842,7 @@
           "point": true
         },
         {
-          "id": 52,
+          "id": 55,
           "name": "water-6",
           "type": "",
           "x": 200,

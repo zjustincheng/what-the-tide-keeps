@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 7,
+  "nextobjectid": 8,
   "layers": [
     {
       "id": 1,
@@ -1651,6 +1651,18 @@
           "type": "",
           "x": 344,
           "y": 152,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 7,
+          "name": "marine",
+          "type": "",
+          "x": 344,
+          "y": 184,
           "width": 0,
           "height": 0,
           "rotation": 0,

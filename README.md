@@ -309,6 +309,20 @@ The regions are joined in more than one place, and some links only open from the
 - **The high tarn**, up the smugglers' stair, is a frozen lake under the pass. Cut fishing holds **mountain char**, the most valuable fish, found nowhere else. The trapper's partner lies under the ice; bring him her ring and he gives you the **Frost ring** (the vulture's keepsake: 7 more health, hits 1 softer). Hounds and a raider hunt on the ice. A rope ladder climbs to the middle of the pass, but it can only be let down from the pass side.
 - **The drove road** runs from the downs, east up the chalk, to the battlefield's south gate. A wolf drover takes herbivores' sheep up to the carnivores' fort for them, and remembers a man with no fur carrying a sack toward the abbey. Raiders camp in a ring of boulders with a stash of stolen coin. The gate at the top is barred from the battlefield side: lift the bar from there and the road opens both ways.
 
+## The world, as people tell it
+
+Some people carry the world's history rather than the plot. Each has several things to ask about (`src/content/lore.ts`):
+
+- **A novice** in the church: the Covenant and the Long Table, the salt-water basin and the coastal saying "the tide keeps what it takes," why only the condemned are raised, and the alchemists who built the rite.
+- **A pilgrim** at the old shrine in the fields: the Hunger Wars, why the peace is really fish, what the shrine's oath meant, and the last shrine where the fish come ashore.
+- **A seal fish-carter** at the crossroads: why the sea peoples are not citizens, the sea's own laws (pirate articles, shark blood-debts, whale grudges), and why the kraken attacked.
+- **A hedgehog beekeeper** in the orchard: why insects are not people under the Covenant, and why the pests grew so large.
+- **A stork scribe** in Millbrook's square: why grimoires are licensed (a spell doesn't care how big you are), mana and why hiding it is suspicious, and the hedge-witches.
+- **An old hare marine** in the inn: the night the kraken came over the harbour wall, the feast, and who rules now that every ruler is dead.
+- **A crow** on the downs: the nursery rhyme of the nations, the mountain holds and their closed rookeries, and the oldest song, from before mana.
+- **A crane ferrywoman** at the weir: the river towns on stilts, the sickness and the round-ups of the venomous, and crates sealed for a lighthouse no chart shows.
+- **The garrison chaplain**, **a raven courier**, and **a wolf schoolmistress** in the fort: what resurrection costs and where it goes, the carnivores' faith, the holds' unsigned order and their archive of every letter ever sent, the catechism, and the winter of no bread as the children's grandparents tell it.
+
 ## Death and memory
 
 The hero begins with eight of his ten memories; his home and his name were lost before the game starts. A party wipe wakes him at the cot, where he must choose one held memory to forget before he can move. Each memory shows what forgetting it costs and the Hollow perk that replaces it:
@@ -381,6 +395,7 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/buildings.spec.ts` — entering the hall, tannery, and mill.
 - `tests/music.spec.ts` — themes per place and battle, muting, volume, and levels.
 - `tests/rules/themes.test.ts` — every theme fits its loop and range.
+- `tests/lore.spec.ts` and `tests/rules/lore.test.ts` — the keepers of lore and what they know.
 - `tests/connected.spec.ts` and `tests/rules/connected.test.ts` — the weir, the tarn, the drove road, and their shortcuts.
 - `tests/preboss.spec.ts` and `tests/rules/preboss.test.ts` — what has to be done before the boar and the hyena, and their conversations.
 - `tests/alive.spec.ts` — enemies chasing and giving up, and fighters reacting in battle.

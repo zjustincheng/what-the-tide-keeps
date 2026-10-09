@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 
-type Ears = 'long' | 'wool' | 'horns' | 'antlers' | 'pointed';
+// none: birds, tortoises, and seals, whose heads are just the head.
+type Ears = 'long' | 'wool' | 'horns' | 'antlers' | 'pointed' | 'none';
 type Villager = { fur: number; muzzle: number; cloth: number; trim: number; ears: Ears; child?: boolean };
 
 // Placeholder townsfolk, drawn on the same 20×26 grid as the priest.
@@ -35,6 +36,18 @@ const VILLAGERS: Record<string, Villager> = {
   mink: { fur: 0x2e2420, muzzle: 0x8a7a6a, cloth: 0x4a3a28, trim: 0x8a6a3a, ears: 'pointed' },
   trapper: { fur: 0xa88a60, muzzle: 0xe0d4bc, cloth: 0x5a4a3a, trim: 0xc8ccc8, ears: 'pointed' },
   drover: { fur: 0x7a7a74, muzzle: 0xc0b8a8, cloth: 0x5a4a30, trim: 0x8a3a30, ears: 'pointed' },
+  // Keepers of the world's history.
+  novice: { fur: 0xb8946a, muzzle: 0xe8d8c0, cloth: 0x8a8a7a, trim: 0xb8b69b, ears: 'long' },
+  pilgrim: { fur: 0x6a7a5a, muzzle: 0x8a8a6a, cloth: 0x6a5a44, trim: 0xb8a070, ears: 'none' },
+  carter: { fur: 0x5a5e62, muzzle: 0x8a8e90, cloth: 0x3a4a5a, trim: 0x8aa0a8, ears: 'none' },
+  beekeeper: { fur: 0x6a5a48, muzzle: 0xd8c8a8, cloth: 0xc8b878, trim: 0x6a6a5a, ears: 'pointed' },
+  scribe: { fur: 0xe8e4dc, muzzle: 0xc85a3a, cloth: 0x3a3a48, trim: 0xd8d0b8, ears: 'none' },
+  marine: { fur: 0xb8a888, muzzle: 0xe0d4c0, cloth: 0x3a4a6a, trim: 0xc8b878, ears: 'long' },
+  bard: { fur: 0x2a2a2e, muzzle: 0x4a4a4e, cloth: 0x5a3a4a, trim: 0xc8a858, ears: 'none' },
+  ferry: { fur: 0xd8dcdc, muzzle: 0x3a3a3a, cloth: 0x4a5a50, trim: 0xa83a2a, ears: 'none' },
+  chaplain: { fur: 0xe0e0dc, muzzle: 0x2a2a28, cloth: 0x8a8a7a, trim: 0xd8c878, ears: 'pointed' },
+  raven: { fur: 0x1e1e24, muzzle: 0x3a3a40, cloth: 0x6a5a3a, trim: 0xa89060, ears: 'none' },
+  teacher: { fur: 0x9a9a94, muzzle: 0xd8d4c8, cloth: 0x4a3a5a, trim: 0xc8c0a8, ears: 'pointed' },
   // The fort town in the highlands: a carnivore garrison, and the herbivores who trade there.
   sergeant: { fur: 0x6a6a6a, muzzle: 0xb8b0a0, cloth: 0x4a3a34, trim: 0x8a3a30, ears: 'pointed' },
   quartermaster: { fur: 0x3a3a38, muzzle: 0xe0dcd0, cloth: 0x5a5040, trim: 0x8a7a5a, ears: 'pointed' },

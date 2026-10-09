@@ -1680,6 +1680,18 @@
           "rotation": 0,
           "visible": true,
           "point": true
+        },
+        {
+          "id": 9,
+          "name": "novice",
+          "type": "",
+          "x": 72,
+          "y": 232,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
         }
       ]
     }
