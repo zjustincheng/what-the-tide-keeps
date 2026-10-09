@@ -151,7 +151,7 @@ test('coming to the vulture with her note in hand, there is no fight', async ({ 
 });
 
 test('the deserters, the hyena, her ledger, and the inquisitor on the road', async ({ page }) => {
-  await start(page, { ...BEAR, flags: ['bear-free', 'boar-defeated', 'vulture-free', 'bridge-lowered', 'ossuary-key', 'hyena-challenged'] }, 'abbey', 'from-battlefield');
+  await start(page, { ...BEAR, flags: ['bear-free', 'boar-defeated', 'vulture-free', 'bridge-lowered', 'ossuary-key', 'hyena-challenged', 'lantern'] }, 'abbey', 'from-battlefield');
   await place(page, 'abbey', 260, 240);
   await page.keyboard.down('d');
   await expect(page.getByRole('heading', { name: 'Deserter hexer' })).toBeVisible();
@@ -182,4 +182,26 @@ test('the deserters, the hyena, her ledger, and the inquisitor on the road', asy
   await page.keyboard.up('s');
   await page.getByRole('button', { name: /^Run/ }).click();
   await page.getByRole('button', { name: 'Get away' }).click();
+});
+
+test('the old border fort: the captain holds the lantern, and the smith tempers what you carry', async ({ page }) => {
+  await start(page, { ...BEAR, flags: ['bear-free', 'boar-defeated', 'vulture-free'], found: ['crow-feather'], coins: 40 }, 'fort', 'from-pass');
+  // The smith offers only what you own.
+  await go(page, 'fort', 680, 348, 'Speak to the smith');
+  await talk(page);
+  await expect(page.getByRole('heading', { name: 'The smith' })).toBeVisible();
+  await page.getByRole('button', { name: /Buy Temper the Crow's feather/ }).click();
+  expect(JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.world.v1')))!).tempered).toEqual(['crow-feather']);
+  await page.getByRole('button', { name: 'Leave' }).click();
+  // Up to the border fort, through the captain, to the lantern.
+  await go(page, 'fort', 384, 24, 'Climb to the old border fort', 'border-keep');
+  await place(page, 'border-keep', 424, 200);
+  await page.keyboard.down('w');
+  await expect(page.getByRole('heading', { name: 'Deserter captain' })).toBeVisible();
+  await page.keyboard.up('w');
+  await expect(page.locator('.follower h4')).toHaveText(['Lieutenant']);
+  await win(page);
+  await go(page, 'border-keep', 472, 152, 'Take the lantern');
+  await talk(page);
+  expect(JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.world.v1')))!).flags).toEqual(expect.arrayContaining(['captain-slain', 'lantern']));
 });

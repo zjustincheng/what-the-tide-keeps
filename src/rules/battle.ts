@@ -2,7 +2,7 @@
 // Rule modules import each other with .ts extensions so Node can run their tests directly.
 import type { Hollow } from './memory';
 import { MEMBER_IDS, mods, NO_MODS } from './gear.ts';
-import type { Gear, Mods } from './gear';
+import type { Gear, KeepsakeId, Mods } from './gear';
 import { BOOKS, SPELLS, STARTING_BOOKS } from './spells.ts';
 import type { Books, SpellId } from './spells';
 import { NO_SUPPLIES, SUPPLIES } from './economy.ts';
@@ -11,7 +11,7 @@ import type { Drained, Wounds } from './world';
 export type MemberId = 'chameleon' | 'bear' | 'vulture';
 export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze' | 'gather';
 export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm' | 'warden' | 'leech' | 'hound' | 'pack' | 'wisp' | 'drowned'
-  | 'raider' | 'ghoul' | 'vulture' | 'pair' | 'hyena' | 'inquisitor';
+  | 'raider' | 'ghoul' | 'vulture' | 'pair' | 'hyena' | 'inquisitor' | 'captain';
 export const SPELL = 'Salt lance';
 // Each caster's spell. Until a spell is studied (analyzed, or survived once) its name is hidden, it can't be dodged,
 // and no barrier stops it. Once studied, it can be seen coming, dodged, and barred.
@@ -67,6 +67,8 @@ export type Battle = Readonly<{
   snared: boolean;
   // Bosses change once they are down to half health.
   stage: 1 | 2;
+  // Which wave of the fight this is, and how many there are.
+  wave: number; waves: number;
   // Supplies brought into the fight; whatever is left goes back into the pack.
   supplies: Supplies;
   log: readonly string[];
@@ -128,6 +130,8 @@ export const ENEMIES = {
     opening: 'Two deserters step out of the abbey gate: a hexer with ink on his hands, and a brute with a pick. They have done this together before.' },
   hyena: { name: 'The hyena', short: 'hyena', health: 130, mana: 8, veiled: false,
     opening: 'The hyena looks up from the bones. "Nobody comes down here to pray." Behind her, the dead she keeps get up.' },
+  captain: { name: 'Deserter captain', short: 'captain', health: 124, mana: 8, veiled: true,
+    opening: 'A wolf in a garrison coat with the badges cut off stands up from the inner yard\'s fire. "Nobody\'s coming for that lantern. Nobody\'s coming for us." His lieutenant draws.' },
   inquisitor: { name: 'The inquisitor', short: 'inquisitor', health: 600, mana: 60, veiled: false,
     opening: 'The largest signature you have ever felt. A ram in grey, the royal seal at his collar. "Convict. You are a long way from your church." You cannot win this. Run.' },
 } as const satisfies Record<Encounter, unknown>;
@@ -143,6 +147,8 @@ export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; healt
   pack: [{ name: 'Hound', health: 14, weapon: 'bite' }, { name: 'Hound', health: 14, weapon: 'bite' }],
   // The hexer's brute hits hard and physically, in the same round the hexer casts.
   pair: [{ name: 'Brute', health: 38, weapon: 'pick', damage: 8 }],
+  // The captain's lieutenant shields him with a crossbow.
+  captain: [{ name: 'Lieutenant', health: 34, weapon: 'crossbow', damage: 6 }],
   // The hyena's dead get up again, unless she has eaten them.
   hyena: [{ name: 'Ghoul', health: 24, weapon: 'claws', damage: 5 }, { name: 'Ghoul', health: 24, weapon: 'claws', damage: 5 }],
 };
@@ -204,6 +210,16 @@ const QUIET = 'The signature flickers out. It is quiet again.';
 
 // After any blow the party lands, a boss brought down for the first time rises into its second stage instead of falling.
 function staged(battle: Battle): Battle {
+  // A fight in waves: when one falls, the next comes on.
+  if (battle.phase === 'victory' && battle.wave < battle.waves) {
+    const allActed = battle.party.every(member => member.health <= 0 || member.acted);
+    return {
+      ...battle, wave: battle.wave + 1, phase: allActed ? 'enemy' : 'player',
+      enemy: { ...battle.enemy, health: battle.enemy.maxHealth, mana: battle.enemy.maxMana },
+      followers: battle.followers.map(follower => ({ ...follower, health: follower.maxHealth, eaten: false })),
+      log: [...battle.log.filter(line => line !== QUIET), `Another ${ENEMIES[battle.encounter].short} comes on. (${battle.wave + 1} of ${battle.waves})`],
+    };
+  }
   const stage = STAGES[battle.encounter];
   if (!stage || battle.stage === 2 || battle.enemy.health > 0) return battle;
   const allActed = battle.party.every(member => member.health <= 0 || member.acted);
@@ -240,11 +256,13 @@ export type BattleOptions = Readonly<{
   wounds?: Wounds; drained?: Drained;
   // An ambush gives the enemy the first turn. A surprise, from a hero with hidden mana, costs the enemy its first move.
   ambush?: boolean; surprise?: boolean;
+  // tempered: keepsakes the smith has tempered. waves: how many times the enemy comes on before the fight is won.
+  tempered?: readonly KeepsakeId[]; waves?: number;
 }>;
 export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], options: BattleOptions = {}): Battle {
-  const { hollow = UNHOLLOWED, gear, books = STARTING_BOOKS, roster = MEMBER_IDS, supplies = NO_SUPPLIES, wounds = {}, drained = {}, ambush = false, surprise = false } = options;
+  const { hollow = UNHOLLOWED, gear, books = STARTING_BOOKS, roster = MEMBER_IDS, supplies = NO_SUPPLIES, wounds = {}, drained = {}, ambush = false, surprise = false, tempered = [], waves = 1 } = options;
   const member = (id: MemberId, base: number, mana: number): Member => {
-    const worn = gear ? mods(gear, id) : NO_MODS;
+    const worn = gear ? mods(gear, id, tempered) : NO_MODS;
     const maxHealth = Math.max(1, base + worn.health);
     // Heroes enter hurt if they were hurt before; a hero who fell stays down.
     const health = Math.max(0, maxHealth - (wounds[id] ?? 0));
@@ -258,7 +276,7 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
     party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10)].filter(member => roster.includes(member.id)),
     enemy: { health: scaled(ENEMIES[encounter].health), maxHealth: scaled(ENEMIES[encounter].health), mana: ENEMIES[encounter].mana, maxMana: ENEMIES[encounter].mana },
     followers: (FOLLOWERS[encounter] ?? []).map(({ name, health }) => ({ name, health: scaled(health), maxHealth: scaled(health), mana: 4, maxMana: 4 })),
-    fury: 0, step: 0, snared: surprise && !ambush, stage: 1, supplies,
+    fury: 0, step: 0, snared: surprise && !ambush, stage: 1, wave: 1, waves, supplies,
     log: [ENEMIES[encounter].opening, ...(ambush ? ['Ambush! It moves before you can.'] : surprise ? ['It never saw you coming. It loses its first move.'] : [])],
   };
 }
@@ -401,6 +419,12 @@ function plainIntent(battle: Battle): Move & { tell: string } {
       : battle.stage === 2
         ? { name: 'Frenzy', type: 'physical', tell: `She doesn't stop. Three blows, each one hungrier.${fed}`, damage: 4 + Math.floor(battle.fury / 2), hits: 3, piercing: 2, window: { perfect: 50, graze: 120 } }
         : { name: 'Rend', type: 'physical', tell: `She comes in low.${fed}`, damage: 9 + battle.fury, piercing: 3 + Math.floor(battle.fury / 2), window: { perfect: 50, graze: 120 } };
+  }
+  if (battle.encounter === 'captain') {
+    // A volley every third round, an execution blow when someone is down, a sabre otherwise.
+    if (battle.round % 3 === 0) return { name: 'Volley', type: 'physical', tell: 'He calls the volley. Three bolts from the walls, one after another, and no guard will stop them.', damage: 5, hits: 3, unblockable: true, window: { perfect: 50, graze: 130 } };
+    if (battle.party.some(member => member.health <= 0)) return { name: 'Execution', type: 'physical', tell: 'He looks at the fallen and lifts the sabre in both hands. The next blow will go through a guard.', damage: 15, piercing: 8, window: { perfect: 40, graze: 110 } };
+    return { name: 'Sabre', type: 'physical', tell: 'He comes on with the sabre, the way they taught him on the walls. A guard won\'t stop all of it.', damage: 10, piercing: 3, window: { perfect: 55, graze: 140 } };
   }
   if (battle.encounter === 'inquisitor')
     return { name: 'Verdict', type: 'spell', spell: 'Verdict', tell: 'He does not hurry. Verdict: no barrier will stop it, and it cannot be dodged.', damage: 14, undodgeable: true, unblockable: true };

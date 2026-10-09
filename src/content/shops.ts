@@ -1,5 +1,6 @@
 import type { Ware } from '../rules/economy';
 import type { ShopId } from '../rules/world';
+import { KEEPSAKE_IDS } from '../rules/gear';
 
 // What each shopkeeper offers. Names are placeholders.
 export const SHOPS: Record<ShopId, { title: string; note: string; wares: Ware[] }> = {
@@ -35,6 +36,12 @@ export const SHOPS: Record<ShopId, { title: string; note: string; wares: Ware[] 
     title: 'The shuttered stall, open',
     note: 'Lamplight through the slats. No prices chalked anywhere. She tells you, and you pay.',
     wares: [{ gear: 'night-cloak', price: 30 }, { gear: 'smuggled-blade', price: 35 }, { gear: 'banned-hymnal', price: 60 }, { supply: 'smelling-salts', fair: true }],
+  },
+  // The fort's smith tempers a keepsake once: its benefits grow by half, its drawbacks don't change.
+  smith: {
+    title: 'The smith',
+    note: 'He looks at each thing a long time before he names a price. Whatever it gives you, tempered, it gives more. What it costs you stays.',
+    wares: KEEPSAKE_IDS.map(id => ({ temper: id, price: 30 })),
   },
   reeve: {
     title: 'The reeve',

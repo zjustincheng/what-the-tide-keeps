@@ -324,6 +324,16 @@ Once the boar is dead the priest has new orders: bodies are going missing from t
 - **The ossuary.** The hyena **talks first**: why she keeps the dead from the ground while the fish ration shrinks, and the monk's part in it. The fight starts when you tell her the church sent you. She keeps the dead of the famine in its niches, and she is the hardest fight so far. She attacks with two ghouls and raises them every third round. **Anyone falling**, on either side, makes her stronger, as the guideline says. Every other round she **feeds on a fallen body**, healing and growing stronger still. Her laughing lunge is very fast and drives through most of a guard. A fallen hero is safe only under a barrier, which can now be cast on the fallen, and she will eat her own downed ghouls, which she then can't raise again. Beaten, she tells you why she was exiled, that the man with no fur ate at her table, and that her ledger proves the church cut the fish first. The vulture notices the kingdom punished her with the same work it exiled the hyena for.
 - **Afterwards.** On the pass, a signature far larger than anything so far waits by the road: the inquisitor. He cannot be beaten yet. Run.
 
+### The old border fort
+
+Through the fort town's north gate, a ruined keep the town was built to feed, held now by deserters. Wolves hunt the snow outside. The archive in the west wing keeps the border war's rolls (the farmland's dead with names, the highland dead with numbers) and one newer roll, in a church hand, recording how long the garrison takes to grow angry each time the fish is cut. Its last entry: SUFFICIENT. The **deserter captain** holds the inner yard with his lieutenant: his volleys come three at a time and can't be blocked, and he executes the fallen through any guard. Behind him, at the top of the tower, is the garrison's **signal lantern**.
+
+The ossuary is dark now: the monk gives you the key, but tells you not to go down without a real light. The stair opens only with the key and the lantern.
+
+The fort's **smith** tempers keepsakes, once each, for 30 coins: a tempered keepsake's benefits grow by half (rounded up) and its drawbacks stay the same (`keepsakeMods` in `src/rules/gear.ts`).
+
+Some fights come in **waves**: the raider camp on the drove road and the raider on the high switchback each send a second raider when the first falls.
+
 ### Anchors
 
 The vulture's note teaches **anchors**. Once she has joined, every rest at a fire, bed, or cot offers to **write a memory down**. A written memory can't be chosen when the next wipe takes something; after that death it has to be written again. There is one slot. Anchors are saved with the memories in `tide-keeps.memory.v1`.

@@ -47,6 +47,7 @@ const VILLAGERS: Record<string, Villager> = {
   harbourmaster: { fur: 0x5a6a4a, muzzle: 0x8a8a6a, cloth: 0x2a3a4a, trim: 0xc8b878, ears: 'none' },
   steward: { fur: 0x8a5a3a, muzzle: 0xe8d8c0, cloth: 0x3a2a2a, trim: 0xb89a5a, ears: 'pointed' },
   cleaner: { fur: 0xe0e0dc, muzzle: 0x2a2a28, cloth: 0x6a6a5a, trim: 0x8a8a7a, ears: 'pointed' },
+  smith: { fur: 0x4a3a2c, muzzle: 0x8a6a4a, cloth: 0x3a3028, trim: 0x8a8a8a, ears: 'pointed' },
   marten: { fur: 0x5a3a24, muzzle: 0xe8c890, cloth: 0x2a2a30, trim: 0xb89a5a, ears: 'pointed' },
   // Keepers of the world's history.
   novice: { fur: 0xb8946a, muzzle: 0xe8d8c0, cloth: 0x8a8a7a, trim: 0xb8b69b, ears: 'long' },

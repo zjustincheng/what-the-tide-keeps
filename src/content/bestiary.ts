@@ -18,5 +18,6 @@ export const BESTIARY: Record<Encounter, string> = {
   vulture: 'She takes you for a grave thief. She can\'t be beaten; live through three rounds. Better still, bring her own note.',
   pair: 'Two deserters, a hexer and a brute. The hexer casts Salt lance while the brute swings: guard against one, bar the other.',
   hyena: 'The gravedigger of the winter of no bread. Anyone falling feeds her, on either side; a barrier keeps her off a fallen body. Brought down once, she eats her own dead and rises.',
+  captain: 'A garrison captain who walked off the walls with his company, and kept the walls. His volleys come three at a time, and he executes the fallen through any guard. Kill the lieutenant or live with the bolts.',
   inquisitor: 'A royal investigator, certain of your guilt. His Verdict cannot be dodged or barred. You cannot win this yet. Run.',
 };

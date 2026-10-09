@@ -159,6 +159,8 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
   fill(furniture,0,0,47,1,F.TOP);fill(furniture,0,34,47,35,F.TOP);fill(furniture,0,0,1,35,F.TOP);fill(furniture,46,0,47,35,F.TOP);
   fill(furniture,23,34,24,35,0);fill(floor,23,34,24,35,F.GATE);
   fill(furniture,46,17,47,18,0);fill(floor,46,17,47,18,F.GATE);
+  // The north gate, up to the old border fort.
+  fill(furniture,23,0,24,1,0);fill(floor,23,0,24,1,F.GATE);
   fill(floor,16,12,32,22,F.FLAG);
   // The barracks, north-west.
   fill(furniture,3,3,14,5,F.ROOF);fill(furniture,3,6,14,8,F.BARRACKS);put(furniture,9,8,F.DOOR);put(furniture,5,7,F.WINDOW);put(furniture,12,7,F.WINDOW);
@@ -181,7 +183,7 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
     ['barracks-door',...at(9,9)],['from-barracks',...at(9,10)],
     ['sergeant',...at(21,31)],['quartermaster',...at(35,9)],['lynx',...at(34,12)],['veteran',...at(37,12)],
     ['merchant',218,440],['fence',...at(40,27)],
-    ['board',...at(19,13)],['waystone',...at(30,14)],['from-waystone',...at(30,15)],['chaplain',...at(11,10)],['altar',...at(12,10)],['raven',...at(21,13)],['teacher',...at(21,20)],['cub-1',...at(20,22)],['cub-2',...at(22,22)],['hooks',...at(40,25)],['camp-fort',...at(28,18)],
+    ['board',...at(19,13)],['waystone',...at(30,14)],['from-waystone',...at(30,15)],['north',384,8],['from-keep',384,40],['smith',...at(42,20)],['chaplain',...at(11,10)],['altar',...at(12,10)],['raven',...at(21,13)],['teacher',...at(21,20)],['cub-1',...at(20,22)],['cub-2',...at(22,22)],['hooks',...at(40,25)],['camp-fort',...at(28,18)],
   ]);
 }
 
@@ -294,5 +296,33 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
     ['drover',...at(16,9)],['sheep-a',...at(12,8)],['sheep-b',...at(19,6)],['sheep-c',...at(20,8)],['drove-cairn',...at(17,9)],['drove-sign',...at(30,10)],
     ['raider-1',...at(40,16)],['raider-2',...at(43,16)],['hound-1',...at(28,14)],['raider-stash',...at(42,19)],['forage-1',...at(24,18)],
     ['gate-1',712,24],['gate-2',728,24],
+  ]);
+}
+
+// The old border fort: a ruined keep above the fort town, held by deserters, with the border war's archive and the signal lantern.
+{
+  const m=grid(40,34,H.HEATHER);const {floor,furniture,put,fill}=m;
+  snowfield(m,()=>true,0.2,5.1);
+  fill(furniture,0,0,39,0,H.ROCK);fill(furniture,0,33,39,33,H.ROCK);fill(furniture,0,0,0,33,H.ROCK);fill(furniture,39,0,39,33,H.ROCK);
+  // Up from the fort town in the south.
+  fill(furniture,19,33,20,33,0);fill(floor,19,22,20,33,H.ROAD);
+  // The keep: outer walls, broken in places; the gate on the south side.
+  fill(furniture,8,4,31,4,H.AWALL);fill(furniture,8,21,31,21,H.AWALL);fill(furniture,8,4,8,21,H.AWALL);fill(furniture,31,4,31,21,H.AWALL);
+  fill(furniture,19,21,20,21,0);fill(furniture,8,12,8,13,0);
+  fill(floor,9,5,30,20,H.FLAG);
+  // The archive in the west wing, walled off with a door; the inner yard and the tower in the north-east.
+  fill(furniture,9,10,16,10,H.AWALL);fill(furniture,16,5,16,10,H.AWALL);fill(furniture,16,8,16,9,0);
+  fill(furniture,22,5,22,12,H.AWALL);fill(furniture,22,12,30,12,H.AWALL);fill(furniture,26,12,27,12,0);
+  put(floor,28,6,H.STAIR);put(floor,29,6,H.STAIR);
+  for(const [x,y] of [[12,15],[17,17],[25,16],[14,19],[28,18]]) put(furniture,x,y,H.PILLAR);
+  for(const [x,y] of [[11,7],[13,7],[10,8]]) put(furniture,x,y,H.NICHE);
+  put(furniture,18,14,H.BANNER);put(furniture,24,18,H.TENT);
+  for(const [x,y] of [[3,6],[5,26],[35,8],[34,27],[2,16],[36,18],[13,28],[27,29]]) put(furniture,x,y,H.PINE);
+  for(const [x,y] of [[6,30],[31,25],[16,25]]) put(furniture,x,y,H.BOULDER);
+  write('border-keep','highland',HROWS,HIGHLAND_SOLID,m,[
+    ['south',328,536],['from-fort',328,512],
+    ['hound-1',...at(6,24)],['hound-2',...at(33,22)],
+    ['captain',...at(26,10)],['lantern',...at(29,8)],
+    ['archive',...at(12,8)],['roll',...at(14,6)],['camp',...at(24,19)],['banner',...at(18,15)],['keep-gate',...at(19,22)],
   ]);
 }

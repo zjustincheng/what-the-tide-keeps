@@ -10,7 +10,7 @@ import { hall, inn, millInside, tannery } from '../content/interiors';
 import { barrow, downs } from '../content/downs';
 import { fen, weir } from '../content/fen';
 import { feastHall, harbour, square } from '../content/capital';
-import { abbey, barracks, battlefield, drove, fort, ossuary, pass, tarn } from '../content/highlands';
+import { abbey, barracks, battlefield, drove, fort, keep, ossuary, pass, tarn } from '../content/highlands';
 import type { Encounter } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
@@ -32,7 +32,8 @@ export type Area = {
   npcs: { point: string; texture: string; hiddenIf?: Condition[] }[];
   // Enemies respawn on every visit unless hiddenIf holds; defeat applies once the fight is won.
   // An ambusher's signature flickers out as the hero comes near, and it strikes first.
-  enemies: { point: string; encounter: Encounter; hiddenIf?: Condition[]; defeat?: Effect; ambush?: true }[];
+  // waves: how many times it comes on before the fight is won.
+  enemies: { point: string; encounter: Encounter; hiddenIf?: Condition[]; defeat?: Effect; ambush?: true; waves?: number }[];
   // SVG art in public/assets to load, beyond the map, tiles, and enemies.
   assets?: string[];
   // Objects on the map that disappear once any hiddenIf condition holds. Solid ones block the way.
@@ -331,7 +332,7 @@ export const PASS: Area = {
   ...HIGHLAND_GROUND, key: 'pass', map: 'pass', music: 'highlands', place: 'The high pass', time: 'Morning', dialogue: pass, grade: COLD,
   npcs: [],
   enemies: [
-    { point: 'raider-1', encounter: 'raider', ambush: true }, { point: 'raider-2', encounter: 'raider', ambush: true }, { point: 'raider-3', encounter: 'raider', ambush: true },
+    { point: 'raider-1', encounter: 'raider', ambush: true }, { point: 'raider-2', encounter: 'raider', ambush: true }, { point: 'raider-3', encounter: 'raider', ambush: true, waves: 2 },
     // After the hyena, something far larger is on the road. It cannot be beaten yet.
     { point: 'inquisitor', encounter: 'inquisitor', hiddenIf: [{ not: { flag: 'hyena-slain' } }] },
   ],
@@ -352,13 +353,14 @@ export const FORT: Area = {
   ground: 'dirt', surfaces: { 2: 'stone', 5: 'stone', 20: 'grass', 22: 'water' }, grade: COLD, enemies: [],
   npcs: [...['sergeant', 'quartermaster', 'lynx', 'veteran', 'merchant', 'fence', 'chaplain', 'raven', 'teacher'].map(name => ({ point: name, texture: name })),
     // The schoolmistress's two pupils, sitting for a lesson in the square.
-    { point: 'cub-1', texture: 'cub' }, { point: 'cub-2', texture: 'cub' }],
+    { point: 'cub-1', texture: 'cub' }, { point: 'cub-2', texture: 'cub' }, { point: 'smith', texture: 'smith' }],
   props: [{ point: 'camp-fort', texture: 'campfire', hiddenIf: [] }, { point: 'altar', texture: 'altar', solid: true, hiddenIf: [] }],
   camps: { 'camp-fort': { prompt: 'Rest by the garrison fire', cost: 4, lines: ['The garrison lets you sit at their fire for a few coins. Nobody asks about the brand.'] } },
   exits: {
     south: { to: 'pass', spawn: 'from-fort', prompt: 'Go back down the pass' },
     east: { to: 'battlefield', spawn: 'from-fort', prompt: 'Go down to the battlefield' },
     'barracks-door': { to: 'barracks', spawn: 'spawn', prompt: 'Enter the barracks' },
+    north: { to: 'border-keep', spawn: 'from-fort', prompt: 'Climb to the old border fort' },
   },
   decorate: scene => snowfall(scene, 768, 576),
 };
@@ -396,8 +398,9 @@ export const ABBEY: Area = {
   ],
   exits: {
     west: { to: 'battlefield', spawn: 'from-abbey', prompt: 'Go back over the ravine' },
-    stair: { to: 'ossuary', spawn: 'spawn', prompt: 'Go down into the ossuary', requires: { flag: 'ossuary-key' },
-      barred: { speaker: 'THE STAIR', lines: ['An iron grate across the stair, chained and locked from above with a church padlock. Someone up here has the key.'] } },
+    // Down into the dark: the key, and a light she can't put out.
+    stair: { to: 'ossuary', spawn: 'spawn', prompt: 'Go down into the ossuary', requires: { all: [{ flag: 'ossuary-key' }, { flag: 'lantern' }] },
+      barred: { speaker: 'THE STAIR', lines: ['An iron grate across the stair, chained and locked from above with a church padlock. Someone up here has the key.', 'Below the grate is a dark you can feel on your face. You would want a real light.'] } },
   },
   decorate: scene => snowfall(scene, 640, 480),
 };
@@ -467,7 +470,8 @@ export const DROVE: Area = {
   npcs: [{ point: 'drover', texture: 'drover' }],
   forage: { 'forage-1': 'berry' },
   enemies: [
-    { point: 'raider-1', encounter: 'raider', ambush: true }, { point: 'raider-2', encounter: 'raider', ambush: true },
+    // The raider camp fights in two waves.
+    { point: 'raider-1', encounter: 'raider', ambush: true, waves: 2 }, { point: 'raider-2', encounter: 'raider', ambush: true },
     { point: 'hound-1', encounter: 'hound', ambush: true },
   ],
   props: [
@@ -524,4 +528,17 @@ export const FEAST_HALL: Area = {
   exits: { out: { to: 'square', spawn: 'from-hall', prompt: 'Go back out to the square' } },
 };
 
-export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL];
+// The old border fort above the fort town.
+export const BORDER_KEEP: Area = {
+  ...HIGHLAND_GROUND, key: 'border-keep', map: 'border-keep', music: 'highlands', place: 'The old border fort', time: 'Dusk', dialogue: keep,
+  grade: { saturation: -0.45, brightness: 0.74, vignette: 0.55 }, npcs: [], assets: ['lieutenant'],
+  enemies: [
+    { point: 'hound-1', encounter: 'hound', ambush: true }, { point: 'hound-2', encounter: 'hound', ambush: true },
+    { point: 'captain', encounter: 'captain', hiddenIf: [{ flag: 'captain-slain' }], defeat: { set: 'captain-slain' } },
+  ],
+  props: [{ point: 'lantern', texture: 'cache', hiddenIf: [{ not: { flag: 'captain-slain' } }, { flag: 'lantern' }] }],
+  exits: { south: { to: 'fort', spawn: 'from-keep', prompt: 'Go back down to the fort town' } },
+  decorate: scene => snowfall(scene, 640, 544),
+};
+
+export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP];

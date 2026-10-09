@@ -57,7 +57,7 @@ test('the sister keeps the lane shut until the hero knows the truth, and the boa
 });
 
 test('the monk holds the ossuary key until his yard is buried, and the hyena talks first', async ({ page }) => {
-  await start(page, ['bear-free', 'boar-defeated', 'vulture-free', 'bridge-lowered', 'pair-slain'], 'abbey', 'from-battlefield');
+  await start(page, ['bear-free', 'boar-defeated', 'vulture-free', 'bridge-lowered', 'pair-slain', 'lantern'], 'abbey', 'from-battlefield');
   await go(page, 'abbey', 536, 112, 'Go down into the ossuary');
   await expect(page.locator('#dialogue-text')).toContainText('iron grate');
   await talk(page);

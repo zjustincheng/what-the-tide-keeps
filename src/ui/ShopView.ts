@@ -1,12 +1,12 @@
 import { SHOPS } from '../content/shops';
-import { buy, canBuy, gearName, gearText, price, SUPPLIES } from '../rules/economy';
+import { buy, canBuy, gearName, gearText, offered, price, SUPPLIES } from '../rules/economy';
 import type { Ware } from '../rules/economy';
 import { FISH, FISH_IDS } from '../rules/fishing';
 import type { ShopId, World } from '../rules/world';
 import { music } from '../audio/music';
 
-const name = (ware: Ware) => 'sellCatch' in ware ? 'Your catch' : 'deed' in ware ? ware.name : 'gear' in ware ? gearName(ware.gear) : SUPPLIES[ware.supply].name;
-const text = (ware: Ware) => 'sellCatch' in ware ? 'Every fish in your pack.' : 'deed' in ware ? ware.text : 'gear' in ware ? gearText(ware.gear) : SUPPLIES[ware.supply].text;
+const name = (ware: Ware) => 'sellCatch' in ware ? 'Your catch' : 'deed' in ware ? ware.name : 'gear' in ware ? gearName(ware.gear) : 'temper' in ware ? `Temper the ${gearName(ware.temper)}` : SUPPLIES[ware.supply].name;
+const text = (ware: Ware) => 'sellCatch' in ware ? 'Every fish in your pack.' : 'deed' in ware ? ware.text : 'gear' in ware ? gearText(ware.gear) : 'temper' in ware ? `Now: ${gearText(ware.temper)} Tempered, its benefits grow by half.` : SUPPLIES[ware.supply].text;
 
 // A shopkeeper's wares. Coins and supplies bought here are lost on a wipe.
 export class ShopView {
@@ -23,7 +23,7 @@ export class ShopView {
     this.root.tabIndex = -1;
     this.root.innerHTML = `
       <div class="battle-heading"><p class="eyebrow">MILLBROOK</p><h2 id="shop-title">${title}</h2><p class="equipment-intro">${note}</p><p class="purse" aria-live="polite"></p></div>
-      <ul class="wares">${SHOPS[shop].wares.map((ware, index) => `<li data-ware="${index}"><div><strong>${name(ware)}</strong><small>${text(ware)}</small><small class="owned"></small></div>
+      <ul class="wares">${SHOPS[shop].wares.map((ware, index) => !offered(world, ware) ? '' : `<li data-ware="${index}"><div><strong>${name(ware)}</strong><small>${text(ware)}</small><small class="owned"></small></div>
         <button type="button" data-buy="${index}" aria-label="Buy ${name(ware)}"></button></li>`).join('')}</ul>
       <button id="shop-close" type="button">Leave</button>`;
     document.querySelector('.game-frame')!.append(this.root);
@@ -52,10 +52,11 @@ export class ShopView {
   private render() {
     this.root.querySelector('.purse')!.textContent = `You carry ${this.world.coins} coins.`;
     SHOPS[this.shop].wares.forEach((ware, index) => {
-      const row = this.root.querySelector<HTMLElement>(`[data-ware="${index}"]`)!;
-      const done = ('deed' in ware && this.world.flags.includes(ware.deed)) || ('gear' in ware && this.world.found.includes(ware.gear));
+      const row = this.root.querySelector<HTMLElement>(`[data-ware="${index}"]`);
+      if (!row) return;
+      const done = ('deed' in ware && this.world.flags.includes(ware.deed)) || ('gear' in ware && this.world.found.includes(ware.gear)) || ('temper' in ware && (this.world.tempered ?? []).includes(ware.temper));
       const button = row.querySelector<HTMLButtonElement>('button')!;
-      button.textContent = 'sellCatch' in ware ? `Sell for ${price(this.world, ware)}` : done ? 'Bought' : `${price(this.world, ware)} coins`;
+      button.textContent = 'sellCatch' in ware ? `Sell for ${price(this.world, ware)}` : done ? ('temper' in ware ? 'Tempered' : 'Bought') : `${price(this.world, ware)} coins`;
       if ('sellCatch' in ware) button.setAttribute('aria-label', 'Sell your catch');
       button.disabled = !canBuy(this.world, ware);
       row.querySelector('.owned')!.textContent = 'supply' in ware ? `In your pack: ${this.world.supplies[ware.supply]}`

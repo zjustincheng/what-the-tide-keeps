@@ -64,6 +64,10 @@ export const fort: Dialogue = {
     { text: 'Play bones. (10 coins)', if: { coins: 10 }, ends: true, lines: ['"Garrison rules. No crying."'], then: { dice: 10 } },
     { text: 'Where did you fight?', lines: ['On the ground below the east gate. Both sides buried each other\'s dead in it, after. Nobody remembers who won.'] },
   ] },
+  smith: { speaker: 'THE SMITH', prompt: 'Speak to the smith', lines: [
+    'Bring me anything you would die without. I\'ll make it worth dying with.',
+    'Thirty coins a piece, once each. After that it\'s as good as it will ever be.',
+  ], then: { shop: 'smith' } },
   // Up here the herbivores are the frightened ones, and too frightened to overcharge.
   merchant: { speaker: 'A GOAT BEHIND THE BARS', prompt: 'Speak to the goat', lines: [
     'Stay on that side. Please.',
@@ -189,6 +193,7 @@ export const abbey: Dialogue = {
     { text: 'They\'re buried. The key.', if: { all: [{ flag: 'dead-1' }, { flag: 'dead-2' }, { flag: 'dead-3' }, { not: { flag: 'ossuary-key' } }] }, ends: true, lines: [
       'He holds it out at arm\'s length, as if it might bite.',
       '"Lock it behind you. Whatever comes up."',
+      '"And take a light. Not a candle: she puts out candles. The garrison\'s old signal lantern is in the border fort, if the deserters haven\'t burned it for warmth."',
       'You receive the ossuary key.',
     ], then: { set: 'ossuary-key' } },
   ] },
@@ -350,4 +355,31 @@ export const drove: Dialogue = {
     'Under the raiders\' bedding: a purse of mixed coin, some of it church, and a firepot wrapped in a sheepskin.',
     'You receive 12 coins and a firepot.',
   ], then: { earn: 12, supply: 'firepot', set: 'drover-cache' } },
+};
+
+// The old border fort above the fort town, held by deserters, with the border war's archive and the signal lantern.
+export const keep: Dialogue = {
+  'keep-gate': { speaker: 'THE OLD BORDER FORT', prompt: 'Examine the gate', lines: [
+    'The fort the fort town was built to feed, back when the border ran here. The gate has been barred from inside with a cart.',
+  ] },
+  archive: { speaker: 'THE ARCHIVE', prompt: 'Search the archive', lines: [
+    'Shelves of garrison rolls from the border war. The farmland\'s dead have names. The highland dead have numbers.',
+    'One roll is newer than the rest, in a careful church hand: RATION OBSERVATIONS, HIGHLAND GARRISON. Weekly.',
+    'It records how long the garrison takes to grow angry each time the fish is cut, and how angry. The last entry says only: SUFFICIENT.',
+  ] },
+  roll: { speaker: 'A LIST ON THE WALL', prompt: 'Read the list', lines: [
+    'The names of the deserters who hold the keep, written by one of them. Twelve names. Eleven crossed out, with a date and a word beside each.',
+    'HUNGER. HUNGER. COLD. HIS OWN HAND. HUNGER.',
+  ] },
+  camp: { speaker: 'THEIR FIRE', prompt: 'Examine the fire', lines: [
+    'A pot with nothing in it but snow, boiled. The bones of something small, picked clean. They have been up here a long time.',
+  ] },
+  banner: { speaker: 'THE BANNER', prompt: 'Examine the banner', lines: [
+    'The garrison\'s banner, cut down and hung again upside down.',
+  ] },
+  lantern: { speaker: 'THE SIGNAL LANTERN', prompt: 'Take the lantern', hiddenIf: [{ not: { flag: 'captain-slain' } }, { flag: 'lantern' }], lines: [
+    'At the top of the tower stair, the garrison\'s signal lantern: an iron cage around a lens as big as your head. Lit, it could be seen from the farmland.',
+    'It\'s heavy. It\'s the kind of light she can\'t put out.',
+    'Found: the signal lantern.',
+  ], then: { set: 'lantern' } },
 };

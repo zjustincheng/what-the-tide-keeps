@@ -16,7 +16,7 @@ export class EquipmentView {
   private owned: KeepsakeId[];
   private books: BookId[];
 
-  constructor(private gear: Gear, private carried: Books, found: readonly Found[], private party: readonly MemberId[], private hollow: Hollow, heroImage: string, onChange: (gear: Gear, books: Books) => void, onClose: () => void) {
+  constructor(private gear: Gear, private carried: Books, found: readonly Found[], private party: readonly MemberId[], private hollow: Hollow, heroImage: string, onChange: (gear: Gear, books: Books) => void, onClose: () => void, private tempered: readonly KeepsakeId[] = []) {
     this.owned = found.filter((id): id is KeepsakeId => id in KEEPSAKES);
     // Each hero's own grimoire is always theirs to carry; others must be found.
     // Only the grimoires of heroes who have joined, and those found along the way.
@@ -65,7 +65,7 @@ export class EquipmentView {
 
   private render() {
     // Preview the party exactly as the next fight will build it.
-    const party = createBattle('locust', [], { hollow: this.hollow, gear: this.gear, books: this.carried, roster: this.party }).party;
+    const party = createBattle('locust', [], { hollow: this.hollow, gear: this.gear, books: this.carried, roster: this.party, tempered: this.tempered }).party;
     for (const id of this.party) {
       const card = this.root.querySelector<HTMLElement>(`[data-member="${id}"]`)!;
       const member = party.find(member => member.id === id)!;
@@ -81,10 +81,10 @@ export class EquipmentView {
         const held = this.gear[id][slot];
         const fits = this.owned.filter(keepsake => canEquip(this.owned, id, keepsake));
         const elsewhere = (keepsake: KeepsakeId) => this.party.find(other => other !== id && this.gear[other].includes(keepsake));
-        select.innerHTML = `<option value="">— empty —</option>${fits.map(keepsake => `<option value="${keepsake}" ${keepsake === held ? 'selected' : ''}>${KEEPSAKES[keepsake].name}${elsewhere(keepsake) ? ` (from ${MEMBERS[elsewhere(keepsake)!].name})` : ''}</option>`).join('')}`;
+        select.innerHTML = `<option value="">— empty —</option>${fits.map(keepsake => `<option value="${keepsake}" ${keepsake === held ? 'selected' : ''}>${KEEPSAKES[keepsake].name}${this.tempered.includes(keepsake) ? ' (tempered)' : ''}${elsewhere(keepsake) ? ` (from ${MEMBERS[elsewhere(keepsake)!].name})` : ''}</option>`).join('')}`;
         // A second slot opens once the first is filled.
         select.disabled = !fits.length || (slot > 0 && !this.gear[id][slot - 1]);
-        select.nextElementSibling!.textContent = held ? `${KEEPSAKES[held].effect} ${KEEPSAKES[held].drawback}` : '';
+        select.nextElementSibling!.textContent = held ? `${this.tempered.includes(held) ? 'Tempered: its benefits are half again as strong. ' : ''}${KEEPSAKES[held].effect} ${KEEPSAKES[held].drawback}` : '';
       });
     }
     this.root.querySelector('.found-keepsakes')!.textContent = this.owned.length

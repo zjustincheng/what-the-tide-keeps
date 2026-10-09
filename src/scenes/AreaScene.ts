@@ -42,7 +42,7 @@ type Direction = 'up' | 'down' | 'left' | 'right';
 type Point = { name: string; x: number; y: number };
 type Prop = { sprite: Phaser.Physics.Arcade.Sprite; hiddenIf: Condition[]; shadow?: Phaser.GameObjects.Ellipse };
 type Foe = { encounter: Encounter; defeat?: Effect; fledAt?: number; ambush?: boolean; hidden?: boolean; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container;
-  home: { x: number; y: number }; phase: number; point: string };
+  home: { x: number; y: number }; phase: number; point: string; waves?: number };
 // Ordinary enemies come after the hero once he is in sight, a little slower than he walks; bosses and guardians hold their ground.
 // sight and speed are in pixels and pixels per second. The hero walks at 70.
 const CHASE: Partial<Record<Encounter, { sight: number; speed: number }>> = {
@@ -60,7 +60,7 @@ const PICKED = new Set<string>();
 const HIDE_DRAIN = 2500;
 // Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
 const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8], warden: [22, 26, 5, 4], leech: [28, 24, 2, 4], hound: [20, 22, 6, 8], pack: [22, 24, 5, 6], wisp: [14, 14, 9, 9], drowned: [20, 26, 6, 4],
-  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4] };
+  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4], captain: [22, 24, 5, 6] };
 // Whether the last save succeeded, shared by every area.
 let saved = true;
 // The way out of a conversation, offered whenever the hero comes back to the replies.
@@ -314,7 +314,7 @@ export class AreaScene extends Phaser.Scene {
       }
   }
 
-  private createFoe(at: Point, { encounter, defeat, ambush: lurks, point }: Area['enemies'][number]) {
+  private createFoe(at: Point, { encounter, defeat, ambush: lurks, point, waves }: Area['enemies'][number]) {
     // At night every ordinary enemy hunts unseen.
     const ambush = lurks || (Boolean(loadWorld().night) && Boolean(CHASE[encounter]));
     const [width, height, x, y] = BODY[encounter];
@@ -328,7 +328,7 @@ export class AreaScene extends Phaser.Scene {
     const mana = this.add.text(0, veiled ? -24 : -23, `◇ ${enemyMana(createBattle(encounter))}`, { fontFamily: 'monospace', fontSize: '8px', color: veiled ? '#b7d3c7' : '#dbc58b' }).setOrigin(0.5);
     const signature = this.add.container(at.x, at.y, [ring, mana]).setDepth(5);
     this.tweens.add({ targets: ring, alpha: veiled ? 0.15 : 0.35, duration: veiled ? 1400 : 1000, yoyo: true, repeat: -1 });
-    const foe: Foe = { encounter, sprite, signature, defeat, ambush, home: { x: at.x, y: at.y }, phase: this.foes.length * 1.7, point };
+    const foe: Foe = { encounter, sprite, signature, defeat, ambush, home: { x: at.x, y: at.y }, phase: this.foes.length * 1.7, point, waves };
     this.foes.push(foe);
     this.physics.add.overlap(this.player, sprite, () => this.beginBattle(foe));
   }
@@ -639,7 +639,7 @@ export class AreaScene extends Phaser.Scene {
         saved = saveMemory(wipe(loadMemory())) && saveWorld(drop(loadWorld()));
         this.scene.start('church');
       }
-    }, foe.encounter, { ...this.partyOptions(), ambush: Boolean(foe.ambush && foe.hidden), surprise: this.sneaking });
+    }, foe.encounter, { ...this.partyOptions(), ambush: Boolean(foe.ambush && foe.hidden), surprise: this.sneaking, waves: foe.waves });
   }
 
   // A shop opens after its keeper has spoken, if there is anything left to sell.
@@ -735,7 +735,7 @@ export class AreaScene extends Phaser.Scene {
     music.effect('open');
     this.overlay = new EquipmentView(loadGear(), settle(loadBooks(), roster(loadWorld())), loadWorld().found, roster(loadWorld()), hollow(loadMemory()), this.textures.getBase64('hero'),
       (gear, books) => { saved = saveGear(gear) && saveBooks(books); },
-      () => { this.overlay?.destroy(); this.overlay = undefined; this.renderMemory(); this.resumeExploration(); });
+      () => { this.overlay?.destroy(); this.overlay = undefined; this.renderMemory(); this.resumeExploration(); }, loadWorld().tempered ?? []);
   }
 
   private writeDown(then: () => void) {
@@ -773,7 +773,7 @@ export class AreaScene extends Phaser.Scene {
   // The party as it stands: memories, keepsakes, grimoires, companions, supplies, wounds, and spent mana.
   private partyOptions(): BattleOptions {
     const world = loadWorld();
-    return { hollow: hollow(loadMemory()), gear: loadGear(), books: settle(loadBooks(), roster(world)), roster: roster(world), supplies: world.supplies, wounds: world.wounds, drained: world.drained };
+    return { hollow: hollow(loadMemory()), gear: loadGear(), books: settle(loadBooks(), roster(world)), roster: roster(world), tempered: world.tempered ?? [], supplies: world.supplies, wounds: world.wounds, drained: world.drained };
   }
 
   private toggleHud() {

@@ -67,9 +67,20 @@ export function equip(gear: Gear, owned: readonly KeepsakeId[], member: MemberId
   return next;
 }
 
-export function mods(gear: Gear, member: MemberId): Mods {
+// Which way is better for each modifier: more health is good, more mana shown is not.
+const GOOD: Record<keyof Mods, 1 | -1> = { health: 1, damage: 1, reveal: 1, agility: 1, shown: -1, suppressCost: -1 };
+
+// A tempered keepsake's benefits grow by half (rounded up); its drawbacks stay as they were.
+export function keepsakeMods(id: KeepsakeId, tempered = false): Partial<Mods> {
+  const base = KEEPSAKES[id].mods;
+  if (!tempered) return base;
+  return Object.fromEntries((Object.entries(base) as [keyof Mods, number][]).map(([key, value]) =>
+    [key, Math.sign(value) === GOOD[key] ? Math.sign(value) * Math.ceil(Math.abs(value) * 1.5) : value])) as Partial<Mods>;
+}
+
+export function mods(gear: Gear, member: MemberId, tempered: readonly KeepsakeId[] = []): Mods {
   return gear[member].reduce<Mods>((total, id) => {
-    const add = KEEPSAKES[id].mods;
+    const add = keepsakeMods(id, tempered.includes(id));
     return Object.fromEntries(Object.entries(total).map(([key, value]) => [key, value + (add[key as keyof Mods] ?? 0)])) as Mods;
   }, NO_MODS);
 }
