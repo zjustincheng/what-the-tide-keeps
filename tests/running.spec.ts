@@ -34,7 +34,9 @@ test('running away drops half the coins and takes a parting blow, and the enemy 
   await page.getByRole('button', { name: 'Get away' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.locator('#purse')).toHaveText('10 coins');
-  await expect(page.locator('.hud-hint')).toBeVisible();
+  // The parting blow shows on the party display.
+  const health = await page.getByRole('group', { name: 'Party' }).getByRole('meter', { name: /health/ }).evaluateAll(meters => meters.map(meter => meter.getAttribute('aria-valuetext')));
+  expect(health.some(text => !/^(\d+) of \1$/.test(text ?? ''))).toBe(true);
   // A moment to get clear, and the locust is still there.
   await page.waitForTimeout(300);
   await expect(page.getByRole('dialog')).toHaveCount(0);

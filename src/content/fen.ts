@@ -50,7 +50,7 @@ export const fen: Dialogue = {
   ] },
   'chapel-cache': { speaker: 'A DRY NICHE', prompt: 'Search the niche', hiddenIf: [{ owns: 'drowned-psalter' }], lines: [
     'In a niche above the waterline, a psalter wrapped in oilskin. The pages are swollen but you can read them.',
-    'The Drowned psalter is yours. Whoever carries it can cast Undertow; give it to someone from the Equipment screen.',
+    'Found: Drowned psalter.',
   ], then: { find: 'drowned-psalter' } },
 };
 
@@ -99,7 +99,7 @@ export const weir: Dialogue = {
     'He\'s home. Wet, thin, and home.',
     'Up the cliff, behind the willow, there\'s a stair the river folk cut before the church came. It goes to the high tarn. Use it. Nobody counts what goes up it.',
     'She gives you something from the holt\'s stores: a bone hook, old and very sharp.',
-    'The Weir hook is a keepsake. Equip it from the Equipment screen.',
+    'Found: Weir hook.',
   ], then: { find: 'weir-hook' } }, { if: { flag: 'brother-freed' }, lines: [
     'Use the stair. Tell the trapper at the tarn the otters sent you.',
   ] }], choices: [

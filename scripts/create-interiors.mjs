@@ -65,7 +65,7 @@ const at=(x,y)=>[x*16+8,y*16+8];
   for(const [x,y] of [[12,11],[18,13]]){r.put(r.furniture,x,y,TABLE);r.put(r.furniture,x+1,y,TABLE);r.put(r.floor,x-1,y,STOOL);r.put(r.floor,x+2,y,STOOL);}
   r.put(r.furniture,7,8,BED);r.put(r.furniture,7,11,BED);r.put(r.furniture,7,14,BED);
   r.fill(r.floor,13,15,18,17,RUG);
-  write('inn',r,[['spawn',...at(r.door,17)],['out',...at(r.door,19)],['drinker',...at(14,11)],['patron',...at(20,14)],['bed',...at(8,14)],['tariff',...at(21,9)],['marine',...at(21,11)]]);
+  write('inn',r,[['spawn',...at(r.door,17)],['out',...at(r.door,19)],['drinker',...at(14,11)],['patron',...at(20,14)],['bed',...at(8,14)],['tariff',...at(21,9)],['marine',...at(11,11)]]);
 }
 // The reeve's hall: stone floor, a clerk at a desk, cabinets of records.
 {

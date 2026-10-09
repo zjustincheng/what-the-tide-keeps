@@ -12,7 +12,7 @@ export const downs: Dialogue = {
   ] },
   'tower-cache': { speaker: 'UNDER THE STAIR', prompt: 'Search the rubble', hiddenIf: [{ owns: 'iron-collar' }], lines: [
     'Under the fallen stones of the stair, an iron collar with three links of chain still on it. Too big for any dog.',
-    'The Iron collar is a keepsake. Only the bear can wear it; equip it from the Equipment screen.',
+    'Found: Iron collar.',
   ], then: { find: 'iron-collar' } },
   ram: { speaker: 'THE OLD RAM', prompt: 'Speak to the ram', lines: [
     'Hounds. A pack of them, up at the old watchtower. Three lambs this month.',

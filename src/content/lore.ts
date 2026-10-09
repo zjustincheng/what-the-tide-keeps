@@ -6,7 +6,7 @@ import type { Dialogue } from './dialogue';
 // The church: a novice who has read too much.
 export const churchLore: Dialogue = {
   novice: { speaker: 'A NOVICE', prompt: 'Speak to the novice', lines: [
-    'I\'m not supposed to talk to the condemned. I\'m supposed to sweep around you.',
+    'I\'m not supposed to talk to the condemned. I\'m supposed to keep the basin full and sweep around you.',
     'But you\'ve been more places than I have. I\'ve only been here.',
   ], choices: [
     { text: 'What is the Covenant?', lines: [
@@ -31,9 +31,10 @@ export const churchLore: Dialogue = {
 
 // The farmland: a pilgrim at the old shrine, a seal hauling fish inland, and a hedgehog who keeps bees.
 export const fieldsLore: Dialogue = {
-  pilgrim: { speaker: 'A PILGRIM', prompt: 'Speak to the pilgrim', lines: [
-    'Sit, if you like. The stones don\'t mind who sits by them.',
-    'I walk the old shrines. All of them, one after another, until I don\'t.',
+  // She waits by the track while the shrine is guarded, and sits at it once the warden is gone.
+  pilgrim: { speaker: 'A PILGRIM', prompt: 'Speak to the pilgrim', hiddenIf: [{ flag: 'warden-slain' }], lines: [
+    'Sit, if you like. I\'m waiting for the road to clear.',
+    'I walk the old shrines, one after another. The one past the stones has something hooded at it, and something worse standing in the circle. I\'ll wait. I\'ve waited longer.',
   ], choices: [
     { text: 'Why walk the shrines?', lines: [
       'Each one marks a feeding ground from before the Covenant, where one kind of people used to eat another.',
@@ -54,7 +55,7 @@ export const fieldsLore: Dialogue = {
     ] },
   ] },
   carter: { speaker: 'A SEAL WITH A FISH CART', prompt: 'Speak to the seal', lines: [
-    'Mind the barrels. They\'re counted.',
+    'Mind the cart. The barrels are counted.',
     'I haul for the church, from the harbour to the fort. Fish going inland, me going with them, since nobody else will smell like this.',
   ], choices: [
     { text: 'Are you a citizen?', lines: [
@@ -72,7 +73,7 @@ export const fieldsLore: Dialogue = {
     ] },
   ] },
   beekeeper: { speaker: 'A HEDGEHOG BEEKEEPER', prompt: 'Speak to the beekeeper', lines: [
-    'Slowly. They don\'t like quick.',
+    'Slowly, near the hives. They don\'t like quick.',
     'The orchard needs them, and the locusts come for the orchard. So I keep these and I kill those, and nobody calls it murder either way.',
   ], choices: [
     { text: 'Are insects people?', lines: [
@@ -130,7 +131,7 @@ export const innLore: Dialogue = {
 // The downs and the weir: a crow who sings the nations, and a crane who ferries the rivers.
 export const downsLore: Dialogue = {
   bard: { speaker: 'A CROW WHO SINGS', prompt: 'Speak to the crow', lines: [
-    'A coin for a song, or a song for nothing, if you stand downwind of me.',
+    'From the top of the cairn: a coin for a song, or a song for nothing, if you stand downwind of me.',
   ], choices: [
     { text: 'Sing about the nations.', lines: [
       '"The farmland grows, the highlands guard, the holds look down from stone; the rivers trade with land and sea, the capital holds the throne."',
@@ -168,7 +169,8 @@ export const weirLore: Dialogue = {
 // The fort town: a garrison chaplain, a raven courier out of work, and a wolf who teaches the catechism.
 export const fortLore: Dialogue = {
   chaplain: { speaker: 'THE GARRISON CHAPLAIN', prompt: 'Speak to the chaplain', lines: [
-    'A convict of the church. You\'ve been through the basin more times than I\'ve said the rite.',
+    'He is trimming the candles on a field altar by the barracks door.',
+    '"A convict of the church. You\'ve been through the basin more times than I\'ve said the rite."',
   ], choices: [
     { text: 'Why does the church only raise convicts?', lines: [
       'Officially: because a life given back must be a life owed. The condemned serve until they are used up.',
@@ -184,7 +186,7 @@ export const fortLore: Dialogue = {
     ] },
   ] },
   raven: { speaker: 'A RAVEN COURIER', prompt: 'Speak to the raven', lines: [
-    'Courier of the holds, without anything to carry. Three months now.',
+    'Courier of the holds, without anything to carry. Three months now. I read the notice board to remember what letters look like.',
   ], choices: [
     { text: 'Why did the holds close?', lines: [
       '"By order of the house." That\'s all the gate said when I came back from my last run. No house signed it.',
@@ -199,7 +201,8 @@ export const fortLore: Dialogue = {
     ] },
   ] },
   teacher: { speaker: 'A WOLF SCHOOLMISTRESS', prompt: 'Speak to the schoolmistress', lines: [
-    'Lessons are at dawn, when the children are too cold to fidget. Now I\'m just a wolf in a square.',
+    'Sit still, both of you. Not you, convict. Them.',
+    'We have lessons out here when the barracks is too cold. The square is colder, but it\'s quieter.',
   ], choices: [
     { text: 'What do you teach?', lines: [
       'Letters, sums, and the catechism. "What is the Covenant?" "No citizen eats another." "Who is a citizen?" "Everyone who sat at the Long Table, and their children."',
@@ -214,3 +217,7 @@ export const fortLore: Dialogue = {
     ] },
   ] },
 };
+fieldsLore['pilgrim-shrine'] = { ...fieldsLore.pilgrim, hiddenIf: [{ not: { flag: 'warden-slain' } }], lines: [
+  'Sit, if you like. The stones don\'t mind who sits by them.',
+  'Something stood in this circle for a long time. It\'s gone. I think I have you to thank, so: thank you.',
+] };

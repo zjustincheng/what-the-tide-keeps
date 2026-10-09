@@ -233,7 +233,7 @@ export const abbey: Dialogue = {
   ] }] },
   'abbey-cache': { speaker: 'BEHIND THE ALTAR STONE', prompt: 'Search behind the stone', hiddenIf: [{ owns: 'famine-spoon' }], lines: [
     'Behind the fallen altar stone, a wooden spoon worn thin, wrapped in a ration card from the winter of no bread.',
-    'The Famine spoon is a keepsake. Equip it from the Equipment screen.',
+    'Found: Famine spoon.',
   ], then: { find: 'famine-spoon' } },
 };
 
@@ -303,7 +303,7 @@ export const tarn: Dialogue = {
     { text: 'Give him the ring.', if: { has: 'ring' }, ends: true, lines: [
       'He holds it for a long time without saying anything.',
       '"Take this. It was hers. Better on someone moving." He gives you a band of dark iron, cold as the lake.',
-      'The Frost ring is a keepsake. Only the vulture can wear it.',
+      'Found: Frost ring.',
     ], then: { take: 'ring', set: 'ring-returned', find: 'frost-ring' } },
     { text: 'What is up the cliff?', lines: [
       'The pass. The garrison road. There\'s a rope ladder, if someone up there has let it down.',

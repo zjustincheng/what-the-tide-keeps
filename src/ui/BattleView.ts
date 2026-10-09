@@ -35,7 +35,7 @@ export class BattleView {
     this.root.setAttribute('aria-modal', 'true');
     this.root.setAttribute('aria-labelledby', 'battle-title');
     this.root.innerHTML = `
-      <div class="battle-heading"><p class="eyebrow">THE CONDEMNED</p><h2 id="battle-title">Stand together.</h2><p id="battle-turn"></p><button id="flee" class="flee" type="button">Run <small>drop half your coins, take a parting blow</small></button></div>
+      <div class="battle-heading"><p class="eyebrow">THE CONDEMNED</p><h2 id="battle-title">Stand together.</h2><p id="battle-turn"></p><button id="flee" class="flee" type="button" title="Drop half your coins and take a parting blow">Run</button></div>
       <div class="enemy-row">
         <div class="fighter enemy-fighter" data-foe="0"><img src="${import.meta.env.BASE_URL}assets/${encounter}.svg" alt="${enemyName}" /></div>
         <div><h3>${enemyName}</h3><div class="health-bar" role="meter" aria-label="${enemyName} health" aria-valuemin="0" aria-valuemax="100"><span></span></div><p id="enemy-condition"></p><p class="mana" id="enemy-mana"></p></div>

@@ -41,12 +41,12 @@ export const farm: Dialogue = {
   ] },
   'ruin-cache': { speaker: 'IN THE FARMHOUSE ASHES', prompt: 'Search the ashes', hiddenIf: [{ owns: 'snare-primer' }], lines: [
     'Under a fallen beam, a tin box the fire couldn\'t open. Inside, a thin primer of snares and knots in a crooked hand.',
-    "Hedge-witch's primer is yours. Whoever carries it can cast Bramble snare.",
+    "Found: Hedge-witch's primer.",
   ], then: { find: 'snare-primer' } },
   // The badger's thanks for letting them go.
   'tusk-cache': { speaker: 'UNDER THE THIRD FENCE POST', prompt: 'Dig under the fence post', hiddenIf: [{ not: { flag: 'followers-spared' } }, { owns: 'boar-tusk' }], lines: [
     'A small box wrapped in sacking. Inside, a boar\'s tusk, broken off and polished smooth from years of being held.',
-    "The Boar's tusk is a keepsake. Equip it from the Equipment screen.",
+    "Found: Boar's tusk.",
   ], then: { find: 'boar-tusk' } },
   cup: { speaker: 'AMONG THE BOAR\'S THINGS', prompt: 'Examine the cup', hiddenIf: [{ not: { flag: 'boar-defeated' } }], lines: [
     'A gilded cup with the capital\'s crest, out of place on a pig farm.',

@@ -36,7 +36,7 @@ export const fields: Dialogue = {
     'Quiet. You\'ll scare them.',
     'Fish come inland by church license now, in barrels, at a price. I catch my own. That\'s still allowed.',
     'You get hurt a lot, don\'t you. Take this. It was my mother\'s. It\'s mostly mending.',
-    "Pond-keeper's primer is yours. Whoever carries it can cast Still water; give it to someone from the Equipment screen.",
+    "Found: Pond-keeper's primer.",
   ], then: { find: 'pond-primer' }, variants: [{ if: { owns: 'pond-primer' }, lines: [
     'Quiet. You\'ll scare them.',
     'Use the primer. It was never any good sitting on a shelf.',
@@ -56,7 +56,7 @@ export const fields: Dialogue = {
   // Keepsakes left where only someone wandering off the road would find them.
   'camp-cache': { speaker: 'UNDER THE TENT FLAP', prompt: 'Search the bundle', hiddenIf: [{ owns: 'cracked-mirror' }], lines: [
     'A bundle in oilcloth, kept out of the rain. Inside: a hand mirror, cracked straight across.',
-    'The Cracked mirror is a keepsake. Equip it from the Equipment screen.',
+    'Found: Cracked mirror.',
   ], then: { find: 'cracked-mirror' } },
   'orchard-cache': { speaker: 'IN THE LAST ROW OF TREES', prompt: 'Search the roots', hiddenIf: [{ owns: 'crow-feather' }], lines: [
     'A crow\'s hoard between the roots: buttons, a thimble, and one long black feather.',

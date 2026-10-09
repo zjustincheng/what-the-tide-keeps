@@ -321,15 +321,15 @@ The regions are joined in more than one place, and some links only open from the
 
 Some people carry the world's history rather than the plot. Each has several things to ask about (`src/content/lore.ts`):
 
-- **A novice** in the church: the Covenant and the Long Table, the salt-water basin and the coastal saying "the tide keeps what it takes," why only the condemned are raised, and the alchemists who built the rite.
-- **A pilgrim** at the old shrine in the fields: the Hunger Wars, why the peace is really fish, what the shrine's oath meant, and the last shrine where the fish come ashore.
-- **A seal fish-carter** at the crossroads: why the sea peoples are not citizens, the sea's own laws (pirate articles, shark blood-debts, whale grudges), and why the kraken attacked.
-- **A hedgehog beekeeper** in the orchard: why insects are not people under the Covenant, and why the pests grew so large.
-- **A stork scribe** in Millbrook's square: why grimoires are licensed (a spell doesn't care how big you are), mana and why hiding it is suspicious, and the hedge-witches.
-- **An old hare marine** in the inn: the night the kraken came over the harbour wall, the feast, and who rules now that every ruler is dead.
-- **A crow** on the downs: the nursery rhyme of the nations, the mountain holds and their closed rookeries, and the oldest song, from before mana.
-- **A crane ferrywoman** at the weir: the river towns on stilts, the sickness and the round-ups of the venomous, and crates sealed for a lighthouse no chart shows.
-- **The garrison chaplain**, **a raven courier**, and **a wolf schoolmistress** in the fort: what resurrection costs and where it goes, the carnivores' faith, the holds' unsigned order and their archive of every letter ever sent, the catechism, and the winter of no bread as the children's grandparents tell it.
+- **A novice** tending the salt basin in the church: the Covenant and the Long Table, the salt-water basin and the coastal saying "the tide keeps what it takes," why only the condemned are raised, and the alchemists who built the rite.
+- **A pilgrim** waiting by the field track until the old shrine is safe, then sitting at it once the warden is dead: the Hunger Wars, why the peace is really fish, what the shrine's oath meant, and the last shrine where the fish come ashore.
+- **A seal fish-carter** camped at the crossroads fire beside his cart: why the sea peoples are not citizens, the sea's own laws (pirate articles, shark blood-debts, whale grudges), and why the kraken attacked.
+- **A hedgehog beekeeper** among her hives in the orchard: why insects are not people under the Covenant, and why the pests grew so large.
+- **A stork scribe** at a licensing lectern outside the reeve's hall: why grimoires are licensed (a spell doesn't care how big you are), mana and why hiding it is suspicious, and the hedge-witches.
+- **An old hare marine** sharing a table with the carter in the inn: the night the kraken came over the harbour wall, the feast, and who rules now that every ruler is dead.
+- **A crow** perched on the cairn on the downs: the nursery rhyme of the nations, the mountain holds and their closed rookeries, and the oldest song, from before mana.
+- **A crane ferrywoman** at the boat landing on the weir: the river towns on stilts, the sickness and the round-ups of the venomous, and crates sealed for a lighthouse no chart shows.
+- **The garrison chaplain** at his field altar by the barracks, **a raven courier** by the notice board, and **a wolf schoolmistress** teaching two cubs in the square: what resurrection costs and where it goes, the carnivores' faith, the holds' unsigned order and their archive of every letter ever sent, the catechism, and the winter of no bread as the children's grandparents tell it.
 
 ## Death and memory
 

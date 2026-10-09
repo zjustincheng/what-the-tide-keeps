@@ -699,8 +699,8 @@ export class AreaScene extends Phaser.Scene {
         <span class="hud-numbers">${member.health} / ${member.maxHealth}</span>
         <div class="mana-bar" role="meter" aria-label="${MEMBERS[member.id].name} mana" aria-valuemin="0" aria-valuemax="${member.maxMana}" aria-valuenow="${member.mana}" aria-valuetext="${member.mana} of ${member.maxMana} mana" style="--mana:${member.mana / member.maxMana * 100}%"><span></span></div>
         <span class="hud-numbers">◇ ${member.mana} / ${member.maxMana}</span></div></div>`;
-    }).join('') + (party.some(member => member.health < member.maxHealth || member.mana < member.maxMana) ? '<p class="hud-hint">Rest at a fire to heal and recover mana</p>' : '');
-    element('memory-status').textContent = `Some things are already missing · ${held(loadMemory()).length} of ${MEMORY_IDS.length} memories remain${saved ? '' : ' · not saved'}`;
+    }).join('');
+    element('memory-status').textContent = `${held(loadMemory()).length} of ${MEMORY_IDS.length} memories remain${saved ? '' : ' · not saved'}`;
   }
 
   private resumeExploration() {

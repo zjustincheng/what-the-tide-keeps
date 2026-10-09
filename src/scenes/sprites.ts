@@ -48,6 +48,7 @@ const VILLAGERS: Record<string, Villager> = {
   chaplain: { fur: 0xe0e0dc, muzzle: 0x2a2a28, cloth: 0x8a8a7a, trim: 0xd8c878, ears: 'pointed' },
   raven: { fur: 0x1e1e24, muzzle: 0x3a3a40, cloth: 0x6a5a3a, trim: 0xa89060, ears: 'none' },
   teacher: { fur: 0x9a9a94, muzzle: 0xd8d4c8, cloth: 0x4a3a5a, trim: 0xc8c0a8, ears: 'pointed' },
+  cub: { fur: 0x8a8a84, muzzle: 0xd0ccc0, cloth: 0x5a4a38, trim: 0x8a7a5a, ears: 'pointed', child: true },
   // The fort town in the highlands: a carnivore garrison, and the herbivores who trade there.
   sergeant: { fur: 0x6a6a6a, muzzle: 0xb8b0a0, cloth: 0x4a3a34, trim: 0x8a3a30, ears: 'pointed' },
   quartermaster: { fur: 0x3a3a38, muzzle: 0xe0dcd0, cloth: 0x5a5040, trim: 0x8a7a5a, ears: 'pointed' },
@@ -121,6 +122,35 @@ export function createSprites(scene: Phaser.Scene) {
   const crow = scene.make.graphics({ x: 0, y: 0 });
   crow.fillStyle(0x0e0f10).fillRect(0, 2, 3, 1).fillRect(2, 1, 4, 3).fillRect(5, 2, 3, 1).fillRect(3, 0, 2, 1);
   crow.generateTexture('crow', 8, 4); crow.destroy();
+  // What the new people work at: the seal's fish cart, the beekeeper's hives, the scribe's lectern, the chaplain's field altar.
+  const fishcart = scene.make.graphics({ x: 0, y: 0 });
+  fishcart.fillStyle(0x4a3828).fillRect(1, 6, 26, 9);
+  fishcart.fillStyle(0x6a5236).fillRect(2, 7, 24, 3);
+  for (const x of [4, 11, 18]) fishcart.fillStyle(0x5a4630).fillRect(x, 1, 6, 8).fillStyle(0x3c3326).fillRect(x, 3, 6, 1);
+  fishcart.fillStyle(0x2a2420).fillRect(3, 14, 5, 5).fillRect(20, 14, 5, 5);
+  fishcart.fillStyle(0x8aa0a8).fillRect(6, 0, 2, 1).fillRect(13, 0, 3, 1);
+  fishcart.generateTexture('fishcart', 28, 19); fishcart.destroy();
+  const hive = scene.make.graphics({ x: 0, y: 0 });
+  hive.fillStyle(0x6a5236).fillRect(2, 13, 12, 3);
+  hive.fillStyle(0xb89a5a).fillRect(3, 4, 10, 10);
+  hive.fillStyle(0x9a7a42).fillRect(3, 7, 10, 1).fillRect(3, 10, 10, 1);
+  hive.fillStyle(0x7a5a2a).fillRect(2, 2, 12, 3);
+  hive.fillStyle(0x2a2018).fillRect(7, 12, 2, 2);
+  hive.fillStyle(0xd8b840).fillRect(12, 1, 1, 1).fillRect(1, 6, 1, 1);
+  hive.generateTexture('hive', 16, 16); hive.destroy();
+  const lectern = scene.make.graphics({ x: 0, y: 0 });
+  lectern.fillStyle(0x4a3828).fillRect(6, 7, 4, 9);
+  lectern.fillStyle(0x6a5236).fillRect(1, 2, 14, 6);
+  lectern.fillStyle(0xd8d0b8).fillRect(2, 3, 5, 3).fillRect(9, 3, 5, 3);
+  lectern.fillStyle(0x8a3a30).fillRect(7, 5, 2, 3);
+  lectern.generateTexture('lectern', 16, 16); lectern.destroy();
+  const altar = scene.make.graphics({ x: 0, y: 0 });
+  altar.fillStyle(0x5a564e).fillRect(1, 8, 14, 8);
+  altar.fillStyle(0x7a766c).fillRect(0, 6, 16, 3);
+  altar.fillStyle(0xd8d0b8).fillRect(5, 3, 1, 4).fillRect(10, 3, 1, 4);
+  altar.fillStyle(0xf0b34a).fillRect(5, 2, 1, 1).fillRect(10, 2, 1, 1);
+  altar.fillStyle(0x8a8a7a).fillRect(7, 1, 2, 5).fillRect(6, 2, 4, 1);
+  altar.generateTexture('altar', 16, 16); altar.destroy();
   // Things that grow wild and can be picked: thyme, mushrooms, and hedge berries.
   const herb = scene.make.graphics({ x: 0, y: 0 });
   herb.fillStyle(0x3e5a32).fillRect(3, 6, 2, 6).fillRect(7, 3, 2, 9).fillRect(11, 5, 2, 7);

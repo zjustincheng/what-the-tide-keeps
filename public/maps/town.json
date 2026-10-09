@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 22,
+  "nextobjectid": 23,
   "layers": [
     {
       "id": 1,
@@ -1757,8 +1757,8 @@
           "id": 15,
           "name": "scribe",
           "type": "",
-          "x": 280,
-          "y": 200,
+          "x": 168,
+          "y": 120,
           "width": 0,
           "height": 0,
           "rotation": 0,
@@ -1767,6 +1767,18 @@
         },
         {
           "id": 16,
+          "name": "lectern",
+          "type": "",
+          "x": 184,
+          "y": 120,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 17,
           "name": "hall-door",
           "type": "",
           "x": 88,
@@ -1778,7 +1790,7 @@
           "point": true
         },
         {
-          "id": 17,
+          "id": 18,
           "name": "from-hall",
           "type": "",
           "x": 72,
@@ -1790,7 +1802,7 @@
           "point": true
         },
         {
-          "id": 18,
+          "id": 19,
           "name": "inn-door",
           "type": "",
           "x": 104,
@@ -1802,7 +1814,7 @@
           "point": true
         },
         {
-          "id": 19,
+          "id": 20,
           "name": "from-inn",
           "type": "",
           "x": 88,
@@ -1814,7 +1826,7 @@
           "point": true
         },
         {
-          "id": 20,
+          "id": 21,
           "name": "tannery-door",
           "type": "",
           "x": 456,
@@ -1826,7 +1838,7 @@
           "point": true
         },
         {
-          "id": 21,
+          "id": 22,
           "name": "from-tannery",
           "type": "",
           "x": 440,

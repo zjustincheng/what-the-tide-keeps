@@ -10,17 +10,17 @@ const at = (page: Page, key: string) => page.evaluate(async key => {
 }, key);
 
 const PEOPLE: [area: string, spawn: string, x: number, y: number, prompt: string][] = [
-  ['church', 'spawn', 72, 252, 'Speak to the novice'],
-  ['farmland', 'spawn', 792, 524, 'Speak to the pilgrim'],
+  ['church', 'spawn', 356, 282, 'Speak to the novice'],
+  ['farmland', 'spawn', 712, 364, 'Speak to the pilgrim'],
   ['farmland', 'spawn', 632, 428, 'Speak to the seal'],
   ['farmland', 'spawn', 840, 140, 'Speak to the beekeeper'],
-  ['town', 'spawn', 280, 220, 'Speak to the scribe'],
-  ['inn', 'spawn', 344, 204, 'Speak to the old marine'],
-  ['downs', 'from-fields', 168, 524, 'Speak to the crow'],
-  ['weir', 'from-fen', 200, 476, 'Speak to the crane'],
-  ['fort', 'from-pass', 104, 204, 'Speak to the chaplain'],
-  ['fort', 'from-pass', 680, 252, 'Speak to the raven'],
-  ['fort', 'from-pass', 344, 348, 'Speak to the schoolmistress'],
+  ['town', 'spawn', 150, 120, 'Speak to the scribe'],
+  ['inn', 'spawn', 184, 204, 'Speak to the old marine'],
+  ['downs', 'from-fields', 116, 476, 'Speak to the crow'],
+  ['weir', 'from-fen', 212, 440, 'Speak to the crane'],
+  ['fort', 'from-pass', 184, 188, 'Speak to the chaplain'],
+  ['fort', 'from-pass', 364, 216, 'Speak to the raven'],
+  ['fort', 'from-pass', 344, 308, 'Speak to the schoolmistress'],
 ];
 
 test('the keepers of lore stand where they should and have things to tell', async ({ page }) => {

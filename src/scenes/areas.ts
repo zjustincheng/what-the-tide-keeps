@@ -95,7 +95,8 @@ export const FARMLAND: Area = {
   dialogue: { ...fields, ...fieldsLore }, assets: ['bear', 'nymph', 'votive'],
   ground: 'grass', surfaces: { 3: 'dirt', 16: 'wood', 17: 'water', 27: 'leaves' },
   npcs: [{ point: 'bear', texture: 'bear', hiddenIf: [{ flag: 'bear-free' }] }, { point: 'miller', texture: 'miller' }, { point: 'heron', texture: 'heron' }, { point: 'shepherd', texture: 'shepherd' },
-    { point: 'pilgrim', texture: 'pilgrim' }, { point: 'carter', texture: 'carter' }, { point: 'beekeeper', texture: 'beekeeper' }],
+    { point: 'pilgrim', texture: 'pilgrim', hiddenIf: [{ flag: 'warden-slain' }] }, { point: 'pilgrim-shrine', texture: 'pilgrim', hiddenIf: [{ not: { flag: 'warden-slain' } }] },
+    { point: 'carter', texture: 'carter' }, { point: 'beekeeper', texture: 'beekeeper' }],
   enemies: [
     // The reeve's fields: clearing both earns the writ that frees the bear.
     { point: 'locust', encounter: 'locust', defeat: { set: 'pests-field' } }, { point: 'locust-road', encounter: 'locust' },
@@ -111,6 +112,9 @@ export const FARMLAND: Area = {
     ...([['camp-cache', 'cracked-mirror'], ['orchard-cache', 'crow-feather'], ['shrine-cache', 'covenant-token'], ['ford-cache', 'yoke-peg']] as const)
       .map(([point, keepsake]) => ({ point, texture: 'cache', hiddenIf: [{ owns: keepsake }, ...(GUARDED[point] ? [{ not: { flag: GUARDED[point]! } }] : [])] })),
     { point: 'camp-fields', texture: 'campfire', hiddenIf: [] },
+    // The seal's fish cart by the crossroads fire, and the beekeeper's hives in the orchard.
+    { point: 'carter-cart', texture: 'fishcart', solid: true, hiddenIf: [] },
+    { point: 'hive-1', texture: 'hive', solid: true, hiddenIf: [] }, { point: 'hive-2', texture: 'hive', solid: true, hiddenIf: [] },
     { point: 'gibbet', texture: 'gibbet', solid: true, hiddenIf: [] },
     // The woods can only be entered across the ford, through the leech.
     { point: 'log', texture: 'log', solid: true, hiddenIf: [] },
@@ -151,7 +155,7 @@ export const TOWN: Area = {
   key: 'town', map: 'town', tileset: 'town', music: 'town', region: 'THE FARMLAND', place: 'Millbrook', time: 'Morning',
   dialogue: { ...town, ...townLore }, enemies: [], ground: 'stone', surfaces: { 3: 'grass', 4: 'dirt' },
   npcs: ['reeve', 'innkeeper', 'shopkeeper', 'child', 'fishmonger', 'fox', 'scribe'].map(name => ({ point: name, texture: name })),
-  props: [{ point: 'stocks', texture: 'stocks', solid: true, hiddenIf: [] }],
+  props: [{ point: 'stocks', texture: 'stocks', solid: true, hiddenIf: [] }, { point: 'lectern', texture: 'lectern', solid: true, hiddenIf: [] }],
   exits: {
     north: { to: 'farmland', spawn: 'from-town', prompt: 'Return to the fields' },
     south: { to: 'border-road', spawn: 'spawn', prompt: 'Take the border road' },
@@ -336,8 +340,10 @@ export const PASS: Area = {
 export const FORT: Area = {
   key: 'fort', map: 'fort', tileset: 'fort', music: 'highlands', region: 'THE HIGHLANDS', place: 'The fort town', time: 'Morning', dialogue: { ...fort, ...fortLore },
   ground: 'dirt', surfaces: { 2: 'stone', 5: 'stone', 20: 'grass', 22: 'water' }, grade: COLD, enemies: [],
-  npcs: ['sergeant', 'quartermaster', 'lynx', 'veteran', 'merchant', 'fence', 'chaplain', 'raven', 'teacher'].map(name => ({ point: name, texture: name })),
-  props: [{ point: 'camp-fort', texture: 'campfire', hiddenIf: [] }],
+  npcs: [...['sergeant', 'quartermaster', 'lynx', 'veteran', 'merchant', 'fence', 'chaplain', 'raven', 'teacher'].map(name => ({ point: name, texture: name })),
+    // The schoolmistress's two pupils, sitting for a lesson in the square.
+    { point: 'cub-1', texture: 'cub' }, { point: 'cub-2', texture: 'cub' }],
+  props: [{ point: 'camp-fort', texture: 'campfire', hiddenIf: [] }, { point: 'altar', texture: 'altar', solid: true, hiddenIf: [] }],
   camps: { 'camp-fort': { prompt: 'Rest by the garrison fire', cost: 4, lines: ['The garrison lets you sit at their fire for a few coins. Nobody asks about the brand.'] } },
   exits: {
     south: { to: 'pass', spawn: 'from-fort', prompt: 'Go back down the pass' },

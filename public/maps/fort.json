@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 19,
+  "nextobjectid": 22,
   "layers": [
     {
       "id": 1,
@@ -3665,8 +3665,8 @@
           "id": 14,
           "name": "chaplain",
           "type": "",
-          "x": 104,
-          "y": 184,
+          "x": 184,
+          "y": 168,
           "width": 0,
           "height": 0,
           "rotation": 0,
@@ -3675,10 +3675,10 @@
         },
         {
           "id": 15,
-          "name": "raven",
+          "name": "altar",
           "type": "",
-          "x": 680,
-          "y": 232,
+          "x": 200,
+          "y": 168,
           "width": 0,
           "height": 0,
           "rotation": 0,
@@ -3687,6 +3687,18 @@
         },
         {
           "id": 16,
+          "name": "raven",
+          "type": "",
+          "x": 344,
+          "y": 216,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 17,
           "name": "teacher",
           "type": "",
           "x": 344,
@@ -3698,7 +3710,31 @@
           "point": true
         },
         {
-          "id": 17,
+          "id": 18,
+          "name": "cub-1",
+          "type": "",
+          "x": 328,
+          "y": 360,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 19,
+          "name": "cub-2",
+          "type": "",
+          "x": 360,
+          "y": 360,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 20,
           "name": "hooks",
           "type": "",
           "x": 648,
@@ -3710,7 +3746,7 @@
           "point": true
         },
         {
-          "id": 18,
+          "id": 21,
           "name": "camp-fort",
           "type": "",
           "x": 456,
