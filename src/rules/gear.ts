@@ -3,10 +3,11 @@ import type { MemberId } from './battle';
 
 export type KeepsakeId = 'cracked-mirror' | 'crow-feather' | 'covenant-token' | 'yoke-peg' | 'wool-charm' | 'boar-tusk' | 'iron-collar' | 'famine-spoon' | 'weir-hook' | 'frost-ring' | 'tide-shell';
 // What a keepsake changes about its holder in battle.
-export type Mods = Readonly<{ health: number; damage: number; reveal: number; suppressCost: number; shown: number }>;
+// agility: in hundredths of a hero's dodge windows; +15 makes every window 15% wider.
+export type Mods = Readonly<{ health: number; damage: number; reveal: number; suppressCost: number; shown: number; agility: number }>;
 export type Gear = Readonly<Record<MemberId, readonly KeepsakeId[]>>;
 
-export const NO_MODS: Mods = { health: 0, damage: 0, reveal: 0, suppressCost: 0, shown: 0 };
+export const NO_MODS: Mods = { health: 0, damage: 0, reveal: 0, suppressCost: 0, shown: 0, agility: 0 };
 export const SLOTS = 2;
 export const MEMBER_IDS: readonly MemberId[] = ['chameleon', 'bear', 'vulture'];
 
@@ -25,13 +26,13 @@ export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; ef
   'boar-tusk': { name: "Boar's tusk",
     effect: 'Attacks hit 3 harder.', drawback: '3 less health.', mods: { damage: 3, health: -3 } },
   'iron-collar': { name: 'Iron collar', holder: 'bear',
-    effect: 'Attacks hit 2 harder and 4 more health.', drawback: 'Shows 3 more mana, so enemies watch the holder.', mods: { damage: 2, health: 4, shown: 3 } },
+    effect: 'Attacks hit 2 harder and 4 more health.', drawback: 'Shows 3 more mana, and dodging is harder (-15% timing).', mods: { damage: 2, health: 4, shown: 3, agility: -15 } },
   'weir-hook': { name: 'Weir hook',
     effect: 'Attacks hit 2 harder.', drawback: 'Shows 1 more mana.', mods: { damage: 2, shown: 1 } },
   'frost-ring': { name: 'Frost ring', holder: 'vulture',
     effect: '7 more health.', drawback: 'Attacks hit 1 softer.', mods: { health: 7, damage: -1 } },
   'tide-shell': { name: 'Tide shell',
-    effect: '5 more health, and shows 1 less mana.', drawback: 'Attacks hit 1 softer.', mods: { health: 5, shown: -1, damage: -1 } },
+    effect: '3 more health, and dodges come easier (+20% timing).', drawback: 'Attacks hit 1 softer.', mods: { health: 3, agility: 20, damage: -1 } },
   'famine-spoon': { name: 'Famine spoon',
     effect: 'Shows 3 less mana, so enemies watch the others.', drawback: '3 less health.', mods: { shown: -3, health: -3 } },
 };

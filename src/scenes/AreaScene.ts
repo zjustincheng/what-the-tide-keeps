@@ -53,8 +53,10 @@ const BREATHING = new Set(['sheep', 'badger', 'rat', 'hyena']);
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 // What has been picked, by area and point, since the hero last rested. Resting lets it grow back.
 const PICKED = new Set<string>();
+// How often hiding costs every hero a point of mana, in milliseconds.
+const HIDE_DRAIN = 2500;
 // Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
-const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8], warden: [22, 26, 5, 4], leech: [28, 24, 2, 4], hound: [24, 16, 4, 12], pack: [26, 18, 3, 12], wisp: [14, 14, 9, 9], drowned: [20, 26, 6, 4],
+const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8], warden: [22, 26, 5, 4], leech: [28, 24, 2, 4], hound: [20, 22, 6, 8], pack: [22, 24, 5, 6], wisp: [14, 14, 9, 9], drowned: [20, 26, 6, 4],
   raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4] };
 // Whether the last save succeeded, shared by every area.
 let saved = true;
@@ -108,6 +110,7 @@ export class AreaScene extends Phaser.Scene {
   private campPoint?: string;
   // Hiding the party's mana: slower and silent, unseen by enemies, and a first strike on anyone walked into.
   private sneaking = false;
+  private lastDrain = 0;
   private forage: { point: string; sprite: Phaser.GameObjects.Image }[] = [];
 
   constructor(private area: Area) { super(area.key); }
@@ -641,9 +644,22 @@ export class AreaScene extends Phaser.Scene {
     this.overlay?.destroy(); this.overlay = undefined; this.renderMemory(); this.resumeExploration();
   }
 
+  // A short message over the map, in the same place as the hiding badge.
+  private noticeTimer?: ReturnType<typeof setTimeout>;
+  private notice(text: string) {
+    const badge = element('sneaking');
+    badge.textContent = text; badge.hidden = false;
+    clearTimeout(this.noticeTimer);
+    this.noticeTimer = setTimeout(() => { badge.textContent = 'MANA HIDDEN'; badge.hidden = !this.sneaking; }, 1800);
+  }
+
   private toggleSneak() {
+    // Hiding needs mana to hold down.
+    if(!this.sneaking && (createBattle('locust', [], this.partyOptions()).party.find(member=>member.id==='chameleon')?.mana ?? 0)<=0) { this.notice('No mana left to hide.'); return; }
     this.sneaking = !this.sneaking;
+    this.lastDrain = this.time.now;
     this.player.setAlpha(this.sneaking ? 0.55 : 1);
+    element('sneaking').textContent = 'MANA HIDDEN';
     element('sneaking').hidden = !this.sneaking;
     music.effect(this.sneaking ? 'gather' : 'select');
   }
@@ -744,6 +760,17 @@ export class AreaScene extends Phaser.Scene {
     const motion=new Phaser.Math.Vector2(x,y).normalize().scale(this.sneaking ? 42 : 70);
     this.player.setVelocity(motion.x,motion.y);
     this.slideAroundCorners(x,y);
+    // Holding the party's mana down costs mana: a point from everyone every few seconds. When the hero runs dry, it shows again.
+    if(this.sneaking && time-this.lastDrain>HIDE_DRAIN) {
+      this.lastDrain=time;
+      const world=loadWorld();
+      const party=createBattle('locust', [], this.partyOptions()).party;
+      const drained={ ...world.drained };
+      for(const member of party) if(member.mana>0) drained[member.id]=(drained[member.id] ?? 0)+1;
+      saved=saveWorld({ ...world, drained });
+      this.renderMemory();
+      if((party.find(member=>member.id==='chameleon')?.mana ?? 0)<=1) { this.toggleSneak(); this.notice('Out of mana. It shows again.'); }
+    }
     // Enemies come alive: they bob where they stand, turn to face the hero, and the ordinary ones give chase.
     for(const foe of this.foes) {
       if(!foe.sprite.active) continue;

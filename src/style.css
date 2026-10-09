@@ -770,3 +770,9 @@ button.die[aria-pressed="true"] { border-color: #bc755e; color: #d8a890; }
 .cutscene-line { margin: 0; max-width: 520px; font: 18px/1.5 Georgia, serif; color: #e8e0c8; }
 .cutscene.narration .cutscene-line { font-style: italic; color: #c8c0a8; }
 .cutscene-next { margin-top: 6px; }
+
+/* How long the enemy will wait for the party to act. */
+.patience { height: 3px; width: min(320px, 70%); margin: 2px auto 6px; background: #1e2a24; }
+.patience span { display: block; height: 100%; width: 100%; background: #8a6a4a; transform-origin: left; }
+.battle:not([data-phase="player"]) .patience span { animation: none !important; transform: scaleX(0); }
+@keyframes patience { from { transform: scaleX(1); background: #8a9a6a; } 70% { background: #c8a858; } to { transform: scaleX(0); background: #c86a4a; } }

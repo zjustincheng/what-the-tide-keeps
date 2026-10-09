@@ -24,12 +24,21 @@ export async function win(page: Page) {
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
 }
 
-// Everyone attacks; each enemy turn downs the member showing the most mana until the party wipes.
+// Everyone still standing attacks, round after round, until the party wipes, however many blows each enemy turn lands.
 export async function lose(page: Page) {
   await doom(page);
-  for (const [round, living] of [[1, ['Chameleon', 'Bear', 'Vulture']], [2, ['Chameleon', 'Vulture']], [3, ['Vulture']]] as const) {
-    await expect(page.locator('#battle-turn')).toHaveText(`Round ${round} · ${living.length} actions remaining`);
-    for (const name of living) await page.getByRole('button', { name: `${name} attack`, exact: true }).click();
-  }
+  await attackUntilWiped(page);
   await page.getByRole('button', { name: 'Wake at the cot' }).click();
+}
+
+export async function attackUntilWiped(page: Page) {
+  const wake = page.getByRole('button', { name: 'Wake at the cot' });
+  for (let round = 1; round < 10 && !(await wake.isVisible()); round++) {
+    await expect(page.locator('.battle')).toHaveAttribute('data-phase', /player|defeat/, { timeout: 15000 });
+    for (const name of ['Chameleon', 'Bear', 'Vulture']) {
+      const attack = page.getByRole('button', { name: `${name} attack`, exact: true });
+      if (await page.locator('.battle').getAttribute('data-phase') === 'player' && await attack.count() && await attack.isEnabled()) await attack.click();
+    }
+  }
+  await expect(wake).toBeVisible({ timeout: 15000 });
 }

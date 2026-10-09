@@ -27,7 +27,7 @@ test('the shrine warden cannot be harmed while its votives burn, and relights th
 
 test('the mire leech heals by what it takes, so dodging or guarding starves it', () => {
   // Already in her second stage, so the hits below don't set it off.
-  const hurt: Battle = { ...createBattle('leech'), stage: 2, enemy: { ...createBattle('leech').enemy, health: 30 } };
+  const hurt: Battle = { ...createBattle('leech'), stage: 2, round: 2, enemy: { ...createBattle('leech').enemy, health: 30 } };
   const exposed = act(act(act(hurt, 'chameleon', 'attack'), 'bear', 'attack'), 'vulture', 'attack');
   assert.equal(intent(exposed).name, 'Latch');
   const fed = strike(exposed, 'miss');

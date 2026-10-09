@@ -1,4 +1,4 @@
-import { act, canAct, canCast, canFlee, canUse, cast, flee, GATHER, STAGES, SURVIVE, useSupply, warded, condition, cost, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
+import { act, agility, canAct, canCast, canFlee, canUse, cast, flee, GATHER, hesitate, PATIENCE, STAGES, SURVIVE, useSupply, warded, condition, cost, DODGE, ENEMIES, createBattle, enemyTarget, grade, intent, MEMBERS, nextStrike, strike, visibleMana, enemyMana, SPELL } from '../rules/battle';
 import type { Action, Battle, BattleOptions, Dodge, Fighter, Foe, MemberId, Encounter } from '../rules/battle';
 import { checkSequence, SPELLS } from '../rules/spells';
 import { BOUNTY, SUPPLIES, SUPPLY_IDS } from '../rules/economy';
@@ -10,6 +10,14 @@ import type { Effect as Sound } from '../audio/effects';
 
 // How long the dodge ring takes to close on its target, in milliseconds.
 const LEAD = 900;
+
+// What each hero's support does. A guard stops physical blows; a barrier (under Spellcraft) stops studied spells.
+const SUPPORT_SHORT: Record<MemberId, string> = { chameleon: 'Stops blows', bear: 'Guards an ally', vulture: 'Next hit harder' };
+const SUPPORT_HELP: Record<MemberId, string> = {
+  chameleon: 'Guard: stops physical blows aimed at him this turn. It does nothing against spells: a barrier does that.',
+  bear: 'Protect: the bear guards the ally chosen on his card against physical blows this turn, himself included. Spells pass through: use a barrier.',
+  vulture: 'Focus: her next attack hits 3 harder.',
+};
 
 export class BattleView {
   private state: Battle;
@@ -47,16 +55,16 @@ export class BattleView {
         </div>`).join('')}
       </div>
       ${this.state.followers.length ? `<label class="strike-label">Strike at <select id="strike-target" aria-label="Attack target"><option value="0">${enemyName}</option>${this.state.followers.map((follower, index) => `<option value="${index + 1}">${follower.name}</option>`).join('')}</select></label>` : ''}
-      <p class="intent" id="enemy-intent"></p><p class="grimoire-status" aria-live="polite"></p>
+      <p class="intent" id="enemy-intent"></p><div class="patience" aria-hidden="true"><span></span></div><p class="grimoire-status" aria-live="polite"></p>
       <div class="party-roster" data-size="${this.state.party.length}">${this.state.party.map(member => {
         const info = MEMBERS[member.id];
         return `<section class="member-card" data-member="${member.id}" aria-label="${info.name}">
           <button class="fighter party-fighter" aria-label="${info.name}: tap for ${info.support.toLowerCase()}, drag to attack or support"><img alt="" /></button>
           <h3>${info.name}</h3><div class="health-bar" role="meter" aria-label="${info.name} health" aria-valuemin="0" aria-valuemax="100"><span></span></div><p class="member-condition"></p><p class="mana member-mana"></p><p class="member-status"></p>
           <label class="protect-label">Ally <select aria-label="${member.id === 'bear' ? 'Bear protection target' : info.name + ' barrier target'}">${this.state.party.map(target => `<option value="${target.id}" ${target.id === member.id ? 'selected' : ''}>${MEMBERS[target.id].name}</option>`).join('')}</select></label>
-          <div class="member-actions"><button data-action="attack" aria-label="${info.name} attack">${info.attack}<small>Physical</small></button><button data-action="support" aria-label="${info.name} support">${info.support}<small>No mana</small></button><button data-action="gather" aria-label="${info.name} gather">Gather<small>+${GATHER} mana</small></button></div>
+          <div class="member-actions"><button data-action="attack" aria-label="${info.name} attack">${info.attack}<small>Physical</small></button><button data-action="support" aria-label="${info.name} support" title="${SUPPORT_HELP[member.id]}">${info.support}<small>${SUPPORT_SHORT[member.id]}</small></button><button data-action="gather" aria-label="${info.name} gather">Gather<small>+${GATHER} mana</small></button></div>
           ${member.spell ? `<button class="cast-button" data-cast aria-label="${info.name} cast ${SPELLS[member.spell].name}">${SPELLS[member.spell].name}<small>${SPELLS[member.spell].cost} mana · ${SPELLS[member.spell].length} keys</small></button>` : ''}
-          <details class="spellcraft"><summary>Spellcraft</summary><button data-action="suppress" aria-label="${info.name} suppress">Suppress · ${cost(member, 'suppress')} mana</button><button data-action="barrier" aria-label="${info.name} barrier">Barrier · 5 mana</button><button data-action="analyze" aria-label="${info.name} analyze">Analyze · 2 mana</button></details>
+          <details class="spellcraft"><summary>Spellcraft</summary><button data-action="suppress" aria-label="${info.name} suppress">Suppress · ${cost(member, 'suppress')} mana</button><button data-action="barrier" aria-label="${info.name} barrier" title="A barrier stops spells, but only ones you have studied, for the ally chosen on this card. It does nothing against physical blows: guard against those.">Barrier · 5 mana</button><button data-action="analyze" aria-label="${info.name} analyze">Analyze · 2 mana</button></details>
           ${SUPPLY_IDS.some(id => this.state.supplies[id] > 0) ? `<details class="spellcraft supplies-menu"><summary>Supplies</summary>${SUPPLY_IDS.map(id => `<button data-supply="${id}" aria-label="${info.name} use ${SUPPLIES[id].name}"></button>`).join('')}</details>` : ''}
         </section>`;
       }).join('')}</div>
@@ -173,6 +181,23 @@ export class BattleView {
   private focusNext() {
     const next = this.state.party.find(member => member.health > 0 && !member.acted);
     if (next) this.card(next.id).querySelector<HTMLButtonElement>('[data-action="support"]')!.focus({ preventScroll: true });
+    this.armPatience();
+  }
+
+  // The enemy will not wait forever: when the bar runs out, it takes a free swing, and the bar starts again.
+  private patience?: ReturnType<typeof setTimeout>;
+  private armPatience() {
+    clearTimeout(this.patience);
+    const bar = this.root.querySelector<HTMLElement>('.patience span');
+    if (this.state.phase !== 'player' || !bar) return;
+    bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = `patience ${PATIENCE}ms linear forwards`;
+    this.patience = setTimeout(() => {
+      if (this.state.phase !== 'player' || this.casting) { this.armPatience(); return; }
+      this.state = hesitate(this.state);
+      music.effect('hit');
+      this.persist(); this.render(); this.ended();
+      if (this.state.phase === 'player') this.focusNext();
+    }, PATIENCE);
   }
 
   private foe(): Foe {
@@ -234,6 +259,7 @@ export class BattleView {
   }
 
   private afterAction() {
+    clearTimeout(this.patience);
     const before = this.shownStage;
     this.persist(); this.render();
     // A boss brought down for the first time gets back up: play its scene before anything else moves.
@@ -308,7 +334,8 @@ export class BattleView {
     if (!this.prompt) return;
     const error = performance.now() - this.prompt.impact;
     // Pressing far too early commits the dodge too soon; it cannot be retried.
-    this.prompt.answer(grade(error, nextStrike(this.state)!.move), error < 0);
+    const next = nextStrike(this.state)!;
+    this.prompt.answer(grade(error, next.move, agility(next.target)), error < 0);
   }
 
   // A short cue when the fight ends, once.
@@ -473,7 +500,7 @@ export class BattleView {
   }
 
   destroy() {
-    clearTimeout(this.timer); this.cleanup.abort(); this.root.remove();
+    clearTimeout(this.timer); clearTimeout(this.patience); this.cleanup.abort(); this.root.remove();
     if (this.previousFocus?.isConnected) this.previousFocus.focus({ preventScroll: true });
   }
 }

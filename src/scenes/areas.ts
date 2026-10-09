@@ -104,9 +104,11 @@ export const FARMLAND: Area = {
     { point: 'carter', texture: 'carter' }, { point: 'beekeeper', texture: 'beekeeper' }],
   enemies: [
     // The reeve's fields: clearing both earns the writ that frees the bear.
-    { point: 'locust', encounter: 'locust', defeat: { set: 'pests-field' } }, { point: 'locust-road', encounter: 'locust' },
-    { point: 'weevil-yard', encounter: 'weevil', defeat: { set: 'pests-yard' } }, { point: 'weevil-orchard', encounter: 'weevil' }, { point: 'weevil-woods', encounter: 'weevil', ambush: true },
-    { point: 'exile', encounter: 'acolyte' },
+    // The reeve's two pests stay dead once cleared; the others are just the fields being the fields.
+    { point: 'locust', encounter: 'locust', hiddenIf: [{ flag: 'pests-field' }], defeat: { set: 'pests-field' } }, { point: 'locust-road', encounter: 'locust' },
+    { point: 'weevil-yard', encounter: 'weevil', hiddenIf: [{ flag: 'pests-yard' }], defeat: { set: 'pests-yard' } }, { point: 'weevil-orchard', encounter: 'weevil' }, { point: 'weevil-woods', encounter: 'weevil', ambush: true },
+    // The boar's hooded followers leave the roads once he is beaten.
+    { point: 'exile', encounter: 'acolyte', hiddenIf: [{ flag: 'boar-defeated' }] },
     { point: 'swarm', encounter: 'swarm', hiddenIf: [{ flag: 'swarm-slain' }], defeat: { set: 'swarm-slain' } },
     // Guardians of the harder keepsakes. Their caches appear only once they are dead.
     { point: 'warden', encounter: 'warden', hiddenIf: [{ flag: 'warden-slain' }], defeat: { set: 'warden-slain' } },
@@ -180,7 +182,7 @@ export const TOWN: Area = {
 
 export const BORDER_ROAD: Area = {
   key: 'border-road', map: 'border-road', tileset: 'border', music: 'wilds', region: 'THE FARMLAND', place: 'The border road', time: 'Midday',
-  dialogue: border, enemies: [{ point: 'follower', encounter: 'acolyte' }], ground: 'grass', surfaces: { 2: 'dirt' },
+  dialogue: border, enemies: [{ point: 'follower', encounter: 'acolyte', hiddenIf: [{ flag: 'boar-defeated' }] }], ground: 'grass', surfaces: { 2: 'dirt' },
   npcs: [{ point: 'driver', texture: 'driver' }, { point: 'guard', texture: 'guard' }, { point: 'sister', texture: 'sow', hiddenIf: [{ flag: 'boar-defeated' }] }],
   camps: { 'camp-border': { prompt: 'Rest by the fire', cost: 4, lines: ['The carters let you sit at their fire. Nobody talks much.'] } },
   props: [
@@ -366,7 +368,7 @@ export const BATTLEFIELD: Area = {
   // The vulture takes the hero for a grave thief and fights him once, unless he comes carrying her own note. After that she will talk.
   npcs: [{ point: 'vulture', texture: 'vulture', hiddenIf: [{ not: { any: [{ flag: 'vulture-met' }, { has: 'note' }] } }, { flag: 'vulture-free' }] }],
   enemies: [
-    { point: 'vulture', encounter: 'vulture', hiddenIf: [{ flag: 'vulture-met' }, { has: 'note' }], defeat: { set: 'vulture-met' } },
+    { point: 'vulture', encounter: 'vulture', hiddenIf: [{ flag: 'vulture-met' }, { has: 'note' }, { flag: 'vulture-free' }], defeat: { set: 'vulture-met' } },
     // The hyena raises the dead; with her gone they stay down.
     { point: 'ghoul-1', encounter: 'ghoul', hiddenIf: [{ flag: 'hyena-slain' }], ambush: true }, { point: 'ghoul-2', encounter: 'ghoul', hiddenIf: [{ flag: 'hyena-slain' }], ambush: true },
   ],

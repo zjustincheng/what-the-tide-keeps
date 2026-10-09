@@ -96,3 +96,18 @@ test('what people say is written in the journal, and bones can be won or lost', 
   await page.getByRole('button', { name: 'Done' }).click();
   expect((await saved(page)).coins).toBe(result!.includes('win') ? 25 : result!.includes('lose') ? 15 : 20);
 });
+
+test('hiding costs mana over time, and the enemy punishes a hero who takes too long', async ({ page }) => {
+  test.setTimeout(90000);
+  await start(page, { flags: ['bear-free'] });
+  const mana = () => page.getByRole('group', { name: 'Party' }).getByRole('meter', { name: /mana/ }).first().getAttribute('aria-valuetext');
+  const before = await mana();
+  await page.keyboard.press('q');
+  await page.waitForTimeout(5600);
+  expect(await mana()).not.toBe(before);
+  await page.keyboard.press('q');
+  // In a fight, waiting out the bar gives the enemy a free blow.
+  await place(page, 'farmland', 530, 282);
+  await expect(page.getByRole('heading', { name: 'Crop locust' })).toBeVisible({ timeout: 5000 });
+  await expect(page.getByRole('log')).toContainText('You hesitate.', { timeout: 20000 });
+});

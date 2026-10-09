@@ -202,9 +202,18 @@ Spells have consequences inside a fight. After casting, a grimoire needs time to
 
 A companion's own grimoire can't be lent to anyone before they join, and a companion who joins takes theirs back from whoever was carrying it. Any hero can carry any grimoire, which is how the guideline's "the grimoire is the class" begins: giving the bear the primer makes him the healer. Damage spells follow the same targeting as attacks, so the boar still shields his followers from them. Which hero carries which grimoire is saved in `tide-keeps.books.v1`. These carried grimoires are separate from the shared grimoire of studied enemy spells.
 
+## Guard, barrier, and the pressure of a fight
+
+- **Guard** stops physical blows. The chameleon guards himself; the bear's Protect guards whichever ally is chosen on his card; the vulture's Focus makes her next attack hit harder instead.
+- **Barrier** (under Spellcraft) stops spells, but only spells you have studied, by analyzing them or by surviving them once. It does nothing against physical blows.
+- Some blows partly drive through a guard (piercing), some **can't be blocked by anything** and must be dodged, and some **land several times**, each dodged on its own. Bosses' signature moves are built from these: the boar's Trample, the warden's Censer storm, the leech's Thrash, the swarm-mother's double Dive, the pack leader's Savage, the drowned's Bell swing, the hyena's Frenzy, and the inquisitor's Verdict.
+- **Don't take too long.** A bar under the enemy's intent drains during your turn. When it runs out, the enemy takes a free swing (a guard still holds it), and the bar starts again.
+
 ## Dodging
 
 Enemy blows can be dodged with timing, never luck. When a blow is about to land, a ring closes on the companion it targets and a **Dodge** bar appears at the bottom of the screen. Press **Space** (or **Enter**, or tap **Dodge**) as the ring meets the inner circle:
+
+Each hero has an **agility** that widens or narrows their dodge windows: the vulture is quick (125%), the chameleon ordinary, the bear slow (80%). Keepsakes can change it: the Tide shell helps, the Iron collar hinders. The base windows are a little tighter than before.
 
 - **Perfect** (within 90 ms; 60 ms for heavy, telegraphed blows such as a leap or charge): no damage.
 - **Graze** (within 200 ms): half damage.
@@ -323,7 +332,7 @@ The regions are joined in more than one place, and some links only open from the
 
 ## Besides fighting
 
-- **Hiding your mana (Q, or Hide on a touch screen).** As the guideline describes, the party can suppress its mana to slip past. While hidden, the hero walks slower and silently, ordinary enemies don't notice him until he's almost on them, and ambushers can't vanish before he sees them. Walk into an enemy while hidden and it loses its first move. A badge over the map shows when your mana is hidden.
+- **Hiding your mana (Q, or Hide on a touch screen).** As the guideline describes, the party can suppress its mana to slip past. Holding it down costs every hero a point of mana every few seconds; when the hero runs dry, his mana shows again, and he can't hide with none. While hidden, the hero walks slower and silently, ordinary enemies don't notice him until he's almost on them, and ambushers can't vanish before he sees them. Walk into an enemy while hidden and it loses its first move. A badge over the map shows when your mana is hidden.
 - **Foraging.** Wild thyme, field mushrooms, and hedge berries grow around the farmland, the downs, the fen, the weir, the pass, the tarn, and the drove road. Pick them with E; they grow back after you rest. Like fish, they're lost on a wipe.
 - **Cooking.** A campfire now asks whether to cook or sleep (a bed or the church cot still just sleeps). Cooking turns fish and forage into supplies: smoked fish (1 fish), **fish stew** (2 fish and thyme, heals 18), **herb salve** (2 thyme and a mushroom, revives with 14), and **trail cake** (2 berries, heals 7). Rules are in `src/rules/cooking.ts`.
 - **The journal (J, or Journal in Settings).** Every answer someone gives when you ask them something is written down, grouped by who said it and where. It's paper, so it survives every death, and it's kept in `tide-keeps.journal.v1`.

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { doom } from './helpers';
+import { attackUntilWiped, doom } from './helpers';
 
 async function enterEncounter(page: Page) {
   await page.evaluate(async () => {
@@ -84,15 +84,18 @@ test('bear can drag onto an ally and vulture can tap to focus', async ({ page })
 test('downed companions are skipped and only a full party wipe returns to the cot', async ({ page }) => {
   await enterEncounter(page);
   await doom(page);
-  for(let round=1;round<=3;round++) {
-    const living=round===1?['chameleon','bear','vulture']:round===2?['chameleon','vulture']:['vulture'];
-    await expect(page.locator('#battle-turn')).toHaveText(`Round ${round} · ${living.length} actions remaining`);
-    if(round===2) {
-      await expect(card(page, 'bear').locator('.member-condition')).toHaveText('Downed');
-      await expect(page.getByRole('button', { name: 'Bear attack', exact: true })).toBeDisabled();
-    }
-    for(const id of living) await page.getByRole('button', { name: `${id[0].toUpperCase()+id.slice(1)} attack`, exact: true }).click();
+  // The first enemy turn downs someone; their actions are skipped from then on.
+  for(const id of ['chameleon','bear','vulture']) await page.getByRole('button', { name: `${id[0].toUpperCase()+id.slice(1)} attack`, exact: true }).click();
+  await expect(page.locator('.battle')).toHaveAttribute('data-phase', /player|defeat/, { timeout: 15000 });
+  const downed = page.locator('.member-card[data-downed="true"]');
+  expect(await downed.count()).toBeGreaterThan(0);
+  const fallen = await downed.first().getAttribute('data-member');
+  if(await page.locator('.battle').getAttribute('data-phase') === 'player') {
+    await expect(page.getByRole('button', { name: `${fallen![0].toUpperCase()+fallen!.slice(1)} attack`, exact: true })).toBeDisabled();
+    await expect(page.locator('#battle-turn')).toHaveText(`Round 2 · ${3 - await downed.count()} actions remaining`);
   }
+  // Only the whole party falling ends it.
+  await attackUntilWiped(page);
   await page.getByRole('button', { name: 'Wake at the cot' }).click();
   await page.getByRole('radio', { name: /The kraken/ }).check();
   await page.getByRole('button', { name: 'Let it go' }).click();

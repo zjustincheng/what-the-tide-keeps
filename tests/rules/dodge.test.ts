@@ -27,8 +27,10 @@ test('a perfect dodge avoids the blow and a graze halves it', () => {
   const grazed = strike(battle, 'graze');
   assert.equal(grazed.party.find(member => member.id === next.target.id)!.health, health - Math.ceil(next.damage / 2));
   assert.equal(strike(battle, 'miss').party.find(member => member.id === next.target.id)!.health, health - next.damage);
-  // Without dodges, a whole turn matches the old all-at-once resolution.
-  assert.deepEqual(strike(battle), resolveEnemy(battle));
+  // Without dodges, striking blow by blow matches resolving the whole turn at once.
+  let blows = battle;
+  while (blows.phase === 'enemy') blows = strike(blows);
+  assert.deepEqual(blows, resolveEnemy(battle));
 });
 
 test('guarded blows need no dodge, and an unknown spell cannot be dodged', () => {
