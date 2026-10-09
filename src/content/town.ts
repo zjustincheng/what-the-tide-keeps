@@ -8,7 +8,11 @@ export const town: Dialogue = {
     'Nobody here gave that order. Find out who did.',
     'The bear at the mill is yours, I suppose. Clear the pests out of my fields, the locust in the wheat and the weevil in the hay yard, and I will sign a writ for him.',
     'Or pay his fine. Sixty coins.',
-  ], then: { shop: 'reeve' }, variants: [{ if: { all: [{ flag: 'followers-reported' }, { not: { flag: 'followers-paid' } }] }, lines: [
+  ], then: { shop: 'reeve' }, variants: [{ if: { all: [{ flag: 'otter-reported' }, { not: { flag: 'otter-paid' } }] }, lines: [
+    'The watch went up to the fen on your word. Found a camp and some eel traps. Nobody in it.',
+    'Ten coins anyway. The Covenant thanks you.',
+    'You receive 10 coins.',
+  ], then: { earn: 10, set: 'otter-paid' } }, { if: { all: [{ flag: 'followers-reported' }, { not: { flag: 'followers-paid' } }] }, lines: [
     'The watch brought a badger in this morning. Said you sent him.',
     'Twenty coins. The Covenant thanks you.',
     'You receive 20 coins.',

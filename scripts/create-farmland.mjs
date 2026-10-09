@@ -51,8 +51,10 @@ for(let i=0;i<60;i++) put(floor,(i*37+11)%w,(i*23+7)%h,FLOWER);
 fill(furniture,0,0,w-1,1,TREE);fill(furniture,22,0,41,2,WALL);put(furniture,31,2,DOOR);put(furniture,32,2,DOOR);
 fill(furniture,0,0,0,h-1,TREE);fill(furniture,w-1,0,w-1,h-1,TREE);fill(furniture,0,h-1,w-1,h-1,TREE);
 fill(furniture,30,h-1,33,h-1,0);fill(furniture,w-1,40,w-1,41,0);
+// The track runs on east up onto the downs; a path follows the stream north into the fen.
+fill(furniture,w-1,22,w-1,23,0);fill(furniture,13,0,14,1,0);fill(floor,13,0,14,3,ROAD);
 // The high road south to Millbrook, and a cross track from the mill to the shrine.
-fill(floor,30,3,33,h-1,ROAD);fill(floor,1,22,47,23,ROAD);fill(floor,46,24,47,41,ROAD);fill(floor,46,40,w-1,41,ROAD);
+fill(floor,30,3,33,h-1,ROAD);fill(floor,1,22,w-1,23,ROAD);fill(floor,46,24,47,41,ROAD);fill(floor,46,40,w-1,41,ROAD);
 put(furniture,34,20,SIGN);
 // Where the track bends south for the border, a second waymark.
 put(furniture,48,21,SIGN);
@@ -78,7 +80,7 @@ put(furniture,17,14,SCARECROW);
 fill(furniture,16,30,23,35,POND);fill(furniture,17,29,22,29,REEDS);
 for(const [x,y] of [[15,40],[25,33],[20,43],[27,27],[14,27],[24,44]]) put(furniture,x,y,BUSH);
 // Groves break up the open meadows without closing them off.
-for(const [x0,y0,pattern] of [[24,39,'xx.x|.xxx|xx..'],[37,39,'.xx.|xxxx|.x.x'],[49,24,'x.xx|xx.x'],[58,44,'xxx|.xx'],[14,44,'x.x|xxx'],[60,20,'xx|xx|x.']])
+for(const [x0,y0,pattern] of [[24,39,'xx.x|.xxx|xx..'],[37,39,'.xx.|xxxx|.x.x'],[49,24,'x.xx|xx.x'],[58,44,'xxx|.xx'],[14,44,'x.x|xxx'],[60,18,'xx|xx']])
   pattern.split('|').forEach((row,dy)=>[...row].forEach((c,dx)=>{ if(c==='x') put(furniture,x0+dx,y0+dy,TREE); }));
 // The orchard, east of the road, in rows with room to walk between.
 for(let x=38;x<=56;x+=3) for(let y=5;y<=17;y+=3) put(furniture,x,y,APPLE);
@@ -95,7 +97,7 @@ const points=[
   ['bear',104,232],['miller',56,216],['heron',296,600],['camp',104,616],['camp-cache',56,616],['weevil-woods',136,656],
   ['weevil-orchard',728,200],['orchard-cache',920,104],['weevil-yard',664,488],
   ['shrine',888,504],['shrine-cache',888,568],['exile',888,456],['ford-cache',216,680],['pond-spot',392,512],['stream-spot',216,224],
-  ['shepherd',440,696],['sheep-woods',104,472],['sheep-orchard',616,248],['sheep-yard',744,520],['swarm',72,712],['stream-bank',216,392],['camp-fields',600,392],['camp-woods',88,584],['gibbet',440,344],['bones',120,696],['warden',888,568],['leech',184,648],['mill-door',88,196],['from-mill',88,210],['log',112,424],['waymark',776,360],
+  ['shepherd',440,696],['sheep-woods',104,472],['sheep-orchard',616,248],['sheep-yard',744,520],['swarm',72,712],['stream-bank',216,392],['camp-fields',600,392],['camp-woods',88,584],['gibbet',440,344],['bones',120,696],['warden',888,568],['leech',184,648],['mill-door',88,196],['from-mill',88,210],['log',112,424],['waymark',776,360],['downs',1016,368],['from-downs',992,368],['upstream',224,16],['from-fen',224,52],
   ['water-1',168,628],['water-2',184,628],['water-3',200,628],['water-4',168,668],['water-5',184,668],['water-6',200,668],
 ];
 const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,

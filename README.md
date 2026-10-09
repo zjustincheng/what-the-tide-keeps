@@ -234,7 +234,20 @@ South of the church lies the open farmland, a scrolling map about four screens a
 - **The meadow:** a pond with a heron who fishes for herself.
 - **The south meadow:** a shepherd missing three sheep.
 - **East:** an apple orchard with a grain weevil among the rows, a fenced hay yard with another, and an old Covenant shrine in a ring of standing stones, watched by a hooded follower of the boar.
-- **South:** the high road to Millbrook. **Southeast:** a field track that skirts the town and joins the border road north of the brambles.
+- **South:** the high road to Millbrook. **East along the track:** a second waymark where the field track bends south to skirt the town and join the border road north of the brambles. Past it, the track climbs onto the downs.
+- **North, up the stream:** a path along the east bank leads into the fen.
+
+### The downs
+
+Open chalk pasture east of the fields. An old ram has lost three lambs this month to a hound pack that dens in the broken watchtower to the north, and he'll pay fifteen coins for the leader. The **Pack leader** fights with two hounds; every third round he rushes with the whole pack, an undodgeable blow that grows with every hound still standing, so thin the pack first. Lone **starved hounds** roam the gorse with a fast lunge.
+
+Under the barrow to the south, the leader's mate is nursing pups. She takes the lambs so she can feed them. Bring her **three fish** and the family leaves over the border that night: no fight, a few grave coins from her, and only five grudging coins from the ram. Kill the leader instead and the barrow is empty when you come back. Either way the pack is gone and the **Iron collar** under the tower stair can be taken (a bear keepsake: hits 2 harder and 4 more health, but shows 3 more mana). There is also a dew pond to fish, a fold fire to rest at for 3 coins, grave goods in the barrow, a cairn, and a running wolf cut into the chalk that somebody keeps scouring clean.
+
+### The fen
+
+Upstream of the mill, the water spreads over the drowned hamlet of Wetherby; the roofs still stand in it. **Marsh lights** hang over the water with a very fast flare. An otter poaches eels from a camp on a hummock and sells them to the fishmonger at his back door. Promise not to tell and she parts the reeds to her eel run, the best eel fishing in the game. Report her and the reeve pays ten coins, but the camp is empty when the watch arrives.
+
+The sluice gate above the mill holds the fen back. Open it and the water drops enough to uncover a causeway to the sunken chapel, where **the drowned** still holds the bell rope: it tolls an undodgeable, guard-piercing blow every third round and tries to pull someone under. Beyond it is the **Drowned psalter**, which teaches **Undertow**, the hardest-hitting spell so far (seven keys in three seconds). Opening the sluice slows the mill wheel, and the miller notices.
 
 Crop pests show their full mana and only strike physically, as the guideline describes. The weevil jabs most turns and makes a heavy rolling charge every third round.
 
@@ -289,6 +302,8 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `src/audio/music.ts` — the synthesised instruments, reverb, scheduler, and crossfades.
 - `src/audio/effects.ts` — the synthesised sound effects.
 - `src/storage/settings.ts` — volumes, mute, and how the party display is shown.
+- `scripts/create-downs.mjs`, `scripts/create-fen.mjs` — the downs and barrow, and the fen.
+- `src/content/downs.ts`, `src/content/fen.ts` — what is said and found there.
 - `src/storage/progress.ts` — erasing a playthrough to start over.
 - `src/ui/fullscreen.ts` — the full screen button and the F key.
 - `src/ui/SettingsView.ts` — the controls list and menu actions.
@@ -315,6 +330,8 @@ Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is 
 - `tests/buildings.spec.ts` — entering the hall, tannery, and mill.
 - `tests/music.spec.ts` — themes per place and battle, muting, volume, and levels.
 - `tests/rules/themes.test.ts` — every theme fits its loop and range.
+- `tests/regions.spec.ts` — reaching the downs, the barrow, and the fen, their quests, and the new enemies.
+- `tests/rules/regions.test.ts` — feeding the hounds, the pack rush, the otter, and the sluice.
 - `tests/running.spec.ts` — running away, campfire costs, the way into the woods, and the death count.
 - `tests/rules/consequences2.test.ts` — fleeing, the ledger, and the reeve's letter.
 - `tests/consequences.spec.ts` — sparing or reporting the boar's followers, and a paid bed.

@@ -20,6 +20,10 @@ const VILLAGERS: Record<string, Villager> = {
   clerk: { fur: 0xc8b8a0, muzzle: 0xe8dcc8, cloth: 0x3a3a48, trim: 0xd8d0b8, ears: 'long' },
   tanner: { fur: 0x4a3828, muzzle: 0x8a7058, cloth: 0x6a5a40, trim: 0x3a2e22, ears: 'pointed' },
   guard: { fur: 0xd6cdb8, muzzle: 0x9a8a72, cloth: 0x6b7a8a, trim: 0xd8cfae, ears: 'horns' },
+  // The downs and the fen.
+  ram: { fur: 0xa8a090, muzzle: 0x5a5048, cloth: 0x5a5a40, trim: 0x8a7a5a, ears: 'horns' },
+  'hound-mother': { fur: 0x5a524a, muzzle: 0x8a7a68, cloth: 0x3a3530, trim: 0x4a433c, ears: 'pointed' },
+  otter: { fur: 0x6a4a30, muzzle: 0xb8a088, cloth: 0x3a4a44, trim: 0x5a6a5a, ears: 'pointed' },
 };
 
 function villager(scene: Phaser.Scene, key: string, v: Villager) {
@@ -86,6 +90,12 @@ export function createSprites(scene: Phaser.Scene) {
   const crow = scene.make.graphics({ x: 0, y: 0 });
   crow.fillStyle(0x0e0f10).fillRect(0, 2, 3, 1).fillRect(2, 1, 4, 3).fillRect(5, 2, 3, 1).fillRect(3, 0, 2, 1);
   crow.generateTexture('crow', 8, 4); crow.destroy();
+  // Reed beds that hide the otter's run.
+  const reeds = scene.make.graphics({ x: 0, y: 0 });
+  reeds.fillStyle(0x1a2426).fillRect(0, 10, 16, 6);
+  for (const [x, h] of [[1, 14], [4, 16], [7, 12], [10, 15], [13, 13]]) reeds.fillStyle(0x5a6a3a).fillRect(x, 16 - h, 2, h);
+  reeds.fillStyle(0x8a7a4a).fillRect(4, 0, 2, 3).fillRect(10, 1, 2, 3);
+  reeds.generateTexture('reeds', 16, 16); reeds.destroy();
   // A fallen oak across the woods path, and dark water where the leech waits.
   const log = scene.make.graphics({ x: 0, y: 0 });
   log.fillStyle(0x2a1e14).fillRect(0, 4, 32, 10);

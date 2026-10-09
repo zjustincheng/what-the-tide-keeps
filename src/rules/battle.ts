@@ -10,7 +10,7 @@ import type { Supplies, SupplyId } from './economy';
 import type { Drained, Wounds } from './world';
 export type MemberId = 'chameleon' | 'bear' | 'vulture';
 export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze' | 'gather';
-export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm' | 'warden' | 'leech';
+export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm' | 'warden' | 'leech' | 'hound' | 'pack' | 'wisp' | 'drowned';
 export const SPELL = 'Salt lance';
 export type Phase = 'player' | 'enemy' | 'victory' | 'defeat' | 'fled';
 export type Fighter = Readonly<{ health: number; maxHealth: number; mana: number; maxMana: number }>;
@@ -82,6 +82,16 @@ export const ENEMIES = {
     opening: 'The ford heaves. Something long and black comes up out of the silt.' },
   swarm: { name: 'Swarm-mother', short: 'swarm-mother', health: 64, mana: 4, veiled: false,
     opening: 'Something the size of a cart unfolds in the dark between the trees. Her brood drops from the branches around her.' },
+  // The downs: hounds gone hungry since the Covenant closed the commons to them.
+  hound: { name: 'Starved hound', short: 'hound', health: 40, mana: 2, veiled: false,
+    opening: 'A hound comes out of the gorse with its ribs showing. It does not bark.' },
+  pack: { name: 'Pack leader', short: 'pack leader', health: 74, mana: 4, veiled: false,
+    opening: 'The leader steps out of the broken tower. Two of his pack come round behind you.' },
+  // The fen, over the drowned hamlet.
+  wisp: { name: 'Marsh light', short: 'light', health: 34, mana: 8, veiled: false,
+    opening: 'A pale light hangs over the water, the height of a lantern held by someone short. Nobody is holding it.' },
+  drowned: { name: 'The drowned', short: 'drowned', health: 84, mana: 5, veiled: false,
+    opening: 'Something in a rotted cassock stands up out of the chapel water. The bell rope is still in its hands.' },
 } as const satisfies Record<Encounter, unknown>;
 // Outcast omnivores who follow the boar. They hide their mana; he shields them with his own body.
 export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; health: number; weapon: string }[]>> = {
@@ -90,6 +100,8 @@ export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; healt
   swarm: [{ name: 'Nymph', health: 10, weapon: 'bite' }, { name: 'Nymph', health: 10, weapon: 'bite' }],
   // The warden's votives burn at its sides; while any burns, the warden cannot be harmed.
   warden: [{ name: 'Votive', health: 8, weapon: 'flare' }, { name: 'Votive', health: 8, weapon: 'flare' }],
+  // The pack fights for its leader and goes on fighting without him.
+  pack: [{ name: 'Hound', health: 14, weapon: 'bite' }, { name: 'Hound', health: 14, weapon: 'bite' }],
 };
 // Followers who give up once their leader falls. Everyone else fights until the last of them is down.
 export const YIELDING: Partial<Record<Encounter, true>> = { boar: true };
@@ -215,6 +227,25 @@ export function intent(battle: Battle): Move & { tell: string } {
   if (battle.encounter === 'leech') return battle.round % 3 === 0
     ? { name: 'Coil', type: 'physical', tell: 'It draws its whole length back into a coil. It cannot be dodged.', damage: 13, undodgeable: true }
     : { name: 'Latch', type: 'physical', tell: 'Its mouth opens toward you. Whatever it takes, it keeps.', damage: 8, drain: true, window: { perfect: 60, graze: 150 } };
+  if (battle.encounter === 'hound') return battle.round % 2 === 0
+    ? { name: 'Lunge', type: 'physical', tell: 'It drops onto its haunches. A lunge is coming, fast.', damage: 8, window: { perfect: 55, graze: 140 } }
+    : { name: 'Snap', type: 'physical', tell: 'It circles, snapping.', damage: 3 };
+  if (battle.encounter === 'pack') {
+    // The rush grows with every hound still standing: thin the pack first.
+    const hounds = battle.followers.filter(follower => follower.health > 0).length;
+    return battle.round % 3 === 0
+      ? { name: 'Pack rush', type: 'physical', tell: `He barks once and ${hounds ? 'the pack goes for you together' : 'comes alone'}. It cannot be dodged.`, damage: 5 + 4 * hounds, undodgeable: true }
+      : { name: 'Throat bite', type: 'physical', tell: 'He drops low. He will go for the throat, fast.', damage: 8, window: { perfect: 50, graze: 130 } };
+  }
+  if (battle.encounter === 'wisp') return battle.round % 2 === 0
+    ? { name: 'Flare', type: 'physical', tell: 'The light gutters, then swells. A flare is coming, and it comes very fast.', damage: 7, window: { perfect: 35, graze: 90 } }
+    : { name: 'Flicker', type: 'physical', tell: 'The light flickers at the edge of your eye.', damage: 3 };
+  if (battle.encounter === 'drowned') {
+    if (battle.round % 3 === 0) return { name: 'Toll', type: 'physical', tell: 'It hauls on the rope. The sunken bell will toll. It cannot be dodged, and no guard will hold all of it.', damage: 10, piercing: 4, undodgeable: true };
+    return battle.round % 3 === 2
+      ? { name: 'Pull under', type: 'physical', tell: 'It lets go of the rope and reaches for you. It will try to pull someone under.', damage: 12, window: { perfect: 45, graze: 110 } }
+      : { name: 'Grasp', type: 'physical', tell: 'Cold hands come up out of the water.', damage: 5 };
+  }
   if (battle.encounter === 'swarm') return battle.round % 3 === 0
     ? { name: 'Brood call', type: 'physical', tell: 'She shrills, and the brood answers. Fallen nymphs will rise again.', damage: 0, revive: true }
     : { name: 'Wing buffet', type: 'physical', tell: 'Her wings rattle. A buffet is coming.', damage: 5 };

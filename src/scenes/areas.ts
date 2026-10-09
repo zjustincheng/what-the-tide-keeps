@@ -6,6 +6,8 @@ import { border } from '../content/border';
 import { fields } from '../content/fields';
 import { town } from '../content/town';
 import { hall, inn, millInside, tannery } from '../content/interiors';
+import { barrow, downs } from '../content/downs';
+import { fen } from '../content/fen';
 import type { Encounter } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
@@ -111,6 +113,8 @@ export const FARMLAND: Area = {
     south: { to: 'town', spawn: 'spawn', prompt: 'Walk on to Millbrook' },
     east: { to: 'border-road', spawn: 'from-fields', prompt: 'Take the field track to the border' },
     'mill-door': { to: 'mill-inside', spawn: 'spawn', prompt: 'Enter the mill' },
+    downs: { to: 'downs', spawn: 'from-fields', prompt: 'Climb onto the downs' },
+    upstream: { to: 'fen', spawn: 'from-fields', prompt: 'Follow the stream up into the fen' },
   },
   decorate(scene) {
     // A grey ground fog over the fields.
@@ -199,4 +203,69 @@ export const TANNERY: Area = { ...INDOORS, key: 'tannery', map: 'tannery', place
 export const MILL: Area = { ...INDOORS, key: 'mill-inside', map: 'mill-inside', place: 'The mill', time: 'Dawn', dialogue: millInside,
   npcs: [], exits: { out: { to: 'farmland', spawn: 'from-mill', prompt: 'Go back outside' } } };
 
-export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL];
+// The downs, east of the fields: the ram's lambs, the hounds who take them, and the barrow where the hounds den.
+const PACK_GONE = [{ flag: 'pack-slain' as const }, { flag: 'hounds-fed' as const }];
+export const DOWNS: Area = {
+  key: 'downs', map: 'downs', tileset: 'downs', music: 'fields', region: 'THE FARMLAND', place: 'The downs', time: 'Late morning',
+  dialogue: downs, assets: ['hound'],
+  grade: { saturation: -0.3, brightness: 0.86, vignette: 0.4 },
+  npcs: [{ point: 'ram', texture: 'ram' }],
+  enemies: [
+    { point: 'hound-west', encounter: 'hound', hiddenIf: [{ flag: 'hounds-fed' }] },
+    { point: 'hound-east', encounter: 'hound', hiddenIf: [{ flag: 'hounds-fed' }] },
+    { point: 'pack', encounter: 'pack', hiddenIf: PACK_GONE, defeat: { set: 'pack-slain' } },
+  ],
+  props: [
+    // The collar under the tower stair can be searched once the pack has gone, either way.
+    { point: 'tower-cache', texture: 'cache', hiddenIf: [{ owns: 'iron-collar' }, { all: PACK_GONE.map(gone => ({ not: gone })) }] },
+    { point: 'camp-downs', texture: 'campfire', hiddenIf: [] },
+    { point: 'sheep-1', texture: 'sheep', solid: true, hiddenIf: [] },
+    { point: 'sheep-2', texture: 'sheep', solid: true, hiddenIf: [] },
+  ],
+  fishing: { 'dewpond-spot': 'dewpond' },
+  camps: { 'camp-downs': { prompt: 'Rest by the fire', cost: 3, lines: ['The ram lets you sit at his fold fire for a few coins. The wind on the downs never stops.'] } },
+  exits: {
+    west: { to: 'farmland', spawn: 'from-downs', prompt: 'Go back down to the fields' },
+    'barrow-door': { to: 'barrow', spawn: 'spawn', prompt: 'Squeeze past the slab into the barrow' },
+  },
+  decorate(scene) {
+    // Wind moving through the grass in long pale bands.
+    for (let i = 0; i < 10; i++) {
+      const gust = scene.add.rectangle(40 + (i * 233) % 900, 60 + (i * 149) % 560, 160, 6, 0xd8d6c0, 0.05).setDepth(5);
+      scene.tweens.add({ targets: gust, x: gust.x + 120, alpha: 0.01, duration: 3000 + i * 400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+  },
+};
+export const BARROW: Area = {
+  key: 'barrow', map: 'barrow', tileset: 'downs', music: 'wilds', region: 'THE FARMLAND', place: 'The barrow', time: 'Late morning',
+  dialogue: barrow, enemies: [], grade: { saturation: -0.4, brightness: 0.62, vignette: 0.7 },
+  npcs: [{ point: 'hound-mother', texture: 'hound-mother', hiddenIf: PACK_GONE }],
+  exits: { out: { to: 'downs', spawn: 'from-barrow', prompt: 'Go back out into the light' } },
+};
+
+// The fen, upstream of the mill, over the drowned hamlet. The sluice drains it enough to reach the chapel.
+export const FEN: Area = {
+  key: 'fen', map: 'fen', tileset: 'fen', music: 'wilds', region: 'THE FARMLAND', place: 'The fen', time: 'Grey afternoon',
+  dialogue: fen, grade: { saturation: -0.45, brightness: 0.7, vignette: 0.55 },
+  npcs: [{ point: 'otter', texture: 'otter', hiddenIf: [{ flag: 'otter-reported' }] }],
+  enemies: [
+    { point: 'wisp-1', encounter: 'wisp' }, { point: 'wisp-2', encounter: 'wisp' },
+    { point: 'drowned', encounter: 'drowned', hiddenIf: [{ flag: 'drowned-slain' }], defeat: { set: 'drowned-slain' } },
+  ],
+  props: [
+    ...Array.from({ length: 8 }, (_, i) => ({ point: `reeds-${i + 1}`, texture: 'reeds', solid: true, hiddenIf: [{ flag: 'otter-trusted' as const }] })),
+    ...Array.from({ length: 24 }, (_, i) => ({ point: `flood-${i + 1}`, texture: 'dark-water', solid: true, hiddenIf: [{ flag: 'sluice-open' as const }] })),
+    { point: 'chapel-cache', texture: 'cache', hiddenIf: [{ owns: 'drowned-psalter' }, { not: { flag: 'drowned-slain' } }] },
+  ],
+  fishing: { 'fen-spot': 'fen' },
+  exits: { south: { to: 'farmland', spawn: 'from-fen', prompt: 'Follow the stream back down to the mill' } },
+  decorate(scene) {
+    // Mist lying on the water.
+    for (let i = 0; i < 14; i++) {
+      const mist = scene.add.rectangle(30 + (i * 197) % 860, 40 + (i * 131) % 600, 150, 22, 0xc0c8c4, 0.08).setDepth(5);
+      scene.tweens.add({ targets: mist, x: mist.x - 50, alpha: 0.03, duration: 7000 + i * 500, yoyo: true, repeat: -1 });
+    }
+  },
+};
+
+export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN];

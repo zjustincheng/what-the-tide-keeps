@@ -6,14 +6,15 @@ import type { BookId } from './spells';
 import type { MemberId } from './battle';
 import { NO_SUPPLIES } from './economy.ts';
 import type { Supplies, SupplyId } from './economy';
-import { NO_CATCH } from './fishing.ts';
+import { FISH_IDS, NO_CATCH } from './fishing.ts';
 import type { Catch } from './fishing';
 
 export type Item = 'bell';
 export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated' | 'pests-field' | 'pests-yard' | 'writ-given' | 'bear-free' | 'vulture-free'
   | 'sheep-woods' | 'sheep-orchard' | 'sheep-yard' | 'sheep-reward' | 'barrel-bought' | 'squid-freed' | 'swarm-slain' | 'bounty-paid'
   | 'warden-slain' | 'leech-slain'
-  | 'followers-spared' | 'followers-reported' | 'followers-paid' | 'fishmonger-angry' | 'stall-cowed' | 'stood-count' | 'inn-room' | 'reeve-pardon';
+  | 'followers-spared' | 'followers-reported' | 'followers-paid' | 'fishmonger-angry' | 'stall-cowed' | 'stood-count' | 'inn-room' | 'reeve-pardon'
+  | 'hounds-fed' | 'pack-slain' | 'ram-paid' | 'barrow-coins' | 'sluice-open' | 'drowned-slain' | 'otter-trusted' | 'otter-reported' | 'otter-paid';
 // Things worth keeping: keepsakes and grimoires. Once found, they are kept through every death; carried items are not.
 export type Found = KeepsakeId | BookId;
 // Coins and supplies, like carried items, are lost on a wipe.
@@ -27,7 +28,8 @@ export const ITEMS: readonly Item[] = ['bell'];
 export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
   'sheep-woods', 'sheep-orchard', 'sheep-yard', 'sheep-reward', 'barrel-bought', 'squid-freed', 'swarm-slain', 'bounty-paid',
   'warden-slain', 'leech-slain',
-  'followers-spared', 'followers-reported', 'followers-paid', 'fishmonger-angry', 'stall-cowed', 'stood-count', 'inn-room', 'reeve-pardon'];
+  'followers-spared', 'followers-reported', 'followers-paid', 'fishmonger-angry', 'stall-cowed', 'stood-count', 'inn-room', 'reeve-pardon',
+  'hounds-fed', 'pack-slain', 'ram-paid', 'barrow-coins', 'sluice-open', 'drowned-slain', 'otter-trusted', 'otter-reported', 'otter-paid'];
 // A favor spell: a small everyday spell a villager trades for help. It opens the hedge on the border road.
 export const BRAMBLES = "Bramble's leave";
 
@@ -35,10 +37,12 @@ export const BRAMBLES = "Bramble's leave";
 export type Context = Readonly<{ world: World; lost: readonly MemoryId[]; studied: readonly string[] }>;
 export type Condition = { forgot: MemoryId } | { has: Item } | { flag: Flag } | { knows: string } | { owns: Found } | { not: Condition } | { all: Condition[] } | { any: Condition[] }
   // coins: carrying at least this many.
-  | { coins: number };
+  | { coins: number }
+  // fish: carrying at least this many fish, of any kind.
+  | { fish: number };
 // shop names a shop to open once the conversation ends.
 // pay spends coins; supply hands over one of a supply.
-export type Effect = { give?: Item; take?: Item; set?: Flag | readonly Flag[]; learn?: string; find?: Found; earn?: number; pay?: number; supply?: SupplyId; shop?: ShopId; rest?: true };
+export type Effect = { give?: Item; take?: Item; set?: Flag | readonly Flag[]; learn?: string; find?: Found; earn?: number; pay?: number; feed?: number; supply?: SupplyId; shop?: ShopId; rest?: true };
 export type ShopId = 'stall' | 'reeve' | 'fishmonger';
 
 export function createWorld(): World {
@@ -50,6 +54,7 @@ export function holds(context: Context, condition: Condition): boolean {
   if ('all' in condition) return condition.all.every(each => holds(context, each));
   if ('any' in condition) return condition.any.some(each => holds(context, each));
   if ('coins' in condition) return context.world.coins >= condition.coins;
+  if ('fish' in condition) return FISH_IDS.reduce((total, fish) => total + context.world.fish[fish], 0) >= condition.fish;
   if ('forgot' in condition) return context.lost.includes(condition.forgot);
   if ('has' in condition) return context.world.carried.includes(condition.has);
   if ('flag' in condition) return context.world.flags.includes(condition.flag);
@@ -67,10 +72,20 @@ export function apply(context: Context, effect: Effect): Context {
       flags: [...world.flags, ...[effect.set ?? []].flat().filter((flag, i, all) => !world.flags.includes(flag) && all.indexOf(flag) === i)],
       found: effect.find && !world.found.includes(effect.find) ? [...world.found, effect.find] : world.found,
       coins: Math.max(0, world.coins + (effect.earn ?? 0) - (effect.pay ?? 0)),
-      supplies: effect.supply ? { ...world.supplies, [effect.supply]: world.supplies[effect.supply] + 1 } : world.supplies, fish: world.fish, deaths: world.deaths, wounds: effect.rest ? {} : world.wounds, drained: effect.rest ? {} : world.drained,
+      supplies: effect.supply ? { ...world.supplies, [effect.supply]: world.supplies[effect.supply] + 1 } : world.supplies, fish: effect.feed ? feed(world.fish, effect.feed) : world.fish, deaths: world.deaths, wounds: effect.rest ? {} : world.wounds, drained: effect.rest ? {} : world.drained,
     },
     studied: effect.learn && !studied.includes(effect.learn) ? [...studied, effect.learn] : studied,
   };
+}
+
+// Handing over fish gives up the smallest first.
+export function feed(caught: Catch, count: number): Catch {
+  const left = { ...caught };
+  for (const fish of FISH_IDS) {
+    const given = Math.min(left[fish], count);
+    left[fish] -= given; count -= given;
+  }
+  return left;
 }
 
 // Resting at a campfire closes every wound and restores every hero's mana.

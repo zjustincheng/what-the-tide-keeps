@@ -3,7 +3,7 @@ import type { Dialogue } from './dialogue';
 // The open farmland south of the church. Names are placeholders.
 export const fields: Dialogue = {
   sign: { speaker: 'A WAYMARK', prompt: 'Read the waymark', lines: [
-    'South: Millbrook. West: the mill, over the stream. East: the hay yard, and the field track that bends south to the border road.',
+    'South: Millbrook. West: the mill, over the stream. East: the hay yard, the downs, and the field track to the border road. North, up the stream: the fen.',
     'Someone has carved a lizard under it, and a rope.',
   ] },
   bell: { speaker: 'THE TRAMPLED CLEARING', prompt: 'Pick up the bell', hiddenIf: [{ has: 'bell' }, { flag: 'lamb-thanked' }], lines: [
@@ -22,7 +22,10 @@ export const fields: Dialogue = {
     'Keep back from him. And from me.',
     'The church sends me a convict, the church takes the flour. The key stays on my belt until the reeve says otherwise, in writing.',
     'Go and ask the reeve in Millbrook what he wants for it.',
-  ], variants: [{ if: { flag: 'bear-free' }, lines: [
+  ], variants: [{ if: { all: [{ flag: 'sluice-open' }, { any: [{ flag: 'bear-free' }, { not: { flag: 'writ-given' } }] }] }, lines: [
+    'The stream\'s dropped a foot. Somebody\'s been at the sluice up in the fen.',
+    'The wheel\'s barely turning. If I find out who, the reeve hears about it.',
+  ] }, { if: { flag: 'bear-free' }, lines: [
     'Wheel turns slower without him. Don\'t tell him I said that.',
   ] }, { if: { flag: 'writ-given' }, lines: [
     'A writ. The reeve\'s seal. Fine.',
@@ -87,7 +90,7 @@ export const fields: Dialogue = {
     'A sheep pressed against the hay yard fence, blood dried in its fleece. Not its own. It goes when you call.',
   ], then: { set: 'sheep-yard' } },
   waymark: { speaker: 'A WAYMARK', prompt: 'Read the waymark', lines: [
-    'The track bends south here. BORDER ROAD, it says, with an arrow. The shrine is off to the south-east, past the stones.',
+    'SOUTH: the border road. EAST: the downs. The shrine is off to the south-east, past the stones.',
   ] },
   log: { speaker: 'A FALLEN OAK', prompt: 'Examine the fallen oak', lines: [
     'A fallen oak lies across the path into the woods, roots and all. It is too big to climb.',

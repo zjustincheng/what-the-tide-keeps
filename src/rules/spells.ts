@@ -2,8 +2,8 @@
 // These are distinct from the shared grimoire of studied enemy spells.
 import type { MemberId } from './battle';
 
-export type BookId = 'thornwork' | 'riverstone' | 'windward' | 'pond-primer' | 'snare-primer';
-export type SpellId = 'thorn-volley' | 'stone-ward' | 'gale-quill' | 'still-water' | 'bramble-snare';
+export type BookId = 'thornwork' | 'riverstone' | 'windward' | 'pond-primer' | 'snare-primer' | 'drowned-psalter';
+export type SpellId = 'thorn-volley' | 'stone-ward' | 'gale-quill' | 'still-water' | 'bramble-snare' | 'undertow';
 export type Books = Readonly<Record<MemberId, BookId | null>>;
 
 // Casting means typing a shown sequence of 1–4 within the time limit. One wrong key and the spell fizzles.
@@ -14,6 +14,8 @@ export const SPELLS: Record<SpellId, { name: string; cost: number; length: numbe
   'gale-quill': { name: 'Gale quill', cost: 5, length: 6, seconds: 3.2, kind: 'damage', power: 16, cooldown: 2, text: 'One quill on a gale, at one enemy.' },
   'still-water': { name: 'Still water', cost: 4, length: 5, seconds: 3, kind: 'heal', power: 8, cooldown: 3, text: 'Every standing hero recovers 8 health.' },
   'bramble-snare': { name: 'Bramble snare', cost: 5, length: 6, seconds: 3.2, kind: 'snare', power: 0, cooldown: 3, text: 'The main enemy loses its next move. Followers still act.' },
+  // Hard to cast quickly, and it hits harder than anything a hero starts with.
+  undertow: { name: 'Undertow', cost: 6, length: 7, seconds: 3, kind: 'damage', power: 20, cooldown: 3, text: 'Black water drags at one enemy.' },
 };
 
 export const BOOKS: Record<BookId, { name: string; spell: SpellId }> = {
@@ -22,6 +24,7 @@ export const BOOKS: Record<BookId, { name: string; spell: SpellId }> = {
   windward: { name: 'Windward', spell: 'gale-quill' },
   'pond-primer': { name: "Pond-keeper's primer", spell: 'still-water' },
   'snare-primer': { name: "Hedge-witch's primer", spell: 'bramble-snare' },
+  'drowned-psalter': { name: 'Drowned psalter', spell: 'undertow' },
 };
 export const BOOK_IDS = Object.keys(BOOKS) as BookId[];
 // Each hero starts with their own grimoire; others are found and can be carried by anyone.
