@@ -294,7 +294,7 @@ export const FEN: Area = {
 // The highlands: carnivore country, militarized and distrusted. Every map shares the highland tileset except the fort town.
 const HIGHLAND_GROUND: Pick<Area, 'region' | 'tileset' | 'ground' | 'surfaces'> = {
   region: 'THE HIGHLANDS', tileset: 'highland', ground: 'grass',
-  surfaces: { 3: 'dirt', 5: 'stone', 7: 'snow', 13: 'stone', 16: 'wood', 18: 'stone', 21: 'stone', 24: 'stone', 26: 'dirt' },
+  surfaces: { 3: 'dirt', 5: 'stone', 7: 'snow', 13: 'stone', 16: 'wood', 18: 'stone', 21: 'stone', 24: 'stone', 26: 'dirt', 33: 'snow' },
 };
 const COLD = { saturation: -0.4, brightness: 0.8, vignette: 0.5 };
 const snowfall = (scene: Phaser.Scene, width: number, height: number) => {

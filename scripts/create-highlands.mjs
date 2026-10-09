@@ -21,7 +21,7 @@ const HIGHLAND = [
   rect(0,0,16,16,'#4a4a46')+rect(1,1,7,6,'#5a5a54')+rect(8,8,7,7,'#56564e')+rect(0,7,16,1,'#36362f')+rect(7,0,1,16,'#3e3e38'), // 3 rock face
   rect(0,0,16,16,'#6a6a62')+rect(2,3,2,2,'#86867c')+rect(9,6,3,2,'#56564e')+rect(5,11,2,2,'#86867c')+rect(12,12,2,2,'#4e4e48'), // 4 scree
   pine('#55573e'),                                                                                        // 5 pine
-  rect(0,0,16,16,'#c8ccc8')+rect(3,4,4,1,'#b0b6b4')+rect(10,10,3,1,'#b0b6b4'),                             // 6 snow
+  rect(0,0,16,16,'#c4cacb')+rect(0,0,16,3,'#ccd2d3')+rect(2,6,5,1,'#b4bcbe')+rect(9,11,4,1,'#b4bcbe')+rect(12,4,1,1,'#e4eaea')+rect(5,13,1,1,'#e4eaea'), // 6 deep snow
   rect(0,0,16,16,'#55573e')+rect(2,4,12,11,'#6a6a62')+rect(4,3,7,4,'#7e7e74')+rect(2,13,12,2,'#4a4a44'),   // 7 boulder
   rect(0,0,16,16,'#55573e')+rect(3,8,10,7,'#6e6e64')+rect(5,4,6,5,'#828276')+rect(7,1,3,4,'#6e6e64'),      // 8 cairn
   rect(0,0,16,16,'#55573e')+rect(7,6,2,10,'#5d4630')+rect(2,2,12,5,'#8c7049')+rect(3,3,10,1,'#b49863'),    // 9 signpost
@@ -47,9 +47,10 @@ const HIGHLAND = [
   rect(0,0,16,16,'#9aaab0')+rect(3,3,10,10,'#2a3a40')+rect(4,4,8,8,'#1a2a30')+rect(3,3,10,1,'#c8d6da'),    // 29 hole in the ice
   rect(0,0,16,16,'#4a3a2c')+[1,5,9,13].map(y=>rect(0,y,16,3,'#5d4630')).join('')+rect(0,0,16,1,'#c8ccc8'), // 30 log hut
   rect(0,0,16,16,'#9aaab0')+rect(3,5,10,6,'#7a8288')+rect(4,6,4,3,'#a89878')+rect(10,7,2,2,'#6a5a48')+rect(2,4,1,1,'#b8c6ca'), // 31 a body under the ice
+  heather('#55573e')+rect(0,0,16,6,'#c4cacb')+rect(0,6,11,2,'#c4cacb')+rect(0,8,7,2,'#c4cacb')+rect(0,10,4,2,'#c4cacb')+rect(0,12,2,2,'#c4cacb')+rect(12,6,2,1,'#bcc2c3')+rect(8,9,2,1,'#bcc2c3')+rect(5,11,1,1,'#bcc2c3')+rect(3,2,1,2,'#7a5a6a')+rect(10,3,1,2,'#6a6a48'), // 32 drift edge
 ];
 sheet('highland', HIGHLAND);
-const H = Object.fromEntries(['HEATHER','STONES','ROAD','ROCK','SCREE','PINE','SNOW','BOULDER','CAIRN','SIGN','DEAD','MOUND','BONES','PIT','CHASM','BRIDGE','AWALL','FLAG','PILLAR','BONEWALL','OFLOOR','VOID','NICHE','STAIR','BANNER','TRENCH','STREAM','TENT','ICE','HOLE','HUT','FROZEN'].map((n,i)=>[n,i+1]));
+const H = Object.fromEntries(['HEATHER','STONES','ROAD','ROCK','SCREE','PINE','SNOW','BOULDER','CAIRN','SIGN','DEAD','MOUND','BONES','PIT','CHASM','BRIDGE','AWALL','FLAG','PILLAR','BONEWALL','OFLOOR','VOID','NICHE','STAIR','BANNER','TRENCH','STREAM','TENT','ICE','HOLE','HUT','FROZEN','DUST'].map((n,i)=>[n,i+1]));
 const HIGHLAND_SOLID = [3,5,7,8,9,10,11,13,14,16,18,19,21,22,24,26,27,29,30];
 
 // The fort town: a carnivore garrison behind stone walls.
@@ -98,6 +99,25 @@ function write(name,tileset,rows,solid,{w,h,floor,furniture},points){
   writeFileSync(`public/maps/${name}.json`,JSON.stringify(map,null,2)+'\n');
 }
 const at=(x,y)=>[x*16+8,y*16+8];
+// Drifts rather than tiles: a smooth wave pattern picks where snow lies; deep snow in the middle of a drift, a dusting at its edges.
+function snowfield(m, keep, threshold = 0.6, seed = 0) {
+  const level = (x, y) => Math.sin(x * 0.31 + seed) + Math.sin(y * 0.37 + seed * 2) + Math.sin((x + y) * 0.19 + seed * 3) + 0.6 * Math.sin((x - y) * 0.53 + seed);
+  const snowy = (x, y) => x >= 0 && y >= 0 && x < m.w && y < m.h && keep(x, y) && level(x, y) > threshold;
+  for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++) {
+    if (!snowy(x, y)) continue;
+    const deep = snowy(x - 1, y) && snowy(x + 1, y) && snowy(x, y - 1) && snowy(x, y + 1);
+    // Tiled keeps flips in the top bits of a tile number: horizontal, vertical, and diagonal (a quarter turn).
+    // The edge tile's drift lies along its top; turn it to face the deeper snow beside it, mirrored now and then for variety.
+    const H_FLIP = 0x80000000, V_FLIP = 0x40000000, D_FLIP = 0x20000000;
+    const vary = (x * 7 + y * 13) % 2 === 1;
+    const turn = snowy(x, y - 1) ? (vary ? H_FLIP : 0)
+      : snowy(x, y + 1) ? V_FLIP + (vary ? H_FLIP : 0)
+      : snowy(x - 1, y) ? D_FLIP + (vary ? V_FLIP : 0)
+      : snowy(x + 1, y) ? D_FLIP + H_FLIP + (vary ? V_FLIP : 0)
+      : [0, H_FLIP, V_FLIP, D_FLIP][(x + y) % 4];
+    m.put(m.floor, x, y, deep ? H.SNOW : (H.DUST + turn) >>> 0);
+  }
+}
 const scatter=(m,count,tile,seedA,seedB,keep)=>{for(let i=0;i<count;i++){const x=(i*seedA+5)%m.w,y=(i*seedB+3)%m.h;if(keep(x,y)) m.put(m.floor,x,y,tile);}};
 const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
 
@@ -114,7 +134,9 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
   fill(furniture,1,33,38,33,H.ROCK);fill(furniture,27,33,28,33,0);
   fill(furniture,1,21,38,21,H.ROCK);fill(furniture,19,21,20,21,0);
   // Snow lies higher up.
-  for(let y=1;y<21;y++) for(let x=1;x<39;x++) if((x*7+y*13)%5===0 && floor[y*40+x]!==H.ROAD) put(floor,x,y,H.SNOW);
+  snowfield(m,(x,y)=>y>=1&&y<21&&floor[y*40+x]!==H.ROAD,0.4,1.3);
+  // A thinner dusting lower down.
+  snowfield(m,(x,y)=>y>=22&&y<33&&floor[y*40+x]!==H.ROAD,1.6,4.1);
   for(const [x,y] of [[4,58],[30,56],[34,49],[3,48],[16,42],[33,36],[6,30],[14,24],[33,24],[5,16],[30,12],[35,4],[9,6],[24,9],[3,37],[36,60]]) put(furniture,x,y,H.PINE);
   for(const [x,y] of [[25,57],[6,54],[22,48],[31,43],[17,36],[5,26],[24,30],[30,17],[11,12],[27,4]]) put(furniture,x,y,H.BOULDER);
   fill(floor,6,42,9,44,H.SCREE);fill(floor,30,28,35,31,H.SCREE);
@@ -232,7 +254,7 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
 // The high tarn: a frozen lake under the pass, reached up the smugglers' stair from the weir.
 {
   const m=grid(44,32,H.HEATHER);const {floor,furniture,put,fill}=m;
-  scatter(m,60,H.SNOW,23,11,()=>true);
+  snowfield(m,(x,y)=>(x<12||x>34||y<8||y>24),0.5,2.7);
   fill(furniture,0,0,43,0,H.ROCK);fill(furniture,0,31,43,31,H.ROCK);fill(furniture,0,0,0,31,H.ROCK);fill(furniture,43,0,43,31,H.ROCK);
   // Up the stair from the weir in the south-west; the rope ladder up to the pass on the east cliff.
   fill(furniture,4,31,5,31,0);fill(floor,4,26,5,31,H.SCREE);

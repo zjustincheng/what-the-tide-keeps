@@ -1666,13 +1666,13 @@
       "name": "highland",
       "image": "../assets/highland-tiles.svg",
       "imagewidth": 128,
-      "imageheight": 64,
+      "imageheight": 80,
       "margin": 0,
       "spacing": 0,
       "tilewidth": 16,
       "tileheight": 16,
       "columns": 8,
-      "tilecount": 32,
+      "tilecount": 40,
       "tiles": [
         {
           "id": 3,
