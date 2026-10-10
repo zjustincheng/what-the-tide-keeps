@@ -265,3 +265,47 @@ export const fleet: Dialogue = {
     'Bones in the sand, the swell moving them a little, back and forth, back and forth, like something being rocked.',
   ] },
 };
+
+// Places you leap to. Nobody has been here in a long time, because getting here takes a leap.
+
+// The gorge east of the pass.
+export const gorge: Dialogue = {
+  satchel: { speaker: 'A COURIER\'S SATCHEL', prompt: 'Open the satchel', hiddenIf: [{ owns: 'climbers-chalk' }], lines: [
+    'Oilcloth, gone stiff. Inside, a bag of chalk for the hands, and a bundle of letters for the holds, tied with a cord that falls apart when you touch it.',
+    'The top letter is unsealed: TELL THE HOUSE THE CHURCH BOATS ARE TAKING FROM THE PENS AGAIN. TELL THEM BEFORE THE FEAST.',
+    'Found: climber\'s chalk.',
+  ], then: { find: 'climbers-chalk' } },
+  courier: { speaker: 'THE COURIER', prompt: 'Look at the bones', lines: [
+    'A marten, by the skull, curled against the rock where the ledge is widest. Not a fall. She got here, and the weather came in, and nobody came the short way after her.',
+  ] },
+  carving: { speaker: 'A CARVING', prompt: 'Read the carving', lines: [
+    'Cut into the rock low down, the way children cut things: a deer\'s name and a wolf\'s name, side by side, and a date from before the Covenant. Under it, in the same hand: WE CAME THE SHORT WAY. DON\'T TELL.',
+  ] },
+};
+
+// The old rookery spires west of the climb.
+export const spires: Dialogue = {
+  nest: { speaker: 'THE OLDEST NEST', prompt: 'Search the nest', hiddenIf: [{ owns: 'falconers-hood' }], lines: [
+    'Sticks and wool and old letters, woven together, wider than a cart wheel. Whoever built it is long gone. In the bottom, a falconer\'s hood of soft leather, made for a bird bigger than anything in the holds now.',
+    'Found: the falconer\'s hood.',
+  ], then: { find: 'falconers-hood' } },
+  letters: { speaker: 'LETTERS ON THE PERCH', prompt: 'Read the letters', lines: [
+    'Undelivered post, weighted with a stone. The newest is from a pigeon to her mother: THE CHURCH SAYS THE LIGHT ON THE ROCK FEEDS THE HUNGRY. WE SENT THEM OUR HUNGRY. NOBODY WE SENT HAS WRITTEN.',
+    'The pigeon never flew it. Somebody stopped the routes the week after.',
+  ] },
+};
+
+// The sunken rows north of Wickmere.
+export const rows: Dialogue = {
+  register: { speaker: 'THE PARISH REGISTER', prompt: 'Read the register', hiddenIf: [{ owns: 'reed-charm' }], lines: [
+    'Up in the belfry, out of the water, a register in a tin box. Births, deaths, and freeholds: every family in the old town owned the ground under its house.',
+    'The last page is the church taking the town over "after the flood". Tucked in the box, a charm of plaited reeds, the kind frogs give their young for luck.',
+    'Found: a reed charm.',
+  ], then: { find: 'reed-charm' } },
+  counting: { speaker: 'THE COUNTING HOUSE', prompt: 'Look in the counting house', lines: [
+    'Ledgers, swollen to twice their size. The last entry is the cost of digging a new cut for the river, paid by the church, the month before the old town drowned.',
+  ] },
+  window: { speaker: 'A WINDOW', prompt: 'Look through the window', lines: [
+    'Under the water, through a window, a room with the table still laid. Everyone got out. The plates are still there because nobody was allowed back for them.',
+  ] },
+};

@@ -2,7 +2,7 @@
 // the battlefield, the ruined abbey, and the ossuary under it.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
-import { grain, rect as krect, scatter as speckle, stairs, vary } from './tile-kit.mjs';
+import { crumble, gap, grain, rect as krect, scatter as speckle, stairs, tileProps, vary } from './tile-kit.mjs';
 const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
 const sheet = (name, tiles) => {
   const rows = Math.ceil(tiles.length / 8);
@@ -70,10 +70,13 @@ HIGHLAND.push(
   HIGHLAND[17] + krect(9,2,1,3,'#524e46') + krect(10,4,1,1,'#524e46') + krect(3,10,2,1,'#525a44'),
 );
 // Dressed stone, cut square and stacked for the carts.
-const BLOCK = HIGHLAND.length + 1;
-HIGHLAND.push(rect(0,0,16,16,'#6a6a62')+rect(1,2,14,12,'#9a968a')+rect(1,2,14,1,'#b4b0a2')+rect(1,8,14,1,'#7a766c')+rect(8,2,1,6,'#7a766c')+rect(4,8,1,6,'#7a766c')+rect(1,13,14,1,'#5a5850')+rect(3,4,3,1,'#a8a498'));
+const BLOCK = HIGHLAND.length + 1, CRACK = HIGHLAND.length + 2, LOOSE = HIGHLAND.length + 3;
+HIGHLAND.push(rect(0,0,16,16,'#6a6a62')+rect(1,2,14,12,'#9a968a')+rect(1,2,14,1,'#b4b0a2')+rect(1,8,14,1,'#7a766c')+rect(8,2,1,6,'#7a766c')+rect(4,8,1,6,'#7a766c')+rect(1,13,14,1,'#5a5850')+rect(3,4,3,1,'#a8a498'),
+  // A crack in the rock, narrow enough to leap; a loose ledge that won't hold you long.
+  HIGHLAND[14], crumble({ top: '#8a8578', crack: '#3a3630', under: '#121418' }));
 sheet('highland', HIGHLAND);
 const HIGHLAND_SOLID = [3,5,7,8,9,10,11,13,14,16,18,19,21,22,24,26,27,29,30,BLOCK-1];
+const HIGHLAND_GAPS = [CRACK-1], HIGHLAND_CRUMBLES = [LOOSE-1];
 
 // The fort town: a carnivore garrison behind stone walls.
 const FORT = [
@@ -125,7 +128,7 @@ function write(name,tileset,rows,solid,{w,h,floor,furniture},points){
   const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
     layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([n,x,y],i)=>({id:i+1,name:n,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
     tilesets:[{firstgid:1,name:tileset,image:`../assets/${tileset}-tiles.svg`,imagewidth:128,imageheight:rows*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows*8,
-      tiles:solid.map(id=>({id,properties:[{name:'collides',type:'bool',value:true}]}))}]};
+      tiles:tileset==='highland'?tileProps(solid,HIGHLAND_GAPS,HIGHLAND_CRUMBLES):tileProps(solid)}]};
   writeFileSync(`public/maps/${name}.json`,JSON.stringify(map,null,2)+'\n');
 }
 const at=(x,y)=>[x*16+8,y*16+8];
@@ -173,6 +176,8 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
   // A spur west to the cliff edge, where a rope ladder drops to the tarn.
   fill(floor,1,39,10,40,H.ROAD);fill(furniture,0,39,0,40,0);
   put(furniture,22,61,H.SIGN);put(furniture,23,28,H.CAIRN);
+  // East, a goat track out along the gorge.
+  fill(furniture,39,26,39,27,0);
   write('pass','highland',HROWS,HIGHLAND_SOLID,m,[
     ['south',...at(19,63).map((v,i)=>i===0?v+8:v)],['from-border',320,1000],['north',320,8],['from-fort',320,36],
     ['pass-sign',...at(22,62)],['cairn',...at(23,29)],
@@ -180,6 +185,7 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
     ['courier',...at(7,43)],['camp-pass',...at(33,38)],
     ['inquisitor',...at(22,10)],
     ['west',8,640],['from-tarn',28,640],['ladder-top',...at(3,38)],['forage-1',...at(30,24)],
+    ['east',632,432],['from-gorge',600,432],
   ]);
 }
 
@@ -429,5 +435,31 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
     ['west',8,208],['from-drove',40,208],
     ['collie',...at(18,11)],['cairn',...at(21,10)],['hut',...at(14,6)],['camp-shieling',...at(23,13)],['sheep-a',...at(9,19)],['sheep-b',...at(11,20)],['fold',...at(14,20)],
     ['harrier-1',...at(25,19)],['hound-1',...at(8,9)],['hound-2',...at(27,9)],['forage-1',...at(4,16)],
+  ]);
+}
+
+// The gorge east of the pass: islands of rock over a drop, cracks to leap, and a ledge of loose stone that won't hold you long.
+// A courier went this way once, the short way to the holds. Her satchel is still on the last ledge.
+{
+  const m=grid(44,26,H.SCREE);const {floor,furniture,put,fill}=m;
+  fill(furniture,0,0,43,25,H.CHASM);
+  const island=(x0,y0,x1,y1,ground=H.SCREE)=>{fill(furniture,x0,y0,x1,y1,0);fill(floor,x0,y0,x1,y1,ground);};
+  // The way in from the pass, and the first island.
+  island(0,12,0,13);island(1,9,8,16,H.HEATHER);
+  // A crack, then the second island; a wider crack, then the third.
+  fill(furniture,9,10,9,15,CRACK);island(10,8,14,17);
+  fill(furniture,15,9,16,12,CRACK);island(17,6,21,12);
+  // A ledge of loose stone out to the fourth: keep walking, and it holds.
+  for(let x=22;x<=26;x++){fill(furniture,x,9,x,9,0);put(floor,x,9,LOOSE);}
+  island(27,5,32,12);
+  // A crack, a single pillar, a wider crack, and the courier's ledge.
+  fill(furniture,33,6,33,10,CRACK);island(34,8,34,8);fill(furniture,35,6,36,10,CRACK);island(37,4,42,10);
+  put(floor,40,7,H.BONES);put(furniture,42,4,H.CAIRN);
+  // Below the second island, down across a crack, a shelf with something carved in it.
+  fill(furniture,11,18,13,19,CRACK);island(10,20,15,24,H.HEATHER);put(furniture,10,24,H.BOULDER);put(furniture,15,20,H.PINE);
+  for(const [x,y] of [[2,10],[7,15],[21,6],[27,12]]) put(furniture,x,y,H.BOULDER);
+  write('gorge','highland',HROWS,HIGHLAND_SOLID,m,[
+    ['west',8,208],['from-pass',40,208],
+    ['satchel',...at(40,6)],['courier',...at(40,8)],['carving',...at(12,22)],['harrier-1',...at(30,8)],['forage-1',...at(14,23)],
   ]);
 }

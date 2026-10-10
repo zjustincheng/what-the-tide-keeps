@@ -1359,6 +1359,31 @@
               "value": true
             }
           ]
+        },
+        {
+          "id": 28,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            },
+            {
+              "name": "gap",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 29,
+          "properties": [
+            {
+              "name": "crumble",
+              "type": "bool",
+              "value": true
+            }
+          ]
         }
       ]
     }

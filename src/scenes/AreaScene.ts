@@ -26,6 +26,8 @@ import { PartyView } from '../ui/PartyView';
 import { ShellView } from '../ui/ShellView';
 import { ArmView } from '../ui/ArmView';
 import { boutAfter, boutWon, BOUTS } from '../rules/ring';
+import { landing } from '../rules/leap';
+import type { Ground } from '../rules/leap';
 import { ShopView } from '../ui/ShopView';
 import { FishingView } from '../ui/FishingView';
 import { SettingsView } from '../ui/SettingsView';
@@ -65,10 +67,14 @@ const BREATHING = new Set(['sheep', 'badger', 'rat', 'hyena']);
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 // What has been picked, by area and point, since the hero last rested. Resting lets it grow back.
 const PICKED = new Set<string>();
+// Places where the hero has been told how to leap, this session.
+const HINTED = new Set<string>();
 // How often hiding costs every hero a point of mana, in milliseconds.
 // How near the hero must be to see a signature through fog.
 const FOG_SIGHT = 120;
 const HIDE_DRAIN = 2500;
+// Falling into a gap costs the hero this much health. Crumbling ground cracks after this long underfoot, gives way after this long, and comes back after this long.
+const FALL_WOUND = 3, CRACKS = 450, GIVES = 800, COMES_BACK = 3000;
 // Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
 const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8], warden: [22, 26, 5, 4], leech: [28, 24, 2, 4], hound: [20, 22, 6, 8], pack: [22, 24, 5, 6], wisp: [14, 14, 9, 9], drowned: [20, 26, 6, 4],
   raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4], captain: [22, 24, 5, 6], harrier: [22, 18, 5, 8], mosquito: [20, 16, 6, 8], scorpion: [24, 16, 4, 12], brood: [26, 20, 3, 8], apprentice: [22, 22, 5, 8], viper: [26, 20, 3, 10], hornet: [20, 16, 6, 8], spider: [26, 16, 3, 12], duellist: [20, 22, 6, 8], cuckoo: [22, 22, 5, 8], warder: [26, 18, 3, 12], cricket: [22, 14, 5, 14], flight: [26, 20, 3, 8], champion: [22, 22, 5, 8], shark: [26, 18, 3, 10], barracuda: [24, 12, 4, 12], jelly: [22, 20, 5, 8], eel: [26, 14, 3, 12], cuttlefish: [28, 22, 2, 8] };
@@ -118,6 +124,14 @@ export class AreaScene extends Phaser.Scene {
   private pendingShop?: ShopId;
   // A campfire to rest at once the current conversation ends.
   private pendingRest?: string;
+  // Leaping: whether the hero is in the air, which way he faces, how high the arc has him, and where he last stood on firm ground.
+  private leaping = false;
+  private facing = { dx: 0, dy: 1 };
+  private lift = 0;
+  private safe = { x: 0, y: 0 };
+  // The tileset's leapable gap tile, which crumbling ground turns into when it goes; and when each crumbling tile was first stood on.
+  private gapTile?: number;
+  private crumbling = new Map<string, number>();
   // What the church took, in memories, to raise one of the fallen: said once the conversation closes.
   private pendingTithe?: string[];
   private pendingFight?: Foe;
@@ -154,7 +168,7 @@ export class AreaScene extends Phaser.Scene {
     this.thrownOut = data?.caught;
     this.sentries = [];
     this.cleanup = new AbortController();
-    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.pendingChurch = false; this.exitMarkers = []; this.pendingBout = undefined; this.pendingTithe = undefined; this.pendingSail = undefined; this.pendingShells = undefined; this.pendingArm = undefined; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
+    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.pendingChurch = false; this.exitMarkers = []; this.pendingBout = undefined; this.pendingTithe = undefined; this.leaping = false; this.lift = 0; this.crumbling = new Map(); this.pendingSail = undefined; this.pendingShells = undefined; this.pendingArm = undefined; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
     this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false; this.pendingShop = undefined; this.pendingRest = undefined; this.pendingFight = undefined;
   }
 
@@ -173,12 +187,14 @@ export class AreaScene extends Phaser.Scene {
     const furniture = map.createLayer('Furniture', tiles)!;
     furniture.setCollisionByProperty({ collides: true });
     this.walls = furniture;
+    this.gapTile = Object.entries(tiles.tileProperties as Record<string, { gap?: boolean }>).filter(([, props]) => props?.gap).map(([id]) => tiles.firstgid + Number(id))[0];
     this.points = map.getObjectLayer('Points')!.objects.map(p => ({ name: p.name, x: p.x!, y: p.y! }));
     const spawn = this.point(this.arrival);
     createSprites(this);
     this.shadow = this.add.ellipse(spawn.x, spawn.y + 3, 14, 6, 0x122b22, 0.6);
     this.player = this.physics.add.sprite(spawn.x, spawn.y, 'hero');
     this.player.setSize(9, 7).setOffset(5, 17).setCollideWorldBounds(true);
+    this.safe = { x: spawn.x, y: spawn.y };
     this.physics.world.setBounds(...this.area.bounds ?? [0, 0, map.widthInPixels, map.heightInPixels]);
     // Maps larger than the view scroll with the hero.
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels).startFollow(this.player, true, 0.15, 0.15);
@@ -247,6 +263,8 @@ export class AreaScene extends Phaser.Scene {
     this.showClock();
     element('game').setAttribute('aria-label', `${this.area.place} map. Move with WASD or arrow keys. Press E or Space to interact.`);
     this.cameras.main.fadeIn(650, 16, 27, 24);
+    // The first time in a place with gaps to leap, say how.
+    if(this.gapTile!==undefined && !HINTED.has(this.area.key) && this.walls.findTile(tile=>tile.index===this.gapTile)) { HINTED.add(this.area.key); this.time.delayedCall(900, () => this.notice('Shift (or Leap) to jump a gap. Loose ground won\'t hold you for long.', 5000)); }
     music.play(this.area.music);
     this.renderMemory();
     // A wipe that was not yet paid for, such as one interrupted by a reload, is still owed.
@@ -437,6 +455,93 @@ export class AreaScene extends Phaser.Scene {
     }
   }
 
+  // What the ground is at a tile, for leaping: open, a gap that can be leapt, or a wall.
+  private ground(tx: number, ty: number): Ground {
+    const tile = this.walls.getTileAt(tx, ty);
+    if (tx < 0 || ty < 0 || tx >= this.walls.layer.width || ty >= this.walls.layer.height) return 'wall';
+    if (!tile || !tile.collides) return 'open';
+    return (tile.tileset?.getTileProperties(tile.index) as { gap?: boolean } | null)?.gap ? 'gap' : 'wall';
+  }
+  private feet(): { tx: number; ty: number } {
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    return { tx: Math.floor(body.center.x / 16), ty: Math.floor(body.center.y / 16) };
+  }
+
+  // A leap the way the hero faces: over a gap of up to two tiles, or a hop forward on open ground. Short of the far side, he falls.
+  private leap() {
+    if(this.leaping || this.overlay || this.leaving || this.active) return;
+    const from = this.feet();
+    const { dx, dy } = this.facing;
+    const lands = landing((tx, ty) => this.ground(tx, ty), from, dx, dy);
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    const below = body.center.y - this.player.y;
+    this.leaping = true;
+    this.player.setVelocity(0);
+    body.checkCollision.none = true;
+    this.safe = { x: this.player.x, y: this.player.y };
+    music.effect('dodge');
+    const steps = lands ? Math.abs(lands.tx - from.tx) + Math.abs(lands.ty - from.ty) : 0;
+    const to = lands ? { x: dx ? lands.tx * 16 + 8 : this.player.x, y: dy ? lands.ty * 16 + 8 - below : this.player.y } : { x: this.player.x, y: this.player.y };
+    const duration = 180 + steps * 90;
+    this.tweens.add({ targets: this.player, x: to.x, y: to.y, duration, ease: 'Linear' });
+    this.tweens.addCounter({ from: 0, to: 1, duration, onUpdate: tween => { this.lift = Math.sin(tween.getValue()! * Math.PI) * (steps ? 0.55 : 0.3); },
+      onComplete: () => {
+        this.lift = 0;
+        body.checkCollision.none = false;
+        body.reset(this.player.x, this.player.y);
+        this.leaping = false;
+        const at = this.feet();
+        if (lands?.falls || this.ground(at.tx, at.ty) === 'gap') this.fall();
+        else music.effect(`step-${this.surface()}`);
+      } });
+  }
+
+  // A fall: down into the gap, and back up where he last stood firm, a little hurt. It never takes the last of his health.
+  private fall() {
+    this.leaping = true;
+    this.player.setVelocity(0);
+    (this.player.body as Phaser.Physics.Arcade.Body).checkCollision.none = true;
+    music.effect('hit');
+    this.cameras.main.shake(180, 0.004);
+    this.tweens.add({ targets: this.player, scale: 0.3, alpha: 0, duration: 420, ease: 'Quad.easeIn', onComplete: () => {
+      this.player.setPosition(this.safe.x, this.safe.y).setScale(1).setAlpha(1);
+      const body = this.player.body as Phaser.Physics.Arcade.Body;
+      body.reset(this.safe.x, this.safe.y);
+      body.checkCollision.none = false;
+      this.leaping = false;
+      const world = loadWorld();
+      const hero = createBattle('locust', [], { ...this.partyOptions(), roster: roster(world) }).party.find(member => member.id === 'chameleon');
+      const hurt = hero ? Math.min(FALL_WOUND, Math.max(0, hero.health - 1)) : 0;
+      if (hurt) saved = saveWorld({ ...world, wounds: { ...world.wounds, chameleon: (world.wounds.chameleon ?? 0) + hurt } });
+      this.renderMemory();
+      this.notice(hurt ? `You fall, and climb back out. (−${hurt} health)` : 'You fall, and climb back out.', 2500);
+    } });
+  }
+
+  // Ground that crumbles: it holds a moment, cracks, and goes. It comes back a while later.
+  private footing(time: number) {
+    const at = this.feet();
+    const tile = this.floor.getTileAt(at.tx, at.ty);
+    const crumbles = Boolean(tile && (tile.tileset?.getTileProperties(tile.index) as { crumble?: boolean } | null)?.crumble) && !this.walls.getTileAt(at.tx, at.ty);
+    const key = `${at.tx},${at.ty}`;
+    for (const other of [...this.crumbling.keys()]) if (other !== key) this.crumbling.delete(other);
+    if (!crumbles) { if (!this.walls.getTileAt(at.tx, at.ty)) this.safe = { x: this.player.x, y: this.player.y }; return; }
+    const since = this.crumbling.get(key) ?? time;
+    this.crumbling.set(key, since);
+    if (time - since > CRACKS) tile!.tint = 0x8a7a6a;
+    if (time - since > GIVES || this.gapTile === undefined) {
+      this.crumbling.delete(key);
+      if (this.gapTile === undefined) return;
+      this.walls.putTileAt(this.gapTile, at.tx, at.ty).setCollision(true);
+      for (let i = 0; i < 6; i++) {
+        const bit = this.add.rectangle(at.tx * 16 + 3 + (i * 5) % 11, at.ty * 16 + 4 + (i * 3) % 9, 2, 2, 0x6a5a4a).setDepth(5);
+        this.tweens.add({ targets: bit, y: bit.y + 14, alpha: 0, duration: 500, delay: i * 40, onComplete: () => bit.destroy() });
+      }
+      this.fall();
+      this.time.delayedCall(COMES_BACK, () => { this.walls.removeTileAt(at.tx, at.ty); tile!.tint = 0xffffff; });
+    }
+  }
+
   // Corner assist: walking straight into a wall that the hero only clips by a few pixels slides him along it,
   // so narrow bridges and boardwalks don't need pixel-perfect lining up.
   private slideAroundCorners(x: number, y: number) {
@@ -526,6 +631,7 @@ export class AreaScene extends Phaser.Scene {
       if(['e','E',' ','Enter'].includes(event.key)) this.interact(event);
       if(['h','H'].includes(event.key) && !event.repeat && !this.active) this.toggleHud();
       if(['q','Q'].includes(event.key) && !event.repeat && !this.active) this.toggleSneak();
+      if(event.key==='Shift' && !event.repeat && !this.active) this.leap();
       if(['j','J'].includes(event.key) && !event.repeat && !this.active) this.openPanel(()=>new JournalView(loadJournal(), ()=>this.closePanel(), orders(loadWorld()), leads(loadWorld())));
       if(['b','B'].includes(event.key) && !event.repeat && !this.active) this.openPanel(()=>new BestiaryView(loadBestiary(), loadGrimoire(), ()=>this.closePanel()));
       if(['p','P'].includes(event.key) && !event.repeat && !this.active) this.openParty();
@@ -543,6 +649,7 @@ export class AreaScene extends Phaser.Scene {
     element('continue').addEventListener('click',()=>this.interact(),{signal});
     element('touch-interact').addEventListener('click',()=>this.interact(),{signal});
     element('touch-sneak').addEventListener('click',()=>{ if(!this.active && !this.overlay) this.toggleSneak(); },{signal});
+    element('touch-leap').addEventListener('click',()=>{ if(!this.active && !this.overlay) this.leap(); },{signal});
     document.querySelectorAll<HTMLButtonElement>('[data-direction]').forEach(button=>{
       const direction=button.dataset.direction as Direction;
       button.addEventListener('pointerdown',event=>{
@@ -1107,10 +1214,10 @@ export class AreaScene extends Phaser.Scene {
     const pressed=(direction:Direction,...keys:string[])=>this.held.has(direction)||keys.some(key=>this.keys[key].isDown);
     let x=Number(pressed('right','D','RIGHT'))-Number(pressed('left','A','LEFT'));
     let y=Number(pressed('down','S','DOWN'))-Number(pressed('up','W','UP'));
-    if(this.active){x=0;y=0;}
+    if(this.active || this.leaping){x=0;y=0;}
+    if(x||y) this.facing=Math.abs(x)>=Math.abs(y) ? { dx: Math.sign(x), dy: 0 } : { dx: 0, dy: Math.sign(y) };
     const motion=new Phaser.Math.Vector2(x,y).normalize().scale(this.sneaking ? 42 : 70);
-    this.player.setVelocity(motion.x,motion.y);
-    this.slideAroundCorners(x,y);
+    if(!this.leaping) { this.player.setVelocity(motion.x,motion.y); this.slideAroundCorners(x,y); this.footing(time); }
     // Holding the party's mana down costs mana: a point from everyone every few seconds. When the hero runs dry, it shows again.
     if(this.sneaking && time-this.lastDrain>HIDE_DRAIN) {
       this.lastDrain=time;
@@ -1179,7 +1286,7 @@ export class AreaScene extends Phaser.Scene {
     this.shadow.setPosition(this.player.x,this.player.y+9);
     this.shading?.carried.setPosition(this.player.x,this.player.y);
     // A restrained walking bob, or slow breathing when standing still, while the physics body stays steady.
-    this.player.setOrigin(0.5,0.5+(x||y?Math.sin(time/85)*0.025:Math.sin(time/520)*0.012));
+    this.player.setOrigin(0.5,0.5+(x||y?Math.sin(time/85)*0.025:Math.sin(time/520)*0.012)+this.lift);
     const context=this.context();
     this.nearby=this.points.filter(p=>p.name in this.area.exits || p.name in (this.area.fishing ?? {}) || p.name in (this.area.camps ?? {}) || this.forage.some(spot=>spot.point===p.name) || (p.name==='waystone' && Boolean(waystoneIn(this.area.key))) || (p.name in this.area.dialogue
       && !this.area.dialogue[p.name].hiddenIf?.some(condition=>holds(context, condition))))

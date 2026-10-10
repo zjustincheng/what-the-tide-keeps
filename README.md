@@ -25,6 +25,8 @@ Every push to `main` builds the game and publishes it to GitHub Pages at **https
 Walking into a wall you only clip by a few pixels slides you along it, so narrow bridges, boardwalks, and doorways don't need lining up exactly (`slideAroundCorners` in `src/scenes/AreaScene.ts`). Solid things on the map, like dark water, barricades, and people, count as walls for this too.
 
 
+**Leaping (Shift, or Leap on a touch screen).** A hop the way you're facing: one tile on open ground, or over a gap up to two tiles wide onto the far side. Only some drops can be leapt, the narrow ones in places built for it; walls, and the wide water and chasms that guard the story, can't. Some ground is **loose**: it holds while you keep moving, cracks if you stop, and gives way under you a moment later (it comes back after a while). Leap short or stand too long, and you **fall**: back to where you last stood firm, 3 health down (a fall never takes the last of it). The rules are in `src/rules/leap.ts`, and a map test checks that leaping reaches every parkour reward and opens nothing else anywhere.
+
 **Every way out is marked** with a small gold arrow just in front of it, pointing the way through: left through a door in a west wall, down through a door in a south wall, off the edge of the map at a road's end. The direction is read from the walls around the exit (an exit can set it with `facing` where they don't make it plain). A way that is still barred, by a locked gate or a guard, is marked in grey, so you know it's there, and turns gold the moment it opens.
 ## Run locally
 
@@ -448,6 +450,14 @@ Seven places nobody is sent to, one or two in every region (`src/content/outskir
 - **The cistern**, under the lanes. The city's water, a valve the church shuts in "dry years", and three dead standing in the water together. Put them down, and bring the boy up. His mother gives you his **tin cup** (shows 2 less mana, 2 less health).
 - **The peat cuttings**, south of the far bank. A vole cuts peat for the capital, and leaves where they lie the bodies the bog gives back. The oldest is three hundred years old and wears your brand. In his hand is the **old brand-iron** (hits 2 harder, 4 more health, shows 3 more mana).
 - **The drowned fleet**, out on the current east of the open water. Three church boats scuttled together on the way back from the light. A hermit crab lives in a marine's helmet. The manifest reads PASSENGERS FOR THE LIGHT, 14. RETURNING: —. The **drowned bell** is in the hold (octopus: 6 more health, hits 1 harder, dodging 10% harder).
+
+### Places you leap to
+
+Three places reached only by leaping, Hollow Knight style: gaps, single pillars to land on, and bridges of loose ground to cross without stopping.
+
+- **The gorge**, east off the high pass. Islands of rock over the drop; a crack, a wider crack, a ledge of loose stone, and a lone pillar to the last ledge, where a marten courier died taking the short way to the holds. Her satchel holds **climber's chalk** (+15% dodge timing, 2 less health) and a letter that never reached the house. A shelf below has a carving from before the Covenant.
+- **The old spires**, west off the climb. The tops of the old rookery towers standing out of the drop; slate bridges that slide away underfoot, two lone pillars, and at the far tower the oldest nest in the holds, with the **falconer's hood** (vulture: +20% dodge timing, shows 1 less mana, hits 1 softer). Undelivered post on the couriers' perch.
+- **The sunken rows**, up the old alley north of Wickmere. The first town, drowned when the church cut the river a new course; rooftops over deep water, rotten boards, and the belfry with the parish register, which shows who owned the ground before the flood, and a **reed charm** (frog: 4 more health, +10% dodge timing, shows 1 more mana).
 
 ## The old roads and the bestiary
 

@@ -2,7 +2,7 @@
 // (a city up a cliff face, ranked by height), the noble house's upper tiers, the rookeries' archive, and the lord's hall.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
-import { rect as krect, rows, scatter, sheet, stairs, vary } from './tile-kit.mjs';
+import { rect as krect, rows, scatter, sheet, stairs, vary, crumble, gap, tileProps } from './tile-kit.mjs';
 const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
 const tiles = [
   rect(0,0,16,16,'#3a3a3e')+rect(1,1,7,6,'#46464a')+rect(8,8,7,7,'#424246')+rect(0,7,16,1,'#2a2a2e')+rect(3,12,4,1,'#2e2e32'), // 0 cliff
@@ -44,6 +44,9 @@ tiles.push(
   scatter(tiles[1], 21, [['#5a564c',2,1],['#7a766a',1,1],['#4e4a42',3,1]], 7),
   tiles[2] + krect(1,10,9,2,'#a8acb2') + krect(2,9,7,1,'#d4d8dc') + krect(10,3,4,1,'#a8acb2'),
 );
+// Parkour: a gap narrow enough to leap, and footing that won't hold for long.
+const LEAP_TILES = tiles.length + 1, DROP_INDEX = 7;
+tiles.push(tiles[DROP_INDEX], crumble({ top: '#8a8a82', crack: '#34343a', under: '#0c0e12' }));
 const svg = sheet(tiles);
 writeFileSync('public/assets/holds-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
 const [CLIFF,LEDGE,SNOW,FLAGS,TWALL,ROOF,STAIR,DROP,BANNER,GATE,DOOR,NEST,LETTERS,BOARDS,CARPET,CHAIR,PILLAR,PERCH,BRAZIER,LEVER,PINE,BOULDER,BRIDGE,STATUE,SLIT]=tiles.map((_,i)=>i+1);
@@ -65,7 +68,7 @@ function write(name,{W,H,floor,furniture},points){
   const map={compressionlevel:-1,width:W,height:H,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
     layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([pname,x,y],i)=>({id:i+1,name:pname,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
     tilesets:[{firstgid:1,name:'holds',image:'../assets/holds-tiles.svg',imagewidth:128,imageheight:rows(tiles)*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows(tiles)*8,
-      tiles:solid.map(id=>({id,properties:[{name:'collides',type:'bool',value:true}]}))}]};
+      tiles:tileProps(solid,[LEAP_TILES-1],[LEAP_TILES])}]};
   vary(floor,W,4,FLAG_VARIANTS,name.length*7,0.22);vary(floor,W,2,LEDGE_VARIANTS,name.length*5,0.3);vary(floor,W,3,SNOW_VARIANTS,name.length*3,0.25);
   writeFileSync(`public/maps/${name}.json`,JSON.stringify(map,null,2)+'\n');
 }
@@ -86,10 +89,13 @@ function write(name,{W,H,floor,furniture},points){
   carve(24,1,27,10,STAIR);carve(24,0,27,0,STAIR);// up to the hold
   for(const [x,y] of [[8,34],[21,35],[12,24],[24,25],[10,11],[18,12],[2,21]]) put(furniture,x,y,BOULDER);
   for(const [x,y] of [[29,34],[6,25],[28,11]]) put(furniture,x,y,PINE);
+  // West, along a ledge to the old rookery spires.
+  fill(furniture,0,23,0,24,0);
   write('climb',m,[
     ['south',264,632],['from-rookery',264,600],['north',416,8],['from-hold',416,40],
     ['hornet-1',...at(14,34)],['hornet-2',...at(20,11)],['spider',...at(2,25)],['decoy-1',...at(18,24)],['decoy-2',...at(34,9)],['decoy-3',...at(12,11)],
     ['camp-climb',...at(26,24)],['bag',...at(35,9)],['summit',568,104],['from-summit',...at(34,10)],['wind-post',...at(16,35)],['forage-1',...at(3,22)],
+    ['west',8,384],['from-spires',40,384],
   ]);
 }
 
@@ -223,5 +229,32 @@ function write(name,{W,H,floor,furniture},points){
   put(furniture,4,16,BRAZIER);put(furniture,21,16,BRAZIER);
   write('ring',m,[
     ['out',8,248],['from-hold',...at(3,15)],['ringmaster',...at(12,16)],['board',...at(9,16)],['crowd',...at(16,4)],['thorns',...at(4,12)],['bettor',...at(18,16)],
+  ]);
+}
+
+// The spires west of the climb: the old rookery towers, their tops standing out of the drop. Gaps to leap between them,
+// slate bridges that slide away underfoot, and at the far tower, the oldest nest in the holds.
+{
+  const m=grid(40,28,FLAGS);const {floor,furniture,put,fill}=m;
+  const GAP=LEAP_TILES, SLATE=LEAP_TILES+1;
+  fill(furniture,0,0,39,27,DROP);
+  const top=(x0,y0,x1,y1,ground=FLAGS)=>{fill(furniture,x0,y0,x1,y1,0);fill(floor,x0,y0,x1,y1,ground);};
+  // The way in from the climb, onto the first tower.
+  top(39,13,39,14);top(33,10,38,17);
+  fill(furniture,31,11,32,15,GAP);top(26,9,30,16,BOARDS);
+  // North, across a gap, the couriers' perch.
+  fill(furniture,27,7,29,8,GAP);top(25,1,31,6);put(furniture,25,1,PERCH);put(furniture,31,1,PERCH);
+  // West, a bridge of loose slate to the third tower.
+  for(let x=19;x<=25;x++){fill(furniture,x,12,x,12,0);put(floor,x,12,SLATE);}
+  top(14,8,18,16);
+  // Two lone pillars, and the far tower with the old nest.
+  fill(furniture,12,9,13,11,GAP);top(11,10,11,10);fill(furniture,9,9,10,11,GAP);top(8,10,8,10);fill(furniture,7,9,7,11,GAP);
+  top(2,6,6,14,BOARDS);put(furniture,3,7,NEST);put(furniture,4,7,NEST);put(furniture,2,14,BANNER);
+  // Below the third tower, down a run of slate, a ledge where something has made its web.
+  for(let y=17;y<=21;y++){fill(furniture,16,y,16,y,0);put(floor,16,y,SLATE);}
+  top(13,22,19,26);put(furniture,13,26,BOULDER);
+  write('spires',m,[
+    ['east',632,224],['from-climb',600,224],
+    ['nest',...at(4,9)],['letters',...at(28,3)],['spider-1',...at(16,24)],['forage-1',...at(18,25)],
   ]);
 }

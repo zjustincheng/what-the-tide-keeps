@@ -14,7 +14,7 @@ import { abbey, barracks, battlefield, drove, fort, keep, ossuary, pass, rookery
 import { apothecary, causeway, creek, farBank, hospice, pens, wickmere } from '../content/marsh';
 import { archive, cellars, climb, hold, houseHall, ring, summit, upper } from '../content/holds';
 import { krakenGrave, openWater, port, reef, seaPens } from '../content/ocean';
-import { cistern, fleet, lanes, orchard, peat, quarry, shieling } from '../content/outskirts';
+import { cistern, fleet, gorge, lanes, orchard, peat, quarry, rows, shieling, spires } from '../content/outskirts';
 import type { Encounter, Escort } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
@@ -364,6 +364,7 @@ export const PASS: Area = {
   exits: {
     south: { to: 'border-road', spawn: 'from-pass', prompt: 'Go back down to the border road' },
     north: { to: 'fort', spawn: 'from-pass', prompt: 'Walk up to the fort gate' },
+    east: { to: 'gorge', spawn: 'from-pass', prompt: 'Follow the goat track out along the gorge' },
     // The ladder down to the tarn, once it has been let down from this side.
     west: { to: 'tarn', spawn: 'from-pass', prompt: 'Climb down the rope ladder to the tarn', requires: { flag: 'ladder-down' },
       barred: { speaker: 'THE CLIFF EDGE', lines: ['The rope ladder is still coiled and tied off at the edge.'] } },
@@ -643,6 +644,7 @@ export const WICKMERE: Area = {
   camps: { 'camp-wickmere': { prompt: 'Rest by the brazier', cost: 4, lines: ['A brazier on the deck, where the smokehouse workers warm their hands. Nobody sits near you.'] } },
   exits: {
     west: { to: 'causeway', spawn: 'from-wickmere', prompt: 'Go back along the causeway' },
+    north: { to: 'rows', spawn: 'from-wickmere', prompt: 'Go up the old alley to the sunken rows' },
     south: { to: 'harbour', spawn: 'from-marsh', prompt: 'Take the tidal road down to the capital', requires: { night: false },
       barred: { speaker: 'THE TIDAL ROAD', lines: ['The shingle road down the estuary is under the tide. It comes back out at first light.'] } },
     'hospice-door': { to: 'hospice', spawn: 'spawn', prompt: 'Enter the hospice' },
@@ -722,6 +724,7 @@ export const CLIMB: Area = {
   exits: {
     south: { to: 'rookery-road', spawn: 'from-holds', prompt: 'Go back down through the gate' },
     north: { to: 'hold', spawn: 'from-climb', prompt: 'Climb on to the hold' },
+    west: { to: 'spires', spawn: 'from-climb', prompt: 'Edge along the ledge to the old spires' },
     summit: { to: 'summit', spawn: 'from-climb', prompt: 'Climb up to the old eyrie' },
   },
   decorate: scene => wind(scene, 576, 640),
@@ -1001,4 +1004,31 @@ export const FLEET: Area = {
   exits: { out: { to: 'open-water', spawn: 'from-fleet', prompt: 'Ride the current back west' } },
 };
 
-export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY, CLIMB, HOLD, UPPER, ARCHIVE, HOUSE_HALL, PENS, CREEK, CELLARS, SUMMIT, RING, OUTLAW_PORT, OPEN_WATER, SEA_PENS, KRAKEN_GRAVE, REEF, ORCHARD, QUARRY, SHIELING, LANES, CISTERN, PEAT, FLEET];
+// Places you leap to: gaps you can clear, and footing that won't hold for long (Shift, or Leap on a touch screen).
+export const GORGE: Area = {
+  ...HIGHLAND_GROUND, key: 'gorge', map: 'gorge', music: 'highlands', place: 'The gorge', dialogue: gorge, grade: COLD,
+  npcs: [], enemies: [{ point: 'harrier-1', encounter: 'harrier' }],
+  forage: { 'forage-1': 'herb' },
+  exits: { west: { to: 'pass', spawn: 'from-gorge', prompt: 'Go back to the pass' } },
+  decorate: scene => { wind(scene, 704, 416); snowfall(scene, 704, 416); },
+};
+
+export const SPIRES: Area = {
+  ...HOLDS_GROUND, key: 'spires', map: 'spires', music: 'holds', place: 'The old spires', dialogue: spires,
+  grade: { saturation: -0.45, brightness: 0.8, vignette: 0.5 },
+  npcs: [], enemies: [{ point: 'spider-1', encounter: 'spider' }],
+  forage: { 'forage-1': 'herb' },
+  exits: { east: { to: 'climb', spawn: 'from-spires', prompt: 'Edge back along the ledge to the climb' } },
+  decorate: scene => wind(scene, 640, 448),
+};
+
+export const ROWS: Area = {
+  ...MARSH_GROUND, key: 'rows', map: 'rows', place: 'The sunken rows', dialogue: rows, ground: 'wood',
+  grade: { saturation: -0.5, brightness: 0.68, vignette: 0.62 },
+  npcs: [], enemies: [{ point: 'wisp-1', encounter: 'wisp' }],
+  fishing: { 'rows-spot': 'wickmere' },
+  exits: { south: { to: 'wickmere', spawn: 'from-rows', prompt: 'Go back down to Wickmere' } },
+  decorate: scene => marshFog(scene, 576, 448, 8),
+};
+
+export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY, CLIMB, HOLD, UPPER, ARCHIVE, HOUSE_HALL, PENS, CREEK, CELLARS, SUMMIT, RING, OUTLAW_PORT, OPEN_WATER, SEA_PENS, KRAKEN_GRAVE, REEF, ORCHARD, QUARRY, SHIELING, LANES, CISTERN, PEAT, FLEET, GORGE, SPIRES, ROWS];

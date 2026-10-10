@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 17,
+  "nextobjectid": 19,
   "layers": [
     {
       "id": 1,
@@ -2305,7 +2305,7 @@
         8,
         8,
         8,
-        1,
+        0,
         0,
         0,
         0,
@@ -2341,7 +2341,7 @@
         8,
         8,
         8,
-        1,
+        0,
         0,
         0,
         0,
@@ -3120,6 +3120,30 @@
           "rotation": 0,
           "visible": true,
           "point": true
+        },
+        {
+          "id": 17,
+          "name": "west",
+          "type": "",
+          "x": 8,
+          "y": 384,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 18,
+          "name": "from-spires",
+          "type": "",
+          "x": 40,
+          "y": 384,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
         }
       ]
     }
@@ -3303,6 +3327,31 @@
           "properties": [
             {
               "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 28,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            },
+            {
+              "name": "gap",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 29,
+          "properties": [
+            {
+              "name": "crumble",
               "type": "bool",
               "value": true
             }

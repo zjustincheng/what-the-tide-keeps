@@ -58,3 +58,46 @@ test('every arrival point in every map can walk to every other, and to every way
   }
   assert.deepEqual(stranded, []);
 });
+
+// Leaping clears narrow gaps, so it must only open what it is meant to: the parkour rewards listed here.
+// Everything else on every map has to be just as reachable, or unreachable, as it is on foot. And every reward must be reachable by leaping.
+const LEAP_ONLY: Record<string, readonly string[]> = {
+  'gorge.json': ['harrier-1', 'satchel', 'courier', 'carving', 'forage-1'],
+  'spires.json': ['nest', 'letters', 'spider-1', 'forage-1'],
+  'rows.json': ['register', 'counting', 'wisp-1', 'rows-spot', 'window'],
+};
+test('leaping opens only the places meant for it, and reaches every one of them', async () => {
+  const { reachable } = await import('../../src/rules/leap.ts');
+  const problems: string[] = [];
+  for (const file of readdirSync('public/maps')) {
+    const map = JSON.parse(readFileSync(`public/maps/${file}`, 'utf8'));
+    const { width, height } = map;
+    const props = new Map<number, Record<string, boolean>>(map.tilesets[0].tiles.map((tile: { id: number; properties: { name: string; value: boolean }[] }) =>
+      [tile.id + 1, Object.fromEntries(tile.properties.map(({ name, value }) => [name, value]))]));
+    const furniture: number[] = map.layers[1].data;
+    const ground = (tx: number, ty: number) => {
+      if (tx < 0 || ty < 0 || tx >= width || ty >= height) return 'wall' as const;
+      const tile = props.get(furniture[ty * width + tx] & 0x1fffffff);
+      return tile?.gap ? 'gap' as const : tile?.collides ? 'wall' as const : 'open' as const;
+    };
+    const points: { name: string; x: number; y: number }[] = map.layers[2].objects;
+    const starts = points.filter(point => point.name === 'spawn' || point.name.startsWith('from-'))
+      .map(point => ({ tx: Math.floor(point.x / 16), ty: Math.floor(point.y / 16) })).filter(tile => ground(tile.tx, tile.ty) === 'open');
+    if (!starts.length) continue;
+    const walking = reachable(ground, starts, false), leaping = reachable(ground, starts, true);
+    // A point counts as reached if its tile or one beside it is, since people and things stand against walls.
+    const reached = (set: Set<string>, point: { x: number; y: number }) => {
+      const tx = Math.floor(point.x / 16), ty = Math.floor(point.y / 16);
+      return [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => set.has(`${tx + dx},${ty + dy}`));
+    };
+    const meant = LEAP_ONLY[file] ?? [];
+    for (const point of points) {
+      const onFoot = reached(walking, point), byLeap = reached(leaping, point);
+      if (meant.includes(point.name)) {
+        if (!byLeap) problems.push(`${file}: ${point.name} can't be reached even by leaping`);
+        if (onFoot) problems.push(`${file}: ${point.name} is meant to need a leap, but can be walked to`);
+      } else if (byLeap && !onFoot) problems.push(`${file}: leaping reaches ${point.name}, which should need no leap`);
+    }
+  }
+  assert.deepEqual(problems, []);
+});

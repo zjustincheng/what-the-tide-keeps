@@ -2,7 +2,7 @@
 // its church hospice, the far bank with the spoiled stores, and the flooded apothecary.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
-import { rect as krect, rows, scatter, sheet, stairs, vary } from './tile-kit.mjs';
+import { rect as krect, rows, scatter, sheet, stairs, vary, crumble, gap, tileProps } from './tile-kit.mjs';
 const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
 const tree = (leaf,dark,ground) => rect(0,0,16,16,ground)+rect(1,1,14,11,dark)+rect(3,2,9,6,leaf)+rect(7,11,3,5,'#3a2e22');
 const WATER_BG = '#101a1c';
@@ -51,6 +51,9 @@ tiles.push(
   rect(0,0,16,16,'#3a2c1e')+[[1,9],[6,9],[11,9],[3,4],[8,4]].map(([x,y])=>rect(x,y,5,5,'#2a1e14')+rect(x,y,5,1,'#4a3826')).join('')+rect(5,1,5,3,'#2a1e14'), // stacked turves
   rect(0,0,16,16,'#2a2a1e')+rect(1,1,14,14,'#1e2a26')+rect(3,5,10,4,'#6a4e30')+rect(4,4,3,2,'#7a5a38')+rect(11,6,2,1,'#4a3420')+rect(5,9,6,2,'#5a4028'), // a body in a cutting
 );
+// Parkour: a gap narrow enough to leap, and footing that won't hold for long.
+const LEAP_TILES = tiles.length + 1;
+tiles.push(tiles[3] + krect(0,0,16,16,'#000000',0.35) + krect(3,5,4,1,'#3a5a5a',0.6) + krect(9,11,4,1,'#3a5a5a',0.6), crumble({ top: '#6a5a40', crack: '#2a2018', under: '#0e1a1c' }));
 const svg = sheet(tiles);
 writeFileSync('public/assets/marsh-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
 const [GRASS,MUD,WALK,WATER,REEDS,WILLOW,BORDER,DECK,HWALL,ROOF,SMOKE,HOSPICE,DOOR,CRATES,LIGHTHOUSE,SACK,SHELVES,COUNTER,FLOOD,BOARDS,COT,GRATE,EGGS,POST,BOAT,CELLAR,LANTERN,BASIN]=tiles.map((_,i)=>i+1);
@@ -73,7 +76,7 @@ function write(name,{W,H,floor,furniture},points){
   const map={compressionlevel:-1,width:W,height:H,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
     layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([pname,x,y],i)=>({id:i+1,name:pname,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
     tilesets:[{firstgid:1,name:'marsh',image:'../assets/marsh-tiles.svg',imagewidth:128,imageheight:rows(tiles)*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows(tiles)*8,
-      tiles:solid.map(id=>({id,properties:[{name:'collides',type:'bool',value:true}]}))}]};
+      tiles:tileProps(solid,[LEAP_TILES-1],[LEAP_TILES])}]};
   vary(floor,W,1,GRASS_VARIANTS,name.length*7);vary(floor,W,8,DECK_VARIANTS,name.length*11,0.15);
   writeFileSync(`public/maps/${name}.json`,JSON.stringify(map,null,2)+'\n');
 }
@@ -132,6 +135,8 @@ function write(name,{W,H,floor,furniture},points){
   fill(furniture,40,15,42,18,0);fill(floor,40,15,42,18,MUD);fill(furniture,43,16,43,17,0);fill(floor,43,16,43,17,MUD);
   // South off the decks, the tidal road down the estuary to the capital's harbour.
   walk(10,31,11,33,MUD);
+  // North up the old alley, to the rows the river took.
+  fill(furniture,15,0,16,3,0);fill(floor,15,0,16,3,WALK);
   write('wickmere',m,[
     ['west',8,264],['from-causeway',...at(2,16)],['channel',...at(36,16)],['from-far-bank',...at(35,17)],
     ['hospice-door',...at(34,8)],['from-hospice',...at(34,9)],
@@ -139,6 +144,7 @@ function write(name,{W,H,floor,furniture},points){
     ['smoker',...at(16,26)],['herbalist',...at(12,9)],['widow',...at(29,8)],['child',...at(10,29)],['mourner',...at(30,28)],
     ['waystone',...at(18,17)],['from-waystone',...at(18,18)],['camp-wickmere',...at(9,19)],['wickmere-spot',...at(21,23)],
     ['notice',...at(20,13)],['barrels',...at(33,22)],['south',176,536],['from-harbour',176,500],['mink',...at(14,15)],
+    ['north',256,8],['from-rows',256,40],
   ]);
 }
 
@@ -263,5 +269,28 @@ function write(name,{W,H,floor,furniture},points){
     ['north',288,8],['from-far-bank',288,40],
     ['cutter',...at(21,5)],['camp-peat',...at(31,6)],['body-1',...at(10,16)],['body-2',...at(23,17)],['old-body',...at(31,23)],
     ['leech-1',...at(18,10)],['wisp-1',...at(27,11)],['mosquito-1',...at(11,21)],['peat-spot',...at(26,14)],['forage-1',...at(5,14)],
+  ]);
+}
+
+// The sunken rows north of Wickmere: the first town, before the river moved. Rooftops and deck ends stand out of deep water;
+// the channels between are narrow enough to leap, and some of the old boards have rotted to nothing.
+{
+  const m=grid(36,28,BOARDS);const {floor,furniture,put,fill,walk}=m;
+  const FLOODED=LEAP_TILES, ROTTEN=LEAP_TILES+1;
+  fill(furniture,0,0,35,27,WATER);
+  // The landing from the south, and the first roof across a channel.
+  walk(17,27,18,27,DECK);walk(14,21,21,26,DECK);
+  fill(furniture,15,19,17,20,FLOODED);walk(13,14,19,18,BOARDS);
+  // East along rotten boards to the counting house.
+  for(let x=20;x<=25;x++){fill(furniture,x,16,x,16,0);put(floor,x,16,ROTTEN);}
+  walk(26,12,31,19,BOARDS);put(furniture,31,12,CRATES);put(furniture,26,19,SACK);
+  // North across a channel, then two chimney stacks, to the old church's belfry.
+  fill(furniture,15,12,16,13,FLOODED);walk(12,7,18,11,BOARDS);
+  fill(furniture,10,7,11,9,FLOODED);walk(9,8,9,8,BOARDS);fill(furniture,7,7,8,9,FLOODED);
+  walk(2,4,6,10,BOARDS);put(furniture,2,4,HWALL);put(furniture,6,4,HWALL);put(furniture,4,10,LANTERN);
+  for(const [x,y] of [[12,22],[22,25],[33,5],[2,20],[29,24]]) put(furniture,x,y,REEDS);
+  write('rows',m,[
+    ['south',288,440],['from-wickmere',288,408],
+    ['register',...at(4,6)],['counting',...at(28,14)],['wisp-1',...at(29,17)],['rows-spot',...at(13,18)],['window',...at(16,9)],
   ]);
 }

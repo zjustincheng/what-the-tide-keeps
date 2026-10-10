@@ -2321,6 +2321,31 @@
               "value": true
             }
           ]
+        },
+        {
+          "id": 35,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            },
+            {
+              "name": "gap",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 36,
+          "properties": [
+            {
+              "name": "crumble",
+              "type": "bool",
+              "value": true
+            }
+          ]
         }
       ]
     }

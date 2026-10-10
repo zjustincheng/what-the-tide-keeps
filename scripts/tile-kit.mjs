@@ -65,3 +65,28 @@ export function vary(floor, W, base, variants, seed = 1, share = 0.35) {
     if (floor[i] === base && roll < share) floor[i] = variants[Math.floor(roll / share * variants.length) % variants.length];
   }
 }
+
+// The tileset's per-tile properties for Tiled: solid tiles collide; gap tiles collide but can be leapt;
+// crumble tiles are walkable ground that gives way under someone who stands on it too long. All ids 0-based.
+export function tileProps(solid, gaps = [], crumbles = []) {
+  const bool = name => ({ name, type: 'bool', value: true });
+  const ids = [...new Set([...solid, ...gaps, ...crumbles])].sort((a, b) => a - b);
+  return ids.map(id => ({ id, properties: [
+    ...(solid.includes(id) || gaps.includes(id) ? [bool('collides')] : []),
+    ...(gaps.includes(id) ? [bool('gap')] : []),
+    ...(crumbles.includes(id) ? [bool('crumble')] : []),
+  ] }));
+}
+
+// A gap that can be leapt: a drop with its near lip lit and its far wall falling into dark, so it reads as narrow enough.
+export function gap({ lip, wall, dark }) {
+  return rect(0, 0, 16, 16, dark) + rect(0, 0, 16, 2, lip) + rect(0, 2, 16, 3, wall) + rect(0, 13, 16, 3, wall, 0.5)
+    + rect(3, 7, 1, 4, wall, 0.6) + rect(11, 6, 1, 5, wall, 0.6) + rect(7, 9, 2, 1, '#ffffff', 0.05);
+}
+// Ground that won't hold for long: a slab a shade paler than the ground around it, split by cracks, with dark showing through the holes
+// and a shadow under its edges where it hangs over nothing.
+export function crumble({ top, crack, under }) {
+  return rect(0, 0, 16, 16, top) + rect(0, 15, 16, 1, under) + rect(15, 0, 1, 16, under, 0.6)
+    + rect(2, 3, 5, 1, crack) + rect(6, 4, 1, 3, crack) + rect(7, 6, 4, 1, crack) + rect(10, 7, 1, 4, crack) + rect(11, 10, 3, 1, crack)
+    + rect(1, 10, 3, 1, crack) + rect(3, 11, 1, 2, crack) + rect(12, 2, 2, 2, under) + rect(4, 13, 2, 1, under) + rect(1, 1, 3, 1, '#ffffff', 0.1);
+}

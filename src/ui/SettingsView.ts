@@ -11,6 +11,7 @@ const CONTROLS: [string, string][] = [
   ['Journal', 'J'],
   ['Bestiary', 'B'],
   ['Hide your mana (sneak)', 'Q'],
+  ['Leap a gap', 'Shift'],
   ['Settings', 'Escape'],
   ['Full screen', 'F'],
   ['Mute music', 'M'],
