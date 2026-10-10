@@ -889,8 +889,11 @@ button.die[aria-pressed="true"] { border-color: #bc755e; color: #d8a890; }
 .climb-wall[data-hazard="icicles"] .climb-hold { border-radius: 2px 2px 8px 8px; background: linear-gradient(#e8f2f6 0 3px, #3a4e58 3px); box-shadow: 0 2px 0 #26343a; }
 .climb-top { position: absolute; left: 0; right: 0; background: linear-gradient(#6a7a4a, transparent); opacity: 0.6; }
 .climb-wall[data-hazard="icicles"] .climb-top { background: linear-gradient(#e8eef0, transparent); }
-.climber { position: absolute; width: 32px; height: 40px; z-index: 2; filter: drop-shadow(2px 3px 0 rgba(0,0,0,0.35)); }
-.climber-body { display: block; width: 100%; height: 100%; transform-origin: 50% 100%; }
+.climber { position: absolute; width: 40px; height: 48px; z-index: 2; filter: drop-shadow(2px 3px 0 rgba(0,0,0,0.35)); }
+/* Hanging still, he breathes and shifts his weight a little. */
+.climber svg { animation: climb-sway 1.6s ease-in-out infinite alternate; transform-origin: 75% 0; }
+@keyframes climb-sway { from { transform: rotate(-1.5deg); } to { transform: rotate(1.5deg) translateY(1px); } }
+.climber-body { display: block; width: 100%; height: 100%; transform-origin: 50% 0; }
 .climber svg { width: 100%; height: 100%; image-rendering: pixelated; }
 .climber.summit { animation: climb-summit 700ms ease-in forwards; }
 @keyframes climb-summit { 40% { transform: translateY(-18px); } to { transform: translateY(-46px); opacity: 0; } }

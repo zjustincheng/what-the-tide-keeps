@@ -482,7 +482,8 @@ export class AreaScene extends Phaser.Scene {
   // Knocked off, he lands at the foot of it, hurt; letting go costs nothing.
   private climb(point: string) {
     const climb = this.area.climbs![point];
-    const seed = [...`${this.area.key}:${point}`].reduce((sum, char) => sum * 31 + char.charCodeAt(0), 7) >>> 0;
+    // A new wall every time.
+    const seed = Math.floor(Math.random() * 0x7fffffff) + 1;
     this.openPanel(() => new ClimbView(this.textures.getBase64('hero'), climb.title, climb.height, seed, climb.hazard, climb.every ?? 1500, (reached, gaveUp) => {
       this.closePanel();
       if (reached) {

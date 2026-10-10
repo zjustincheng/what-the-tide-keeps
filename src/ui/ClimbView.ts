@@ -11,15 +11,30 @@ const COL = 48, ROW = 46, VISIBLE = 8;
 const WARN = 650, FALL = 420;
 const KEYS: Record<string, Way> = { ArrowUp: 'up', w: 'up', W: 'up', ArrowDown: 'down', s: 'down', S: 'down', ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right' };
 
-// The hero from behind, climbing: one arm up to the next hold, the other down, tail hanging. Flipped, the other arm leads.
+// The hero from behind, climbing: a chameleon, crest up, eyes bulging out to either side, tail curled under. One hand reaches up
+// to the hold he's on while the opposite foot pushes up under him, the way climbers move. Drawn reaching with the right hand;
+// mirrored, he reaches with the left. On a 20 by 24 grid.
 const px = (x: number, y: number, w: number, h: number, c: string) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
-const CLIMBER = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 20" shape-rendering="crispEdges">${[
-  px(8, 13, 2, 3, '#4e7a40'), px(9, 15, 2, 2, '#4e7a40'), px(10, 16, 3, 2, '#4e7a40'), px(12, 15, 1, 1, '#4e7a40'),
-  px(4, 12, 2, 4, '#6e9a58'), px(3, 15, 3, 2, '#9ac07a'), px(10, 11, 2, 3, '#6e9a58'), px(11, 10, 3, 2, '#9ac07a'),
-  px(5, 5, 6, 7, '#6e9a58'), px(5, 7, 6, 5, '#8a7458'), px(5, 11, 6, 1, '#5a4a38'), px(7, 5, 2, 2, '#4e7a40'),
-  px(3, 1, 2, 5, '#6e9a58'), px(2, 0, 3, 2, '#9ac07a'), px(11, 6, 2, 5, '#6e9a58'), px(11, 11, 3, 2, '#9ac07a'),
-  px(6, 1, 4, 4, '#6e9a58'), px(7, 0, 2, 1, '#4e7a40'), px(6, 2, 1, 2, '#9ac07a'),
+const G = '#6e9a58', D = '#46723a', L = '#a2c882', T = '#8a7458', B = '#5a4a38', E = '#d8c868', P = '#1e2418';
+const CLIMBER = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 24" shape-rendering="crispEdges">${[
+  // Tail, curled under him.
+  px(9, 16, 2, 3, D), px(10, 19, 2, 2, D), px(12, 20, 3, 1, D), px(14, 18, 1, 2, D), px(12, 17, 2, 1, D), px(12, 18, 1, 1, G),
+  // The right leg straight down, toes on the wall; the left leg drawn up under him.
+  px(11, 15, 2, 4, G), px(11, 19, 3, 2, L), px(12, 21, 1, 1, L), px(14, 20, 1, 1, L),
+  px(5, 14, 3, 2, G), px(4, 12, 2, 3, G), px(3, 11, 3, 2, L), px(3, 10, 1, 1, L), px(5, 10, 1, 1, L),
+  // The body, in his tunic, with the ridge of his spine showing above it.
+  px(7, 7, 6, 8, G), px(9, 7, 2, 2, D), px(7, 9, 6, 5, T), px(7, 13, 6, 1, B), px(9, 9, 2, 4, '#7a6650'),
+  // The left arm bent down and out, hand flat on the rock.
+  px(5, 8, 2, 2, G), px(4, 9, 2, 3, G), px(3, 12, 3, 2, L),
+  // The right arm reaching up to the hold, fingers curled over it.
+  px(13, 6, 2, 3, G), px(14, 3, 2, 4, G), px(14, 1, 3, 2, L), px(14, 0, 1, 1, L), px(16, 0, 1, 1, L),
+  // The head: the casque rising to a crest, and the eyes bulging out to either side.
+  px(8, 2, 4, 5, G), px(9, 1, 2, 1, D), px(9, 0, 1, 1, D), px(8, 5, 4, 1, D),
+  px(6, 3, 2, 2, E), px(6, 3, 1, 1, P), px(12, 3, 2, 2, E), px(13, 3, 1, 1, P),
 ].join('')}</svg>`;
+// Where his reaching hand is on the grid, so it can be put on the hold.
+const HAND = { x: 15.5, y: 1 };
+const SCALE = 2;
 
 export class ClimbView {
   private root: HTMLElement;
@@ -30,7 +45,7 @@ export class ClimbView {
   private closing = false;
   private lead = false;
 
-  // every: how often, in milliseconds, something falls. Seeded by the wall, so the same wall falls the same way each try.
+  // every: how often, in milliseconds, something falls. seed: a new one each climb, so no two climbs are the same.
   constructor(_heroImage: string, private title: string, height: number, seed: number, private hazard: Hazard, private every: number,
     private onDone: (reached: boolean, gaveUp: boolean) => void) {
     this.state = startClimb(makeWall(seed, height));
@@ -89,7 +104,7 @@ export class ClimbView {
     return marks.join('');
   }
 
-  // A seeded roll, so the same wall drops the same way each try.
+  // A seeded roll: the climb's own randomness, new each time.
   private roll(): number {
     this.next = (Math.imul(this.next + 0x9e3779b9, 2654435761) >>> 0) || 1;
     return (this.next % 10000) / 10000;
@@ -195,11 +210,14 @@ export class ClimbView {
     const { wall, at } = this.state;
     const climber = this.climber();
     climber.style.transition = moved ? (slid ? 'left 320ms ease-in, top 320ms ease-in' : 'left 150ms cubic-bezier(.3,1.5,.6,1), top 150ms cubic-bezier(.3,1.5,.6,1)') : 'none';
-    climber.style.left = `${at.col * COL + COL / 2 - 16}px`;
-    // Hanging from the hold: hands on it, body below.
-    climber.style.top = `${(wall.height - 1 - at.row) * ROW + ROW / 2 - 7}px`;
-    climber.querySelector<HTMLElement>('.climber-body')!.style.transform = this.lead ? 'scaleX(-1)' : '';
-    if (moved && !slid) climber.querySelector<HTMLElement>('.climber-body')!.animate([{ transform: `${this.lead ? 'scaleX(-1) ' : ''}scaleY(1.12)` }, { transform: this.lead ? 'scaleX(-1)' : 'none' }], { duration: 180, easing: 'ease-out' });
+    // Hanging from the hold by his reaching hand: mirrored, that hand is on the other side.
+    const handX = (this.lead ? 20 - HAND.x : HAND.x) * SCALE, handY = HAND.y * SCALE;
+    climber.style.left = `${at.col * COL + COL / 2 - handX}px`;
+    climber.style.top = `${(wall.height - 1 - at.row) * ROW + ROW / 2 - handY - 2}px`;
+    const body = climber.querySelector<HTMLElement>('.climber-body')!;
+    body.style.transform = this.lead ? 'scaleX(-1)' : '';
+    // A reach: he stretches toward the hold, then settles onto it.
+    if (moved && !slid) body.animate([{ transform: `${this.lead ? 'scaleX(-1) ' : ''}scale(0.94, 1.1)` }, { transform: this.lead ? 'scaleX(-1)' : 'none' }], { duration: 200, easing: 'cubic-bezier(.3,1.6,.6,1)' });
     const top = Math.max(0, Math.min((wall.height - VISIBLE) * ROW, (wall.height - 1 - at.row) * ROW - (VISIBLE - 3) * ROW));
     this.root.querySelector<HTMLElement>('.climb-track')!.style.transform = `translateY(${-top}px)`;
     this.renderHits();
