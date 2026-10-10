@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { createBattle, drainedAfter, enemyMana, ENEMIES, MEMBERS, woundsAfter } from '../rules/battle';
+import { createBattle, drainedAfter, enemyMana, ENEMIES, LIEUTENANTS, MEMBERS, woundsAfter } from '../rules/battle';
 import type { BattleOptions } from '../rules/battle';
 import type { Encounter } from '../rules/battle';
 import { anchor, forget, held, hollow, MEMORY_IDS, wipe } from '../rules/memory';
@@ -114,6 +114,7 @@ export class AreaScene extends Phaser.Scene {
   private pendingFight?: Foe;
   private pendingCook = false;
   private pendingTravel?: keyof typeof WAYSTONES;
+  private pendingChurch = false;
   private waystone?: Phaser.GameObjects.Image;
   private pendingDice?: { stake: number; opponent: string };
   private campPoint?: string;
@@ -132,7 +133,7 @@ export class AreaScene extends Phaser.Scene {
     // Scene instances are reused, so every visit starts from a clean slate.
     this.arrival = data?.spawn ?? 'spawn';
     this.cleanup = new AbortController();
-    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
+    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.pendingChurch = false; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
     this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false; this.pendingShop = undefined; this.pendingRest = undefined; this.pendingFight = undefined;
   }
 
@@ -582,6 +583,7 @@ export class AreaScene extends Phaser.Scene {
     if(then.cook) this.pendingCook=true;
     if(then.camp) this.pendingRest=this.campPoint;
     if(then.travel) this.pendingTravel=then.travel;
+    if(then.church) this.pendingChurch=true;
     if(then.dice) this.pendingDice={ stake: then.dice, opponent: (this.active?.speaker ?? 'the house').toLowerCase().replace(/^(a|an|the) /, 'the ') };
     if(then.shop) this.pendingShop=then.shop;
     if(then.find || then.learn || then.give) music.effect('find');
@@ -625,6 +627,14 @@ export class AreaScene extends Phaser.Scene {
     const shop=this.pendingShop;this.pendingShop=undefined;
     if(shop) this.openShop(shop);
     if(this.pendingCook) { this.pendingCook=false; this.openPanel(()=>new CookView(loadWorld(), world=>{ saved=saveWorld(world); this.renderMemory(); }, ()=>this.closePanel())); }
+    // Back to the priest for the next orders: the same pale road the church wakes you by.
+    if(this.pendingChurch && !this.leaving) {
+      this.pendingChurch=false;
+      music.effect('barrier');
+      this.leaving=true; this.cameras.main.fadeOut(700,16,27,24);
+      this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.start('church'));
+      return;
+    }
     const road=this.pendingTravel;this.pendingTravel=undefined;
     if(road && !this.leaving) {
       // The old road: a fade to pale light, and out at the other stone.
@@ -682,6 +692,14 @@ export class AreaScene extends Phaser.Scene {
           this.refreshProps();
         }
         this.resumeExploration();
+        // A region's lieutenant down: the brand knows, and the church will have new orders.
+        if(LIEUTENANTS.includes(foe.encounter)) this.say({ speaker: 'THE BRAND', lines: [
+          'The brand on your wrist goes warm, the way it does when the church wants you.',
+          'It is done here. The priest will have new orders.',
+        ], choices: [
+          { text: 'Go back to the priest.', ends: true, lines: [], then: { church: true } },
+          { text: 'Not yet.', ends: true, lines: ['There is still the region to walk. The church can wait. It always does.'] },
+        ] }, 'hero');
       } else if(battle.phase === 'fled') {
         // A getaway: half the coins dropped, the parting blow's wound kept, and some distance put between them.
         music.play(this.area.music);

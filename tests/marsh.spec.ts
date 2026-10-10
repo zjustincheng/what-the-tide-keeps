@@ -119,8 +119,32 @@ test('the viper talks, then fights: everyone starts poisoned, and the frog fight
   await win(page);
   const world = await saved(page);
   expect(world.flags).toContain('viper-slain');
+  // The brand offered the way back; win() said not yet.
   expect(world.found).toContain('viper-fang');
   // She lies where she fell, and still talks.
   await go(page, 'apothecary', 184, 124, 'Speak to the viper');
   await expect(page.locator('#dialogue-text')).toContainText('too tired to hold her head up');
+});
+
+test('after a region\'s lieutenant falls, the brand offers the way back to the priest', async ({ page }) => {
+  await start(page, { flags: [...HIGHLANDS_DONE, 'frog-free', 'viper-challenged'] }, 'apothecary', 'spawn');
+  await page.evaluate(async () => {
+    const { game } = await import('/src/main.ts');
+    const scene = game.scene.getScene('apothecary');
+    scene.player.setPosition(184, 130);
+  });
+  await page.keyboard.down('w');
+  await expect(page.getByRole('heading', { name: 'The viper' })).toBeVisible();
+  await page.keyboard.up('w');
+  await page.evaluate(async () => {
+    const { game } = await import('/src/main.ts');
+    const view = game.scene.getScenes(true)[0].overlay;
+    view.state = { ...view.state, stage: 2, enemy: { ...view.state.enemy, health: 1 } };
+    view.render();
+  });
+  await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await expect(page.locator('#speaker')).toHaveText('THE BRAND');
+  await talk(page, 'Go back to the priest');
+  await expect.poll(() => at(page, 'church')).not.toBeNull();
 });

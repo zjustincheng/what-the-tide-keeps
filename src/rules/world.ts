@@ -66,7 +66,9 @@ export type Effect = { give?: Item; take?: Item; set?: Flag | readonly Flag[]; l
   // Handled by the scene, not the story: camp sleeps at the fire, cook opens the cooking, dice starts a game of bones for that stake.
   camp?: true; cook?: true; dice?: number;
   // travel: go to that waystone.
-  travel?: WaystoneId; shop?: ShopId; rest?: true };
+  travel?: WaystoneId; shop?: ShopId; rest?: true;
+  // church: go back to the priest, for the next orders.
+  church?: true };
 export type ShopId = 'stall' | 'reeve' | 'fishmonger' | 'merchant' | 'fence' | 'apothecary' | 'night-market' | 'smith' | 'herbalist';
 
 export function createWorld(): World {

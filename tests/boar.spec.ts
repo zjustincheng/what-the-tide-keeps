@@ -68,6 +68,11 @@ test('fighting the boar directly frees the grain and changes the farmland', asyn
   }
   await expect(page.locator('.battle')).toHaveAttribute('data-phase', 'victory');
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  // The brand offers the way back to the priest; not yet.
+  await expect(page.locator('#speaker')).toHaveText('THE BRAND');
+  while (!(await page.locator('#choices').isVisible())) await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('button', { name: /Not yet/ }).click();
+  while (await page.locator('#dialogue').isVisible()) await page.getByRole('button', { name: 'Continue' }).click();
   await place(page, 'boar-farm', 256, 212);
   await expect(page.locator('#prompt')).toContainText('Examine the cup');
   await page.keyboard.press('e');

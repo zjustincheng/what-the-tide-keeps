@@ -22,6 +22,12 @@ export async function win(page: Page) {
   });
   await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  // A region's lieutenant offers the way back to the priest; tests stay where they are unless they ask.
+  if (await page.locator('#dialogue').isVisible() && await page.locator('#speaker').textContent() === 'THE BRAND') {
+    while (!(await page.locator('#choices').isVisible())) await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: /Not yet/ }).click();
+    while (await page.locator('#dialogue').isVisible()) await page.getByRole('button', { name: 'Continue' }).click();
+  }
 }
 
 // Everyone still standing attacks, round after round, until the party wipes, however many blows each enemy turn lands.

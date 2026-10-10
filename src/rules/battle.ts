@@ -276,6 +276,9 @@ function staged(battle: Battle): Battle {
   return { ...risen, ...stage.enter?.(risen) };
 }
 
+// The human's lieutenants, one to a region. Beating one finishes that region's orders, and the church has more.
+export const LIEUTENANTS: readonly Encounter[] = ['boar', 'hyena', 'viper'];
+
 // Followers who give up once their leader falls. Everyone else fights until the last of them is down.
 export const YIELDING: Partial<Record<Encounter, true>> = { boar: true, hyena: true, brood: true };
 export const FURY_PER_HIT = 3;

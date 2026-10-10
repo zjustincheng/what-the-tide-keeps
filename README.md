@@ -343,6 +343,10 @@ People you already know have darker things to say if you ask: the priest (once y
 
 The vulture's note teaches **anchors**. Once she has joined, every rest at a fire, bed, or cot offers to **write a memory down**. A written memory can't be chosen when the next wipe takes something; after that death it has to be written again. There is one slot. Anchors are saved with the memories in `tide-keeps.memory.v1`.
 
+## Orders
+
+Beating a region's lieutenant (the boar, the hyena, the viper) finishes the church's orders there. The brand on the hero's wrist goes warm, and you can **go back to the priest** at once for the next orders, or stay and walk the region a while. The priest always has them waiting.
+
 ## The marsh
 
 Once the hyena is dead, the priest sends the party downriver: a sickness in the river towns, and the church's stores spoiling at Wickmere. The **crane at the weir** ferries you down ("Take the ferry downriver"); until then she turns you back.
