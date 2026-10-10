@@ -121,6 +121,8 @@ export class AreaScene extends Phaser.Scene {
   private pendingCook = false;
   private pendingTravel?: keyof typeof WAYSTONES;
   private pendingChurch = false;
+  // A marker at every way out: gold where it can be taken, grey where something still bars it.
+  private exitMarkers: { name: string; marker: Phaser.GameObjects.Image; glow: Phaser.GameObjects.Ellipse }[] = [];
   // A bout in the Talon Ring, or a stake at the shells or the arm-wrestling, to begin once the conversation closes.
   private pendingBout?: number;
   private pendingShells?: number;
@@ -148,7 +150,7 @@ export class AreaScene extends Phaser.Scene {
     this.thrownOut = data?.caught;
     this.sentries = [];
     this.cleanup = new AbortController();
-    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.pendingChurch = false; this.pendingBout = undefined; this.pendingShells = undefined; this.pendingArm = undefined; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
+    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.pendingChurch = false; this.exitMarkers = []; this.pendingBout = undefined; this.pendingShells = undefined; this.pendingArm = undefined; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
     this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false; this.pendingShop = undefined; this.pendingRest = undefined; this.pendingFight = undefined;
   }
 
@@ -194,6 +196,7 @@ export class AreaScene extends Phaser.Scene {
     }
     const context = this.context();
     this.refreshFoes(context);
+    this.markExits(map.widthInPixels, map.heightInPixels);
     // Sentries stand where they can see, with their sight drawn faintly on the ground.
     for (const { point, range, texture } of this.area.sentries ?? []) {
       const at = this.point(point);
@@ -335,8 +338,41 @@ export class AreaScene extends Phaser.Scene {
     return { world: loadWorld(), lost: loadMemory().lost, studied: loadGrimoire() };
   }
 
+  // Every way out is marked, so nobody has to find an exit by walking into it. At a map's edge, an arrow points out and drifts that way;
+  // in the middle of a map, a chevron bobs above the spot. A barred way is marked in grey until it opens.
+  private markExits(width: number, height: number) {
+    for (const name of Object.keys(this.area.exits)) {
+      const at = this.point(name);
+      if (!at) continue;
+      const edge = at.x < 28 ? Math.PI : at.x > width - 28 ? 0 : at.y < 28 ? -Math.PI / 2 : at.y > height - 28 ? Math.PI / 2 : undefined;
+      const inward = 18;
+      const x = edge === Math.PI ? at.x + inward : edge === 0 ? at.x - inward : at.x;
+      const y = edge === -Math.PI / 2 ? at.y + inward : edge === Math.PI / 2 ? at.y - inward : edge === undefined ? at.y - 20 : at.y;
+      // A soft pool of light on the ground where the way out is, and the arrow over it.
+      const glow = this.add.ellipse(at.x, at.y + 4, 30, 14, 0xe8c870, 0.18).setDepth(2);
+      this.tweens.add({ targets: glow, scaleX: 1.25, scaleY: 1.25, alpha: 0.08, duration: 1100, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      const marker = this.add.image(x, y, 'exit-arrow').setDepth(7).setRotation(edge ?? Math.PI / 2).setAlpha(0.95).setScale(1.5);
+      const drift = 6;
+      this.tweens.add({ targets: marker, x: x + Math.round(Math.cos(edge ?? Math.PI / 2) * drift), y: y + Math.round(Math.sin(edge ?? Math.PI / 2) * drift),
+        alpha: 0.4, duration: 750, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      this.exitMarkers.push({ name, marker, glow });
+    }
+    this.shadeExits();
+  }
+
+  private shadeExits() {
+    const context = this.context();
+    for (const { name, marker, glow } of this.exitMarkers) {
+      const requires = this.area.exits[name].requires;
+      const open = !requires || holds(context, requires);
+      marker.setTint(open ? 0xe8c870 : 0x8a8a84);
+      glow.setFillStyle(open ? 0xe8c870 : 0x8a8a84);
+    }
+  }
+
   // Props follow story state: brambles that let go, a bell already picked up, a cup left behind.
   private refreshProps(instant = false) {
+    this.shadeExits();
     const context = this.context();
     for (const { sprite, hiddenIf, shadow } of this.props) {
       const hidden = hiddenIf.some(condition => holds(context, condition));

@@ -24,6 +24,8 @@ Every push to `main` builds the game and publishes it to GitHub Pages at **https
 
 Walking into a wall you only clip by a few pixels slides you along it, so narrow bridges, boardwalks, and doorways don't need lining up exactly (`slideAroundCorners` in `src/scenes/AreaScene.ts`). Solid things on the map, like dark water, barricades, and people, count as walls for this too.
 
+
+**Every way out is marked.** At the edge of a map, a gold arrow points the way out over a soft pool of light; in the middle of a map (a door, a cliff path, a stair), a gold chevron bobs above the spot. A way that is still barred, by a locked gate or a guard, is marked in grey, so you know it's there, and turns gold the moment it opens.
 ## Run locally
 
 Requires Node.js 22.12+ (Node.js 24 recommended).
@@ -337,7 +339,7 @@ Some fights come in **waves**: the raider camp on the drove road and the raider 
 
 ### The rookery road
 
-From a gap above the old border fort's west wall, the couriers' road climbs toward the mountain holds, past frozen falls, to a black gate painted BY ORDER OF THE HOUSE. **Harriers** hold the road now; their stoop can't be guarded, only dodged, and one comes in two waves. The raven courier in the fort town asks you to carry her last letter up and slide it under the gate (it's the only copy; lost if you fall). In the falls, her sister is frozen mid-flight with an unsigned order sealed in a cuckoo's egg. Bring it back to the raven for the **Raven's quill** (vulture: much easier dodges, +1 damage, −3 health).
+From a gap above the old border fort's west wall, the couriers' road climbs toward the mountain holds, past frozen falls, to a black gate painted BY ORDER OF THE HOUSE, chained, with the house's seal on it. Once the church sends you there (after the viper), it stands open. **Harriers** hold the road now; their stoop can't be guarded, only dodged, and one comes in two waves. The raven courier in the fort town asks you to carry her last letter up and slide it under the gate (it's the only copy; lost if you fall). In the falls, her sister is frozen mid-flight with an unsigned order sealed in a cuckoo's egg. Bring it back to the raven for the **Raven's quill** (vulture: much easier dodges, +1 damage, −3 health).
 
 People you already know have darker things to say if you ask: the priest (once you're back from the boar), the reeve, the miller, the innkeeper, the sergeant, the quartermaster, and the lynx in the bread line.
 

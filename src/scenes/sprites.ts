@@ -214,6 +214,30 @@ export function createSprites(scene: Phaser.Scene) {
   const light = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
   light.addColorStop(0, 'rgba(250,180,90,0.85)'); light.addColorStop(0.45, 'rgba(230,140,60,0.35)'); light.addColorStop(1, 'rgba(200,110,50,0)');
   ctx.fillStyle = light; ctx.fillRect(0, 0, 128, 128); glow.refresh();
+  // A chevron pointing right, to mark a way out; rotated to face wherever the way goes.
+  const chevron = scene.make.graphics({ x: 0, y: 0 });
+  chevron.fillStyle(0x1a1a14, 0.8).fillTriangle(1, 1, 11, 7, 1, 13);
+  chevron.fillStyle(0xffffff).fillTriangle(2, 3, 9, 7, 2, 11);
+  chevron.generateTexture('exit-arrow', 12, 14); chevron.destroy();
+  // The holds' gate: black stone, the house's seal, chained shut; and the same gate standing open.
+  const shut = scene.make.graphics({ x: 0, y: 0 });
+  shut.fillStyle(0x4a4640).fillRect(0, 0, 36, 44);
+  shut.fillStyle(0x16161a).fillRect(3, 6, 30, 38);
+  shut.fillStyle(0x24242a).fillRect(4, 7, 13, 37).fillRect(19, 7, 13, 37);
+  shut.fillStyle(0x5a5650).fillRect(0, 0, 36, 5).fillRect(2, 2, 32, 2);
+  shut.fillStyle(0x8a2a24).fillRect(5, 16, 26, 7);
+  shut.fillStyle(0xd8d0b8).fillRect(7, 18, 22, 1).fillRect(7, 20, 16, 1);
+  shut.fillStyle(0xc8a848).fillCircle(18, 31, 4);
+  shut.fillStyle(0x8a8a90).fillRect(5, 27, 26, 2).fillRect(16, 25, 4, 7);
+  shut.generateTexture('holds-gate-shut', 36, 44); shut.destroy();
+  const open = scene.make.graphics({ x: 0, y: 0 });
+  open.fillStyle(0x4a4640).fillRect(0, 0, 36, 44);
+  open.fillStyle(0x6a665c).fillRect(3, 6, 30, 38);
+  open.fillStyle(0x8a8678).fillRect(8, 6, 20, 38);
+  open.fillStyle(0x16161a).fillRect(3, 6, 5, 38).fillRect(28, 6, 5, 38);
+  open.fillStyle(0x5a5650).fillRect(0, 0, 36, 5).fillRect(2, 2, 32, 2);
+  open.fillStyle(0xb8bcc0).fillRect(12, 10, 12, 3).fillRect(14, 18, 8, 2);
+  open.generateTexture('holds-gate-open', 36, 44); open.destroy();
   // A fog bank: a long, soft ellipse of mist that fades to nothing at every edge.
   const fog = scene.textures.createCanvas('fogbank', 256, 64)!;
   const mist = fog.getContext();

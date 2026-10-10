@@ -568,7 +568,9 @@ export const ROOKERY_ROAD: Area = {
     { point: 'harrier-1', encounter: 'harrier' }, { point: 'harrier-2', encounter: 'harrier', waves: 2 },
     { point: 'hound-1', encounter: 'hound', ambush: true },
   ],
-  props: [{ point: 'frozen-courier', texture: 'courier', hiddenIf: [] }, { point: 'camp-rookery', texture: 'campfire', hiddenIf: [] }],
+  props: [{ point: 'frozen-courier', texture: 'courier', hiddenIf: [] }, { point: 'camp-rookery', texture: 'campfire', hiddenIf: [] },
+    // The holds' gate: chained shut until the church sends you, then standing open.
+    { point: 'gate-art', texture: 'holds-gate-shut', solid: true, hiddenIf: [{ flag: 'viper-slain' }] }, { point: 'gate-art', texture: 'holds-gate-open', solid: true, hiddenIf: [{ not: { flag: 'viper-slain' } }] }],
   forage: { 'forage-1': 'herb' },
   camps: { 'camp-rookery': { prompt: 'Rest in the couriers\' shelter', cost: 4, lines: ['You burn the last of someone\'s kindling in the couriers\' cairn. The wind never stops.'] } },
   exits: {
