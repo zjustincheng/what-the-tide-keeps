@@ -94,18 +94,23 @@ test('downriver: the queen, the ferryman\'s word, the apprentice\'s vial, and th
   const world = await saved(page);
   expect(world.flags).toContain('frog-free');
   expect(world.carried).toEqual([]);
-  // Four have joined: the newest waits until someone else is sent to the bench.
-  await page.keyboard.press('Tab');
-  await expect(page.getByRole('heading', { name: 'Equipment' })).toBeVisible();
-  await expect(page.locator('.equipment [data-member="frog"] .bench-toggle')).toHaveText(/Waits/);
-  await page.locator('.equipment [data-member="bear"] .bench-toggle').click();
-  await expect(page.locator('.equipment [data-member="frog"] .bench-toggle')).toHaveText(/Fights/);
+  // Four have joined: the newest waits until someone else is sent to wait.
+  await page.keyboard.press('p');
+  await expect(page.getByRole('heading', { name: 'Who fights' })).toBeVisible();
+  await expect(page.locator('.party-screen [data-member="frog"] .bench-toggle')).toHaveText(/Waits/);
+  await page.locator('.party-screen [data-member="bear"] .bench-toggle').click();
+  await expect(page.locator('.party-screen [data-member="frog"] .bench-toggle')).toHaveText(/Fights/);
+  // Bringing the bear back sends the newest fighter to wait in his place.
+  await page.locator('.party-screen [data-member="bear"] .bench-toggle').click();
+  await expect(page.locator('.party-note')).toHaveText('Only 3 fight at a time. Frog waits instead.');
+  await page.locator('.party-screen [data-member="vulture"] .bench-toggle').click();
+  await page.locator('.party-screen [data-member="frog"] .bench-toggle').click();
   await page.getByRole('button', { name: 'Done' }).click();
-  expect((await saved(page)).bench).toBe('bear');
+  expect((await saved(page)).waiting).toEqual(['vulture']);
 });
 
 test('the viper talks, then fights: everyone starts poisoned, and the frog fights beside you', async ({ page }) => {
-  await start(page, { flags: [...HIGHLANDS_DONE, 'brood-slain', 'channel-firm', 'apprentice-slain', 'frog-free'], bench: 'bear' }, 'far-bank', 'from-wickmere');
+  await start(page, { flags: [...HIGHLANDS_DONE, 'brood-slain', 'channel-firm', 'apprentice-slain', 'frog-free'], waiting: ['bear'] }, 'far-bank', 'from-wickmere');
   await go(page, 'far-bank', 552, 344, 'Wade into the apothecary', 'apothecary');
   await go(page, 'apothecary', 184, 124, 'Speak to the viper');
   await talk(page, 'It ends here');

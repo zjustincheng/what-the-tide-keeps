@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { act, createBattle, DART, DOSE, ENEMY_POISON, intent, POISON, resolveEnemy, SOUR, SOURING, strike, useSupply } from '../../src/rules/battle.ts';
 import type { Battle } from '../../src/rules/battle.ts';
-import { createWorld, lineup, roster } from '../../src/rules/world.ts';
+import { createWorld, lineup, roster, toggleWaiting } from '../../src/rules/world.ts';
 
 const MARSH = ['chameleon', 'bear', 'frog'] as const;
 const everyone = (battle: Battle, action: 'attack' | 'support' = 'attack') => battle.party.reduce((next, member) => act(next, member.id, action), battle);
@@ -56,10 +56,17 @@ test('everyone starts poisoned in the viper\'s apothecary', () => {
   assert.match(battle.log.join(' '), /poisoned already/);
 });
 
-test('three fight at a time: once the frog joins, one hero waits on the bench, and never the hero', () => {
-  const world = { ...createWorld(), flags: ['bear-free', 'vulture-free', 'frog-free'] as const };
-  assert.deepEqual(roster(world as never), ['chameleon', 'bear', 'vulture', 'frog']);
-  assert.deepEqual(lineup(world as never), ['chameleon', 'bear', 'vulture'], 'the newest waits by default');
-  assert.deepEqual(lineup({ ...world, bench: 'bear' } as never), ['chameleon', 'vulture', 'frog']);
-  assert.deepEqual(lineup({ ...world, bench: 'chameleon' } as never), ['chameleon', 'bear', 'vulture']);
+test('up to three fight: any companion can be sent to wait, never the hero, and bringing a fourth back sends the newest to wait', () => {
+  const world = { ...createWorld(), flags: ['bear-free', 'vulture-free', 'frog-free'] } as never;
+  assert.deepEqual(roster(world), ['chameleon', 'bear', 'vulture', 'frog']);
+  assert.deepEqual(lineup(world), ['chameleon', 'bear', 'vulture'], 'the newest waits by default');
+  const bearWaits = toggleWaiting(world, 'bear');
+  assert.deepEqual(lineup(bearWaits), ['chameleon', 'vulture', 'frog']);
+  assert.deepEqual(lineup(toggleWaiting(world, 'chameleon')), lineup(world), 'the hero always fights');
+  // Two can wait: the hero goes in with one companion.
+  assert.deepEqual(lineup(toggleWaiting(bearWaits, 'vulture')), ['chameleon', 'frog']);
+  // Bringing the bear back, with three already fighting, sends the newest fighter to wait.
+  const back = toggleWaiting(bearWaits, 'bear');
+  assert.deepEqual(lineup(back), ['chameleon', 'bear', 'vulture']);
+  assert.deepEqual(back.waiting, ['frog']);
 });

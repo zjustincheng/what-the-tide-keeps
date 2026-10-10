@@ -609,7 +609,9 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
 @media (max-width: 700px) { .party-roster[data-size="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .bench-toggle { width: 100%; margin: 4px 0 6px; padding: 4px; background: #22372a; border: 1px solid #5d7253; color: #d7d9c8; font: 11px Georgia, serif; cursor: pointer; }
 .bench-toggle[aria-pressed="true"] { background: #2e2a22; border-color: #8a7a4a; color: #c8b878; }
-.member-card[data-waiting="true"] { opacity: 0.72; }
+.member-card[data-waiting="true"] { opacity: 0.6; }
+.party-always { margin: 4px 0 6px; color: #8a9a8e; font: italic 11px Georgia, serif; }
+.party-note { min-height: 16px; }
 
 .shop { justify-content: flex-start; padding: 20px 6%; }
 .purse { margin: 6px 0 0; font: 12px ui-monospace, monospace; color: #e0c98a; }

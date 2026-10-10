@@ -141,10 +141,10 @@ test('resting at a fire heals but skips no time, and after dark the night market
   await place(page, 'town', 456, 348);
   await expect(page.locator('#prompt')).toContainText('Speak to the marten');
   await page.keyboard.press('e');
-  while (await page.locator('#dialogue').isVisible()) {
-    if (await page.locator('#choices').isVisible()) await page.keyboard.press('Escape');
-    else await page.getByRole('button', { name: 'Continue' }).click();
-  }
+  // She doesn't open the stall until you ask.
+  while (!(await page.locator('#choices').isVisible())) await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('button', { name: /Show me what you have/ }).click();
+  while (await page.locator('#dialogue').isVisible()) await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByRole('heading', { name: 'The shuttered stall, open' })).toBeVisible();
   await page.getByRole('button', { name: 'Buy Night cloak' }).click();
   expect((await saved(page)).found).toContain('night-cloak');

@@ -20,7 +20,7 @@ export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated' | 'pests-fiel
   | 'followers-spared' | 'followers-reported' | 'followers-paid' | 'fishmonger-angry' | 'stall-cowed' | 'stood-count' | 'inn-room' | 'reeve-pardon'
   | 'hounds-fed' | 'pack-slain' | 'ram-paid' | 'barrow-coins' | 'sluice-open' | 'drowned-slain' | 'otter-trusted' | 'otter-reported' | 'otter-paid'
   | 'vulture-met' | 'anchors-known' | 'letter-delivered' | 'bridge-lowered' | 'pair-slain' | 'hyena-slain' | 'ration-ledger' | 'merchant-thanked'
-  | 'brood-slain' | 'channel-firm' | 'apprentice-slain' | 'frog-free' | 'viper-challenged' | 'viper-slain' | 'newt-freed' | 'manifest-read'
+  | 'salt-cut' | 'brood-slain' | 'channel-firm' | 'apprentice-slain' | 'frog-free' | 'viper-challenged' | 'viper-slain' | 'newt-freed' | 'manifest-read'
   | 'captain-slain' | 'lantern' | 'letter-left' | 'order-read' | 'hall-key' | 'crab-freed' | 'old-roads' | 'way-crossroads' | 'way-millbrook' | 'way-downs' | 'way-weir' | 'way-fort' | 'way-square' | 'way-wickmere'
   | 'brother-freed' | 'warden-bribed' | 'crate-delivered' | 'ring-returned' | 'ladder-down' | 'drove-gate-open' | 'drover-cache'
   | 'burn-order-seen' | 'kid-found' | 'lane-open' | 'boar-challenged' | 'dead-1' | 'dead-2' | 'dead-3' | 'ossuary-key' | 'hyena-challenged';
@@ -36,8 +36,8 @@ export type Drained = Readonly<Partial<Record<MemberId, number>>>;
 // night: whether it is dark. clock: how far through the day it is, 0 to 1 from dawn (see clock.ts); night follows it.
 // The hero chooses when he sleeps whether to wake at dawn or at nightfall.
 // tempered: keepsakes the fort's smith has tempered; kept for good, like the keepsakes themselves.
-// bench: the hero who waits out fights once more than three have joined.
-export type World = Readonly<{ night?: boolean; clock?: number; bench?: MemberId; tempered?: readonly KeepsakeId[]; flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number; pantry?: Pantry }>;
+// waiting: companions the player has sent to wait out fights.
+export type World = Readonly<{ night?: boolean; clock?: number; waiting?: readonly MemberId[]; tempered?: readonly KeepsakeId[]; flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number; pantry?: Pantry }>;
 export const ITEMS: readonly Item[] = ['bell', 'letter', 'note', 'crate', 'ring', 'shrine-stone', 'raven-letter', 'sealed-order', 'venom-vial'];
 export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
   'sheep-woods', 'sheep-orchard', 'sheep-yard', 'sheep-reward', 'barrel-bought', 'squid-freed', 'swarm-slain', 'bounty-paid',
@@ -45,7 +45,7 @@ export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defea
   'followers-spared', 'followers-reported', 'followers-paid', 'fishmonger-angry', 'stall-cowed', 'stood-count', 'inn-room', 'reeve-pardon',
   'hounds-fed', 'pack-slain', 'ram-paid', 'barrow-coins', 'sluice-open', 'drowned-slain', 'otter-trusted', 'otter-reported', 'otter-paid',
   'vulture-met', 'anchors-known', 'letter-delivered', 'bridge-lowered', 'pair-slain', 'hyena-slain', 'ration-ledger', 'merchant-thanked',
-  'brood-slain', 'channel-firm', 'apprentice-slain', 'frog-free', 'viper-challenged', 'viper-slain', 'newt-freed', 'manifest-read', 'captain-slain', 'lantern', 'letter-left', 'order-read', 'hall-key', 'crab-freed', 'old-roads', 'way-crossroads', 'way-millbrook', 'way-downs', 'way-weir', 'way-fort', 'way-square', 'way-wickmere',
+  'salt-cut', 'brood-slain', 'channel-firm', 'apprentice-slain', 'frog-free', 'viper-challenged', 'viper-slain', 'newt-freed', 'manifest-read', 'captain-slain', 'lantern', 'letter-left', 'order-read', 'hall-key', 'crab-freed', 'old-roads', 'way-crossroads', 'way-millbrook', 'way-downs', 'way-weir', 'way-fort', 'way-square', 'way-wickmere',
   'brother-freed', 'warden-bribed', 'crate-delivered', 'ring-returned', 'ladder-down', 'drove-gate-open', 'drover-cache',
   'burn-order-seen', 'kid-found', 'lane-open', 'boar-challenged', 'dead-1', 'dead-2', 'dead-3', 'ossuary-key', 'hyena-challenged'];
 // A favor spell: a small everyday spell a villager trades for help. It opens the hedge on the border road.
@@ -99,7 +99,7 @@ export function apply(context: Context, effect: Effect): Context {
       flags: [...world.flags, ...[effect.set ?? []].flat().filter((flag, i, all) => !world.flags.includes(flag) && all.indexOf(flag) === i)],
       found: effect.find && !world.found.includes(effect.find) ? [...world.found, effect.find] : world.found,
       coins: Math.max(0, world.coins + (effect.earn ?? 0) - (effect.pay ?? 0)),
-      supplies: effect.supply ? { ...world.supplies, [effect.supply]: world.supplies[effect.supply] + 1 } : world.supplies, fish: effect.feed ? feed(world.fish, effect.feed) : world.fish, deaths: world.deaths, pantry: world.pantry, night: world.night, clock: world.clock, bench: world.bench, tempered: world.tempered, wounds: effect.rest ? {} : world.wounds, drained: effect.rest ? {} : world.drained,
+      supplies: effect.supply ? { ...world.supplies, [effect.supply]: world.supplies[effect.supply] + 1 } : world.supplies, fish: effect.feed ? feed(world.fish, effect.feed) : world.fish, deaths: world.deaths, pantry: world.pantry, night: world.night, clock: world.clock, waiting: world.waiting, tempered: world.tempered, wounds: effect.rest ? {} : world.wounds, drained: effect.rest ? {} : world.drained,
     },
     studied: effect.learn && !studied.includes(effect.learn) ? [...studied, effect.learn] : studied,
   };
@@ -119,13 +119,25 @@ export function roster(world: World): MemberId[] {
     ...(world.flags.includes('frog-free') ? ['frog' as const] : [])];
 }
 
-// Three fight at a time. Once four have joined, the benched hero waits; the hero never does.
+// Three fight at a time. Any companion can be sent to wait; the hero never waits.
+// If more than three are left fighting, the newest to join waits too.
 export const FIGHTERS = 3;
 export function lineup(world: World): MemberId[] {
-  const joined = roster(world);
-  if (joined.length <= FIGHTERS) return joined;
-  const bench = world.bench && world.bench !== 'chameleon' && joined.includes(world.bench) ? world.bench : joined[joined.length - 1];
-  return joined.filter(member => member !== bench).slice(0, FIGHTERS);
+  const waiting = world.waiting ?? [];
+  return roster(world).filter(member => member === 'chameleon' || !waiting.includes(member)).slice(0, FIGHTERS);
+}
+
+// Send a companion to wait, or bring one back to fight. Bringing a fourth back sends the newest fighter to wait in their place.
+export function toggleWaiting(world: World, member: MemberId): World {
+  if (member === 'chameleon' || !roster(world).includes(member)) return world;
+  const waiting = world.waiting ?? [];
+  if (!lineup(world).includes(member)) {
+    const back = { ...world, waiting: waiting.filter(other => other !== member) };
+    const fighting = roster(back).filter(other => other === 'chameleon' || !(back.waiting ?? []).includes(other));
+    const bumped = fighting.length > FIGHTERS ? fighting.filter(other => other !== member && other !== 'chameleon').at(-1) : undefined;
+    return bumped ? { ...back, waiting: [...(back.waiting ?? []), bumped] } : back;
+  }
+  return { ...world, waiting: [...waiting, member] };
 }
 
 // Things carried, coins, supplies, fish, and wounds gathered since the last death are lost on a wipe. Flags, like opened shortcuts, persist.

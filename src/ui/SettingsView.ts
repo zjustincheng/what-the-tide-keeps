@@ -7,6 +7,7 @@ const CONTROLS: [string, string][] = [
   ['Talk, examine, travel', 'E or Space'],
   ['Choose a reply', '1–4, or click it'],
   ['Equipment', 'Tab'],
+  ['Who fights', 'P'],
   ['Journal', 'J'],
   ['Bestiary', 'B'],
   ['Hide your mana (sneak)', 'Q'],
@@ -25,7 +26,7 @@ export class SettingsView {
   private root: HTMLElement;
   private cleanup = new AbortController();
 
-  constructor(actions: { equipment: () => void; journal: () => void; bestiary: () => void; restart: () => void; close: () => void }) {
+  constructor(actions: { equipment: () => void; party: () => void; journal: () => void; bestiary: () => void; restart: () => void; close: () => void }) {
     this.root = document.createElement('section');
     this.root.className = 'battle settings';
     this.root.setAttribute('role', 'dialog');
@@ -44,6 +45,7 @@ export class SettingsView {
       <div class="settings-actions">
         <button type="button" data-action="fullscreen" ${canFullscreen() ? '' : 'hidden'}>${document.fullscreenElement ? 'Exit full screen' : 'Full screen'}</button>
         <button type="button" data-action="equipment">Equipment</button>
+        <button type="button" data-action="party">Who fights</button>
         <button type="button" data-action="journal">Journal</button>
         <button type="button" data-action="bestiary">Bestiary</button>
         <button type="button" data-action="restart">Return to the cot ↺</button>
@@ -67,7 +69,7 @@ export class SettingsView {
         this.root.querySelector<HTMLElement>(ask ? '[data-action="keep"]' : '[data-action="start-over"]')!.focus();
       }
       else if (action === 'erase') { if (eraseProgress()) location.reload(); }
-      else if (action === 'equipment' || action === 'journal' || action === 'bestiary' || action === 'restart' || action === 'close') actions[action]();
+      else if (action === 'equipment' || action === 'party' || action === 'journal' || action === 'bestiary' || action === 'restart' || action === 'close') actions[action]();
     }, { signal });
     this.root.querySelector<HTMLInputElement>('[aria-label="Music volume"]')!.addEventListener('input', event => music.setVolume(Number((event.target as HTMLInputElement).value) / 100), { signal });
     this.root.querySelector<HTMLInputElement>('[aria-label="Sound effects volume"]')!.addEventListener('input', event => music.setEffectsVolume(Number((event.target as HTMLInputElement).value) / 100), { signal });

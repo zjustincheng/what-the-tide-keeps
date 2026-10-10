@@ -21,6 +21,7 @@ import { loadJournal, writeDown as record } from '../storage/journal';
 import { forage, INGREDIENTS } from '../rules/cooking';
 import { destinations, waystoneIn, WAYSTONES } from '../rules/waystones';
 import { EquipmentView } from '../ui/EquipmentView';
+import { PartyView } from '../ui/PartyView';
 import { ShopView } from '../ui/ShopView';
 import { FishingView } from '../ui/FishingView';
 import { SettingsView } from '../ui/SettingsView';
@@ -106,7 +107,7 @@ export class AreaScene extends Phaser.Scene {
   private props: Prop[] = [];
   private people: Phaser.Physics.Arcade.Sprite[] = [];
   private walls!: Phaser.Tilemaps.TilemapLayer;
-  private overlay?: BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView;
+  private overlay?: BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView | PartyView;
   // A shop to open once the current conversation ends.
   private pendingShop?: ShopId;
   // A campfire to rest at once the current conversation ends.
@@ -403,6 +404,7 @@ export class AreaScene extends Phaser.Scene {
       if(['q','Q'].includes(event.key) && !event.repeat && !this.active) this.toggleSneak();
       if(['j','J'].includes(event.key) && !event.repeat && !this.active) this.openPanel(()=>new JournalView(loadJournal(), ()=>this.closePanel()));
       if(['b','B'].includes(event.key) && !event.repeat && !this.active) this.openPanel(()=>new BestiaryView(loadBestiary(), loadGrimoire(), ()=>this.closePanel()));
+      if(['p','P'].includes(event.key) && !event.repeat && !this.active) this.openParty();
       // Number keys pick a reply.
       const pick=this.options[Number(event.key)-1];
       if(this.active && pick && !event.repeat) { event.preventDefault(); this.choose(pick); }
@@ -757,6 +759,7 @@ export class AreaScene extends Phaser.Scene {
     this.overlay = new SettingsView({
       close,
       equipment: () => { close(); this.openEquipment(); },
+      party: () => { close(); this.openParty(); },
       journal: () => { close(); this.openPanel(()=>new JournalView(loadJournal(), ()=>this.closePanel())); },
       bestiary: () => { close(); this.openPanel(()=>new BestiaryView(loadBestiary(), loadGrimoire(), ()=>this.closePanel())); },
       // Returning to the cot always restarts the church, which also resets its encounters.
@@ -765,7 +768,7 @@ export class AreaScene extends Phaser.Scene {
   }
 
   // A panel over the map: cooking, the journal, or a game of bones.
-  private openPanel(make: () => CookView | JournalView | DiceView | BestiaryView) {
+  private openPanel(make: () => CookView | JournalView | DiceView | BestiaryView | PartyView) {
     if(this.overlay || this.leaving) return;
     this.player.setVelocity(0);
     this.held.clear();
@@ -774,6 +777,11 @@ export class AreaScene extends Phaser.Scene {
     this.setExplorationEnabled(false);
     music.effect('open');
     this.overlay = make();
+  }
+
+  // Who goes into the next fight.
+  private openParty() {
+    this.openPanel(()=>new PartyView(loadWorld(), this.partyOptions(), this.textures.getBase64('hero'), world=>{ saved=saveWorld(world); }, ()=>this.closePanel()));
   }
 
   private closePanel() {
@@ -810,8 +818,7 @@ export class AreaScene extends Phaser.Scene {
     music.effect('open');
     this.overlay = new EquipmentView(loadGear(), settle(loadBooks(), roster(loadWorld())), loadWorld().found, roster(loadWorld()), hollow(loadMemory()), this.textures.getBase64('hero'),
       (gear, books) => { saved = saveGear(gear) && saveBooks(books); },
-      () => { this.overlay?.destroy(); this.overlay = undefined; this.renderMemory(); this.resumeExploration(); }, loadWorld().tempered ?? [],
-      roster(loadWorld()).find(member => !lineup(loadWorld()).includes(member)), member => { saved = saveWorld({ ...loadWorld(), bench: member }) && saved; });
+      () => { this.overlay?.destroy(); this.overlay = undefined; this.renderMemory(); this.resumeExploration(); }, loadWorld().tempered ?? []);
   }
 
   private writeDown(then: () => void) {

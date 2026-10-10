@@ -120,9 +120,16 @@ export const town: Dialogue = {
     'A stall behind the tannery, shuttered. Chalked on the boards: AFTER DARK.',
   ] },
   'night-trader': { speaker: 'A PINE MARTEN', prompt: 'Speak to the marten', hiddenIf: [{ night: false }], lines: [
-    'The shutters are up, and lamplight comes through the slats.',
-    '"Don\'t touch, don\'t haggle, don\'t tell the reeve."',
-  ], then: { shop: 'night-market' }, choices: [
+    'The shutters are up. A marten sits behind them with a lamp turned low.',
+    'Don\'t touch, don\'t haggle, don\'t tell the reeve.',
+  ], choices: [
+    { text: 'Show me what you have.', ends: true, lines: ['She turns the lamp up, just enough.'], then: { shop: 'night-market' } },
+    // The word the fox gave, for standing in the count.
+    { text: 'The fox sent me. The salt cut.', if: { all: [{ flag: 'stood-count' }, { not: { flag: 'salt-cut' } }] }, lines: [
+      'She looks at you for a long time. "The fox doesn\'t send anyone."',
+      'Then she takes a parcel in oilcloth from under the counter. Fish, salted at sea, never stamped. "No church seal on it. It won\'t make anyone sick."',
+      '"Tell the fox we\'re square."',
+    ], then: { set: 'salt-cut', supply: 'fish-stew' } },
     { text: 'What is this place?', lines: [
       'The stall the town pretends is empty. By day, it is.',
       'By night it sells what the church won\'t license: blades, cloaks, and books with the wrong hymns in them.',
