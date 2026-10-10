@@ -112,12 +112,12 @@ test('hiding costs mana over time, and the enemy punishes a hero who takes too l
   await expect(page.getByRole('log')).toContainText('You hesitate.', { timeout: 20000 });
 });
 
-test('sleeping until dark brings night: the clock says so, and the night market opens behind the tannery', async ({ page }) => {
-  await start(page, { flags: ['boar-defeated'], coins: 50 }, 'town', 'spawn');
+test('resting at a fire heals but skips no time, and after dark the night market opens behind the tannery', async ({ page }) => {
+  await start(page, { flags: ['boar-defeated'], coins: 50, clock: 0.3 }, 'town', 'spawn');
   // By day the stall behind the tannery is shuttered.
   await place(page, 'town', 440, 330);
   await expect(page.locator('#prompt')).toContainText('Examine the stall');
-  // Sleep until dark at the crossroads fire.
+  // Resting at the crossroads fire leaves it the same time of day.
   await page.evaluate(async () => {
     const { game } = await import('/src/main.ts');
     game.scene.getScene('town').scene.start('farmland', { spawn: 'spawn' });
@@ -126,10 +126,13 @@ test('sleeping until dark brings night: the clock says so, and the night market 
   await place(page, 'farmland', 600, 410);
   await expect(page.locator('#prompt')).toContainText('Rest by the fire');
   await page.keyboard.press('e');
-  await page.getByRole('button', { name: /Sleep until dark/ }).click();
+  await expect(page.getByRole('button', { name: /Sleep until/ })).toHaveCount(0);
+  await page.getByRole('button', { name: /Rest\./ }).click();
   while (await page.locator('#dialogue').isVisible()) await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.locator('#location-time')).toHaveText('Night');
-  expect((await saved(page)).night).toBe(true);
+  await expect(page.locator('#location-time')).toHaveText('Afternoon');
+  expect((await saved(page)).night).toBe(false);
+  // Come back after dark.
+  await start(page, { flags: ['boar-defeated'], coins: 50, clock: 0.8 }, 'farmland', 'spawn');
   await page.evaluate(async () => {
     const { game } = await import('/src/main.ts');
     game.scene.getScenes(true)[0].scene.start('town', { spawn: 'spawn' });

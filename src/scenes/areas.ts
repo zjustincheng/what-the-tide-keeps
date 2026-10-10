@@ -73,7 +73,7 @@ export const CHURCH: Area = {
     // The side door opens on the capital.
     'west-door': { to: 'square', spawn: 'from-church', prompt: 'Go out into the city' },
   },
-  camps: { spawn: { prompt: 'Rest on the cot', noCooking: true, lines: ['You lie down on the cot. The priest\'s candle burns down while you sleep, and you wake whole.'] } },
+  camps: { spawn: { prompt: 'Rest on the cot', noCooking: true, lines: ['You lie down on the cot. The priest\'s candle burns down a finger\'s width while you rest, and you get up whole.'] } },
   decorate(scene) {
     // Soft window light, hand placed in the same coordinates as the Tiled room.
     const light = scene.add.graphics().setDepth(2);
@@ -134,8 +134,8 @@ export const FARMLAND: Area = {
   fishing: { 'pond-spot': 'pond', 'stream-spot': 'stream' },
   forage: { 'forage-1': 'herb', 'forage-2': 'mushroom', 'forage-3': 'berry', 'forage-4': 'herb', 'forage-5': 'mushroom' },
   camps: {
-    'camp-fields': { prompt: 'Rest by the fire', cost: 4, lines: ['The shepherds\' fire ring at the crossroads. You sleep until the ache goes out of you.', 'By morning the fields have filled up again.'] },
-    'camp-woods': { prompt: 'Rest by the fire', cost: 3, lines: ['You get the old fire going again and sleep under the grey tent.', 'Something is moving in the trees again.'] },
+    'camp-fields': { prompt: 'Rest by the fire', cost: 4, lines: ['The shepherds\' fire ring at the crossroads. You sit until the ache goes out of you.', 'When you look up, the fields have filled up again.'] },
+    'camp-woods': { prompt: 'Rest by the fire', cost: 3, lines: ['You get the old fire going again and rest under the grey tent.', 'Something is moving in the trees again.'] },
   },
   exits: {
     door: { to: 'church', spawn: 'from-road', prompt: 'Return to the church' },
@@ -233,7 +233,7 @@ const INDOORS: Pick<Area, 'region' | 'tileset' | 'grade' | 'enemies' | 'music' |
   ground: 'wood', surfaces: { 3: 'stone', 19: 'straw', 23: 'straw' } };
 export const INN: Area = { ...INDOORS, key: 'inn', map: 'inn', place: 'Millbrook · The inn', dialogue: { ...inn, ...innLore },
   npcs: [{ point: 'drinker', texture: 'drinker' }, { point: 'patron', texture: 'patron' }, { point: 'marine', texture: 'marine' }],
-  camps: { bed: { prompt: 'Sleep in the bed', noCooking: true, lines: ['You sleep in a real bed for the first time you can remember. Your wounds close and your mana returns.'] } },
+  camps: { bed: { prompt: 'Sleep in the bed', noCooking: true, lines: ['You lie down in a real bed for the first time you can remember. Your wounds close and your mana returns.'] } },
   exits: { out: { to: 'town', spawn: 'from-inn', prompt: 'Go back outside' } } };
 export const HALL: Area = { ...INDOORS, key: 'hall', map: 'hall', place: "Millbrook · The reeve's hall", dialogue: hall,
   npcs: [{ point: 'clerk', texture: 'clerk' }], exits: { out: { to: 'town', spawn: 'from-hall', prompt: 'Go back outside' } } };
@@ -338,7 +338,7 @@ export const PASS: Area = {
   ],
   props: [{ point: 'courier', texture: 'courier', hiddenIf: [] }, { point: 'camp-pass', texture: 'campfire', hiddenIf: [] }],
   forage: { 'forage-1': 'herb' },
-  camps: { 'camp-pass': { prompt: 'Rest by the fire', cost: 4, lines: ['A ring of stones out of the wind. You pay a passing carter for wood and sleep with your back to the rock.'] } },
+  camps: { 'camp-pass': { prompt: 'Rest by the fire', cost: 4, lines: ['A ring of stones out of the wind. You pay a passing carter for wood and rest with your back to the rock.'] } },
   exits: {
     south: { to: 'border-road', spawn: 'from-pass', prompt: 'Go back down to the border road' },
     north: { to: 'fort', spawn: 'from-pass', prompt: 'Walk up to the fort gate' },
@@ -455,7 +455,7 @@ export const TARN: Area = {
   props: [{ point: 'camp-tarn', texture: 'campfire', hiddenIf: [] }],
   fishing: { 'tarn-spot': 'tarn' },
   forage: { 'forage-1': 'mushroom' },
-  camps: { 'camp-tarn': { prompt: 'Rest by the trapper\'s fire', cost: 3, lines: ['The trapper lets you sleep by his fire for a few coins. The ice groans all night.'] } },
+  camps: { 'camp-tarn': { prompt: 'Rest by the trapper\'s fire', cost: 3, lines: ['The trapper lets you rest by his fire for a few coins. The ice groans the whole time.'] } },
   exits: {
     stair: { to: 'weir', spawn: 'from-tarn', prompt: 'Go down the smugglers\' stair' },
     ladder: { to: 'pass', spawn: 'from-tarn', prompt: 'Climb the rope ladder to the pass', requires: { flag: 'ladder-down' },
@@ -554,7 +554,7 @@ export const ROOKERY_ROAD: Area = {
   ],
   props: [{ point: 'frozen-courier', texture: 'courier', hiddenIf: [] }, { point: 'camp-rookery', texture: 'campfire', hiddenIf: [] }],
   forage: { 'forage-1': 'herb' },
-  camps: { 'camp-rookery': { prompt: 'Rest in the couriers\' shelter', cost: 4, lines: ['You burn the last of someone\'s kindling in the couriers\' cairn. The wind never stops all night.'] } },
+  camps: { 'camp-rookery': { prompt: 'Rest in the couriers\' shelter', cost: 4, lines: ['You burn the last of someone\'s kindling in the couriers\' cairn. The wind never stops.'] } },
   exits: { south: { to: 'border-keep', spawn: 'from-rookery', prompt: 'Go back down to the old border fort' } },
   decorate: scene => snowfall(scene, 576, 768),
 };

@@ -132,7 +132,7 @@ test('the vulture duel, her note, and writing a memory down', async ({ page }) =
   });
   await expect.poll(() => at(page, 'fort')).not.toBeNull();
   await go(page, 'fort', 456, 296, 'Rest by the garrison fire');
-  await talk(page, 'Sleep until dawn');
+  await talk(page, 'Rest');
   await expect(page.getByRole('heading', { name: 'Write something down.' })).toBeVisible();
   await page.getByRole('radio', { name: /The feast/ }).check();
   await page.getByRole('button', { name: 'Write it down' }).click();

@@ -37,7 +37,7 @@ import type { Surface } from '../audio/effects';
 import { battleTheme } from '../audio/themes';
 import { reclaim, settle } from '../rules/spells';
 import { createSprites } from './sprites';
-import { advance, darkness, NIGHT, phase, timeName } from '../rules/clock';
+import { advance, darkness, phase, timeName } from '../rules/clock';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 type Point = { name: string; x: number; y: number };
@@ -111,7 +111,6 @@ export class AreaScene extends Phaser.Scene {
   private pendingRest?: string;
   private pendingFight?: Foe;
   private pendingCook = false;
-  private pendingNight = false;
   private pendingTravel?: keyof typeof WAYSTONES;
   private waystone?: Phaser.GameObjects.Image;
   private pendingDice?: { stake: number; opponent: string };
@@ -473,15 +472,15 @@ export class AreaScene extends Phaser.Scene {
       const cost=camp.cost ?? 0;
       const sleep=[...(cost ? [`You pay ${cost} coins for wood and a place by the fire.`] : []), ...camp.lines];
       this.campPoint=this.nearby.name;
-      // Sleep until dawn or until dark; a fire can be cooked at as well, a bed or a cot cannot.
+      // Resting heals, but doesn't skip the day or the night: the hour is the same when you get up. A fire can be cooked at as well, a bed or a cot cannot.
       const price=cost ? ` (${cost} coins)` : '';
       const night=Boolean(loadWorld().night);
-      const sleepUntil=(until: 'dawn' | 'dusk')=>cost && coins<cost
-        ? { text: `Sleep until ${until==='dawn' ? 'dawn' : 'dark'}.${price}`, lines: [`Wood and a place by the fire cost ${cost} coins. You have ${coins}.`] }
-        : { text: `Sleep until ${until==='dawn' ? 'dawn' : 'dark'}.${price}`, ends: true, lines: [...sleep, until==='dusk' ? 'You wake as the light goes.' : 'You wake to grey morning.'], then: { camp: until } as Effect };
-      this.say({ speaker: camp.noCooking ? 'REST' : 'THE FIRE', lines: [camp.noCooking ? (night ? 'It is dark out.' : 'It is still light out.') : `The fire is going${night ? ', and it is the only light for a long way' : ''}. You could cook something, or sleep.`], choices: [
+      const restHere=cost && coins<cost
+        ? { text: `Rest.${price}`, lines: [`Wood and a place by the fire cost ${cost} coins. You have ${coins}.`] }
+        : { text: `Rest.${price}`, ends: true, lines: sleep, then: { camp: true } as Effect };
+      this.say({ speaker: camp.noCooking ? 'REST' : 'THE FIRE', lines: [camp.noCooking ? (night ? 'It is dark out.' : 'It is still light out.') : `The fire is going${night ? ', and it is the only light for a long way' : ''}. You could cook something, or rest.`], choices: [
         ...(camp.noCooking ? [] : [{ text: 'Cook something.', ends: true, lines: [], then: { cook: true } as Effect }]),
-        sleepUntil('dawn'), sleepUntil('dusk'),
+        restHere,
       ] }, 'hero');
       element('prompt').textContent='';
       this.player.setVelocity(0);
@@ -579,7 +578,7 @@ export class AreaScene extends Phaser.Scene {
   private effect(then?: Effect) {
     if(!then) return;
     if(then.cook) this.pendingCook=true;
-    if(then.camp) { this.pendingRest=this.campPoint; this.pendingNight=then.camp==='dusk'; }
+    if(then.camp) this.pendingRest=this.campPoint;
     if(then.travel) this.pendingTravel=then.travel;
     if(then.dice) this.pendingDice={ stake: then.dice, opponent: (this.active?.speaker ?? 'the house').toLowerCase().replace(/^(a|an|the) /, 'the ') };
     if(then.shop) this.pendingShop=then.shop;
@@ -637,7 +636,7 @@ export class AreaScene extends Phaser.Scene {
     // Resting heals every wound and brings the area's enemies back, so the area starts over around the fire.
     if(camp && !this.leaving) {
       PICKED.clear();
-      music.effect('rest'); const cost=this.area.camps?.[camp]?.cost ?? 0; saved=saveWorld(rest({ ...loadWorld(), coins: Math.max(0, loadWorld().coins-cost), night: this.pendingNight, clock: this.pendingNight ? NIGHT : 0 }));
+      music.effect('rest'); const cost=this.area.camps?.[camp]?.cost ?? 0; saved=saveWorld(rest({ ...loadWorld(), coins: Math.max(0, loadWorld().coins-cost), }));
       const sleep=()=>{ this.leaving=true; this.cameras.main.fadeOut(400,16,27,24); this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.restart({spawn:camp})); };
       // Once the vulture has shown how, a memory can be written down before sleeping.
       if(loadWorld().flags.includes('anchors-known')) this.writeDown(sleep); else sleep();

@@ -62,7 +62,7 @@ export type Condition = { forgot: MemoryId } | { has: Item } | { flag: Flag } | 
 // pay spends coins; supply hands over one of a supply.
 export type Effect = { give?: Item; take?: Item; set?: Flag | readonly Flag[]; learn?: string; find?: Found; earn?: number; pay?: number; feed?: number; supply?: SupplyId;
   // Handled by the scene, not the story: camp sleeps at the fire, cook opens the cooking, dice starts a game of bones for that stake.
-  camp?: 'dawn' | 'dusk'; cook?: true; dice?: number;
+  camp?: true; cook?: true; dice?: number;
   // travel: go to that waystone.
   travel?: WaystoneId; shop?: ShopId; rest?: true };
 export type ShopId = 'stall' | 'reeve' | 'fishmonger' | 'merchant' | 'fence' | 'apothecary' | 'night-market' | 'smith';
