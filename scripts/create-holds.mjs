@@ -74,7 +74,7 @@ function write(name,{W,H,floor,furniture},points){
   write('climb',m,[
     ['south',264,632],['from-rookery',264,600],['north',416,8],['from-hold',416,40],
     ['hornet-1',...at(14,34)],['hornet-2',...at(20,11)],['spider',...at(2,25)],['decoy-1',...at(18,24)],['decoy-2',...at(34,9)],['decoy-3',...at(12,11)],
-    ['camp-climb',...at(26,24)],['bag',...at(35,9)],['wind-post',...at(16,35)],['forage-1',...at(3,22)],
+    ['camp-climb',...at(26,24)],['bag',...at(35,9)],['summit',568,104],['from-summit',...at(34,10)],['wind-post',...at(16,35)],['forage-1',...at(3,22)],
   ]);
 }
 
@@ -150,7 +150,43 @@ function write(name,{W,H,floor,furniture},points){
   for(const x of [3,8,17,22]) put(furniture,x,0,BANNER);
   put(furniture,4,2,BRAZIER);put(furniture,21,2,BRAZIER);
   put(furniture,12,17,0);put(floor,12,17,DOOR);put(furniture,13,17,0);put(floor,13,17,DOOR);
+  // A door in the west wall, down to the cellars.
+  put(furniture,0,13,0);put(floor,0,13,DOOR);
   write('hall-of-house',m,[
-    ['out',...at(12,17)],['spawn',...at(12,15)],['lord',...at(12,5)],['den',...at(12,5)],['portraits',...at(3,8)],['eggshell',...at(22,8)],
+    ['out',...at(12,17)],['spawn',...at(12,15)],['cellar',8,216],['from-cellar',...at(1,13)],['lord',...at(12,5)],['den',...at(12,5)],['portraits',...at(3,8)],['eggshell',...at(22,8)],
+  ]);
+}
+
+// The cellars under the lord's hall: cells cut in the rock, where the house kept what it didn't want to look at.
+{
+  const m=grid(30,20,BOARDS);const {floor,furniture,put,fill,frame,carve}=m;
+  fill(furniture,0,0,29,19,CLIFF);
+  carve(1,8,28,11,FLAGS);                         // the long passage
+  carve(28,9,29,10,STAIR);                        // up to the hall, at the east end
+  carve(3,2,8,7,FLAGS);carve(5,7,6,7,FLAGS);      // the lord's cell
+  carve(12,2,17,7,FLAGS);carve(14,7,15,7,FLAGS);  // the servants' cell
+  carve(20,12,26,17,FLAGS);carve(22,12,23,12,FLAGS); // the store, gone dark
+  carve(2,12,9,17,FLAGS);carve(5,12,6,12,FLAGS);  // the old wine cellar
+  fill(furniture,5,7,6,7,GATE);fill(furniture,14,7,15,7,GATE);
+  for(const [x,y] of [[4,13],[8,16],[24,16]]) put(furniture,x,y,BOULDER);
+  for(const [x,y] of [[10,9],[19,10]]) put(furniture,x,y,BRAZIER);
+  write('cellars',m,[
+    ['up',472,152],['from-hall',...at(27,9)],['lord-cell',...at(5,8)],['lord',...at(5,4)],['servant-cell',...at(14,8)],['son',...at(14,4)],
+    ['cricket-1',...at(16,10)],['cricket-2',...at(23,15)],['spider',...at(5,15)],['wine',...at(3,13)],['store',...at(25,13)],
+  ]);
+}
+
+// The old eyrie on the peak, past the rope bridge: where the first couriers flew from, and where the lost flight froze.
+{
+  const m=grid(30,24,SNOW);const {floor,furniture,put,fill,frame,carve}=m;
+  fill(furniture,0,0,29,23,CLIFF);
+  carve(1,17,6,22,LEDGE);fill(furniture,0,20,0,21,0);fill(floor,0,20,0,21,LEDGE);   // in from the bridge pillar
+  carve(5,10,7,18,STAIR);
+  carve(6,3,26,11,SNOW);
+  fill(furniture,18,3,25,6,NEST);fill(furniture,20,7,23,7,NEST);put(furniture,21,7,0);put(floor,21,7,DOOR); // the eyrie
+  for(const [x,y] of [[9,5],[13,8],[24,10],[10,10]]) put(furniture,x,y,BOULDER);
+  for(const [x,y] of [[8,4],[15,4],[11,7]]) put(furniture,x,y,PERCH);
+  write('summit',m,[
+    ['down',8,328],['from-climb',...at(2,20)],['hermit',...at(21,8)],['eyrie',...at(22,8)],['flight',...at(13,6)],['perches',...at(15,5)],['oldest',...at(19,8)],
   ]);
 }

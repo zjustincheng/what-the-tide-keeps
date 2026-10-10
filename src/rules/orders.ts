@@ -62,6 +62,9 @@ export function leads(world: World): string[] {
     ...(carrying('sealed-order') ? ['An unsigned order sealed with a cuckoo\'s egg. The raven in the fort town should see it.'] : []),
     ...(carrying('venom-vial') ? ['The apprentice\'s vial of venom. The frog in the hospice.'] : []),
     ...(has('stood-count') && !has('salt-cut') ? ['The fox\'s word for the night market: the salt cut.'] : []),
+    ...(has('newt-freed') && !has('pens-freed') ? ['The newt\'s little brother was taken to wherever the magistrate keeps the caught. East along the far bank.'] : []),
+    ...(has('cuckoo-slain') && !has('lord-freed') && !has('lord-left') ? ['The cuckoo said the real lord is in the cellar under his hall.'] : []),
+    ...(has('duellist-beaten') && !has('son-freed') ? ['The wren on the market tier: her son served in the house, and stopped writing.'] : []),
     ...(has('old-roads') ? [] : carrying('shrine-stone') ? [] : ['The pilgrim in the fields is walking to the last shrine, on the harbour quay.']),
   ];
 }

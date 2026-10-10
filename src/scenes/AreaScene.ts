@@ -51,7 +51,7 @@ type Foe = { encounter: Encounter; defeat?: Effect; fledAt?: number; ambush?: bo
 const CHASE: Partial<Record<Encounter, { sight: number; speed: number }>> = {
   locust: { sight: 90, speed: 44 }, weevil: { sight: 80, speed: 36 }, acolyte: { sight: 96, speed: 40 }, hound: { sight: 120, speed: 58 },
   wisp: { sight: 100, speed: 50 }, raider: { sight: 110, speed: 52 }, ghoul: { sight: 90, speed: 34 }, inquisitor: { sight: 170, speed: 40 },
-  harrier: { sight: 140, speed: 62 }, hornet: { sight: 130, speed: 60 },
+  harrier: { sight: 140, speed: 62 }, hornet: { sight: 130, speed: 60 }, cricket: { sight: 110, speed: 56 },
 };
 // How far a chaser will follow from where it stands before giving up and going back.
 const LEASH = 200;
@@ -66,7 +66,7 @@ const FOG_SIGHT = 120;
 const HIDE_DRAIN = 2500;
 // Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
 const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8], warden: [22, 26, 5, 4], leech: [28, 24, 2, 4], hound: [20, 22, 6, 8], pack: [22, 24, 5, 6], wisp: [14, 14, 9, 9], drowned: [20, 26, 6, 4],
-  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4], captain: [22, 24, 5, 6], harrier: [22, 18, 5, 8], mosquito: [20, 16, 6, 8], scorpion: [24, 16, 4, 12], brood: [26, 20, 3, 8], apprentice: [22, 22, 5, 8], viper: [26, 20, 3, 10], hornet: [20, 16, 6, 8], spider: [26, 16, 3, 12], duellist: [20, 22, 6, 8], cuckoo: [22, 22, 5, 8] };
+  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4], captain: [22, 24, 5, 6], harrier: [22, 18, 5, 8], mosquito: [20, 16, 6, 8], scorpion: [24, 16, 4, 12], brood: [26, 20, 3, 8], apprentice: [22, 22, 5, 8], viper: [26, 20, 3, 10], hornet: [20, 16, 6, 8], spider: [26, 16, 3, 12], duellist: [20, 22, 6, 8], cuckoo: [22, 22, 5, 8], warder: [26, 18, 3, 12], cricket: [22, 14, 5, 14], flight: [26, 20, 3, 8] };
 // Whether the last save succeeded, shared by every area.
 let saved = true;
 // The way out of a conversation, offered whenever the hero comes back to the replies.

@@ -43,6 +43,12 @@ export const SHOPS: Record<ShopId, { title: string; note: string; wares: Ware[] 
     note: 'Bright things, mostly. Nothing has come up the mountain in a year, and it shows in the prices.',
     wares: [{ supply: 'trail-cake' }, { supply: 'herb-salve' }, { supply: 'smelling-salts' }, { supply: 'antivenom' }, { supply: 'firepot' }],
   },
+  // The seal at the smugglers' creek: sea goods, never stamped.
+  smuggler: {
+    title: 'The seal\'s oilcloth',
+    note: 'Salt fish, firepots wrapped in tar, and a few things from further out. No prices. She looks at you and decides.',
+    wares: [{ supply: 'fish-stew' }, { supply: 'smoked-fish' }, { supply: 'firepot' }, { supply: 'antivenom' }, { gear: 'smuggled-blade', price: 30 }],
+  },
   // After dark, behind the tannery: things the church would rather nobody owned.
   'night-market': {
     title: 'The shuttered stall, open',

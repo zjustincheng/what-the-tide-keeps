@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 15,
+  "nextobjectid": 17,
   "layers": [
     {
       "id": 1,
@@ -3075,6 +3075,30 @@
         },
         {
           "id": 13,
+          "name": "summit",
+          "type": "",
+          "x": 568,
+          "y": 104,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 14,
+          "name": "from-summit",
+          "type": "",
+          "x": 552,
+          "y": 168,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 15,
           "name": "wind-post",
           "type": "",
           "x": 264,
@@ -3086,7 +3110,7 @@
           "point": true
         },
         {
-          "id": 14,
+          "id": 16,
           "name": "forage-1",
           "type": "",
           "x": 56,

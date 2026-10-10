@@ -11,8 +11,8 @@ import { barrow, downs } from '../content/downs';
 import { fen, weir } from '../content/fen';
 import { feastHall, harbour, square } from '../content/capital';
 import { abbey, barracks, battlefield, drove, fort, keep, ossuary, pass, rookery, tarn } from '../content/highlands';
-import { apothecary, causeway, farBank, hospice, wickmere } from '../content/marsh';
-import { archive, climb, hold, houseHall, upper } from '../content/holds';
+import { apothecary, causeway, creek, farBank, hospice, pens, wickmere } from '../content/marsh';
+import { archive, cellars, climb, hold, houseHall, summit, upper } from '../content/holds';
 import type { Encounter } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
@@ -604,6 +604,7 @@ export const CAUSEWAY: Area = {
   camps: { 'camp-causeway': { prompt: 'Rest at the fisher\'s platform', cost: 3, lines: ['Somebody\'s old fire on a platform of planks. The fog comes right up to the edge of the light and stops.'] } },
   exits: {
     upriver: { to: 'weir', spawn: 'from-causeway', prompt: 'Take the ferry back upriver' },
+    creek: { to: 'creek', spawn: 'from-causeway', prompt: 'Follow the smugglers\' walk down to the creek' },
     east: { to: 'wickmere', spawn: 'from-causeway', prompt: 'Walk on to Wickmere' },
   },
   decorate: scene => marshFog(scene, 768, 576, 18),
@@ -654,6 +655,7 @@ export const FAR_BANK: Area = {
   forage: { 'forage-1': 'herb' },
   exits: {
     ferry: { to: 'wickmere', spawn: 'from-far-bank', prompt: 'Walk back across the channel' },
+    pens: { to: 'pens', spawn: 'from-far-bank', prompt: 'Follow the bank east, to the pens' },
     'apothecary-door': { to: 'apothecary', spawn: 'spawn', prompt: 'Wade into the apothecary', requires: { flag: 'frog-free' },
       barred: { speaker: 'THE APOTHECARY', lines: ['The door is under water to the knee. Something inside is breathing, slow and patient.', 'You wouldn\'t go in there without someone who knows poison.'] } },
   },
@@ -700,6 +702,7 @@ export const CLIMB: Area = {
   exits: {
     south: { to: 'rookery-road', spawn: 'from-holds', prompt: 'Go back down through the gate' },
     north: { to: 'hold', spawn: 'from-climb', prompt: 'Climb on to the hold' },
+    summit: { to: 'summit', spawn: 'from-climb', prompt: 'Climb up to the old eyrie' },
   },
   decorate: scene => wind(scene, 576, 640),
 };
@@ -754,7 +757,54 @@ export const HOUSE_HALL: Area = {
   npcs: [{ point: 'lord', texture: 'falcon-lord', hiddenIf: [{ flag: 'cuckoo-challenged' }, { flag: 'cuckoo-slain' }] }],
   enemies: [{ point: 'lord', encounter: 'cuckoo', hiddenIf: [{ flag: 'cuckoo-slain' }, { not: { flag: 'cuckoo-challenged' } }], defeat: { set: 'cuckoo-slain' } }],
   props: [{ point: 'den', texture: 'cuckoo', hiddenIf: [{ not: { flag: 'cuckoo-slain' } }] }],
-  exits: { out: { to: 'hold', spawn: 'from-hall', prompt: 'Go back down the great stair' } },
+  exits: {
+    out: { to: 'hold', spawn: 'from-hall', prompt: 'Go back down the great stair' },
+    cellar: { to: 'cellars', spawn: 'from-hall', prompt: 'Go down to the cellars' },
+  },
 };
 
-export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY, CLIMB, HOLD, UPPER, ARCHIVE, HOUSE_HALL];
+// Off the marsh's roads: the church's pens east of the far bank, and the smugglers' creek south of the causeway.
+export const PENS: Area = {
+  ...MARSH_GROUND, key: 'pens', map: 'pens', place: 'The pens', dialogue: pens, fog: true,
+  grade: { saturation: -0.5, brightness: 0.66, vignette: 0.65 },
+  npcs: [{ point: 'newt-boy', texture: 'newt', hiddenIf: [{ flag: 'pens-freed' }] }, { point: 'adder', texture: 'adder', hiddenIf: [{ flag: 'pens-freed' }] }],
+  enemies: [
+    { point: 'warder', encounter: 'warder', hiddenIf: [{ flag: 'warder-slain' }], defeat: { set: 'warder-slain' } },
+    { point: 'mosquito-1', encounter: 'mosquito', ambush: true },
+  ],
+  exits: { west: { to: 'far-bank', spawn: 'from-pens', prompt: 'Go back along the bank' } },
+  decorate: scene => marshFog(scene, 512, 384, 8),
+};
+
+export const CREEK: Area = {
+  ...MARSH_GROUND, key: 'creek', map: 'creek', place: 'The smugglers\' creek', dialogue: creek, fog: true, ground: 'dirt',
+  grade: { saturation: -0.45, brightness: 0.7, vignette: 0.6 },
+  npcs: [{ point: 'seal', texture: 'smuggler-seal' }],
+  enemies: [{ point: 'scorpion-1', encounter: 'scorpion', ambush: true }, { point: 'wisp-1', encounter: 'wisp' }],
+  props: [{ point: 'camp-creek', texture: 'campfire', hiddenIf: [] }],
+  fishing: { 'creek-spot': 'causeway' },
+  forage: { 'forage-1': 'mushroom' },
+  camps: { 'camp-creek': { prompt: 'Rest at the smugglers\' fire', cost: 5, lines: ['The seal lets you sit by the fire for a price, and keeps one eye on you the whole time. Boats come and go in the dark without lights.'] } },
+  exits: { north: { to: 'causeway', spawn: 'from-creek', prompt: 'Go back up to the causeway' } },
+  decorate: scene => marshFog(scene, 480, 416, 10),
+};
+
+// Off the holds' roads: the cellars under the lord's hall, and the old eyrie on the peak.
+export const CELLARS: Area = {
+  ...HOLDS_GROUND, key: 'cellars', map: 'cellars', place: 'The cellars', dialogue: cellars, music: 'wilds',
+  grade: { saturation: -0.5, brightness: 0.58, vignette: 0.75 }, assets: ['falcon-lord'],
+  npcs: [{ point: 'lord', texture: 'falcon-lord', hiddenIf: [{ flag: 'lord-freed' }] }, { point: 'son', texture: 'wren-son', hiddenIf: [{ flag: 'son-freed' }] }],
+  enemies: [{ point: 'cricket-1', encounter: 'cricket' }, { point: 'cricket-2', encounter: 'cricket', ambush: true }, { point: 'spider', encounter: 'spider' }],
+  exits: { up: { to: 'hall-of-house', spawn: 'from-cellar', prompt: 'Go back up to the hall' } },
+};
+
+export const SUMMIT: Area = {
+  ...HOLDS_GROUND, key: 'summit', map: 'summit', place: 'The old eyrie', dialogue: summit,
+  grade: { saturation: -0.5, brightness: 0.84, vignette: 0.5 },
+  npcs: [{ point: 'hermit', texture: 'eagle' }],
+  enemies: [{ point: 'flight', encounter: 'flight', hiddenIf: [{ flag: 'flight-slain' }], defeat: { set: 'flight-slain' } }],
+  exits: { down: { to: 'climb', spawn: 'from-summit', prompt: 'Go back down across the bridge' } },
+  decorate: scene => { wind(scene, 480, 384); snowfall(scene, 480, 384); },
+};
+
+export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY, CLIMB, HOLD, UPPER, ARCHIVE, HOUSE_HALL, PENS, CREEK, CELLARS, SUMMIT];

@@ -216,3 +216,64 @@ export const apothecary: Dialogue = {
     '"Tell the frog the boy died of a fever. She won\'t believe it either."',
   ] },
 };
+
+// The pens: where the magistrate's caught are kept, until a boat comes.
+export const pens: Dialogue = {
+  ledger: { speaker: 'THE WARDER\'S LEDGER', prompt: 'Read the ledger', lines: [
+    'Names, ages, and a column for each: VENOMOUS. FIT FOR WORK. SHIPPED.',
+    'Most of the SHIPPED column says the same thing, in the same careful church hand: to the lighthouse.',
+    'Nobody in the RETURNED column. There is no RETURNED column. You just looked for one.',
+  ] },
+  cages: { speaker: 'THE CAGES', prompt: 'Examine the cages', lines: [
+    'Newts, toads, an adder and her two young, a lionfish from the sea who has stopped speaking. They watch you the way people watch a door.',
+    'The locks are church locks. The keys are on the warder.',
+  ], variants: [{ if: { flag: 'pens-freed' }, lines: [
+    'Empty, and the doors left open. Someone has scratched into the gatehouse wall: WE WERE HERE. WE WERE NOT SICK.',
+  ] }], choices: [
+    { text: 'Open every cage.', if: { all: [{ flag: 'warder-slain' }, { not: { flag: 'pens-freed' } }] }, ends: true, lines: [
+      'The warder\'s keys fit every lock. Nobody runs. They come out slowly, as if the floor might not hold.',
+      'The adder gathers her young and looks at you for a long time. Then she takes something from around her own neck and puts it in your hand.',
+      'Found: Adder\'s coil.',
+    ], then: { set: 'pens-freed', find: 'adders-coil' } },
+  ] },
+  'newt-boy': { speaker: 'A NEWT BOY', prompt: 'Speak to the newt boy', hiddenIf: [{ flag: 'pens-freed' }], lines: [
+    'Is my sister coming? She said she\'d pay the fine. I don\'t know what a fine is.',
+    'The turtle says I\'m fit for work. I\'m eight.',
+  ] },
+  adder: { speaker: 'AN ADDER', prompt: 'Speak to the adder', hiddenIf: [{ flag: 'pens-freed' }], lines: [
+    'I set bones in Wickmere for eleven years. Nobody minded my teeth until there was a sickness to blame.',
+    'The boat comes at the new moon. It takes the ones who can work. It has never brought anybody back.',
+  ] },
+  'old-pens': { speaker: 'AN EMPTY PEN', prompt: 'Look into the empty pen', lines: [
+    'Somebody kept count on the boards with a claw: three hundred and some days. The count stops. The straw has been changed since.',
+  ] },
+  jetty: { speaker: 'THE JETTY', prompt: 'Look out from the jetty', lines: [
+    'Out past the flats, the estuary opens to the sea. On a clear night, the adder says, you can see a light out there that isn\'t on any chart.',
+  ] },
+};
+
+// The smugglers' creek: where the sea's boats come up by night with fish the church never stamped.
+export const creek: Dialogue = {
+  seal: { speaker: 'A SEAL IN OILSKINS', prompt: 'Speak to the seal', lines: [
+    'Church convict. In my creek. You\'ll either buy something or hang me, and you don\'t look like you\'ve got the rope.',
+  ], choices: [
+    { text: 'Show me what you have.', ends: true, lines: [], then: { shop: 'smuggler' } },
+    { text: 'What do you bring in?', lines: [
+      'Fish. Salted at sea, never stamped. The church says unstamped fish is how plague gets in. The church\'s own fish is how plague got in this year.',
+    ] },
+    { text: 'Who sails to the lighthouse?', lines: [
+      'Church boats, with fish, every new moon. I\'ve seen them go out low in the water and come back high.',
+      'And sometimes they go out with people in the hold, from the pens. Those come back high too.',
+      'Nobody I know has ever tied up at that light. Nobody I know has ever wanted to.',
+    ] },
+    { text: 'Are you a citizen?', lines: [
+      'Of what? The sea doesn\'t have citizens. It has crews. The Covenant stops at the tideline, and so do I.',
+    ] },
+  ] },
+  tally: { speaker: 'A TALLY ON A CRATE', prompt: 'Read the tally', lines: [
+    'Chalked on the lid: what came in, what went out, who was paid. One line says only: LIGHTHOUSE BOATS, 3 THIS MONTH. DON\'T BID AGAINST THEM.',
+  ] },
+  boats: { speaker: 'THE BOATS', prompt: 'Look at the boats', lines: [
+    'Sea boats, low and black, with no names. Fish scales in the bilge, and a child\'s shoe.',
+  ] },
+};

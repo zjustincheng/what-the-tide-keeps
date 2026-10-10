@@ -20,7 +20,7 @@ export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated' | 'pests-fiel
   | 'followers-spared' | 'followers-reported' | 'followers-paid' | 'fishmonger-angry' | 'stall-cowed' | 'stood-count' | 'inn-room' | 'reeve-pardon'
   | 'hounds-fed' | 'pack-slain' | 'ram-paid' | 'barrow-coins' | 'sluice-open' | 'drowned-slain' | 'otter-trusted' | 'otter-reported' | 'otter-paid'
   | 'vulture-met' | 'anchors-known' | 'letter-delivered' | 'bridge-lowered' | 'pair-slain' | 'hyena-slain' | 'ration-ledger' | 'merchant-thanked'
-  | 'cuckoo-slain' | 'cuckoo-challenged' | 'stair-open' | 'lab-remembered' | 'inquisitor-spoke' | 'octopus-letter' | 'duellist-beaten'
+  | 'warder-slain' | 'pens-freed' | 'lord-freed' | 'lord-left' | 'son-freed' | 'flight-slain' | 'cuckoo-slain' | 'cuckoo-challenged' | 'stair-open' | 'lab-remembered' | 'inquisitor-spoke' | 'octopus-letter' | 'duellist-beaten'
   | 'salt-cut' | 'brood-slain' | 'channel-firm' | 'apprentice-slain' | 'frog-free' | 'viper-challenged' | 'viper-slain' | 'newt-freed' | 'manifest-read'
   | 'captain-slain' | 'lantern' | 'letter-left' | 'order-read' | 'hall-key' | 'crab-freed' | 'old-roads' | 'way-crossroads' | 'way-millbrook' | 'way-downs' | 'way-weir' | 'way-fort' | 'way-square' | 'way-wickmere' | 'way-holds'
   | 'brother-freed' | 'warden-bribed' | 'crate-delivered' | 'ring-returned' | 'ladder-down' | 'drove-gate-open' | 'drover-cache'
@@ -46,7 +46,7 @@ export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defea
   'followers-spared', 'followers-reported', 'followers-paid', 'fishmonger-angry', 'stall-cowed', 'stood-count', 'inn-room', 'reeve-pardon',
   'hounds-fed', 'pack-slain', 'ram-paid', 'barrow-coins', 'sluice-open', 'drowned-slain', 'otter-trusted', 'otter-reported', 'otter-paid',
   'vulture-met', 'anchors-known', 'letter-delivered', 'bridge-lowered', 'pair-slain', 'hyena-slain', 'ration-ledger', 'merchant-thanked',
-  'cuckoo-slain', 'cuckoo-challenged', 'stair-open', 'lab-remembered', 'inquisitor-spoke', 'octopus-letter', 'duellist-beaten',
+  'warder-slain', 'pens-freed', 'lord-freed', 'lord-left', 'son-freed', 'flight-slain', 'cuckoo-slain', 'cuckoo-challenged', 'stair-open', 'lab-remembered', 'inquisitor-spoke', 'octopus-letter', 'duellist-beaten',
   'salt-cut', 'brood-slain', 'channel-firm', 'apprentice-slain', 'frog-free', 'viper-challenged', 'viper-slain', 'newt-freed', 'manifest-read', 'captain-slain', 'lantern', 'letter-left', 'order-read', 'hall-key', 'crab-freed', 'old-roads', 'way-crossroads', 'way-millbrook', 'way-downs', 'way-weir', 'way-fort', 'way-square', 'way-wickmere', 'way-holds',
   'brother-freed', 'warden-bribed', 'crate-delivered', 'ring-returned', 'ladder-down', 'drove-gate-open', 'drover-cache',
   'burn-order-seen', 'kid-found', 'lane-open', 'boar-challenged', 'dead-1', 'dead-2', 'dead-3', 'ossuary-key', 'hyena-challenged'];
@@ -71,7 +71,7 @@ export type Effect = { give?: Item; take?: Item; set?: Flag | readonly Flag[]; l
   travel?: WaystoneId; shop?: ShopId; rest?: true;
   // church: go back to the priest, for the next orders.
   church?: true };
-export type ShopId = 'stall' | 'reeve' | 'fishmonger' | 'merchant' | 'fence' | 'apothecary' | 'night-market' | 'smith' | 'herbalist' | 'magpie';
+export type ShopId = 'stall' | 'reeve' | 'fishmonger' | 'merchant' | 'fence' | 'apothecary' | 'night-market' | 'smith' | 'herbalist' | 'magpie' | 'smuggler';
 
 export function createWorld(): World {
   return { flags: [], carried: [], found: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, wounds: {}, drained: {}, deaths: 0, pantry: NO_PANTRY };

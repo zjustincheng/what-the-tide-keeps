@@ -29,5 +29,8 @@ export const BESTIARY: Record<Encounter, string> = {
   spider: 'Shows almost no mana, and is the size of a cart. Its silk can\'t be dodged. On the climb, a small signature can hide something large.',
   duellist: 'A kestrel of the house, wearing a charm that shows almost no mana. Its display never moves, even as it casts Talon hex: real mana drops when a spell is cast. That is how you know a lie.',
   cuckoo: 'Raised as a son of the house, and thrown out when they learned what he was. He slips into your party wearing a friend\'s shape; orders to that friend are quietly betrayed. Find the one whose mana never moves, and strike him. Strike the wrong one, and you hurt a friend.',
+  warder: 'A snapping turtle the church pays to keep its pens. His shell turns a blow; the bear\'s maul breaks it. His snap goes through a guard.',
+  cricket: 'Pale and long-legged, from the dark under the house. It leaps.',
+  flight: 'Couriers who froze on the peak in harness, and still fly. They are dead, so poison does nothing; they fly, so the vulture takes them out of the air. Their whiteout can\'t be guarded.',
   inquisitor: 'A royal investigator, certain of your guilt. His Verdict cannot be dodged or barred. You cannot win this yet. Run.',
 };

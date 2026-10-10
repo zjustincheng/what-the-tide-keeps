@@ -81,11 +81,13 @@ function write(name,{W,H,floor,furniture},points){
   for(const [x,y] of [[6,3],[8,7],[7,22],[11,19],[21,16],[37,26],[42,14]]) put(furniture,x,y,WILLOW);
   // East out to Wickmere.
   fill(furniture,47,29,47,30,0);fill(floor,47,29,47,30,WALK);
+  // South from the mudbank, a smugglers' walk down to the creek.
+  walk(35,28,36,35);
   write('causeway',m,[
     ['upriver',...at(3,3)],['from-weir',...at(4,4)],['east',760,488],['from-wickmere',...at(45,29)],
     ['fisher',...at(21,17)],['bones',...at(23,18)],['camp-causeway',...at(9,20)],['forage-1',...at(7,23)],['forage-2',...at(37,25)],
     ['mosquito-1',...at(15,18)],['mosquito-2',...at(24,21)],['mosquito-3',...at(30,27)],['scorpion-1',...at(35,26)],['scorpion-2',...at(40,29)],
-    ['brood',...at(39,11)],['nest',...at(41,12)],['causeway-sign',...at(5,11)],['causeway-spot',...at(13,12)],
+    ['brood',...at(39,11)],['nest',...at(41,12)],['causeway-sign',...at(5,11)],['causeway-spot',...at(13,12)],['creek',584,568],['from-creek',...at(35,33)],
   ]);
 }
 
@@ -154,9 +156,11 @@ function write(name,{W,H,floor,furniture},points){
   fill(furniture,30,20,38,20,HWALL);fill(furniture,30,18,38,19,ROOF);put(furniture,34,20,0);put(floor,34,20,DOOR);
   fill(furniture,30,21,38,28,WATER);walk(33,21,35,24);walk(30,24,35,24);
   for(const [x,y] of [[8,4],[6,20],[10,26],[16,22],[24,26],[36,10],[37,4],[9,12]]) put(furniture,x,y,WILLOW);
+  // East along the bank to the church's pens.
+  fill(furniture,39,15,39,16,0);
   for(const [x,y] of [[7,8],[14,18],[20,24],[27,18],[38,14]]) put(furniture,x,y,REEDS);
   write('far-bank',m,[
-    ['ferry',...at(2,14)],['from-wickmere',...at(4,15)],
+    ['ferry',...at(2,14)],['from-wickmere',...at(4,15)],['pens',632,248],['from-pens',...at(37,15)],
     ['store-gate',...at(20,15)],['apprentice',...at(20,7)],['manifest',...at(23,9)],['vial',...at(16,9)],
     ['apothecary-door',...at(34,21)],['from-apothecary',...at(34,22)],
     ['mosquito-1',...at(9,18)],['scorpion-1',...at(26,22)],['mosquito-2',...at(34,8)],['forage-1',...at(8,24)],
@@ -173,5 +177,44 @@ function write(name,{W,H,floor,furniture},points){
   put(furniture,11,15,0);put(floor,11,15,DOOR);put(furniture,12,15,0);put(floor,12,15,DOOR);
   write('apothecary',m,[
     ['out',...at(11,15)],['spawn',...at(11,13)],['viper',...at(11,6)],['den',...at(11,6)],['ledger',...at(8,3)],['cure',...at(15,3)],
+  ]);
+}
+
+// The pens: the church's holding pens on stilts over the tidal flats, where the caught are kept until a boat comes.
+{
+  const m=grid(32,24,MUD);const {floor,furniture,put,fill,frame,walk}=m;
+  fill(furniture,1,1,30,22,WATER);frame(BORDER);
+  fill(furniture,0,11,0,12,0);fill(floor,0,11,0,12,WALK);walk(1,11,6,12);
+  // The pen deck, with the gatehouse.
+  walk(7,4,26,19,DECK);
+  fill(furniture,9,5,13,8,HWALL);fill(furniture,9,5,13,6,ROOF);put(furniture,11,8,0);put(floor,11,8,DOOR);
+  // Rows of cages.
+  for(const x of [16,19,22,25]) {fill(furniture,x,5,x+1,6,GRATE);fill(furniture,x,15,x+1,16,GRATE);}
+  for(const [x,y] of [[8,17],[14,18],[24,11]]) put(furniture,x,y,LANTERN);
+  // The jetty out to where the boat ties up.
+  walk(26,10,30,11);put(furniture,30,12,BOAT);put(furniture,29,9,POST);
+  for(const [x,y] of [[14,10],[14,11]]) put(furniture,x,y,CRATES);
+  write('pens',m,[
+    ['west',8,192],['from-far-bank',...at(2,11)],['warder',...at(12,10)],['ledger',...at(11,9)],
+    ['cages',...at(20,8)],['newt-boy',...at(19,6)],['adder',...at(25,15)],['old-pens',...at(16,14)],['jetty',...at(29,10)],
+    ['mosquito-1',...at(21,12)],
+  ]);
+}
+
+// The smugglers' creek: where the sea's boats come up the marsh by night with fish nobody stamped.
+{
+  const m=grid(30,26,GRASS);const {floor,furniture,put,fill,frame,walk}=m;
+  frame(BORDER);
+  fill(furniture,19,1,28,24,WATER);fill(furniture,12,14,28,24,WATER);
+  fill(furniture,5,0,6,0,0);fill(floor,5,0,6,4,WALK);
+  fill(floor,1,1,18,13,MUD);fill(floor,1,14,11,24,MUD);
+  // The landing: a jetty into the creek, boats, crates under oilcloth, the seal's fire.
+  walk(12,8,22,9);put(furniture,23,8,BOAT);put(furniture,23,10,BOAT);put(furniture,20,10,POST);
+  for(const [x,y] of [[9,5],[10,5],[9,6],[14,4],[15,4]]) put(furniture,x,y,CRATES);
+  for(const [x,y] of [[3,10],[7,18],[2,22],[16,2],[10,23]]) put(furniture,x,y,WILLOW);
+  for(const [x,y] of [[11,12],[4,15],[9,20],[17,11]]) put(furniture,x,y,REEDS);
+  write('creek',m,[
+    ['north',88,8],['from-causeway',...at(5,2)],['seal',...at(12,6)],['camp-creek',...at(7,8)],['boats',...at(21,9)],['tally',...at(13,4)],
+    ['scorpion-1',...at(6,17)],['wisp-1',...at(14,12)],['creek-spot',...at(11,16)],['forage-1',...at(3,13)],
   ]);
 }

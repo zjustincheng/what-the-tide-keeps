@@ -48,7 +48,10 @@ export const hold: Dialogue = {
   wren: { speaker: 'A WREN', prompt: 'Speak to the wren', lines: [
     'My eldest was taken into the house to serve, when the lord was still the lord. He used to write every week.',
     'He stopped writing when the rookery shut. I tell myself that\'s why.',
-  ] },
+  ], variants: [{ if: { flag: 'son-freed' }, lines: [
+    'He came down the great stair this morning with nothing but his apron. He hasn\'t said much. He sleeps a lot.',
+    'Here. It was his grandmother\'s. Don\'t argue with me.',
+  ], then: { find: 'wren-feather' } }] },
   sparrow: { speaker: 'A SPARROW PORTER', prompt: 'Speak to the sparrow', lines: [
     'Ground tier. Porters, cooks, and anyone the house doesn\'t want to look at. You\'ll fit in.',
     'When the old lord\'s son was a chick, he used to come down here to play. Funny chick. Bigger than all of us by the end of the first spring.',
@@ -152,5 +155,70 @@ export const houseHall: Dialogue = {
   ] },
   eggshell: { speaker: 'IN A GLASS CASE', prompt: 'Look in the case', lines: [
     'Half an eggshell, under glass, labelled in the house\'s hand: NOT OURS.',
+  ] },
+};
+
+// The cellars under the lord's hall.
+export const cellars: Dialogue = {
+  'lord-cell': { speaker: 'THE LORD OF THE HOUSE', prompt: 'Speak to the falcon', portrait: 'falcon-lord', hiddenIf: [{ flag: 'lord-freed' }], lines: [
+    'A falcon in what is left of a lord\'s coat, chained to the wall. He has been fed. Someone has been careful to feed him.',
+    '"Is it you he sent, or are you here for me? Either way. Open the door."',
+  ], variants: [{ if: { flag: 'lord-left' }, lines: [
+    'He doesn\'t look up this time. "The sparrows will let me out. The sparrows always do what they\'re told."',
+  ] }], choices: [
+    { text: 'Did you paint over him?', lines: [
+      '"My wife did. I let her. He was the best of them, you know. The strongest chick we ever had. Then someone looked at the shell."',
+      '"What would you have done? He wasn\'t ours."',
+    ] },
+    { text: 'Open the door.', if: { all: [{ flag: 'cuckoo-slain' }, { not: { flag: 'lord-left' } }] }, ends: true, lines: [
+      'The lock is old and gives. He walks out on legs that don\'t work properly yet, and he doesn\'t thank you.',
+      'At the stair he stops. "The house will open the rookery. The house will say it was always going to." He gives you his signet, as if paying a porter.',
+      'Found: the house signet.',
+    ], then: { set: 'lord-freed', find: 'house-signet' } },
+    { text: 'Leave him.', if: { all: [{ flag: 'cuckoo-slain' }, { not: { flag: 'lord-left' } }] }, ends: true, lines: [
+      'You leave the door shut. Behind you, he doesn\'t call out. He is too proud, or he knows it wouldn\'t help.',
+    ], then: { set: 'lord-left' } },
+    { text: 'Not until the house is settled.', if: { not: { flag: 'cuckoo-slain' } }, lines: [
+      '"Then settle it. You know where he is. He sits in my chair."',
+    ] },
+  ] },
+  'servant-cell': { speaker: 'A YOUNG WREN', prompt: 'Speak to the wren', hiddenIf: [{ flag: 'son-freed' }], lines: [
+    'A wren, very young, in a servant\'s apron. "He put me down here because I saw him take the lord\'s face off. He said he was sorry. He brought me bread."',
+    '"Is my mother still on the market tier? I used to write to her every week."',
+  ], choices: [
+    { text: 'Go home.', ends: true, lines: [
+      'The cell door isn\'t even locked: it was never the lock that kept him. He goes up the passage at a run.',
+    ], then: { set: 'son-freed' } },
+  ] },
+  wine: { speaker: 'THE WINE CELLAR', prompt: 'Look at the racks', lines: [
+    'The house\'s wine, racked by year. One rack is labelled FOR THE LONG TABLE, and it is empty.',
+  ] },
+  store: { speaker: 'THE STORE', prompt: 'Look in the store', lines: [
+    'Sacks of grain and barrels of fish, church-stamped, enough for a year. The house has been eating while the rookery was shut. Nobody on the ground tier has.',
+  ] },
+};
+
+// The old eyrie on the peak.
+export const summit: Dialogue = {
+  hermit: { speaker: 'AN OLD EAGLE', prompt: 'Speak to the eagle', lines: [
+    'First courier of the holds. Was. Fifty years ago. They gave me the eyrie when my eyes went, and I stayed when everybody else went down.',
+    'Those are my flight, in the snow. They went out in a storm with a church letter that couldn\'t wait. It waited.',
+  ], variants: [{ if: { flag: 'flight-slain' }, lines: [
+    'They\'re down. Good. I couldn\'t do it, and they weren\'t going to stop flying on their own.',
+  ], then: { find: 'courier-bell' } }], choices: [
+    { text: 'What letter couldn\'t wait?', lines: [
+      'Supplies, for the island. Back then the church sent a boat a month out past the coast, to a white house on a rock. Food, and medicine, and cages.',
+      'Then one winter the orders stopped. Then the copies of the orders were taken out of the archive. I remember because I was the one who flew them.',
+    ] },
+    { text: 'The couriers in the snow.', if: { not: { flag: 'flight-slain' } }, lines: [
+      'They still fly. The dead do that up here. Anything that comes up the bridge, they take for a hawk.',
+      'If you put them down, the bell over the door is yours. It\'s the one they used to ring when a flight came in.',
+    ] },
+  ] },
+  oldest: { speaker: 'THE OLDEST LETTERS', prompt: 'Read the oldest letters', lines: [
+    'Letters older than the Covenant, in a dozen hands. Most are about weather and debts. One is from a herbivore lord to a carnivore lord, and says only: I am so hungry. Are you?',
+  ] },
+  perches: { speaker: 'THE PERCHES', prompt: 'Look at the perches', lines: [
+    'Perches for a flight of twelve, worn smooth. Seven names are cut in the wood. Five are scratched out, carefully, by someone who knew them.',
   ] },
 };

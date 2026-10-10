@@ -14,7 +14,7 @@ export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze' |
 export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm' | 'warden' | 'leech' | 'hound' | 'pack' | 'wisp' | 'drowned'
   | 'raider' | 'ghoul' | 'vulture' | 'pair' | 'hyena' | 'inquisitor' | 'captain' | 'harrier'
   | 'mosquito' | 'scorpion' | 'brood' | 'apprentice' | 'viper'
-  | 'hornet' | 'spider' | 'duellist' | 'cuckoo';
+  | 'hornet' | 'spider' | 'duellist' | 'cuckoo' | 'warder' | 'cricket' | 'flight';
 export const SPELL = 'Salt lance';
 // What an enemy is, which decides whose blows it fears. Spells ignore all of it: magic is the equaliser.
 export type Trait = 'armoured' | 'flying' | 'caster' | 'insect' | 'dead';
@@ -23,6 +23,7 @@ export const TRAITS: Record<Encounter, readonly Trait[]> = {
   leech: [], hound: [], pack: [], wisp: ['flying', 'dead'], drowned: ['dead'], raider: [], ghoul: ['dead'], vulture: ['flying'], pair: ['caster'],
   hyena: [], inquisitor: ['caster'], captain: ['armoured'], harrier: ['flying'], mosquito: ['insect', 'flying'], scorpion: ['insect', 'armoured'],
   brood: ['insect', 'flying'], apprentice: ['caster'], viper: ['caster'], hornet: ['insect', 'flying'], spider: ['insect'], duellist: ['caster', 'flying'], cuckoo: ['caster', 'flying'],
+  warder: ['armoured'], cricket: ['insect'], flight: ['dead', 'flying'],
 };
 // How each hero's own blow fares against each kind: the bear's maul breaks armour and can't reach what flies;
 // the vulture's talons take things out of the air and skid off plate; the chameleon strikes casters as they gather.
@@ -198,6 +199,13 @@ export const ENEMIES = {
     opening: 'A kestrel in the house\'s colours steps out from the gate. His mana reads almost nothing. He draws as if that didn\'t matter.' },
   cuckoo: { name: 'The lord of the house', short: 'cuckoo', health: 126, mana: 18, veiled: false,
     opening: 'The lord of the house rises from his chair. Then he stops pretending, and the lord\'s face slides off him like water. A cuckoo. "He told me you opened a door, once."' },
+  // Off the main roads: the church's pen-warder, crickets in the house's cellars, and the couriers who froze on the peak.
+  warder: { name: 'The pen-warder', short: 'warder', health: 124, mana: 4, veiled: false,
+    opening: 'A snapping turtle in a church tabard heaves up off the gatehouse step, the pens\' keys on a chain round his neck. "Fit for work, or not. Which are you?"' },
+  cricket: { name: 'Cave cricket', short: 'cricket', health: 48, mana: 2, veiled: false,
+    opening: 'Something pale and long-legged unfolds from the dark of the cellar, and chirrs.' },
+  flight: { name: 'The lost flight', short: 'lost flight', health: 96, mana: 10, veiled: false,
+    opening: 'The couriers who froze on the peak lift out of the snow, still in their harness, and come at you in formation.' },
   inquisitor: { name: 'The inquisitor', short: 'inquisitor', health: 600, mana: 60, veiled: false,
     opening: 'The largest signature you have ever felt. A ram in grey, the royal seal at his collar. "Convict. You are a long way from your church." You cannot win this. Run.' },
 } as const satisfies Record<Encounter, unknown>;
@@ -217,6 +225,8 @@ export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; healt
   captain: [{ name: 'Lieutenant', health: 34, weapon: 'crossbow', damage: 6 }],
   // The queen's brood hatches round her.
   brood: [{ name: 'Wriggler', health: 12, weapon: 'needle', damage: 3 }, { name: 'Wriggler', health: 12, weapon: 'needle', damage: 3 }],
+  // The lost flight comes in formation.
+  flight: [{ name: 'Courier', health: 20, weapon: 'frozen talons', damage: 4 }, { name: 'Courier', health: 20, weapon: 'frozen talons', damage: 4 }],
   // The hyena's dead get up again, unless she has eaten them.
   hyena: [{ name: 'Ghoul', health: 24, weapon: 'claws', damage: 5 }, { name: 'Ghoul', health: 24, weapon: 'claws', damage: 5 }],
 };
@@ -556,6 +566,15 @@ function plainIntent(battle: Battle): Move & { tell: string } {
       return { name: 'Talon hex', type: 'spell', spell: 'Talon hex', tell: 'He traces the house\'s sign in the air: Talon hex, a spell.', damage: 14, window: { perfect: 45, graze: 120 } };
     return { name: 'Borrowed blade', type: 'physical', tell: 'He fights with the lord\'s sword, the way the lord was taught.', damage: 12, piercing: 3, window: { perfect: 50, graze: 130 } };
   }
+  if (battle.encounter === 'warder') return battle.round % 3 === 0
+    ? { name: 'Snap', type: 'physical', tell: 'He draws his head back into the shell, then the jaws come out like a trap. Most of it will go through a guard.', damage: 15, piercing: 6, window: { perfect: 40, graze: 110 } }
+    : { name: 'Shell bash', type: 'physical', tell: 'He throws his shell at someone, twice.', damage: 6, hits: 2 };
+  if (battle.encounter === 'cricket') return battle.round % 2 === 0
+    ? { name: 'Leap', type: 'physical', tell: 'Its long legs fold. It will land on someone, fast.', damage: 11, window: { perfect: 45, graze: 120 } }
+    : { name: 'Chirr', type: 'physical', tell: 'It chirrs and lashes out, twice.', damage: 4, hits: 2 };
+  if (battle.encounter === 'flight') return battle.round % 3 === 0
+    ? { name: 'Whiteout', type: 'physical', tell: 'They climb into the wind and come down in a blizzard of their own feathers. Three blows, and no guard will stop them.', damage: 5, hits: 3, unblockable: true, window: { perfect: 55, graze: 140 } }
+    : { name: 'Dive', type: 'physical', tell: 'The lead courier folds and drops, the way it was taught.', damage: 10, window: { perfect: 50, graze: 130 } };
   if (battle.encounter === 'harrier') return battle.round % 2 === 0
     ? { name: 'Stoop', type: 'physical', tell: 'It climbs into the wind and folds. A dive no guard will stop is coming.', damage: 11, unblockable: true, window: { perfect: 45, graze: 120 } }
     : { name: 'Rake', type: 'physical', tell: 'It rakes past, low, twice.', damage: 4, hits: 2 };

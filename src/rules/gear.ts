@@ -2,7 +2,7 @@
 import type { MemberId } from './battle';
 
 export type KeepsakeId = 'cracked-mirror' | 'crow-feather' | 'covenant-token' | 'yoke-peg' | 'wool-charm' | 'boar-tusk' | 'iron-collar' | 'famine-spoon' | 'weir-hook' | 'frost-ring' | 'tide-shell'
-  | 'garrison-buckler' | 'saints-medal' | 'night-cloak' | 'smuggled-blade' | 'raven-quill' | 'viper-fang' | 'hospice-bell' | 'liars-charm';
+  | 'garrison-buckler' | 'saints-medal' | 'night-cloak' | 'smuggled-blade' | 'raven-quill' | 'viper-fang' | 'hospice-bell' | 'liars-charm' | 'adders-coil' | 'house-signet' | 'courier-bell' | 'wren-feather';
 // What a keepsake changes about its holder in battle.
 // agility: in hundredths of a hero's dodge windows; +15 makes every window 15% wider.
 export type Mods = Readonly<{ health: number; damage: number; reveal: number; suppressCost: number; shown: number; agility: number }>;
@@ -42,6 +42,10 @@ export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; ef
   'hospice-bell': { name: 'Hospice handbell', effect: '6 more health.', drawback: 'Shows 2 more mana: the sick always know where you are.', mods: { health: 6, shown: 2 } },
   // The holds: the duellist's charm, which shows almost nothing.
   'liars-charm': { name: 'Liar\'s charm', effect: 'Shows 4 less mana: enemies look elsewhere.', drawback: 'Hits 1 softer.', mods: { shown: -4, damage: -1 } },
+  'adders-coil': { name: 'Adder\'s coil', holder: 'frog', effect: '5 more health, and dodges come easier (+10% timing).', drawback: 'Shows 1 more mana.', mods: { health: 5, agility: 10, shown: 1 } },
+  'house-signet': { name: 'The house signet', holder: 'chameleon', effect: 'Revealing from hiding hits 2 harder.', drawback: '2 less health: it is heavy, and people stare.', mods: { reveal: 2, health: -2 } },
+  'courier-bell': { name: 'Courier\'s bell', effect: 'Dodges come much easier (+15% timing).', drawback: 'Shows 2 more mana: it rings.', mods: { agility: 15, shown: 2 } },
+  'wren-feather': { name: 'Wren\'s feather', holder: 'vulture', effect: 'Hits 2 harder.', drawback: 'Shows 1 more mana.', mods: { damage: 2, shown: 1 } },
   // Sold rather than found.
   'garrison-buckler': { name: 'Garrison buckler',
     effect: '7 more health.', drawback: 'Attacks hit 1 softer, and dodging is harder (-10% timing).', mods: { health: 7, damage: -1, agility: -10 } },
