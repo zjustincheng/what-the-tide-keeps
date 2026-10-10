@@ -97,8 +97,7 @@ test('downed companions are skipped and only a full party wipe returns to the co
   // Only the whole party falling ends it.
   await attackUntilWiped(page);
   await page.getByRole('button', { name: 'Wake at the cot' }).click();
-  await page.getByRole('radio', { name: /The kraken/ }).check();
-  await page.getByRole('button', { name: 'Let it go' }).click();
+  await page.getByRole('button', { name: 'Stand up' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   const position = await page.evaluate(async () => {
     const path='/src/main.ts'; const { game } = await import(/* @vite-ignore */ path);

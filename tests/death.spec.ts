@@ -19,7 +19,7 @@ async function enterLocust(page: Page) {
 }
 test.beforeEach(async ({ page }) => { await page.goto('/?practice'); await ready(page); });
 
-test('a wipe takes a chosen memory, grants a Hollow perk, and survives reload', async ({ page }) => {
+test('a wipe takes a memory the tide chooses, grants its Hollow perk, and survives reload', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await expect(page.locator('#memory-status')).toContainText('8 of 10 memories remain');
@@ -27,12 +27,12 @@ test('a wipe takes a chosen memory, grants a Hollow perk, and survives reload', 
   await lose(page);
   const wake = page.getByRole('dialog', { name: 'The tide takes something.' });
   await expect(wake).toBeVisible();
-  await expect(wake.getByRole('radio')).toHaveCount(8);
-  await expect(wake).toContainText('Already gone · His home · His name');
-  await expect(page.getByRole('button', { name: 'Let it go' })).toBeDisabled();
-  await page.getByRole('radio', { name: /His training/ }).check();
+  // The first death's roll takes the vulture: no choice, and nothing was written down.
+  await expect(wake.getByRole('region', { name: 'What the tide took' })).toContainText('The vulture');
   await expect(wake).toContainText('Hollow · +2 mana');
-  await page.getByRole('button', { name: 'Let it go' }).click();
+  await expect(wake).toContainText('Nothing was written down');
+  await expect(wake).toContainText('Already gone · His home · His name');
+  await page.getByRole('button', { name: 'Stand up' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.locator('#memory-status')).toContainText('7 of 10 memories remain');
   await page.reload(); await ready(page);
@@ -49,9 +49,7 @@ test('reloading before choosing does not escape the cost', async ({ page }) => {
   await page.reload(); await ready(page);
   await expect(page.getByRole('dialog', { name: 'The tide takes something.' })).toBeVisible();
   await expect(page.locator('#settings')).toHaveAttribute('inert', '');
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Space');
-  await page.keyboard.press('Tab');
+  await expect(page.getByRole('region', { name: 'What the tide took' })).toContainText('The vulture');
   await page.keyboard.press('Enter');
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.locator('#memory-status')).toContainText('7 of 10 memories remain');
@@ -61,11 +59,10 @@ test('the memory choice fits a phone screen', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await enterLocust(page);
   await lose(page);
-  await page.getByRole('radio', { name: /The feast/ }).check();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await expect(page.getByRole('button', { name: 'Let it go' })).toBeInViewport();
+  await expect(page.getByRole('button', { name: 'Stand up' })).toBeInViewport();
   await page.screenshot({ path: 'test-results/resurrection-mobile.png', fullPage: true });
-  await page.getByRole('button', { name: 'Let it go' }).click();
+  await page.getByRole('button', { name: 'Stand up' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 

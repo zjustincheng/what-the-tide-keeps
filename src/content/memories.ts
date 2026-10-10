@@ -2,14 +2,14 @@ import type { MemoryId } from '../rules/memory';
 
 // Narrative text for the hero's memories and what forgetting each one costs.
 export const memories: Record<MemoryId, { name: string; cost: string }> = {
-  feast: { name: 'The feast', cost: 'He stops being sure the party was framed.' },
+  feast: { name: 'The feast', cost: 'He stops being sure the party was framed, and can no longer say so to anyone.' },
   trial: { name: 'The trial', cost: 'He no longer knows why he is branded and cannot argue his innocence.' },
-  kraken: { name: 'The kraken', cost: 'He loses his technique for the shared meter.' },
-  bear: { name: 'The bear', cost: "The bear's reminders stop working on him." },
-  vulture: { name: 'The vulture', cost: "The vulture's reminders stop working on him." },
-  frog: { name: 'The poison dart frog', cost: "The frog's reminders stop working on him." },
-  octopus: { name: 'The mimic octopus', cost: "The octopus's reminders stop working on him." },
-  training: { name: 'His training', cost: 'He loses the bonus damage when revealing hidden mana.' },
+  kraken: { name: 'The kraken', cost: 'Everyone\'s dodging gets tighter (-10% timing): he forgets what the party learned against the kraken.' },
+  bear: { name: 'The bear', cost: "The bear can't remind him of anything he loses." },
+  vulture: { name: 'The vulture', cost: "The vulture can't remind him of anything he loses." },
+  frog: { name: 'The poison dart frog', cost: "The frog can't remind him of anything he loses." },
+  octopus: { name: 'The mimic octopus', cost: "The octopus can't remind him of anything he loses." },
+  training: { name: 'His training', cost: 'His attacks out of hiding hit 2 softer.' },
   home: { name: 'His home', cost: 'A safe house and the people in it treat him as a stranger.' },
   name: { name: 'His name', cost: 'Everyone calls him "hero" and the game stops showing his name.' },
 };

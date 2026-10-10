@@ -76,8 +76,7 @@ test('a wipe drops the bell back in the clearing', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Crop locust' })).toBeVisible();
   await page.keyboard.up('d');
   await lose(page);
-  await page.getByRole('radio', { name: /The kraken/ }).check();
-  await page.getByRole('button', { name: 'Let it go' }).click();
+  await page.getByRole('button', { name: 'Stand up' }).click();
   await go(page, 'church', 256, 330, 'Step outside', 'farmland');
   await place(page, 'farmland', 280, 150);
   await expect(page.locator('#prompt')).toContainText('Pick up the bell');

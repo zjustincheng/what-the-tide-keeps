@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { createBattle, drainedAfter, enemyMana, ENEMIES, LIEUTENANTS, MEMBERS, woundsAfter } from '../rules/battle';
 import type { BattleOptions } from '../rules/battle';
 import type { Encounter } from '../rules/battle';
-import { anchor, forget, held, hollow, MEMORY_IDS, wipe } from '../rules/memory';
+import { anchor, forget, held, hollow, MEMORY_IDS, remind, tideTakes, wipe } from '../rules/memory';
+import type { Companion } from '../rules/memory';
 import { apply, conversation, drop, fill, fleeing, holds, lineup, replies, rest, roster } from '../rules/world';
 import type { Condition, Context, Effect, ShopId } from '../rules/world';
 import type { Choice, Conversation } from '../content/dialogue';
@@ -854,10 +855,15 @@ export class AreaScene extends Phaser.Scene {
     this.physics.pause();
     element('prompt').textContent = '';
     this.setExplorationEnabled(false);
-    this.overlay = new AnchorView(loadMemory(), id => {
+    // Companions who joined can remind him of what he lost; the frog won't until she trusts him again.
+    const world = loadWorld();
+    const friends = roster(world).flatMap(member => member !== 'chameleon' && (member !== 'frog' || world.flags.includes('viper-slain')) ? [{ id: member as Companion, name: MEMBERS[member].name }] : []);
+    this.overlay = new AnchorView(loadMemory(), friends, (id, reminder) => {
       this.overlay?.destroy();
       this.overlay = undefined;
+      if(reminder) { saved = saveMemory(remind(loadMemory(), reminder.by, reminder.id)); music.effect('find'); }
       if(id) { saved = saveMemory(anchor(loadMemory(), id)); music.effect('select'); }
+      this.renderMemory();
       this.setExplorationEnabled(true);
       this.physics.resume();
       then();
@@ -870,10 +876,13 @@ export class AreaScene extends Phaser.Scene {
     element('prompt').textContent = '';
     this.setExplorationEnabled(false);
     music.play('wake');
-    this.overlay = new ResurrectionView(loadMemory(), id => {
+    // The tide chooses: the same memory however often the game is reloaded, until he stands.
+    const taken = tideTakes(loadMemory(), loadWorld().deaths);
+    if (!taken) { saved = saveMemory({ ...loadMemory(), pending: false }); this.resumeExploration(); return; }
+    this.overlay = new ResurrectionView(loadMemory(), taken, () => {
       this.overlay?.destroy();
       this.overlay = undefined;
-      saved = saveMemory(forget(loadMemory(), id));
+      saved = saveMemory(forget(loadMemory(), taken));
       this.renderMemory();
       this.cameras.main.fadeIn(900, 16, 27, 24);
       music.play(this.area.music);

@@ -135,7 +135,7 @@ test('the vulture duel, her note, and writing a memory down', async ({ page }) =
   await talk(page, 'Rest');
   await expect(page.getByRole('heading', { name: 'Write something down.' })).toBeVisible();
   await page.getByRole('radio', { name: /The feast/ }).check();
-  await page.getByRole('button', { name: 'Write it down' }).click();
+  await page.getByRole('button', { name: 'Done' }).click();
   expect(JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.memory.v1')))!).anchors).toEqual(['feast']);
 });
 
@@ -227,4 +227,29 @@ test('the rookery road: the raven\'s letter goes under the holds\' gate, and her
   world = JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.world.v1')))!);
   expect(world.found).toContain('raven-quill');
   expect(world.carried).toEqual([]);
+});
+
+test('by the fire, a companion reminds the hero of what he lost, and writing it down keeps it', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => localStorage.setItem('tide-keeps.memory.v1', JSON.stringify({ lost: ['home', 'name', 'kraken', 'vulture'], pending: false })));
+  await start(page, { ...BEAR, flags: ['bear-free', 'boar-defeated', 'vulture-free', 'anchors-known'], coins: 10 }, 'fort', 'from-pass');
+  await go(page, 'fort', 456, 296, 'Rest by the garrison fire');
+  await talk(page, 'Rest');
+  await expect(page.getByRole('heading', { name: 'Write something down.' })).toBeVisible();
+  // The bear can remind him of the kraken; the vulture can't, because he has forgotten her.
+  await expect(page.getByRole('radio', { name: /Bear: The kraken/ })).toBeVisible();
+  await expect(page.getByRole('radio', { name: /Vulture:/ })).toHaveCount(0);
+  await page.getByRole('radio', { name: /Bear: The kraken/ }).check();
+  await page.getByRole('button', { name: 'Done' }).click();
+  let memory = JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.memory.v1')))!);
+  expect(memory.reminded).toEqual(['kraken']);
+  // Six held, and the kraken back for now.
+  await expect(page.locator('#memory-status')).toContainText('7 of 10 memories remain');
+  // At the next fire, writing it down keeps it past the next death.
+  await go(page, 'fort', 456, 296, 'Rest by the garrison fire');
+  await talk(page, 'Rest');
+  await page.getByRole('radio', { name: /The kraken · reminded/ }).check();
+  await page.getByRole('button', { name: 'Done' }).click();
+  memory = JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.memory.v1')))!);
+  expect(memory.anchors).toEqual(['kraken']);
 });

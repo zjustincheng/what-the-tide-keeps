@@ -64,8 +64,7 @@ test('a wipe in the fields wakes the hero in the church', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Crop locust' })).toBeVisible();
   await page.keyboard.up('d');
   await lose(page);
-  await page.getByRole('radio', { name: /The bear/ }).check();
-  await page.getByRole('button', { name: 'Let it go' }).click();
+  await page.getByRole('button', { name: 'Stand up' }).click();
   await expect.poll(() => area(page, 'church')).toEqual({ x: 88, y: 124 });
   await expect(page.locator('#location-region')).toHaveText('THE CAPITAL');
 });

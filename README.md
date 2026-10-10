@@ -341,9 +341,14 @@ From a gap above the old border fort's west wall, the couriers' road climbs towa
 
 People you already know have darker things to say if you ask: the priest (once you're back from the boar), the reeve, the miller, the innkeeper, the sergeant, the quartermaster, and the lynx in the bread line.
 
-### Anchors
+### Writing down, and reminders
 
-The vulture's note teaches **anchors**. Once she has joined, every rest at a fire, bed, or cot offers to **write a memory down**. A written memory can't be chosen when the next wipe takes something; after that death it has to be written again. There is one slot. Anchors are saved with the memories in `tide-keeps.memory.v1`.
+The vulture's note teaches the hero to **write things down**. Once she has joined, every rest at a fire, bed, or cot opens **By the fire**:
+
+- **Write one memory down.** The tide can't take it at the next death. After that death it has to be written again. There is one slot, so the question at every fire is which loss you can least afford: the kraken's dodging before a hard fight, a companion before a long trip, the feast before the end.
+- **Ask a friend to remind you.** A companion who has joined, and whom the hero still remembers, can remind him of one thing he has lost (not his home or name). It is his again, perk and all, **until his next death**, when the tide takes it back as well as whatever it chooses. **Write a reminded memory down** and it stays his for good. Forget a companion and they can't remind you of anything; the frog won't remind you of anything until the viper is dead and she trusts you again.
+
+Anchors and reminders are saved with the memories in `tide-keeps.memory.v1`.
 
 ## Orders
 
@@ -441,14 +446,22 @@ Some people carry the world's history rather than the plot. Each has several thi
 
 ## Death and memory
 
-The hero begins with eight of his ten memories; his home and his name were lost before the game starts. A party wipe wakes him at the cot, where he must choose one held memory to forget before he can move. Each memory shows what forgetting it costs and the Hollow perk that replaces it:
+The hero begins with eight of his ten memories; his home and his name were lost before the game starts. **Each time the party wipes, the tide takes one memory, and you don't choose which.** It takes one of the memories he still holds that isn't written down, by a roll fixed to that death (reloading gives the same answer). The wake-up screen shows what was taken, what losing it costs, and the Hollow perk that fills its place:
 
 - **+2 mana** for the chameleon. A larger pool also shows more mana, so enemies target him more often.
-- **+1 damage** on every chameleon attack.
+- **+2 damage** on every chameleon attack.
 
-Forgetting **His training** also reduces his reveal bonus from +4 to the +2 every companion gets. Forgetting **The feast** changes what the priest says and what the tidal basin evokes, and forgetting **The trial** changes the resurrection ledger. Because his name is already lost, the game never shows it. The other memory costs are shown but take effect in later build steps. When no memories remain, a wipe takes nothing. Only the hero loses memories for now; companion memories are still an open design question. Perks from the two memories lost before the game are already part of his starting stats.
+What each memory is worth:
 
-Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is saved before the choice is shown, so reloading the page brings the choice back instead of skipping it. The footer shows how many memories remain.
+| Memory | Losing it |
+| --- | --- |
+| The feast | He stops being sure the party was framed: the priest, the basin, and some replies change or vanish |
+| The trial | He no longer knows why he is branded and can't argue his innocence |
+| The kraken | **Everyone's dodge timing gets 10% tighter**: the party's technique from the kraken fight is gone |
+| The bear, the vulture, the frog, the octopus | **That companion can't remind him of anything** (see below) |
+| His training | His attacks out of hiding hit 2 softer |
+
+When no memories remain, a wipe takes nothing. Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is saved before the screen is shown, so reloading brings it back instead of skipping it. The footer shows how many memories remain (and the laboratory, once found).
 
 ## Project layout
 

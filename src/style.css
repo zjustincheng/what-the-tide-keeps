@@ -851,3 +851,9 @@ button.die[aria-pressed="true"] { border-color: #bc755e; color: #d8a890; }
 .unmask-button { width: 100%; margin: 6px 0 2px; padding: 5px; background: #3a2424; border: 1px solid #8a4a3a; color: #e8d8c8; font: 12px Georgia, serif; cursor: pointer; }
 .unmask-button small { display: block; font: 9px ui-monospace, monospace; color: #c8a898; }
 .unmask-button:disabled { opacity: 0.4; cursor: default; }
+
+/* What the tide took, after a death. */
+.memory-taken { max-width: 420px; margin: 8px auto 12px; padding: 12px 16px; border: 1px solid #8a4a3a; background: #2a1e1c; text-align: center; }
+.memory-taken h3 { margin: 4px 0 6px; color: #e8d8c8; font: 22px Georgia, serif; }
+.memory-taken p { margin: 0 0 4px; color: #d7d9c8; font: 14px/1.5 Georgia, serif; }
+.memory-taken .perk { color: #c8b878; font-size: 12px; }

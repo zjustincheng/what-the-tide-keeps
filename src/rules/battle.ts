@@ -346,7 +346,9 @@ export const GATHER = 3;
 export const ENEMY_REGEN = 3;
 // How much more mana a caster shows for the enemy turn after a spell, enough to draw the enemy's eye.
 export const FLARE = 8;
-export const UNHOLLOWED: Hollow = { mana: 0, damage: 0, trained: true };
+export const UNHOLLOWED: Hollow = { mana: 0, damage: 0, trained: true, kraken: true };
+// How much tighter every hero's dodging is once the hero has forgotten the kraken, and the technique the party learned against it.
+export const NO_KRAKEN = 10;
 // Enemy health for a party of one, two, or three, so a smaller party is not simply outmatched.
 export const PARTY_SCALE = [0.45, 0.65, 1] as const;
 
@@ -366,7 +368,8 @@ const TRIO: readonly MemberId[] = ['chameleon', 'bear', 'vulture'];
 export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], options: BattleOptions = {}): Battle {
   const { hollow = UNHOLLOWED, gear, books = STARTING_BOOKS, roster = TRIO, supplies = NO_SUPPLIES, wounds = {}, drained = {}, ambush = false, surprise = false, tempered = [], waves = 1 } = options;
   const member = (id: MemberId, base: number, mana: number): Member => {
-    const worn = gear ? mods(gear, id, tempered) : NO_MODS;
+    const kept = gear ? mods(gear, id, tempered) : NO_MODS;
+    const worn = hollow.kraken === false ? { ...kept, agility: kept.agility - NO_KRAKEN } : kept;
     const maxHealth = Math.max(1, base + worn.health);
     // Heroes enter hurt if they were hurt before; a hero who fell stays down.
     const health = Math.max(0, maxHealth - (wounds[id] ?? 0));

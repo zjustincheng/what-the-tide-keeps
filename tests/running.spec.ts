@@ -87,8 +87,7 @@ test("the priest's count goes up each time the party falls", async ({ page }) =>
   });
   await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
   await page.getByRole('button', { name: 'Wake at the cot' }).click();
-  await page.getByRole('radio').first().check();
-  await page.getByRole('button', { name: 'Let it go' }).click();
+  await page.getByRole('button', { name: 'Stand up' }).click();
   await place(page, 'church', 248, 148);
   await expect(page.locator('#prompt')).toContainText('Speak to the priest');
   await page.keyboard.press('e');
