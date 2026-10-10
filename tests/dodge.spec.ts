@@ -51,7 +51,9 @@ test('pressing as the ring closes dodges the blow', async ({ page }) => {
 test('pressing too soon or not at all takes the full blow', async ({ page }) => {
   await enterLocust(page);
   await attackAll(page);
-  await pressAt(page, -500);
+  // Press the moment the prompt appears: far too soon, however slow the machine.
+  await expect(page.getByRole('button', { name: /Dodge/ })).toBeVisible();
+  await page.evaluate(() => document.querySelector<HTMLElement>('.battle')!.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true })));
   await expect(page.locator('.dodge-call')).toHaveText('Too soon.');
   await expect(page.getByRole('log')).toContainText('The mandible strike (1 of 2) catches Bear.');
   await expect(page.locator('#battle-turn')).toHaveText('Round 2 · 3 actions remaining');

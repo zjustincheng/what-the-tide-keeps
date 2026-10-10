@@ -177,14 +177,17 @@ export class AreaScene extends Phaser.Scene {
     // Maps larger than the view scroll with the hero.
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels).startFollow(this.player, true, 0.15, 0.15);
     this.physics.add.collider(this.player, furniture);
-    for (const { point, texture, hiddenIf = [] } of this.area.npcs) {
+    for (const { point, texture, hiddenIf = [], peek } of this.area.npcs) {
       const at = this.point(point);
       const shadow = this.add.ellipse(at.x, at.y + 4, 15, 6, 0x142a23, 0.6);
       const npc = this.physics.add.staticSprite(at.x, at.y, texture);
+      // Someone hiding badly: smaller, and in shadow.
+      if (peek) npc.setScale(0.7).setTint(0x8a8e88);
       npc.setSize(10, 8).setOffset(5, 16);
       this.physics.add.collider(this.player, npc);
-      // People breathe, each at their own pace, and look at the hero as he passes.
-      this.breathe(npc);
+      // People breathe, each at their own pace, and look at the hero as he passes. A hider holds their breath.
+      if (!peek) this.breathe(npc);
+      shadow.setVisible(!peek);
       this.people.push(npc);
       // People who can leave, like a freed companion, come and go with story state.
       this.props.push({ sprite: npc, hiddenIf, shadow });

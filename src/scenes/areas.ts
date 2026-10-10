@@ -37,8 +37,8 @@ export type Area = {
   caught?: { to: string; spawn: string; lines: string[] };
   dialogue: Dialogue;
   // People on the map. One whose hiddenIf condition holds has left.
-  // lit: carries a lantern, which shows after dark.
-  npcs: { point: string; texture: string; hiddenIf?: Condition[]; lit?: true }[];
+  // lit: carries a lantern, which shows after dark. peek: tucked half out of sight, small and in shadow, like a child hiding badly.
+  npcs: { point: string; texture: string; hiddenIf?: Condition[]; lit?: true; peek?: true }[];
   // Enemies respawn on every visit unless hiddenIf holds; defeat applies once the fight is won.
   // An ambusher's signature flickers out as the hero comes near, and it strikes first.
   // waves: how many times it comes on before the fight is won.
@@ -173,6 +173,10 @@ export const TOWN: Area = {
   key: 'town', map: 'town', tileset: 'town', music: 'town', region: 'THE FARMLAND', place: 'Millbrook',
   dialogue: { ...town, ...townLore }, enemies: [], ground: 'stone', surfaces: { 3: 'grass', 4: 'dirt' },
   npcs: [...['reeve', 'innkeeper', 'shopkeeper', 'child', 'fishmonger', 'fox', 'scribe'].map(name => ({ point: name, texture: name })), { point: 'seeker', texture: 'kid' },
+    // Hide and seek: once the game is on, the hiders can be spotted, if you look. Found, they run home.
+    { point: 'hide-1', texture: 'child', peek: true, hiddenIf: [{ not: { flag: 'hide-started' } }, { flag: 'hide-1' }] },
+    { point: 'hide-2', texture: 'cub', peek: true, hiddenIf: [{ not: { flag: 'hide-started' } }, { flag: 'hide-2' }] },
+    { point: 'hide-3', texture: 'kid', peek: true, hiddenIf: [{ not: { flag: 'hide-started' } }, { flag: 'hide-3' }] },
     // The night market opens behind the tannery after dark.
     { point: 'night-trader', texture: 'marten', hiddenIf: [{ night: false }], lit: true }],
   props: [{ point: 'stocks', texture: 'stocks', solid: true, hiddenIf: [] }, { point: 'lectern', texture: 'lectern', solid: true, hiddenIf: [] }],

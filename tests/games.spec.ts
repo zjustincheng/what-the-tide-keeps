@@ -125,7 +125,7 @@ test('hide and seek in Millbrook: find all three, Pip too', async ({ page }) => 
   await start(page, { flags: ['bear-free'], coins: 0 }, 'town', 'spawn');
   await go(page, 'town', 280, 216, 'Speak to the kid');
   await talk(page, 'I.ll be it');
-  await go(page, 'town', 24, 40, 'Look behind the woodpile');
+  await go(page, 'town', 344, 56, 'Look behind the woodpile');
   await talk(page);
   await go(page, 'town', 488, 104, 'Look under the cart');
   await talk(page);

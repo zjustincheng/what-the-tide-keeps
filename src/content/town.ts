@@ -128,7 +128,7 @@ export const town: Dialogue = {
   ], choices: [
     { text: 'All right. I\'ll be it.', if: { not: { flag: 'hide-started' } }, ends: true, lines: ['"Count to a hundred! Don\'t look!" When you open your eyes, the square is empty.'], then: { set: 'hide-started' } },
   ] },
-  'hide-1': { speaker: 'BEHIND THE REEVE\'S HALL', prompt: 'Look behind the woodpile', hiddenIf: [{ not: { flag: 'hide-started' } }, { flag: 'hide-1' }], lines: [
+  'hide-1': { speaker: 'BY THE NORTH ROAD', prompt: 'Look behind the woodpile', hiddenIf: [{ not: { flag: 'hide-started' } }, { flag: 'hide-1' }], lines: [
     'A lamb, folded up very small behind the woodpile, with both hooves over her eyes. "If I can\'t see you, you can\'t see me."',
   ], then: { set: 'hide-1' } },
   'hide-2': { speaker: 'IN THE CARNIVORE QUARTER', prompt: 'Look under the cart', hiddenIf: [{ not: { flag: 'hide-started' } }, { flag: 'hide-2' }], lines: [
