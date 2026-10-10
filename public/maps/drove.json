@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 18,
+  "nextobjectid": 20,
   "layers": [
     {
       "id": 1,
@@ -630,16 +630,6 @@
         3,
         3,
         3,
-        1,
-        34,
-        1,
-        1,
-        35,
-        34,
-        2,
-        1,
-        1,
-        1,
         3,
         3,
         3,
@@ -686,16 +676,26 @@
         3,
         3,
         3,
-        1,
-        1,
-        1,
-        35,
-        35,
-        34,
-        1,
-        1,
-        35,
-        1,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
         35,
         35,
         1,
@@ -1996,7 +1996,6 @@
         0,
         0,
         0,
-        4,
         0,
         0,
         0,
@@ -2052,7 +2051,8 @@
         0,
         0,
         0,
-        4,
+        0,
+        0,
         4,
         0,
         0,
@@ -2940,6 +2940,30 @@
           "rotation": 0,
           "visible": true,
           "point": true
+        },
+        {
+          "id": 18,
+          "name": "east",
+          "type": "",
+          "x": 888,
+          "y": 176,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 19,
+          "name": "from-shieling",
+          "type": "",
+          "x": 856,
+          "y": 176,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
         }
       ]
     }
@@ -3140,6 +3164,16 @@
         },
         {
           "id": 30,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 37,
           "properties": [
             {
               "name": "collides",

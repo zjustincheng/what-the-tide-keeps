@@ -40,10 +40,19 @@ tiles.push(
   scatter(turf('#66754a'), 5, [['#7f8c5a',1,2],['#5c6a44',2,1],['#c8b8d8',1,1],['#d8d2bc',1,1]], 8),
   scatter(turf('#66754a'), 6, [['#5a6842',3,2],['#d8d2bc',2,1],['#7f8c5a',1,2]], 6),
 );
+// The orchard: apple trees heavy and unpicked, windfalls rotting in the grass, the press, and the stakes.
+const ORCHARD_TILES = tiles.length + 1;
+tiles.push(
+  rect(0,0,16,16,'#66754a')+rect(1,1,14,10,'#3e5230')+rect(2,1,11,6,'#4e6638')+rect(4,3,2,2,'#a8402e')+rect(10,5,2,2,'#a8402e')+rect(6,8,2,2,'#8a3424')+rect(7,10,3,6,'#4a3a2a')+rect(3,13,2,1,'#7a3022')+rect(11,14,2,1,'#6a4a2a'), // apple tree
+  scatter(turf('#66754a'), 41, [['#8a3424',2,1],['#a8402e',1,1],['#6a4a2a',2,1],['#5c6a44',1,2]], 7),                                   // windfalls
+  rect(0,0,16,16,'#66754a')+rect(1,3,14,12,'#5a4430')+rect(2,4,12,3,'#7a5e40')+rect(6,1,4,4,'#3e3226')+rect(3,9,10,5,'#4a3622')+rect(4,10,8,1,'#8a3424'), // cider press
+  rect(0,0,16,16,'#66754a')+rect(7,3,2,13,'#7a5e40')+rect(6,2,4,2,'#9a7a50')+rect(4,13,8,2,'#55603c')+rect(9,5,4,1,'#c8c0a8'),        // grafting stake with a tag
+);
 const svg = sheet(tiles);
 writeFileSync('public/assets/downs-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
 const [TURF,CHALKY,PATH,GORSE,WALL,TOWER,RUBBLE,MOUND,SLAB,POND,FIG_A,HUT,THATCH,THORN,BORDER,SIGN,HURDLE,BFLOOR,BWALL,VOID,GRAVE,NEST,BONES,CAIRN,FIG_D,FIG_C]=tiles.map((_,i)=>i+1);
-const solid=[3,4,5,7,8,9,11,12,13,14,15,16,18,19,20,23].map(t=>t);
+const [APPLE,WINDFALL,PRESS,STAKE]=[0,1,2,3].map(i=>ORCHARD_TILES+i);
+const solid=[3,4,5,7,8,9,11,12,13,14,15,16,18,19,20,23,APPLE-1,PRESS-1,STAKE-1];
 
 function write(name,{w,h,floor,furniture},points){
   const layer=(n,data,id)=>({id,name:n,type:'tilelayer',width:w,height:h,x:0,y:0,opacity:1,visible:true,data});
@@ -91,6 +100,8 @@ const at=(x,y)=>[x*16+8,y*16+8];
   for(const [x,y] of [[6,6],[7,6],[12,4],[14,11],[15,11],[8,26],[9,26],[19,14],[40,12],[41,12],[44,6],[53,6],[54,6],[10,34],[33,24],[50,36],[51,36],[27,24],[56,12]]) put(furniture,x,y,GORSE);
   for(const [x,y] of [[4,10],[18,5],[21,24],[38,17],[55,33],[13,36],[5,30],[45,10]]) put(furniture,x,y,THORN);
   put(furniture,8,30,CAIRN);
+  // South, down a sunken lane to the orchard nobody picks.
+  fill(floor,6,21,7,38,PATH);fill(furniture,6,39,7,39,0);fill(floor,6,39,7,39,PATH);
   write('downs',m,[
     ['west',8,328],['from-fields',28,328],['downs-sign',...at(3,18)],
     ['tower',...at(30,9)],['pack',...at(30,5)],['tower-cache',...at(34,6)],
@@ -99,6 +110,7 @@ const at=(x,y)=>[x*16+8,y*16+8];
     ['barrow-door',368,472],['from-barrow',368,456],
     ['figure',...at(42,33)],['east',952,160],['from-drove',932,160],['cairn',...at(8,31)],['bard',136,468],['waystone',...at(27,22)],['from-waystone',...at(27,23)],['forage-1',...at(20,12)],['forage-2',...at(40,8)],['forage-3',...at(39,18)],['forage-4',...at(26,26)],
     ['hound-west',...at(12,13)],['hound-east',...at(46,33)],
+    ['south',112,632],['from-orchard',112,600],
   ]);
 }
 
@@ -115,4 +127,28 @@ const at=(x,y)=>[x*16+8,y*16+8];
   put(floor,15,8,NEST);put(floor,16,8,NEST);
   for(const [x,y] of [[12,10],[18,9],[14,11]]) put(floor,x,y,BONES);
   write('barrow',m,[['spawn',...at(15,15)],['out',...at(15,17)],['hound-mother',...at(16,8)],['nest',...at(15,9)],['grave',...at(11,8)],['grave-goods',...at(20,11)]]);
+}
+
+// The orchard below the downs: rows of apple trees nobody picks, the press, a hare's hut, and five grafting stakes.
+{
+  const m=grid(40,28,TURF);const {floor,furniture,put,fill}=m;
+  fill(furniture,0,0,39,0,BORDER);fill(furniture,0,27,39,27,BORDER);fill(furniture,0,0,0,27,BORDER);fill(furniture,39,0,39,27,BORDER);
+  fill(furniture,19,0,20,0,0);fill(floor,19,0,20,14,PATH);fill(floor,4,14,35,15,PATH);
+  // The trees, in rows the way they were planted, with the windfalls under them.
+  for(let y=4;y<=24;y+=4) for(let x=3;x<=36;x+=4){ if(x===19||y===16&&x>=27) continue; put(furniture,x,y,APPLE);put(floor,x,y+1,WINDFALL);put(floor,x+1,y,WINDFALL); }
+  for(let i=0;i<40;i++) put(floor,(i*17+3)%38+1,(i*11+5)%26+1,WINDFALL);
+  fill(floor,19,0,20,14,PATH);fill(floor,4,14,35,15,PATH);
+  // The hare's hut in the north-east corner, and the press beside it.
+  fill(furniture,30,2,35,3,THATCH);fill(furniture,30,4,35,5,HUT);put(furniture,26,10,PRESS);put(furniture,27,10,PRESS);
+  // A clearing in the south-west: five stakes in a row, each tagged, each with a young tree grafted to it.
+  fill(furniture,3,20,11,20,0);fill(furniture,3,24,11,24,0);for(const x of [3,5,7,9,11]) put(furniture,x,22,STAKE);
+  fill(floor,3,21,11,23,TURF);
+  // The well, and the camp.
+  fill(furniture,15,22,16,22,POND);
+  write('orchard',m,[
+    ['north',320,8],['from-downs',320,40],
+    ['grafter',...at(32,7)],['hut',...at(33,6)],['press',...at(26,11)],['stakes',...at(7,23)],['well',...at(15,23)],
+    ['weevil-1',...at(9,10)],['weevil-2',...at(29,18)],['locust-1',...at(14,19)],['blight',...at(33,22)],
+    ['camp-orchard',...at(22,9)],['forage-1',...at(6,16)],['forage-2',...at(34,13)],
+  ]);
 }

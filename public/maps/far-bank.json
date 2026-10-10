@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 15,
+  "nextobjectid": 17,
   "layers": [
     {
       "id": 1,
@@ -1038,6 +1038,8 @@
         2,
         2,
         2,
+        3,
+        3,
         2,
         2,
         2,
@@ -1076,6 +1078,8 @@
         2,
         2,
         2,
+        3,
+        3,
         2,
         2,
         2,
@@ -1114,6 +1118,8 @@
         2,
         2,
         2,
+        3,
+        3,
         2,
         2,
         2,
@@ -1152,6 +1158,8 @@
         2,
         2,
         2,
+        3,
+        3,
         2,
         2,
         2,
@@ -1190,16 +1198,8 @@
         2,
         2,
         2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
+        3,
+        3,
         2,
         2,
         2,
@@ -2411,8 +2411,8 @@
         7,
         7,
         7,
-        7,
-        7,
+        0,
+        0,
         7,
         7,
         7,
@@ -2616,6 +2616,30 @@
           "rotation": 0,
           "visible": true,
           "point": true
+        },
+        {
+          "id": 15,
+          "name": "south",
+          "type": "",
+          "x": 240,
+          "y": 472,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 16,
+          "name": "from-peat",
+          "type": "",
+          "x": 240,
+          "y": 440,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
         }
       ]
     }
@@ -2626,13 +2650,13 @@
       "name": "marsh",
       "image": "../assets/marsh-tiles.svg",
       "imagewidth": 128,
-      "imageheight": 64,
+      "imageheight": 80,
       "margin": 0,
       "spacing": 0,
       "tilewidth": 16,
       "tileheight": 16,
       "columns": 8,
-      "tilecount": 32,
+      "tilecount": 40,
       "tiles": [
         {
           "id": 3,
@@ -2836,6 +2860,36 @@
         },
         {
           "id": 27,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 31,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 33,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 34,
           "properties": [
             {
               "name": "collides",

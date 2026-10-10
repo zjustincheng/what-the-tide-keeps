@@ -14,6 +14,7 @@ import { abbey, barracks, battlefield, drove, fort, keep, ossuary, pass, rookery
 import { apothecary, causeway, creek, farBank, hospice, pens, wickmere } from '../content/marsh';
 import { archive, cellars, climb, hold, houseHall, ring, summit, upper } from '../content/holds';
 import { krakenGrave, openWater, port, reef, seaPens } from '../content/ocean';
+import { cistern, fleet, lanes, orchard, peat, quarry, shieling } from '../content/outskirts';
 import type { Encounter } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
@@ -216,6 +217,7 @@ export const BORDER_ROAD: Area = {
     north: { to: 'town', spawn: 'from-border', prompt: 'Return to Millbrook' },
     east: { to: 'farmland', spawn: 'from-border', prompt: 'Take the field track' },
     south: { to: 'boar-farm', spawn: 'spawn', prompt: 'Follow the smoke' },
+    west: { to: 'quarry', spawn: 'from-border', prompt: 'Follow the white track to the quarry' },
     // The pass to the highlands opens once the carts move again.
     pass: { to: 'pass', spawn: 'from-border', prompt: 'Take the track up to the pass', requires: { flag: 'boar-defeated' },
       barred: { speaker: 'THE GUARD', lines: ['The guard steps across the track. "Nobody goes up to the pass while the carts are stopped. Orders."'] } },
@@ -288,6 +290,7 @@ export const DOWNS: Area = {
     west: { to: 'farmland', spawn: 'from-downs', prompt: 'Go back down to the fields' },
     'barrow-door': { to: 'barrow', spawn: 'spawn', prompt: 'Squeeze past the slab into the barrow' },
     east: { to: 'drove', spawn: 'from-downs', prompt: 'Take the drove road up toward the highlands' },
+    south: { to: 'orchard', spawn: 'from-downs', prompt: 'Go down the sunken lane to the orchard' },
   },
   decorate(scene) {
     // Wind moving through the grass in long pale bands.
@@ -496,6 +499,7 @@ export const DROVE: Area = {
   ],
   exits: {
     west: { to: 'downs', spawn: 'from-drove', prompt: 'Go back down to the downs' },
+    east: { to: 'shieling', spawn: 'from-drove', prompt: 'Follow the sheep track up to the huts' },
     north: { to: 'battlefield', spawn: 'from-drove', prompt: 'Go through the gate to the battlefield', requires: { flag: 'drove-gate-open' },
       barred: { speaker: 'THE DROVERS\' GATE', lines: ['A five-bar gate across the road, barred from the far side with a heavy beam.'] } },
   },
@@ -528,6 +532,7 @@ export const HARBOUR: Area = {
   fishing: { 'harbour-spot': 'stream' },
   exits: {
     north: { to: 'square', spawn: 'from-harbour', prompt: 'Climb the steps to the square' },
+    east: { to: 'lanes', spawn: 'from-harbour', prompt: 'Go into the lanes behind the warehouses' },
     // The tidal road up the estuary: shut by the church until it sends you, and only above water by day.
     west: { to: 'wickmere', spawn: 'from-harbour', prompt: 'Take the tidal road to Wickmere', requires: { all: [{ flag: 'hyena-slain' }, { night: false }] },
       barred: { speaker: 'THE TIDAL ROAD', lines: ['A causeway of shingle along the estuary, upriver to Wickmere. It\'s under water at high tide, and the tide comes in at dark.', 'A church marine stands at the start of it. "Sickness upriver. Only the church\'s own go up, and only by day."'] } },
@@ -666,6 +671,7 @@ export const FAR_BANK: Area = {
   exits: {
     ferry: { to: 'wickmere', spawn: 'from-far-bank', prompt: 'Walk back across the channel', facing: 'west' },
     pens: { to: 'pens', spawn: 'from-far-bank', prompt: 'Follow the bank east, to the pens' },
+    south: { to: 'peat', spawn: 'from-far-bank', prompt: 'Take the cutters\' track south to the peat' },
     'apothecary-door': { to: 'apothecary', spawn: 'spawn', prompt: 'Wade into the apothecary', requires: { flag: 'frog-free' },
       barred: { speaker: 'THE APOTHECARY', lines: ['The door is under water to the knee. Something inside is breathing, slow and patient.', 'You wouldn\'t go in there without someone who knows poison.'] } },
   },
@@ -864,6 +870,7 @@ export const OPEN_WATER: Area = {
     port: { to: 'outlaw-port', spawn: 'from-sea', prompt: 'Ride the current back to Wrecktown' },
     pens: { to: 'sea-pens', spawn: 'from-sea', prompt: 'Swim in to the fleet\'s pens' },
     grave: { to: 'kraken-grave', spawn: 'from-sea', prompt: 'Wade onto the sandbar' },
+    fleet: { to: 'fleet', spawn: 'from-sea', prompt: 'Ride the current east, to the sunken boats' },
     reef: { to: 'reef', spawn: 'from-sea', prompt: 'Dive down to the cuttlefish\'s reef', requires: { flag: 'grave-seen' },
       barred: { speaker: 'THE OCTOPUS', lines: ['"Not yet. You don\'t know what you\'re fighting for. Go and see the kraken first. South-east, on the sandbar."'] } },
   },
@@ -893,4 +900,96 @@ export const REEF: Area = {
   exits: { out: { to: 'open-water', spawn: 'from-reef', prompt: 'Rise back up to the open water' } },
 };
 
-export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY, CLIMB, HOLD, UPPER, ARCHIVE, HOUSE_HALL, PENS, CREEK, CELLARS, SUMMIT, RING, OUTLAW_PORT, OPEN_WATER, SEA_PENS, KRAKEN_GRAVE, REEF];
+// Off the roads, one or two in every region: the orchard below the downs, the church's quarry, the shepherds' summer huts,
+// the lanes behind the harbour and the cistern under them, the peat cuttings, and the church's drowned boats.
+export const ORCHARD: Area = {
+  key: 'orchard', map: 'orchard', tileset: 'downs', music: 'fields', region: 'THE FARMLAND', place: 'The orchard', dialogue: orchard,
+  ground: 'grass', surfaces: { 3: 'dirt' }, grade: { saturation: -0.3, brightness: 0.84, vignette: 0.45 },
+  npcs: [{ point: 'grafter', texture: 'grafter' }],
+  enemies: [
+    { point: 'weevil-1', encounter: 'weevil' }, { point: 'weevil-2', encounter: 'weevil' }, { point: 'locust-1', encounter: 'locust' },
+    // The heap in the old tree: weevils, and more weevils, and more.
+    { point: 'blight', encounter: 'weevil', waves: 3, hiddenIf: [{ flag: 'orchard-cleared' }], defeat: { set: 'orchard-cleared' } },
+  ],
+  props: [{ point: 'camp-orchard', texture: 'campfire', hiddenIf: [] }],
+  forage: { 'forage-1': 'berry', 'forage-2': 'berry' },
+  camps: { 'camp-orchard': { prompt: 'Rest under the trees', cost: 2, lines: ['The hare brings you a windfall apple and doesn\'t stay. Apples fall all night, one at a time, like someone knocking.'] } },
+  exits: { north: { to: 'downs', spawn: 'from-orchard', prompt: 'Climb back up to the downs' } },
+};
+
+export const QUARRY: Area = {
+  ...HIGHLAND_GROUND, region: 'THE FARMLAND', key: 'quarry', map: 'quarry', music: 'wilds', place: 'The quarry', dialogue: quarry, ground: 'stone',
+  grade: { saturation: -0.45, brightness: 0.86, vignette: 0.5 },
+  npcs: [{ point: 'quarryman', texture: 'mole', hiddenIf: [{ flag: 'quarrymen-freed' }] }, { point: 'old-cutter', texture: 'old-mole', hiddenIf: [{ flag: 'quarrymen-freed' }] }],
+  enemies: [
+    // The overseer comes down off the terrace with his men behind him.
+    { point: 'overseer', encounter: 'acolyte', waves: 2, hiddenIf: [{ flag: 'overseer-slain' }], defeat: { set: 'overseer-slain' } },
+    { point: 'guard-1', encounter: 'acolyte', hiddenIf: [{ flag: 'quarrymen-freed' }] }, { point: 'guard-2', encounter: 'acolyte', hiddenIf: [{ flag: 'quarrymen-freed' }] },
+  ],
+  exits: { east: { to: 'border-road', spawn: 'from-quarry', prompt: 'Go back to the border road' } },
+};
+
+export const SHIELING: Area = {
+  ...HIGHLAND_GROUND, key: 'shieling', map: 'shieling', music: 'highlands', place: 'The shieling', dialogue: shieling, grade: COLD,
+  npcs: [{ point: 'collie', texture: 'collie' }],
+  enemies: [
+    { point: 'harrier-1', encounter: 'harrier' }, { point: 'hound-1', encounter: 'hound', ambush: true }, { point: 'hound-2', encounter: 'hound', ambush: true },
+  ],
+  props: [
+    { point: 'camp-shieling', texture: 'campfire', hiddenIf: [] },
+    { point: 'sheep-a', texture: 'sheep', solid: true, hiddenIf: [] }, { point: 'sheep-b', texture: 'sheep', solid: true, hiddenIf: [] },
+  ],
+  forage: { 'forage-1': 'herb' },
+  camps: { 'camp-shieling': { prompt: 'Rest in the lee of the huts', cost: 3, lines: ['The dog lies down across the track, between you and the drove road, and doesn\'t sleep.'] } },
+  exits: { west: { to: 'drove', spawn: 'from-shieling', prompt: 'Go back down to the drove road' } },
+  decorate: scene => { wind(scene, 576, 416); snowfall(scene, 576, 416); },
+};
+
+export const LANES: Area = {
+  key: 'lanes', map: 'lanes', tileset: 'city', music: 'capital', region: 'THE CAPITAL', place: 'The lanes', dialogue: lanes,
+  ground: 'stone', grade: { saturation: -0.45, brightness: 0.72, vignette: 0.6 }, enemies: [],
+  npcs: [
+    { point: 'soup-sister', texture: 'soup-sister' }, { point: 'queue-1', texture: 'lodger' }, { point: 'queue-2', texture: 'old-goat' },
+    { point: 'rat-mother', texture: 'rat-mother' }, { point: 'ratling-1', texture: 'ratling' }, { point: 'stoat', texture: 'stoat' },
+  ],
+  exits: {
+    west: { to: 'harbour', spawn: 'from-lanes', prompt: 'Go back out to the harbour' },
+    grate: { to: 'cistern', spawn: 'spawn', prompt: 'Lift the grate and climb down', requires: { flag: 'cistern-asked' },
+      barred: { speaker: 'THE GRATE', lines: ['An iron grate in the cobbles, bars as thick as a wrist. Under it, a long way down, water moves in the dark.', 'It won\'t lift with bare hands.'] } },
+  },
+};
+
+export const CISTERN: Area = {
+  key: 'cistern', map: 'cistern', tileset: 'city', music: 'crypt', region: 'THE CAPITAL', place: 'The cistern', dialogue: cistern,
+  ground: 'stone', surfaces: { 11: 'stone' }, grade: { saturation: -0.55, brightness: 0.56, vignette: 0.78 },
+  npcs: [{ point: 'ratling', texture: 'ratling', hiddenIf: [{ flag: 'ratling-home' }] }],
+  enemies: [
+    // What stands in the water: the dead the cistern kept, one after another.
+    { point: 'drowned', encounter: 'ghoul', waves: 3, hiddenIf: [{ flag: 'cistern-cleared' }], defeat: { set: 'cistern-cleared' } },
+    { point: 'leech-1', encounter: 'ghoul' }, { point: 'wisp-1', encounter: 'wisp' },
+  ],
+  exits: { up: { to: 'lanes', spawn: 'from-cistern', prompt: 'Climb back up to the yard' } },
+};
+
+export const PEAT: Area = {
+  ...MARSH_GROUND, key: 'peat', map: 'peat', place: 'The peat cuttings', dialogue: peat, fog: true, ground: 'dirt',
+  grade: { saturation: -0.5, brightness: 0.66, vignette: 0.62 },
+  npcs: [{ point: 'cutter', texture: 'peat-vole' }],
+  enemies: [{ point: 'leech-1', encounter: 'scorpion', ambush: true }, { point: 'wisp-1', encounter: 'wisp' }, { point: 'mosquito-1', encounter: 'mosquito', ambush: true }],
+  props: [{ point: 'camp-peat', texture: 'campfire', hiddenIf: [] }],
+  fishing: { 'peat-spot': 'causeway' },
+  forage: { 'forage-1': 'mushroom' },
+  camps: { 'camp-peat': { prompt: 'Rest by the cutters\' fire', cost: 3, lines: ['A peat fire, slow and red and hardly any smoke. The vole doesn\'t talk. The bog makes small sounds all night, settling.'] } },
+  exits: { north: { to: 'far-bank', spawn: 'from-peat', prompt: 'Go back up to the far bank' } },
+  decorate: scene => marshFog(scene, 576, 416, 10),
+};
+
+export const FLEET: Area = {
+  ...SEA_GROUND, key: 'fleet', map: 'fleet', music: 'deep', place: 'The drowned fleet', dialogue: fleet, deep: true,
+  grade: { saturation: -0.45, brightness: 0.72, vignette: 0.6 },
+  npcs: [{ point: 'hermit', texture: 'hermit' }],
+  enemies: [{ point: 'barracuda-1', encounter: 'barracuda', ambush: true }, { point: 'barracuda-2', encounter: 'barracuda' }, { point: 'jelly-1', encounter: 'jelly' }],
+  exits: { out: { to: 'open-water', spawn: 'from-fleet', prompt: 'Ride the current back west' } },
+};
+
+export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY, CLIMB, HOLD, UPPER, ARCHIVE, HOUSE_HALL, PENS, CREEK, CELLARS, SUMMIT, RING, OUTLAW_PORT, OPEN_WATER, SEA_PENS, KRAKEN_GRAVE, REEF, ORCHARD, QUARRY, SHIELING, LANES, CISTERN, PEAT, FLEET];

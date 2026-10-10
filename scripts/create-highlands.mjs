@@ -69,8 +69,11 @@ HIGHLAND.push(
   HIGHLAND[6] + krect(1,9,8,2,'#b4bcbe') + krect(2,8,6,1,'#d4dada') + krect(11,3,3,1,'#b4bcbe'),
   HIGHLAND[17] + krect(9,2,1,3,'#524e46') + krect(10,4,1,1,'#524e46') + krect(3,10,2,1,'#525a44'),
 );
+// Dressed stone, cut square and stacked for the carts.
+const BLOCK = HIGHLAND.length + 1;
+HIGHLAND.push(rect(0,0,16,16,'#6a6a62')+rect(1,2,14,12,'#9a968a')+rect(1,2,14,1,'#b4b0a2')+rect(1,8,14,1,'#7a766c')+rect(8,2,1,6,'#7a766c')+rect(4,8,1,6,'#7a766c')+rect(1,13,14,1,'#5a5850')+rect(3,4,3,1,'#a8a498'));
 sheet('highland', HIGHLAND);
-const HIGHLAND_SOLID = [3,5,7,8,9,10,11,13,14,16,18,19,21,22,24,26,27,29,30];
+const HIGHLAND_SOLID = [3,5,7,8,9,10,11,13,14,16,18,19,21,22,24,26,27,29,30,BLOCK-1];
 
 // The fort town: a carnivore garrison behind stone walls.
 const FORT = [
@@ -318,11 +321,13 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
   put(furniture,41,17,H.TENT);put(furniture,43,18,H.BANNER);
   for(const [x,y] of [[5,4],[9,17],[22,3],[27,19],[33,5],[50,6],[52,17],[24,14],[6,20]]) put(furniture,x,y,H.PINE);
   put(furniture,30,9,H.SIGN);
+  // East, a sheep track up to the summer huts.
+  fill(floor,46,10,55,11,H.ROAD);fill(furniture,55,10,55,11,0);
   write('drove','highland',HROWS,HIGHLAND_SOLID,m,[
     ['west',8,168],['from-downs',28,168],['north',712,8],['from-battlefield',712,40],
     ['drover',...at(16,9)],['sheep-a',...at(12,8)],['sheep-b',...at(19,6)],['sheep-c',...at(20,8)],['drove-cairn',...at(17,9)],['drove-sign',...at(30,10)],
     ['raider-1',...at(40,16)],['raider-2',...at(43,16)],['hound-1',...at(28,14)],['raider-stash',...at(42,19)],['forage-1',...at(24,18)],
-    ['gate-1',712,24],['gate-2',728,24],
+    ['gate-1',712,24],['gate-2',728,24],['east',888,176],['from-shieling',856,176],
   ]);
 }
 
@@ -377,5 +382,52 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
     ['south',80,760],['from-keep',80,736],
     ['holds-gate',...at(25,3)],['gate',...at(26,3)],['from-holds',...at(26,4)],['gate-art',416,22],['frozen-courier',...at(30,14)],['shelter',...at(15,25)],['camp-rookery',...at(13,23)],
     ['harrier-1',...at(18,39)],['harrier-2',...at(14,12)],['hound-1',...at(22,26)],['forage-1',...at(24,36)],
+  ]);
+}
+
+// The quarry west of the border road: a pit cut in terraces, convicts on a chain, and stone for the church's light.
+{
+  const m=grid(40,30,H.SCREE);const {floor,furniture,put,fill}=m;
+  fill(furniture,0,0,39,0,H.ROCK);fill(furniture,0,29,39,29,H.ROCK);fill(furniture,0,0,0,29,H.ROCK);fill(furniture,39,0,39,29,H.ROCK);
+  // The cut face: the whole west and north is worked rock, in steps.
+  fill(furniture,1,1,8,28,H.ROCK);fill(furniture,1,1,38,4,H.ROCK);fill(furniture,9,5,14,9,H.ROCK);fill(furniture,9,22,12,28,H.ROCK);
+  // The cart road in from the east, down to the floor of the pit.
+  fill(furniture,39,14,39,15,0);fill(floor,22,14,39,15,H.ROAD);fill(floor,22,8,23,22,H.ROAD);
+  // A terrace above the pit, where the overseers stand; a ramp up to it.
+  fill(furniture,15,5,38,6,H.ROCK);fill(floor,24,7,38,10,H.FLAG);fill(furniture,24,11,38,11,H.ROCK);fill(furniture,30,11,31,11,0);fill(floor,30,11,31,13,H.ROAD);
+  put(furniture,34,8,H.TENT);put(furniture,36,8,H.TENT);put(furniture,27,7,H.BANNER);
+  // Blocks cut and stacked for the carts, and the ones that broke.
+  for(const [x,y] of [[26,18],[27,18],[26,19],[27,19],[30,18],[31,18],[30,19],[33,22],[34,22],[33,23],[17,24],[18,24]]) put(furniture,x,y,BLOCK);
+  for(const [x,y] of [[14,13],[16,20],[35,26],[20,27]]) put(furniture,x,y,H.BOULDER);
+  // Where the ones who fell are laid out, under the face.
+  put(floor,10,15,H.BONES);put(floor,10,17,H.BONES);put(floor,11,16,H.PIT);
+  for(const [x,y] of [[36,24],[37,20],[34,2]]) put(furniture,x,y,H.PINE);
+  write('quarry','highland',HROWS,HIGHLAND_SOLID,m,[
+    ['east',632,240],['from-border',600,240],
+    ['quarryman',...at(13,17)],['old-cutter',...at(16,22)],['chain',...at(14,19)],['fallen',...at(11,16)],
+    ['blocks',...at(28,17)],['tally',...at(33,9)],['overseer',...at(28,9)],['guard-1',...at(20,16)],['guard-2',...at(32,21)],
+  ]);
+}
+
+// The shieling above the drove road: the shepherds' summer huts, snowed in, and the dog who stayed with the sheep.
+{
+  const m=grid(36,26,H.HEATHER);const {floor,furniture,put,fill}=m;
+  snowfield(m,()=>true,0.3,3.7);
+  fill(furniture,0,0,35,0,H.ROCK);fill(furniture,0,25,35,25,H.ROCK);fill(furniture,0,0,0,25,H.ROCK);fill(furniture,35,0,35,25,H.ROCK);
+  fill(furniture,0,12,0,13,0);fill(floor,0,12,20,13,H.ROAD);fill(floor,19,6,20,13,H.ROAD);
+  // Three log huts, one with its door stove in.
+  fill(furniture,13,4,16,5,H.HUT);fill(furniture,22,3,25,4,H.HUT);fill(furniture,26,15,29,16,H.HUT);
+  // The fold: a ring of stones, open on the east side.
+  for(let x=6;x<=13;x++){put(furniture,x,17,H.BOULDER);put(furniture,x,22,H.BOULDER);}
+  for(let y=17;y<=22;y++) put(furniture,6,y,H.BOULDER);put(furniture,13,17,H.BOULDER);put(furniture,13,18,H.BOULDER);put(furniture,13,22,H.BOULDER);put(furniture,13,21,H.BOULDER);
+  // The stream off the tops, frozen at the edges.
+  fill(furniture,32,1,33,24,H.STREAM);fill(floor,31,1,31,24,H.ICE);
+  put(furniture,20,9,H.CAIRN);
+  for(const [x,y] of [[4,4],[9,7],[28,7],[3,21],[17,23],[24,21],[29,11],[8,2]]) put(furniture,x,y,H.PINE);
+  for(const [x,y] of [[23,11],[16,16]]) put(furniture,x,y,H.BOULDER);
+  write('shieling','highland',HROWS,HIGHLAND_SOLID,m,[
+    ['west',8,208],['from-drove',40,208],
+    ['collie',...at(18,11)],['cairn',...at(21,10)],['hut',...at(14,6)],['camp-shieling',...at(23,13)],['sheep-a',...at(9,19)],['sheep-b',...at(11,20)],['fold',...at(14,20)],
+    ['harrier-1',...at(25,19)],['hound-1',...at(8,9)],['hound-2',...at(27,9)],['forage-1',...at(4,16)],
   ]);
 }

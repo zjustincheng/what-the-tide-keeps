@@ -46,11 +46,14 @@ fill(furniture,w-3,15,w-1,16,0);fill(floor,18,15,w-1,16,ROAD);
 // The south is burned; the boar's farm lies that way.
 for(const [x,y] of [[13,21],[18,22],[12,22],[19,20],[20,22],[11,21]]) put(floor,x,y,SCORCH);
 fill(floor,14,22,17,23,SCORCH);
+// West, a cart track worn white with stone dust, out to the church's quarry.
+fill(furniture,0,20,2,21,0);fill(floor,0,20,13,21,ROAD);
 const layer=(name,data,id)=>({id,name,type:'tilelayer',width:w,height:h,x:0,y:0,opacity:1,visible:true,data});
 const points=[
   ['spawn',256,40],['north',256,20],['hedge',256,128],['bramble-1',232,152],['bramble-2',248,152],['bramble-3',264,152],['bramble-4',280,152],['bramble-5',232,168],['bramble-6',248,168],['bramble-7',264,168],['bramble-8',280,168],
   ['driver',152,264],['guard',344,226],['carts',136,232],['marker',312,328],['south',256,372],['from-farm',256,344],['east',504,80],['from-fields',480,80],['camp-border',184,312],['follower',256,296],['pass',504,256],['from-pass',480,256],
   // The boar's sister keeps a barricade of charred beams across the lane to his farm.
+  ['west',8,336],['from-quarry',40,336],
   ['sister',212,338],['barricade-1',232,358],['barricade-2',248,358],['barricade-3',264,358],['barricade-4',280,358],
 ];
 const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,

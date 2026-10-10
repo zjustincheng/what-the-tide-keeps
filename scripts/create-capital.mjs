@@ -41,10 +41,19 @@ TILES.push(
   TILES[0] + krect(1,6,4,1,'#4e5a3a') + krect(11,12,4,1,'#4e5a3a') + krect(6,3,1,1,'#a8b0b0'),
   TILES[1] + krect(10,2,1,3,'#57534b') + krect(11,4,1,1,'#57534b') + krect(3,11,2,1,'#5a6450'),
 );
+// The lanes and the cistern: a drain grate, washing strung over the cobbles, a pump, a broken stair down.
+const LANE_TILES = TILES.length + 1;
+TILES.push(
+  cobbles('#4e4c46','#5c5a52')+krect(2,2,12,12,'#1e1e1c')+[3,6,9,12].map(x=>krect(x,2,1,12,'#5a5850')).join('')+krect(2,7,12,1,'#5a5850'), // drain grate
+  cobbles('#4e4c46','#5c5a52')+krect(0,3,16,1,'#2a2a28')+krect(2,4,4,6,'#8a8070')+krect(8,4,3,5,'#6a5a6a')+krect(12,4,3,7,'#9a9488'),        // washing on a line
+  cobbles('#4e4c46','#5c5a52')+krect(5,3,6,12,'#3a3a36')+krect(6,1,4,3,'#4a4a44')+krect(11,6,3,2,'#3a3a36')+krect(5,13,6,2,'#2a3a40'),     // pump
+  krect(0,0,16,16,'#26241f')+krect(0,0,16,2,'#34312a')+krect(3,6,4,1,'#1c1a16')+krect(10,11,4,1,'#1c1a16')+krect(5,12,1,4,'#2e3a3a'),      // vault wall, wet
+);
 const svg = sheet(TILES);
 writeFileSync('public/assets/city-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(TILES)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
 const T = Object.fromEntries(['COBBLE','FLAG','WALL','ROOF','DOOR','WINDOW','FOUNTAIN','STATUE','AWNING','LAMP','STEPS','GATE','SEA','QUAY','PIER','BOLLARD','CRATES','NETS','BOAT','BONE','SHRINE','TANK','TOP','BENCH'].map((n,i)=>[n,i+1]));
-const SOLID = [2,3,4,5,6,7,8,9,11,12,15,16,17,18,19,20,21,22,23];
+const [GRATE,WASHING,PUMP,VAULT]=[0,1,2,3].map(i=>LANE_TILES+i);
+const SOLID = [2,3,4,5,6,7,8,9,11,12,15,16,17,18,19,20,21,22,23,GRATE-1,PUMP-1,VAULT-1];
 
 function grid(w,h,base){
   const floor=Array(w*h).fill(base), furniture=Array(w*h).fill(0);
@@ -115,10 +124,57 @@ const at=(x,y)=>[x*16+8,y*16+8];
   fill(furniture,0,12,0,13,0);
   // The last shrine, where the fish come ashore, at the east end of the quay.
   put(furniture,44,19,T.SHRINE);
+  // East, under the warehouses, into the lanes.
+  fill(furniture,47,7,47,8,0);
   for(const [x,y] of [[22,8],[34,12],[10,16]]) put(furniture,x,y,T.LAMP);
   write('harbour',m,[
     ['north',344,8],['from-square',344,40],['west',8,208],['from-marsh',28,208],
     ['harbour-wall',...at(5,20)],['kraken-arm',176,316],['sea-shrine',...at(44,20)],['crab',328,232],
-    ['fishwife',...at(17,15)],['harbourmaster',...at(31,18)],['steward',...at(37,9)],['dockhand',...at(27,19)],['harbour-spot',...at(31,29)],
+    ['fishwife',...at(17,15)],['harbourmaster',...at(31,18)],['steward',...at(37,9)],['dockhand',...at(27,19)],['harbour-spot',...at(31,29)],['east',760,128],['from-lanes',728,128],
+  ]);
+}
+
+// The lanes behind the harbour: tenements leaning over alleys, the church's soup line, and a yard with a grate in it.
+{
+  const m=grid(40,30,T.COBBLE);const {floor,furniture,put,fill}=m;
+  fill(furniture,0,0,39,0,T.TOP);fill(furniture,0,29,39,29,T.TOP);fill(furniture,0,0,0,29,T.TOP);fill(furniture,39,0,39,29,T.TOP);
+  fill(furniture,0,14,0,15,0);
+  // Tenements: roofs, then a storey of wall with windows and doors on the lane side.
+  const block=(x0,y0,x1,y1,doors)=>{fill(furniture,x0,y0,x1,y1-2,T.ROOF);fill(furniture,x0,y1-1,x1,y1,T.WALL);for(let x=x0+1;x<x1;x+=3) put(furniture,x,y1,T.WINDOW);for(const x of doors) put(furniture,x,y1,T.DOOR);};
+  block(1,1,10,5,[5]);block(14,1,25,5,[18]);block(29,1,38,5,[33]);
+  block(3,8,10,11,[6]);block(15,8,24,11,[20]);block(30,8,36,11,[33]);
+  block(1,18,12,22,[4,9]);block(16,18,24,22,[19]);block(28,18,38,22,[31,36]);
+  // The yard behind the south tenements: washing over the cobbles, a pump, and the grate down to the cistern.
+  fill(floor,2,24,37,24,WASHING);fill(floor,6,27,30,27,WASHING);
+  put(furniture,10,25,PUMP);put(furniture,20,26,GRATE);
+  for(const [x,y] of [[2,26],[3,26],[36,25],[37,25],[37,26]]) put(furniture,x,y,T.CRATES);
+  // Lamps on the lane, few and far apart.
+  for(const [x,y] of [[12,13],[27,16],[2,12]]) put(furniture,x,y,T.LAMP);
+  put(furniture,13,12,T.BENCH);
+  write('lanes',m,[
+    ['west',8,240],['from-harbour',40,240],
+    ['soup-sister',...at(20,12)],['queue-1',...at(22,13)],['queue-2',...at(24,13)],['rat-mother',...at(9,23)],['ratling-1',...at(26,25)],['stoat',...at(27,4)],
+    ['notice',...at(11,13)],['soup',...at(19,12)],['grate',...at(20,25)],['from-cistern',...at(21,25)],['pump',...at(10,26)],['washing',...at(15,25)],
+  ]);
+}
+
+// The cistern under the lanes: the city's water in the dark, behind the church's valve.
+{
+  const m=grid(32,24,T.FLAG);const {floor,furniture,put,fill}=m;
+  fill(furniture,0,0,31,23,VAULT);
+  // A broken stair down from the grate, and the walkways between the tanks.
+  fill(furniture,15,19,16,23,0);fill(floor,15,19,16,23,T.STEPS);
+  fill(furniture,3,2,28,18,0);
+  fill(furniture,3,7,28,10,T.SEA);fill(furniture,15,7,16,10,0);
+  fill(furniture,3,13,12,16,T.SEA);fill(furniture,19,13,28,16,T.SEA);
+  fill(floor,3,11,28,12,T.QUAY);fill(floor,3,6,28,6,T.QUAY);
+  // Pillars holding up the lanes.
+  for(const [x,y] of [[6,3],[12,3],[19,3],[25,3],[8,17],[23,17]]) put(furniture,x,y,VAULT);
+  // The church's valve on the north wall, with its chain and its lock.
+  put(furniture,15,2,T.TANK);put(furniture,16,2,T.TANK);
+  put(floor,26,4,T.BONE);
+  write('cistern',m,[
+    ['up',256,376],['spawn',256,328],
+    ['valve',...at(16,3)],['drowned',...at(9,4)],['ratling',...at(26,3)],['leech-1',...at(14,17)],['wisp-1',...at(24,12)],['tithe',...at(4,12)],['bones',...at(26,5)],
   ]);
 }

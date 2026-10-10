@@ -5567,6 +5567,16 @@
               "value": true
             }
           ]
+        },
+        {
+          "id": 37,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
         }
       ]
     }

@@ -104,10 +104,12 @@ function write(name,{W,H,floor,furniture},points){
   // A wreck in the north-east, where the eel waits; sandbars at the edges.
   walk(38,3,45,9,DECK);fill(furniture,38,10,45,10,HULL);put(furniture,41,5,MAST);
   fill(floor,2,36,8,38,SAND);fill(floor,40,34,46,38,SAND);
+  // East, a current running out to where the church's boats went down.
+  fill(furniture,47,14,47,15,0);for(let x=44;x<48;x++){put(floor,x,14,CURRENT);put(floor,x,15,CURRENT);}
   write('open-water',m,[
     ['port',8,312],['from-port',...at(2,19)],['pens',...at(4,37)],['from-pens',...at(5,36)],['grave',...at(44,37)],['from-grave',...at(43,36)],
     ['reef',...at(24,1)],['from-reef',...at(24,3)],
-    ['barracuda-1',...at(15,19)],['barracuda-2',...at(33,22)],['jelly-1',...at(20,27)],['jelly-2',...at(27,11)],['eel',...at(42,6)],['wreck',...at(39,7)],
+    ['barracuda-1',...at(15,19)],['barracuda-2',...at(33,22)],['jelly-1',...at(20,27)],['jelly-2',...at(27,11)],['eel',...at(42,6)],['wreck',...at(39,7)],['fleet',760,240],['from-fleet',728,240],
   ]);
 }
 
@@ -151,5 +153,27 @@ function write(name,{W,H,floor,furniture},points){
   for(const [x,y] of [[9,9],[16,10]]) put(furniture,x,y,ROCK);
   write('reef',m,[
     ['out',200,312],['from-sea',...at(12,16)],['cuttlefish',...at(12,7)],['den',...at(12,7)],['shells',...at(5,16)],
+  ]);
+}
+
+// The drowned fleet: church boats sunk together in the shallows east of the currents, still loaded.
+{
+  const m=grid(40,28,SWELL);const {floor,furniture,put,fill,frame,walk}=m;
+  frame(DEEP);
+  fill(furniture,0,13,0,14,0);
+  const hull=(x0,y0,x1,y1)=>{walk(x0,y0,x1,y1,DECK);fill(furniture,x0-1,y0-1,x1+1,y0-1,HULL);fill(furniture,x0-1,y1+1,x1+1,y1+1,HULL);fill(furniture,x0-1,y0-1,x0-1,y1+1,HULL);fill(furniture,x1+1,y0-1,x1+1,y1+1,HULL);};
+  // A cutter on its side, the flagship broken open on the west, and a lugger sunk to the rail.
+  hull(6,3,14,7);fill(furniture,9,8,10,8,0);put(furniture,12,4,MAST);
+  hull(20,8,34,18);fill(furniture,19,12,19,13,0);put(furniture,27,10,MAST);put(furniture,27,16,MAST);put(furniture,31,16,HATCH);
+  for(const [x,y] of [[21,9],[22,9],[33,9],[33,10],[21,18],[33,17]]) put(furniture,x,y,CRATES);
+  hull(6,19,13,23);fill(furniture,9,18,10,18,0);put(furniture,12,21,BARREL);
+  // Weed and rock between them, and the sand the wrecks are settling into.
+  for(const [x,y] of [[16,4],[17,5],[4,12],[17,22],[36,4],[37,22],[25,24],[15,15]]) put(furniture,x,y,KELP);
+  for(const [x,y] of [[30,2],[2,24],[36,12]]) fill(furniture,x,y,x+1,y+1,ROCK);
+  fill(floor,22,22,32,26,SAND);put(floor,26,24,BONES);put(floor,29,23,BONES);
+  write('fleet',m,[
+    ['out',8,224],['from-sea',...at(2,13)],
+    ['hermit',...at(10,5)],['manifest',...at(24,11)],['hold',...at(31,17)],['bell',...at(22,16)],['bones',...at(27,24)],
+    ['barracuda-1',...at(16,13)],['barracuda-2',...at(30,21)],['jelly-1',...at(10,21)],
   ]);
 }

@@ -43,11 +43,20 @@ tiles.push(
   scatter(tiles[0], 16, [['#28302a',3,2],['#2e3a3a',2,1],['#52603a',1,2]], 6),
   tiles[7] + krect(9,5,5,3,'#6a5840') + krect(9,5,5,1,'#7a6848') + krect(2,10,4,4,'#8a7a5a') + krect(3,11,2,2,'#5a4832'),
 );
+// The peat cuttings: cut banks of black peat, the floor of a working, stacked turves, and what the bog kept.
+const PEAT_TILES = tiles.length + 1;
+tiles.push(
+  rect(0,0,16,16,'#2a2018')+rect(0,0,16,3,'#3e3a24')+rect(0,3,16,1,'#1a140e')+[5,10,14].map(y=>rect(0,y,16,1,'#22190f')).join('')+rect(4,7,3,1,'#3a2c1e')+rect(10,12,2,1,'#3a2c1e'), // cut bank
+  rect(0,0,16,16,'#3a2c1e')+rect(2,4,4,1,'#2a2016')+rect(9,10,5,1,'#2a2016')+rect(6,13,2,1,'#4a3a28')+rect(12,2,1,3,'#2e3a2a'),        // worked floor
+  rect(0,0,16,16,'#3a2c1e')+[[1,9],[6,9],[11,9],[3,4],[8,4]].map(([x,y])=>rect(x,y,5,5,'#2a1e14')+rect(x,y,5,1,'#4a3826')).join('')+rect(5,1,5,3,'#2a1e14'), // stacked turves
+  rect(0,0,16,16,'#2a2a1e')+rect(1,1,14,14,'#1e2a26')+rect(3,5,10,4,'#6a4e30')+rect(4,4,3,2,'#7a5a38')+rect(11,6,2,1,'#4a3420')+rect(5,9,6,2,'#5a4028'), // a body in a cutting
+);
 const svg = sheet(tiles);
 writeFileSync('public/assets/marsh-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
 const [GRASS,MUD,WALK,WATER,REEDS,WILLOW,BORDER,DECK,HWALL,ROOF,SMOKE,HOSPICE,DOOR,CRATES,LIGHTHOUSE,SACK,SHELVES,COUNTER,FLOOD,BOARDS,COT,GRATE,EGGS,POST,BOAT,CELLAR,LANTERN,BASIN]=tiles.map((_,i)=>i+1);
 // Collides lists 0-based tile ids.
-const solid=[3,4,5,6,8,9,10,11,13,14,15,16,17,20,21,22,23,24,25,26,27];
+const [CUTBANK,PEAT,TURVES,BOGBODY]=[0,1,2,3].map(i=>PEAT_TILES+i);
+const solid=[3,4,5,6,8,9,10,11,13,14,15,16,17,20,21,22,23,24,25,26,27,CUTBANK-1,TURVES-1,BOGBODY-1];
 
 function grid(W,H,ground){
   const floor=Array(W*H).fill(ground), furniture=Array(W*H).fill(0);
@@ -168,11 +177,13 @@ function write(name,{W,H,floor,furniture},points){
   // East along the bank to the church's pens.
   fill(furniture,39,15,39,16,0);
   for(const [x,y] of [[7,8],[14,18],[20,24],[27,18],[38,14]]) put(furniture,x,y,REEDS);
+  // South, a cutters' track to the peat.
+  fill(furniture,14,29,15,29,0);fill(floor,14,25,15,29,WALK);
   write('far-bank',m,[
     ['ferry',...at(2,14)],['from-wickmere',...at(4,15)],['pens',632,248],['from-pens',...at(37,15)],
     ['store-gate',...at(20,15)],['apprentice',...at(20,7)],['manifest',...at(23,9)],['vial',...at(16,9)],
     ['apothecary-door',...at(34,21)],['from-apothecary',...at(34,22)],
-    ['mosquito-1',...at(9,18)],['scorpion-1',...at(26,22)],['mosquito-2',...at(34,8)],['forage-1',...at(8,24)],
+    ['mosquito-1',...at(9,18)],['scorpion-1',...at(26,22)],['mosquito-2',...at(34,8)],['forage-1',...at(8,24)],['south',240,472],['from-peat',240,440],
   ]);
 }
 
@@ -225,5 +236,32 @@ function write(name,{W,H,floor,furniture},points){
   write('creek',m,[
     ['north',88,8],['from-causeway',...at(5,2)],['seal',...at(12,6)],['camp-creek',...at(7,8)],['boats',...at(21,9)],['tally',...at(13,4)],
     ['scorpion-1',...at(6,17)],['wisp-1',...at(14,12)],['creek-spot',...at(11,16)],['forage-1',...at(3,13)],
+  ]);
+}
+
+// The peat cuttings south of the far bank: black banks cut in steps, pools in the old workings, and the bodies the bog gives back.
+{
+  const m=grid(36,26,GRASS);const {floor,furniture,put,fill,frame,walk}=m;
+  frame(BORDER);
+  fill(furniture,17,0,18,0,0);walk(17,0,18,6);
+  // Three workings, each a floor of cut peat below a bank, stepped down to the south.
+  fill(floor,3,8,32,23,PEAT);
+  fill(furniture,3,7,32,7,CUTBANK);fill(furniture,17,7,18,7,0);
+  fill(furniture,3,13,14,13,CUTBANK);fill(furniture,20,13,32,13,CUTBANK);
+  fill(furniture,3,19,9,19,CUTBANK);fill(furniture,13,19,32,19,CUTBANK);
+  // Old workings, flooded black.
+  fill(furniture,4,9,9,11,WATER);fill(furniture,25,15,31,17,WATER);fill(furniture,15,21,22,23,WATER);
+  // Turves stacked to dry, and the cutters' hut at the top.
+  for(const [x,y] of [[12,9],[13,9],[22,9],[23,10],[6,16],[7,16],[29,21],[30,21]]) put(furniture,x,y,TURVES);
+  fill(furniture,24,2,30,3,ROOF);fill(furniture,24,4,30,5,HWALL);put(furniture,27,5,DOOR);
+  // What the cutters found: they leave them where they lie, and put a stake by each.
+  put(furniture,10,15,BOGBODY);put(furniture,23,18,BOGBODY);put(furniture,31,22,BOGBODY);
+  for(const [x,y] of [[11,14],[24,17],[32,21]]) put(furniture,x,y,POST);
+  for(const [x,y] of [[3,3],[8,2],[13,4],[33,9],[2,22],[34,16]]) put(furniture,x,y,WILLOW);
+  for(const [x,y] of [[5,5],[20,3],[32,5],[3,17]]) put(furniture,x,y,REEDS);
+  write('peat',m,[
+    ['north',288,8],['from-far-bank',288,40],
+    ['cutter',...at(21,5)],['camp-peat',...at(31,6)],['body-1',...at(10,16)],['body-2',...at(23,17)],['old-body',...at(31,23)],
+    ['leech-1',...at(18,10)],['wisp-1',...at(27,11)],['mosquito-1',...at(11,21)],['peat-spot',...at(26,14)],['forage-1',...at(5,14)],
   ]);
 }

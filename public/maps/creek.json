@@ -1738,13 +1738,13 @@
       "name": "marsh",
       "image": "../assets/marsh-tiles.svg",
       "imagewidth": 128,
-      "imageheight": 64,
+      "imageheight": 80,
       "margin": 0,
       "spacing": 0,
       "tilewidth": 16,
       "tileheight": 16,
       "columns": 8,
-      "tilecount": 32,
+      "tilecount": 40,
       "tiles": [
         {
           "id": 3,
@@ -1948,6 +1948,36 @@
         },
         {
           "id": 27,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 31,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 33,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 34,
           "properties": [
             {
               "name": "collides",

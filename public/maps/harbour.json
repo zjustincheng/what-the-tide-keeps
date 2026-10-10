@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 14,
+  "nextobjectid": 16,
   "layers": [
     {
       "id": 1,
@@ -1956,7 +1956,7 @@
         0,
         0,
         0,
-        23,
+        0,
         23,
         0,
         0,
@@ -2004,7 +2004,7 @@
         0,
         0,
         0,
-        23,
+        0,
         23,
         0,
         0,
@@ -3276,6 +3276,30 @@
           "rotation": 0,
           "visible": true,
           "point": true
+        },
+        {
+          "id": 14,
+          "name": "east",
+          "type": "",
+          "x": 760,
+          "y": 128,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 15,
+          "name": "from-lanes",
+          "type": "",
+          "x": 728,
+          "y": 128,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
         }
       ]
     }
@@ -3476,6 +3500,36 @@
         },
         {
           "id": 23,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 27,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 29,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 30,
           "properties": [
             {
               "name": "collides",

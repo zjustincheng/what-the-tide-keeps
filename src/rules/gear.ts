@@ -2,7 +2,8 @@
 import type { MemberId } from './battle';
 
 export type KeepsakeId = 'cracked-mirror' | 'crow-feather' | 'covenant-token' | 'yoke-peg' | 'wool-charm' | 'boar-tusk' | 'iron-collar' | 'famine-spoon' | 'weir-hook' | 'frost-ring' | 'tide-shell'
-  | 'garrison-buckler' | 'saints-medal' | 'night-cloak' | 'smuggled-blade' | 'raven-quill' | 'viper-fang' | 'hospice-bell' | 'liars-charm' | 'adders-coil' | 'house-signet' | 'courier-bell' | 'wren-feather' | 'champions-torc' | 'elder-pearl' | 'kraken-tooth' | 'sea-glass';
+  | 'garrison-buckler' | 'saints-medal' | 'night-cloak' | 'smuggled-blade' | 'raven-quill' | 'viper-fang' | 'hospice-bell' | 'liars-charm' | 'adders-coil' | 'house-signet' | 'courier-bell' | 'wren-feather' | 'champions-torc' | 'elder-pearl' | 'kraken-tooth' | 'sea-glass'
+  | 'grafting-knife' | 'cutters-wedge' | 'shepherds-horn' | 'tin-cup' | 'brand-iron' | 'drowned-bell';
 // What a keepsake changes about its holder in battle.
 // agility: in hundredths of a hero's dodge windows; +15 makes every window 15% wider.
 export type Mods = Readonly<{ health: number; damage: number; reveal: number; suppressCost: number; shown: number; agility: number }>;
@@ -51,6 +52,13 @@ export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; ef
   'elder-pearl': { name: 'The elder\'s pearl', effect: '8 more health. The sea knows who carries it.', drawback: 'Shows 2 more mana.', mods: { health: 8, shown: 2 } },
   'kraken-tooth': { name: 'The kraken\'s tooth', holder: 'octopus', effect: 'Its grapple hits 4 harder.', drawback: '4 less health: it weighs on it.', mods: { damage: 4, health: -4 } },
   'sea-glass': { name: 'Sea glass charm', effect: 'Dodges come easier (+12% timing).', drawback: 'Hits 1 softer.', mods: { agility: 12, damage: -1 } },
+  // Off the roads.
+  'grafting-knife': { name: 'Grafting knife', holder: 'chameleon', effect: 'Revealing from hiding hits 3 harder.', drawback: 'Shows 1 more mana.', mods: { reveal: 3, shown: 1 } },
+  'cutters-wedge': { name: 'The cutter\'s wedge', holder: 'bear', effect: 'Attacks hit 3 harder.', drawback: 'Dodging is harder (-10% timing): it is heavy.', mods: { damage: 3, agility: -10 } },
+  'shepherds-horn': { name: 'The shepherds\' horn', effect: '4 more health, and dodges come easier (+8% timing).', drawback: 'Shows 2 more mana: it carries.', mods: { health: 4, agility: 8, shown: 2 } },
+  'tin-cup': { name: 'A tin cup', effect: 'Shows 2 less mana: nobody looks twice at a beggar.', drawback: '2 less health.', mods: { shown: -2, health: -2 } },
+  'brand-iron': { name: 'The old brand-iron', effect: 'Attacks hit 2 harder, and 4 more health.', drawback: 'Shows 3 more mana: it remembers the fire.', mods: { damage: 2, health: 4, shown: 3 } },
+  'drowned-bell': { name: 'The drowned bell', holder: 'octopus', effect: '6 more health, and hits 1 harder.', drawback: 'Dodging is harder (-10% timing).', mods: { health: 6, damage: 1, agility: -10 } },
   // Sold rather than found.
   'garrison-buckler': { name: 'Garrison buckler',
     effect: '7 more health.', drawback: 'Attacks hit 1 softer, and dodging is harder (-10% timing).', mods: { health: 7, damage: -1, agility: -10 } },

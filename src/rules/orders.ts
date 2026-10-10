@@ -72,6 +72,8 @@ export function leads(world: World): string[] {
     ...(has('newt-freed') && !has('pens-freed') ? ['The newt\'s little brother was taken to wherever the magistrate keeps the caught. East along the far bank.'] : []),
     ...(has('cuckoo-slain') && !has('lord-freed') && !has('lord-left') ? ['The cuckoo said the real lord is in the cellar under his hall.'] : []),
     ...(has('duellist-beaten') && !has('son-freed') ? ['The wren on the market tier: her son served in the house, and stopped writing.'] : []),
+    ...(has('cistern-asked') && !has('ratling-home') ? ['The rat in the lanes behind the harbour: her son went down the grate to the cistern, and hasn\'t come up.'] : []),
+    ...(has('overseer-slain') && !has('quarrymen-freed') ? ['The quarry\'s overseer is dead. The convicts are still on their chain.'] : []),
     ...(has('old-roads') ? [] : carrying('shrine-stone') ? [] : ['The pilgrim in the fields is walking to the last shrine, on the harbour quay.']),
   ];
 }
