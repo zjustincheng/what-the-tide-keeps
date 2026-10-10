@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { act, createBattle, intent } from '../../src/rules/battle.ts';
+import { act, createBattle, intent, nextStrike } from '../../src/rules/battle.ts';
 import { buy, canBuy, offered } from '../../src/rules/economy.ts';
 import { keepsakeMods } from '../../src/rules/gear.ts';
 import { createWorld } from '../../src/rules/world.ts';
@@ -30,6 +30,22 @@ test('a fight in waves goes on when the first enemy falls', () => {
   assert.match(first.log.at(-1)!, /Another raider comes on/);
   const second = act({ ...first, phase: 'player', party: first.party.map(member => ({ ...member, acted: false })), enemy: { ...first.enemy, health: 1 } }, 'chameleon', 'attack');
   assert.equal(second.phase, 'victory');
+});
+
+test('company fights beside the enemy from the first round, and every one of them has to fall', () => {
+  const weevil = { name: 'Weevil', art: 'weevil', health: 18, weapon: 'snout', damage: 3 };
+  const battle = createBattle('weevil', [], { roster: ['chameleon'], company: [weevil, weevil] });
+  assert.equal(battle.followers.length, 2);
+  assert.equal(battle.followers[0].art, 'weevil');
+  // The leader down with its company standing is not a win.
+  const leaderDown = act({ ...battle, enemy: { ...battle.enemy, health: 1 } }, 'chameleon', 'attack');
+  assert.notEqual(leaderDown.phase, 'victory');
+  // The company strikes in the enemy's turn, with its own weapon.
+  const blow = nextStrike({ ...leaderDown, phase: 'enemy', step: 0 })!;
+  assert.equal(blow.move.name, 'weevil\'s snout');
+  assert.equal(blow.move.damage, 3);
+  const allDown = act({ ...battle, enemy: { ...battle.enemy, health: 1 }, followers: battle.followers.map(follower => ({ ...follower, health: 0 })) }, 'chameleon', 'attack');
+  assert.equal(allDown.phase, 'victory');
 });
 
 test('the deserter captain volleys three times and executes through a guard when someone is down', () => {

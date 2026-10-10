@@ -15,7 +15,7 @@ import { apothecary, causeway, creek, farBank, hospice, pens, wickmere } from '.
 import { archive, cellars, climb, hold, houseHall, ring, summit, upper } from '../content/holds';
 import { krakenGrave, openWater, port, reef, seaPens } from '../content/ocean';
 import { cistern, fleet, lanes, orchard, peat, quarry, shieling } from '../content/outskirts';
-import type { Encounter } from '../rules/battle';
+import type { Encounter, Escort } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
 import type { ThemeId } from '../audio/themes';
@@ -45,9 +45,9 @@ export type Area = {
   npcs: { point: string; texture: string; hiddenIf?: Condition[]; lit?: true; peek?: true }[];
   // Enemies respawn on every visit unless hiddenIf holds; defeat applies once the fight is won.
   // An ambusher's signature flickers out as the hero comes near, and it strikes first.
-  // waves: how many times it comes on before the fight is won.
+  // waves: how many times it comes on before the fight is won. company: others who fight beside it, all at once.
   // decoy: a signature with nothing behind it, which comes apart when touched. shows: the mana the signature shows, when it lies.
-  enemies: { point: string; encounter: Encounter; hiddenIf?: Condition[]; defeat?: Effect; ambush?: true; waves?: number; decoy?: true; shows?: number }[];
+  enemies: { point: string; encounter: Encounter; hiddenIf?: Condition[]; defeat?: Effect; ambush?: true; waves?: number; company?: readonly Escort[]; decoy?: true; shows?: number }[];
   // SVG art in public/assets to load, beyond the map, tiles, and enemies.
   assets?: string[];
   // Objects on the map that disappear once any hiddenIf condition holds. Solid ones block the way.
@@ -72,6 +72,10 @@ export type Area = {
   // The colour grade over the map: saturation shift, brightness multiplier, and vignette strength.
   grade?: { saturation?: number; brightness?: number; vignette?: number };
 };
+
+// Those who fight beside an enemy from the first round: a raider's mate, a harrier's pair.
+const RAIDER: Escort = { name: 'Raider', art: 'raider', health: 22, weapon: 'knife', damage: 4 };
+const HARRIER: Escort = { name: 'Harrier', art: 'harrier', health: 18, weapon: 'talons', damage: 4 };
 
 // The church is safe ground. Its two practice enemies exist only for the automated tests, at /?practice.
 const PRACTICE = typeof location !== 'undefined' && new URLSearchParams(location.search).has('practice');
@@ -350,7 +354,7 @@ export const PASS: Area = {
   ...HIGHLAND_GROUND, key: 'pass', map: 'pass', music: 'highlands', place: 'The high pass', dialogue: pass, grade: COLD,
   npcs: [],
   enemies: [
-    { point: 'raider-1', encounter: 'raider', ambush: true }, { point: 'raider-2', encounter: 'raider', ambush: true }, { point: 'raider-3', encounter: 'raider', ambush: true, waves: 2 },
+    { point: 'raider-1', encounter: 'raider', ambush: true }, { point: 'raider-2', encounter: 'raider', ambush: true }, { point: 'raider-3', encounter: 'raider', ambush: true, company: [RAIDER] },
     // After the hyena, something far larger is on the road. It cannot be beaten yet.
     { point: 'inquisitor', encounter: 'inquisitor', hiddenIf: [{ not: { flag: 'hyena-slain' } }] },
   ],
@@ -488,8 +492,8 @@ export const DROVE: Area = {
   npcs: [{ point: 'drover', texture: 'drover' }],
   forage: { 'forage-1': 'berry' },
   enemies: [
-    // The raider camp fights in two waves.
-    { point: 'raider-1', encounter: 'raider', ambush: true, waves: 2 }, { point: 'raider-2', encounter: 'raider', ambush: true },
+    // The raider camp comes at you two at a time.
+    { point: 'raider-1', encounter: 'raider', ambush: true, company: [RAIDER] }, { point: 'raider-2', encounter: 'raider', ambush: true },
     { point: 'hound-1', encounter: 'hound', ambush: true },
   ],
   props: [
@@ -574,7 +578,7 @@ export const ROOKERY_ROAD: Area = {
   ...HIGHLAND_GROUND, key: 'rookery-road', map: 'rookery-road', music: 'highlands', place: 'The rookery road', dialogue: rookery,
   grade: { saturation: -0.45, brightness: 0.76, vignette: 0.55 }, npcs: [],
   enemies: [
-    { point: 'harrier-1', encounter: 'harrier' }, { point: 'harrier-2', encounter: 'harrier', waves: 2 },
+    { point: 'harrier-1', encounter: 'harrier' }, { point: 'harrier-2', encounter: 'harrier', company: [HARRIER] },
     { point: 'hound-1', encounter: 'hound', ambush: true },
   ],
   props: [{ point: 'frozen-courier', texture: 'courier', hiddenIf: [] }, { point: 'camp-rookery', texture: 'campfire', hiddenIf: [] },
@@ -900,6 +904,11 @@ export const REEF: Area = {
   exits: { out: { to: 'open-water', spawn: 'from-reef', prompt: 'Rise back up to the open water' } },
 };
 
+// Those who fight beside an enemy, all at once, in the fights off the roads.
+const WEEVIL: Escort = { name: 'Weevil', art: 'weevil', health: 18, weapon: 'snout', damage: 3 };
+const OVERSEERS_MAN: Escort = { name: 'Overseer\'s man', art: 'acolyte', health: 24, weapon: 'staff', damage: 4 };
+const CISTERN_DEAD: Escort = { name: 'Drowned dead', art: 'ghoul', health: 22, weapon: 'grip', damage: 4 };
+
 // Off the roads, one or two in every region: the orchard below the downs, the church's quarry, the shepherds' summer huts,
 // the lanes behind the harbour and the cistern under them, the peat cuttings, and the church's drowned boats.
 export const ORCHARD: Area = {
@@ -908,8 +917,8 @@ export const ORCHARD: Area = {
   npcs: [{ point: 'grafter', texture: 'grafter' }],
   enemies: [
     { point: 'weevil-1', encounter: 'weevil' }, { point: 'weevil-2', encounter: 'weevil' }, { point: 'locust-1', encounter: 'locust' },
-    // The heap in the old tree: weevils, and more weevils, and more.
-    { point: 'blight', encounter: 'weevil', waves: 3, hiddenIf: [{ flag: 'orchard-cleared' }], defeat: { set: 'orchard-cleared' } },
+    // The heap in the old tree: weevils, all of them at once.
+    { point: 'blight', encounter: 'weevil', company: [WEEVIL, WEEVIL, WEEVIL], hiddenIf: [{ flag: 'orchard-cleared' }], defeat: { set: 'orchard-cleared' } },
   ],
   props: [{ point: 'camp-orchard', texture: 'campfire', hiddenIf: [] }],
   forage: { 'forage-1': 'berry', 'forage-2': 'berry' },
@@ -922,8 +931,8 @@ export const QUARRY: Area = {
   grade: { saturation: -0.45, brightness: 0.86, vignette: 0.5 },
   npcs: [{ point: 'quarryman', texture: 'mole', hiddenIf: [{ flag: 'quarrymen-freed' }] }, { point: 'old-cutter', texture: 'old-mole', hiddenIf: [{ flag: 'quarrymen-freed' }] }],
   enemies: [
-    // The overseer comes down off the terrace with his men behind him.
-    { point: 'overseer', encounter: 'acolyte', waves: 2, hiddenIf: [{ flag: 'overseer-slain' }], defeat: { set: 'overseer-slain' } },
+    // The overseer comes down off the terrace with his men beside him.
+    { point: 'overseer', encounter: 'acolyte', company: [OVERSEERS_MAN, OVERSEERS_MAN], hiddenIf: [{ flag: 'overseer-slain' }], defeat: { set: 'overseer-slain' } },
     { point: 'guard-1', encounter: 'acolyte', hiddenIf: [{ flag: 'quarrymen-freed' }] }, { point: 'guard-2', encounter: 'acolyte', hiddenIf: [{ flag: 'quarrymen-freed' }] },
   ],
   exits: { east: { to: 'border-road', spawn: 'from-quarry', prompt: 'Go back to the border road' } },
@@ -965,7 +974,7 @@ export const CISTERN: Area = {
   npcs: [{ point: 'ratling', texture: 'ratling', hiddenIf: [{ flag: 'ratling-home' }] }],
   enemies: [
     // What stands in the water: the dead the cistern kept, one after another.
-    { point: 'drowned', encounter: 'ghoul', waves: 3, hiddenIf: [{ flag: 'cistern-cleared' }], defeat: { set: 'cistern-cleared' } },
+    { point: 'drowned', encounter: 'ghoul', company: [CISTERN_DEAD, CISTERN_DEAD], hiddenIf: [{ flag: 'cistern-cleared' }], defeat: { set: 'cistern-cleared' } },
     { point: 'leech-1', encounter: 'ghoul' }, { point: 'wisp-1', encounter: 'wisp' },
   ],
   exits: { up: { to: 'lanes', spawn: 'from-cistern', prompt: 'Climb back up to the yard' } },

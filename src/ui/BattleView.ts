@@ -60,7 +60,7 @@ export class BattleView {
         <div class="fighter enemy-fighter" data-foe="0"><img src="${import.meta.env.BASE_URL}assets/${encounter}.svg" alt="${enemyName}" /></div>
         <div><h3>${enemyName}</h3>${TRAITS[encounter].length ? `<p class="enemy-traits" title="The bear's maul breaks armour and can't reach flyers; the vulture's talons take flyers and skid off armour; the chameleon strikes casters hardest; the frog's poison is double in insects and nothing in the dead. Spells ignore all of it.">${TRAITS[encounter].map(trait => trait[0].toUpperCase() + trait.slice(1)).join(' · ')}</p>` : ''}<div class="health-bar" role="meter" aria-label="${enemyName} health" aria-valuemin="0" aria-valuemax="100"><span></span></div><p id="enemy-condition"></p><p class="mana" id="enemy-mana"></p></div>
         ${this.state.followers.map((follower, index) => `<div class="follower" data-foe="${index + 1}">
-          <div class="fighter enemy-fighter"><img src="${import.meta.env.BASE_URL}assets/${follower.name.toLowerCase()}.svg" alt="${follower.name}" /></div>
+          <div class="fighter enemy-fighter"><img src="${import.meta.env.BASE_URL}assets/${follower.art ?? follower.name.toLowerCase()}.svg" alt="${follower.name}" /></div>
           <h4>${follower.name}</h4><div class="health-bar" role="meter" aria-label="${follower.name} health" aria-valuemin="0" aria-valuemax="100"><span></span></div><p class="follower-condition"></p><p class="mana">Mana veiled</p>
         </div>`).join('')}
       </div>

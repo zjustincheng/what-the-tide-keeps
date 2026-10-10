@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { createBattle, drainedAfter, enemyMana, ENEMIES, LIEUTENANTS, MEMBERS, woundsAfter } from '../rules/battle';
 import type { BattleOptions } from '../rules/battle';
-import type { Encounter } from '../rules/battle';
+import type { Encounter, Escort } from '../rules/battle';
 import { anchor, forgetAll, held, hollow, MEMORY_IDS, remind, tideTakesAll, wipe } from '../rules/memory';
 import type { Companion } from '../rules/memory';
 import { apply, conversation, drop, fill, fleeing, holds, lineup, replies, rest, roster } from '../rules/world';
@@ -49,7 +49,7 @@ type Direction = 'up' | 'down' | 'left' | 'right';
 type Point = { name: string; x: number; y: number };
 type Prop = { sprite: Phaser.Physics.Arcade.Sprite; hiddenIf: Condition[]; shadow?: Phaser.GameObjects.Ellipse };
 type Foe = { encounter: Encounter; defeat?: Effect; fledAt?: number; ambush?: boolean; lurks?: boolean; hidden?: boolean; decoy?: boolean; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container;
-  home: { x: number; y: number }; phase: number; point: string; waves?: number };
+  home: { x: number; y: number }; phase: number; point: string; waves?: number; company?: readonly Escort[] };
 // Ordinary enemies come after the hero once he is in sight, a little slower than he walks; bosses and guardians hold their ground.
 // sight and speed are in pixels and pixels per second. The hero walks at 70.
 const CHASE: Partial<Record<Encounter, { sight: number; speed: number }>> = {
@@ -482,7 +482,7 @@ export class AreaScene extends Phaser.Scene {
       }
   }
 
-  private createFoe(at: Point, { encounter, defeat, ambush: lurks, point, waves, decoy, shows }: Area['enemies'][number]) {
+  private createFoe(at: Point, { encounter, defeat, ambush: lurks, point, waves, decoy, shows, company }: Area['enemies'][number]) {
     // At night every ordinary enemy hunts unseen.
     const ambush = lurks || (Boolean(loadWorld().night) && Boolean(CHASE[encounter]) && !decoy);
     const [width, height, x, y] = BODY[encounter];
@@ -493,10 +493,10 @@ export class AreaScene extends Phaser.Scene {
     // Veiled mana reads as a faint, cool shimmer; open mana as a warm ring.
     const veiled = ENEMIES[encounter].veiled;
     const ring = this.add.ellipse(0, veiled ? 5 : 4, veiled ? 34 : 37, veiled ? 18 : 20).setStrokeStyle(1, veiled ? 0x9dbbb4 : 0xd2b675, veiled ? 0.65 : 0.7);
-    const mana = this.add.text(0, veiled ? -24 : -23, `◇ ${shows ?? enemyMana(createBattle(encounter))}`, { fontFamily: 'monospace', fontSize: '8px', color: veiled ? '#b7d3c7' : '#dbc58b' }).setOrigin(0.5);
+    const mana = this.add.text(0, veiled ? -24 : -23, `◇ ${shows ?? enemyMana(createBattle(encounter))}${company?.length ? ` ×${company.length + 1}` : ''}`, { fontFamily: 'monospace', fontSize: '8px', color: veiled ? '#b7d3c7' : '#dbc58b' }).setOrigin(0.5);
     const signature = this.add.container(at.x, at.y, [ring, mana]).setDepth(5);
     this.tweens.add({ targets: ring, alpha: veiled ? 0.15 : 0.35, duration: veiled ? 1400 : 1000, yoyo: true, repeat: -1 });
-    const foe: Foe = { encounter, sprite, signature, defeat, ambush, lurks, decoy, home: { x: at.x, y: at.y }, phase: this.foes.length * 1.7, point, waves };
+    const foe: Foe = { encounter, sprite, signature, defeat, ambush, lurks, decoy, home: { x: at.x, y: at.y }, phase: this.foes.length * 1.7, point, waves, company };
     this.foes.push(foe);
     // A decoy is a signature and nothing else: walk into it and it comes apart.
     if (decoy) {
@@ -856,7 +856,7 @@ export class AreaScene extends Phaser.Scene {
         saved = saveMemory(wipe(loadMemory(), this.area.region === 'THE OCEAN' ? 2 : 1)) && saveWorld(drop(loadWorld()));
         this.scene.start('church');
       }
-    }, foe.encounter, { ...this.partyOptions(true, LIEUTENANTS.includes(foe.encounter)), ambush: Boolean(foe.ambush && foe.hidden), surprise: this.sneaking, waves: foe.waves });
+    }, foe.encounter, { ...this.partyOptions(true, LIEUTENANTS.includes(foe.encounter)), ambush: Boolean(foe.ambush && foe.hidden), surprise: this.sneaking, waves: foe.waves, company: foe.company });
   }
 
   // A bout in the Talon Ring. Winning pays the prize; losing or yielding walks the party out hurt, but nobody dies in the ring.

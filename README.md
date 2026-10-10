@@ -346,7 +346,7 @@ The ossuary is dark now: the monk gives you the key, but tells you not to go dow
 
 The fort's **smith** tempers keepsakes, once each, for 30 coins: a tempered keepsake's benefits grow by half (rounded up) and its drawbacks stay the same (`keepsakeMods` in `src/rules/gear.ts`).
 
-Some fights come in **waves**: the raider camp on the drove road and the raider on the high switchback each send a second raider when the first falls.
+Some enemies bring **company** that fights beside them from the first round: the raider camp on the drove road, the raider on the high switchback, and a harrier on the rookery road each come in pairs. The leader falling isn't enough; every one of them has to go down. On the map, a signature shows how many are coming (`◇ 3 ×2`).
 
 ### The rookery road
 
@@ -441,11 +441,11 @@ The regions are joined in more than one place, and some links only open from the
 
 Seven places nobody is sent to, one or two in every region (`src/content/outskirts.ts`). Each has someone in it, something to find, and something the church would rather nobody saw.
 
-- **The orchard**, down the sunken lane at the south edge of the downs. An old hare keeps a dead family's apple trees alive, and has grafted a branch for each of them onto a stake. A heap of weevils in the old tree comes on three times. Kill it and she gives you the **grafting knife** (chameleon: reveal hits 3 harder, shows 1 more mana).
-- **The quarry**, west off the border road. Branded convicts on one chain, cutting stone stamped FOR THE LIGHT. Kill the overseer (an exile who comes on twice) and the mole will let you break the chain. The old cutter gives you his **wedge** (bear: hits 3 harder, dodging 10% harder).
+- **The orchard**, down the sunken lane at the south edge of the downs. An old hare keeps a dead family's apple trees alive, and has grafted a branch for each of them onto a stake. A heap of weevils in the old tree: a big one and three small, all at once. Kill it and she gives you the **grafting knife** (chameleon: reveal hits 3 harder, shows 1 more mana).
+- **The quarry**, west off the border road. Branded convicts on one chain, cutting stone stamped FOR THE LIGHT. Kill the overseer (an exile, with two of his men beside him) and the mole will let you break the chain. The old cutter gives you his **wedge** (bear: hits 3 harder, dodging 10% harder).
 - **The shieling**, east off the drove road. The shepherds' summer huts, snowed in, and a sheepdog still keeping the flock for shepherds taken in the levy. You can tell her they aren't coming back. The **shepherds' horn** is in the hut (4 more health, +8% dodge timing, shows 2 more mana). Harriers and hounds hunt there.
 - **The lanes**, east of the harbour. Tenements, the church's soup line (a name in the book before every bowl), and a pump with the church's lock on it. A rat's son went down the yard's grate for free water and hasn't come up. She gives you the bar to lift it.
-- **The cistern**, under the lanes. The city's water, a valve the church shuts in "dry years", and the dead standing in the water three times over. Put them down, and bring the boy up. His mother gives you his **tin cup** (shows 2 less mana, 2 less health).
+- **The cistern**, under the lanes. The city's water, a valve the church shuts in "dry years", and three dead standing in the water together. Put them down, and bring the boy up. His mother gives you his **tin cup** (shows 2 less mana, 2 less health).
 - **The peat cuttings**, south of the far bank. A vole cuts peat for the capital, and leaves where they lie the bodies the bog gives back. The oldest is three hundred years old and wears your brand. In his hand is the **old brand-iron** (hits 2 harder, 4 more health, shows 3 more mana).
 - **The drowned fleet**, out on the current east of the open water. Three church boats scuttled together on the way back from the light. A hermit crab lives in a marine's helmet. The manifest reads PASSENGERS FOR THE LIGHT, 14. RETURNING: —. The **drowned bell** is in the hold (octopus: 6 more health, hits 1 harder, dodging 10% harder).
 

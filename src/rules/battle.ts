@@ -67,7 +67,10 @@ export const STUDIABLE: readonly string[] = [...new Set(Object.values(ENEMY_SPEL
 export type Phase = 'player' | 'enemy' | 'victory' | 'defeat' | 'fled';
 export type Fighter = Readonly<{ health: number; maxHealth: number; mana: number; maxMana: number }>;
 // A follower the hyena has fed on is gone for good: it cannot be raised again.
-export type Follower = Fighter & Readonly<{ name: string; eaten?: boolean }>;
+export type Follower = Fighter & Readonly<{ name: string; eaten?: boolean; weapon?: string; damage?: number; art?: string }>;
+// Others who come with an enemy into one fight, all at once: a heap of weevils, an overseer's men.
+// art: the enemy drawing to show for them.
+export type Escort = Readonly<{ name: string; art: string; health: number; weapon: string; damage?: number }>;
 // Who an attack is aimed at: 0 is the main enemy, 1 and up are its followers.
 export type Foe = number;
 // revive: the move raises fallen followers instead of striking. drain: the attacker heals by what it deals.
@@ -401,13 +404,15 @@ export type BattleOptions = Readonly<{
   ambush?: boolean; surprise?: boolean;
   // tempered: keepsakes the smith has tempered. waves: how many times the enemy comes on before the fight is won.
   tempered?: readonly KeepsakeId[]; waves?: number;
+  // company: others who fight beside the enemy from the first round.
+  company?: readonly Escort[];
   // arena: a bout in the Talon Ring, where losing isn't dying.
   arena?: boolean;
 }>;
 // A fight's party when none is given: the three who fought together first.
 const TRIO: readonly MemberId[] = ['chameleon', 'bear', 'vulture'];
 export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], options: BattleOptions = {}): Battle {
-  const { hollow = UNHOLLOWED, gear, books = STARTING_BOOKS, roster = TRIO, supplies = NO_SUPPLIES, wounds = {}, drained = {}, ambush = false, surprise = false, tempered = [], waves = 1 } = options;
+  const { hollow = UNHOLLOWED, gear, books = STARTING_BOOKS, roster = TRIO, supplies = NO_SUPPLIES, wounds = {}, drained = {}, ambush = false, surprise = false, tempered = [], waves = 1, company = [] } = options;
   const member = (id: MemberId, base: number, mana: number): Member => {
     const kept = gear ? mods(gear, id, tempered) : NO_MODS;
     const worn = hollow.kraken === false ? { ...kept, agility: kept.agility - NO_KRAKEN } : kept;
@@ -424,7 +429,10 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
     round: 1, phase: ambush ? 'enemy' : 'player', encounter, studied: studied.filter(name => STUDIABLE.includes(name)), hollow, enemyRevealed: false,
     party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10), member('frog', 18, 12), member('octopus', 22, 14)].filter(member => roster.includes(member.id)),
     enemy: { health: scaled(ENEMIES[encounter].health), maxHealth: scaled(ENEMIES[encounter].health), mana: ENEMIES[encounter].mana, maxMana: ENEMIES[encounter].mana },
-    followers: (FOLLOWERS[encounter] ?? []).map(({ name, health }) => ({ name, health: scaled(health), maxHealth: scaled(health), mana: 4, maxMana: 4 })),
+    followers: [
+      ...(FOLLOWERS[encounter] ?? []).map(({ name, health }) => ({ name, health: scaled(health), maxHealth: scaled(health), mana: 4, maxMana: 4 })),
+      ...company.map(({ name, art, health, weapon, damage }) => ({ name, art, weapon, damage, health: scaled(health), maxHealth: scaled(health), mana: 4, maxMana: 4 })),
+    ],
     fury: 0, step: 0, snared: surprise && !ambush, stage: 1, wave: 1, waves, supplies, enemyPoison: 0, soured: 0, impostor: null, lastSpell: null, enemyWard: 0, stunned: null,
     log: [ENEMIES[encounter].opening, ...(STARTS_POISONED[encounter] ? ['The air in here is thick with venom. Everyone is poisoned already.'] : []), ...(ambush ? ['Ambush! It moves before you can.'] : surprise ? ['It never saw you coming. It loses its first move.'] : [])],
   };
@@ -447,7 +455,7 @@ export function flee(battle: Battle): Battle {
   const target = enemyTarget(battle)!;
   const living = battle.followers.find(follower => follower.health > 0);
   const blow = battle.enemy.health > 0 && intent(battle).damage > 0 ? intent(battle)
-    : { name: living ? `${living.name.toLowerCase()}'s ${FOLLOWERS[battle.encounter]!.find(kind => kind.name === living.name)!.weapon}` : 'parting blow', damage: FOLLOWER_BLOW };
+    : { name: living ? `${living.name.toLowerCase()}'s ${kindOf(battle, living).weapon}` : 'parting blow', damage: FOLLOWER_BLOW };
   const alone = battle.party.filter(member => member.health > 0).length === 1;
   const health = Math.max(alone ? 1 : 0, target.health - blow.damage);
   const party = battle.party.map(member => member.id === target.id ? { ...member, health } : member);
@@ -929,13 +937,18 @@ export function hesitate(battle: Battle): Battle {
   };
 }
 
+// What a follower fights with: its own weapon if it came as company, or its kind's.
+function kindOf(battle: Pick<Battle, 'encounter'>, follower: Follower): { weapon: string; damage?: number } {
+  return follower.weapon ? { weapon: follower.weapon, damage: follower.damage } : FOLLOWERS[battle.encounter]!.find(kind => kind.name === follower.name)!;
+}
+
 // The main enemy moves first, then each standing follower.
 function enemyMoves(battle: Battle): Move[] {
   // A fallen leader takes no more turns; its followers do.
   const main = battle.snared || battle.enemy.health <= 0 ? [] : [intent(battle)];
   return [...main.flatMap(move => Array.from({ length: move.hits ?? 1 }, (_, i) => move.hits ? { ...move, name: `${move.name} (${i + 1} of ${move.hits})` } : move)), ...battle.followers.filter(follower => follower.health > 0)
     .map(follower => {
-      const kind = FOLLOWERS[battle.encounter]!.find(kind => kind.name === follower.name)!;
+      const kind = kindOf(battle, follower);
       return { name: `${follower.name.toLowerCase()}'s ${kind.weapon}`, type: 'physical' as const, damage: kind.damage ?? FOLLOWER_BLOW };
     })];
 }
