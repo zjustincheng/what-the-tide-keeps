@@ -66,7 +66,7 @@ function write(name,{W,H,floor,furniture},points){
   const m=grid(40,30,SWELL);const {floor,furniture,put,fill,frame,walk}=m;
   fill(furniture,1,1,38,28,DEEP);frame(DEEP);
   // The ferry tie-up in the south-west, and the walk in.
-  walk(2,24,8,27,DECK);fill(furniture,0,25,0,26,0);fill(floor,0,25,0,26,DECK);put(furniture,4,27,LANTERN);
+  walk(2,24,8,27,DECK);fill(furniture,0,25,1,26,0);fill(floor,0,25,1,26,DECK);put(furniture,4,27,LANTERN);
   // The hulks: each a deck with its hull showing at the waterline and a mast or two.
   const hulk=(x0,y0,x1,y1)=>{walk(x0,y0,x1,y1,DECK);fill(furniture,x0,y1+1,x1,y1+1,HULL);};
   hulk(6,14,16,21);hulk(19,15,30,22);hulk(5,3,15,10);hulk(19,3,33,11);hulk(33,15,37,24);

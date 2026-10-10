@@ -18,7 +18,7 @@ test('every map uses only tiles its tile sheet actually draws', () => {
 
 // Every place you can arrive in a map must be walkable to every other: a hull or a wall drawn across a path
 // strands the hero where he lands. Arrival points are 'spawn' and the 'from-…' points.
-test('every arrival point in every map can walk to every other', () => {
+test('every arrival point in every map can walk to every other, and to every way out at the edge', () => {
   const stranded: string[] = [];
   for (const file of readdirSync('public/maps')) {
     const map = JSON.parse(readFileSync(`public/maps/${file}`, 'utf8'));
@@ -47,6 +47,13 @@ test('every arrival point in every map can walk to every other', () => {
     for (const point of arrivals.slice(1)) {
       const tile = tileOf(point);
       if (!tile || !seen.has(tile.join())) stranded.push(`${file}: ${point.name} can't be reached from ${arrivals[0].name}`);
+    }
+    // Ways out at the map's edge must be reachable too, close enough to take: within a tile.
+    const edge = map.layers[2].objects.filter((point: { name: string; x: number; y: number }) => !point.name.startsWith('from-') && (point.x < 16 || point.y < 16 || point.x > width * 16 - 16 || point.y > height * 16 - 16));
+    for (const point of edge) {
+      const tx = Math.floor(point.x / 16), ty = Math.floor(point.y / 16);
+      const near = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => seen.has(`${tx + dx},${ty + dy}`));
+      if (!near) stranded.push(`${file}: the way out at ${point.name} can't be reached`);
     }
   }
   assert.deepEqual(stranded, []);
