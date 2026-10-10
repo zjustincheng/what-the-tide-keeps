@@ -338,20 +338,38 @@ export class AreaScene extends Phaser.Scene {
     return { world: loadWorld(), lost: loadMemory().lost, studied: loadGrimoire() };
   }
 
-  // Every way out is marked with a small arrow, so nobody has to find an exit by walking into it. At a map's edge, it points out and drifts that way;
-  // in the middle of a map, a chevron bobs above the spot. A barred way is marked in grey until it opens.
+  // Every way out is marked with a small arrow just in front of it, pointing the way through: through a door in a wall,
+  // or off the edge of the map. A barred way is marked in grey until it opens.
   private markExits(width: number, height: number) {
+    const solid = (x: number, y: number) => x < 0 || y < 0 || x >= width || y >= height || Boolean(this.walls.getTileAtWorldXY(x, y)?.collides);
+    const offMap = (x: number, y: number) => x < 0 || y < 0 || x >= width || y >= height;
+    // Which way the way out goes: off the map if it's right there; otherwise toward the wall it's set in,
+    // the side that is solid where the other side is open, looking one tile away and then two.
+    const facing = (x: number, y: number): number | undefined => {
+      const ways: [number, number, number][] = [[0, -16, -Math.PI / 2], [0, 16, Math.PI / 2], [-16, 0, Math.PI], [16, 0, 0]];
+      const edge = ways.find(([dx, dy]) => offMap(x + dx, y + dy));
+      if (edge) return edge[2];
+      for (const reach of [1, 2]) {
+        const [north, south, west, east] = ways.map(([dx, dy]) => solid(x + dx * reach, y + dy * reach));
+        if (north !== south) return north ? -Math.PI / 2 : Math.PI / 2;
+        if (west !== east) return west ? Math.PI : 0;
+      }
+      return undefined;
+    };
     for (const name of Object.keys(this.area.exits)) {
       const at = this.point(name);
       if (!at) continue;
-      const edge = at.x < 28 ? Math.PI : at.x > width - 28 ? 0 : at.y < 28 ? -Math.PI / 2 : at.y > height - 28 ? Math.PI / 2 : undefined;
-      const inward = 14;
-      const x = edge === Math.PI ? at.x + inward : edge === 0 ? at.x - inward : at.x;
-      const y = edge === -Math.PI / 2 ? at.y + inward : edge === Math.PI / 2 ? at.y - inward : edge === undefined ? at.y - 16 : at.y;
-      const marker = this.add.image(x, y, 'exit-arrow').setDepth(7).setRotation(edge ?? Math.PI / 2).setAlpha(0.95).setScale(0.8);
-      const drift = 4;
-      this.tweens.add({ targets: marker, x: x + Math.round(Math.cos(edge ?? Math.PI / 2) * drift), y: y + Math.round(Math.sin(edge ?? Math.PI / 2) * drift),
-        alpha: 0.4, duration: 750, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      // An exit point set inside the rock faces away from its open side.
+      const inside = solid(at.x, at.y);
+      const open = inside ? [[0, 16], [-16, 0], [16, 0], [0, -16]].find(([dx, dy]) => !solid(at.x + dx, at.y + dy)) : undefined;
+      const set = this.area.exits[name].facing;
+      const angle = set ? { north: -Math.PI / 2, south: Math.PI / 2, east: 0, west: Math.PI }[set] : open ? Math.atan2(-open[1], -open[0]) : facing(at.x, at.y) ?? Math.PI / 2;
+      // Just in front of the way, on the walkable side, pointing through it.
+      const back = open ? 16 : 6;
+      const x = at.x - Math.round(Math.cos(angle) * back), y = at.y - Math.round(Math.sin(angle) * back);
+      const marker = this.add.image(x, y, 'exit-arrow').setDepth(7).setRotation(angle).setAlpha(0.95).setScale(0.8);
+      this.tweens.add({ targets: marker, x: x + Math.round(Math.cos(angle) * 4), y: y + Math.round(Math.sin(angle) * 4),
+        alpha: 0.45, duration: 750, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       this.exitMarkers.push({ name, marker });
     }
     this.shadeExits();

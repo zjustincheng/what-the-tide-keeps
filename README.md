@@ -25,7 +25,7 @@ Every push to `main` builds the game and publishes it to GitHub Pages at **https
 Walking into a wall you only clip by a few pixels slides you along it, so narrow bridges, boardwalks, and doorways don't need lining up exactly (`slideAroundCorners` in `src/scenes/AreaScene.ts`). Solid things on the map, like dark water, barricades, and people, count as walls for this too.
 
 
-**Every way out is marked.** At the edge of a map, a small gold arrow points the way out; in the middle of a map (a door, a cliff path, a stair), a gold chevron bobs above the spot. A way that is still barred, by a locked gate or a guard, is marked in grey, so you know it's there, and turns gold the moment it opens.
+**Every way out is marked** with a small gold arrow just in front of it, pointing the way through: left through a door in a west wall, down through a door in a south wall, off the edge of the map at a road's end. The direction is read from the walls around the exit (an exit can set it with `facing` where they don't make it plain). A way that is still barred, by a locked gate or a guard, is marked in grey, so you know it's there, and turns gold the moment it opens.
 ## Run locally
 
 Requires Node.js 22.12+ (Node.js 24 recommended).

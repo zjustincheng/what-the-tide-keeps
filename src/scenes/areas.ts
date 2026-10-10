@@ -49,7 +49,8 @@ export type Area = {
   // Objects on the map that disappear once any hiddenIf condition holds. Solid ones block the way.
   props?: { point: string; texture: string; solid?: boolean; hiddenIf: Condition[] }[];
   // Points that lead elsewhere when the hero interacts with them. A barred exit only opens once requires holds.
-  exits: Record<string, { to: string; spawn: string; prompt: string; requires?: Condition; barred?: { speaker: string; lines: string[] } }>;
+  // facing: which way the exit's arrow points, where the walls around it don't make that plain.
+  exits: Record<string, { to: string; spawn: string; prompt: string; requires?: Condition; barred?: { speaker: string; lines: string[] }; facing?: 'north' | 'south' | 'east' | 'west' }>;
   // Points where the hero can fish.
   fishing?: Record<string, SpotId>;
   // Places to rest: resting heals every wound and brings the area's enemies back.
@@ -660,7 +661,7 @@ export const FAR_BANK: Area = {
   ],
   forage: { 'forage-1': 'herb' },
   exits: {
-    ferry: { to: 'wickmere', spawn: 'from-far-bank', prompt: 'Walk back across the channel' },
+    ferry: { to: 'wickmere', spawn: 'from-far-bank', prompt: 'Walk back across the channel', facing: 'west' },
     pens: { to: 'pens', spawn: 'from-far-bank', prompt: 'Follow the bank east, to the pens' },
     'apothecary-door': { to: 'apothecary', spawn: 'spawn', prompt: 'Wade into the apothecary', requires: { flag: 'frog-free' },
       barred: { speaker: 'THE APOTHECARY', lines: ['The door is under water to the knee. Something inside is breathing, slow and patient.', 'You wouldn\'t go in there without someone who knows poison.'] } },
