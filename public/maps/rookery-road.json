@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 11,
+  "nextobjectid": 13,
   "layers": [
     {
       "id": 1,
@@ -3543,6 +3543,30 @@
         },
         {
           "id": 4,
+          "name": "gate",
+          "type": "",
+          "x": 424,
+          "y": 56,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 5,
+          "name": "from-holds",
+          "type": "",
+          "x": 424,
+          "y": 72,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 6,
           "name": "frozen-courier",
           "type": "",
           "x": 488,
@@ -3554,7 +3578,7 @@
           "point": true
         },
         {
-          "id": 5,
+          "id": 7,
           "name": "shelter",
           "type": "",
           "x": 248,
@@ -3566,7 +3590,7 @@
           "point": true
         },
         {
-          "id": 6,
+          "id": 8,
           "name": "camp-rookery",
           "type": "",
           "x": 216,
@@ -3578,7 +3602,7 @@
           "point": true
         },
         {
-          "id": 7,
+          "id": 9,
           "name": "harrier-1",
           "type": "",
           "x": 296,
@@ -3590,7 +3614,7 @@
           "point": true
         },
         {
-          "id": 8,
+          "id": 10,
           "name": "harrier-2",
           "type": "",
           "x": 232,
@@ -3602,7 +3626,7 @@
           "point": true
         },
         {
-          "id": 9,
+          "id": 11,
           "name": "hound-1",
           "type": "",
           "x": 360,
@@ -3614,7 +3638,7 @@
           "point": true
         },
         {
-          "id": 10,
+          "id": 12,
           "name": "forage-1",
           "type": "",
           "x": 392,

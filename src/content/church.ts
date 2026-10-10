@@ -7,9 +7,15 @@ export const church: Dialogue = {
     'Easy. Sit up slowly. You were a long time coming back this time.',
     'You asked me to remember something for you, last time. I am sorry. You never told me what it was.',
     'The church has work for you. Grain has stopped reaching the highlands. Take the south door into the farmland and find out why.',
-  ], variants: [{ if: { flag: 'viper-slain' }, lines: [
+  ], variants: [{ if: { flag: 'cuckoo-slain' }, lines: [
+    'Letters again. The church\'s own mail came down from the holds in a sack the size of a cart, a year of it.',
+    'One of the couriers saw a lighthouse on an island that is on no chart. The church has no orders about that. That is not the same as not knowing about it.',
+    'There is nothing more I can send you to. Not by any road. The sea is not the church\'s.',
+  ] }, { if: { flag: 'viper-slain' }, lines: [
     'Wickmere writes that the sickness has stopped. A venomous outbreak, properly contained. The church is satisfied.',
     'Someone also wrote to ask what the lighthouse is. The letter went upstairs, and nobody has come back down with an answer.',
+    'New orders. The messenger birds have stopped flying and the mountain holds have shut their gate. No nation can talk to another. Reopen the routes.',
+    'The holds\' gate is at the top of the rookery road, above the old border fort. It will open for the church\'s convicts. Don\'t expect them to be glad.',
   ] }, { if: { flag: 'hyena-slain' }, lines: [
     'You came back from the highlands. Most don\'t.',
     'Whatever you found under that abbey, don\'t tell me. Not in here.',

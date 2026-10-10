@@ -37,6 +37,12 @@ export const SHOPS: Record<ShopId, { title: string; note: string; wares: Ware[] 
     note: 'Bunches of marsh herbs hang from the ceiling. The antivenom is on the counter, where she can watch it.',
     wares: [{ supply: 'antivenom' }, { supply: 'trail-cake' }, { supply: 'herb-salve' }, { supply: 'smelling-salts' }],
   },
+  // The hold's magpie: whatever came up the mountain before the rookery shut.
+  magpie: {
+    title: 'The magpie',
+    note: 'Bright things, mostly. Nothing has come up the mountain in a year, and it shows in the prices.',
+    wares: [{ supply: 'trail-cake' }, { supply: 'herb-salve' }, { supply: 'smelling-salts' }, { supply: 'antivenom' }, { supply: 'firepot' }],
+  },
   // After dark, behind the tannery: things the church would rather nobody owned.
   'night-market': {
     title: 'The shuttered stall, open',

@@ -2,7 +2,7 @@
 import type { MemberId } from './battle';
 
 export type KeepsakeId = 'cracked-mirror' | 'crow-feather' | 'covenant-token' | 'yoke-peg' | 'wool-charm' | 'boar-tusk' | 'iron-collar' | 'famine-spoon' | 'weir-hook' | 'frost-ring' | 'tide-shell'
-  | 'garrison-buckler' | 'saints-medal' | 'night-cloak' | 'smuggled-blade' | 'raven-quill' | 'viper-fang' | 'hospice-bell';
+  | 'garrison-buckler' | 'saints-medal' | 'night-cloak' | 'smuggled-blade' | 'raven-quill' | 'viper-fang' | 'hospice-bell' | 'liars-charm';
 // What a keepsake changes about its holder in battle.
 // agility: in hundredths of a hero's dodge windows; +15 makes every window 15% wider.
 export type Mods = Readonly<{ health: number; damage: number; reveal: number; suppressCost: number; shown: number; agility: number }>;
@@ -40,6 +40,8 @@ export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; ef
   'viper-fang': { name: 'Viper\'s fang', holder: 'frog',
     effect: 'Her dart hits 3 harder.', drawback: '3 less health.', mods: { damage: 3, health: -3 } },
   'hospice-bell': { name: 'Hospice handbell', effect: '6 more health.', drawback: 'Shows 2 more mana: the sick always know where you are.', mods: { health: 6, shown: 2 } },
+  // The holds: the duellist's charm, which shows almost nothing.
+  'liars-charm': { name: 'Liar\'s charm', effect: 'Shows 4 less mana: enemies look elsewhere.', drawback: 'Hits 1 softer.', mods: { shown: -4, damage: -1 } },
   // Sold rather than found.
   'garrison-buckler': { name: 'Garrison buckler',
     effect: '7 more health.', drawback: 'Attacks hit 1 softer, and dodging is harder (-10% timing).', mods: { health: 7, damage: -1, agility: -10 } },

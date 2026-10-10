@@ -44,14 +44,14 @@ import { advance, darkness, phase, timeName } from '../rules/clock';
 type Direction = 'up' | 'down' | 'left' | 'right';
 type Point = { name: string; x: number; y: number };
 type Prop = { sprite: Phaser.Physics.Arcade.Sprite; hiddenIf: Condition[]; shadow?: Phaser.GameObjects.Ellipse };
-type Foe = { encounter: Encounter; defeat?: Effect; fledAt?: number; ambush?: boolean; lurks?: boolean; hidden?: boolean; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container;
+type Foe = { encounter: Encounter; defeat?: Effect; fledAt?: number; ambush?: boolean; lurks?: boolean; hidden?: boolean; decoy?: boolean; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container;
   home: { x: number; y: number }; phase: number; point: string; waves?: number };
 // Ordinary enemies come after the hero once he is in sight, a little slower than he walks; bosses and guardians hold their ground.
 // sight and speed are in pixels and pixels per second. The hero walks at 70.
 const CHASE: Partial<Record<Encounter, { sight: number; speed: number }>> = {
   locust: { sight: 90, speed: 44 }, weevil: { sight: 80, speed: 36 }, acolyte: { sight: 96, speed: 40 }, hound: { sight: 120, speed: 58 },
   wisp: { sight: 100, speed: 50 }, raider: { sight: 110, speed: 52 }, ghoul: { sight: 90, speed: 34 }, inquisitor: { sight: 170, speed: 40 },
-  harrier: { sight: 140, speed: 62 },
+  harrier: { sight: 140, speed: 62 }, hornet: { sight: 130, speed: 60 },
 };
 // How far a chaser will follow from where it stands before giving up and going back.
 const LEASH = 200;
@@ -66,7 +66,7 @@ const FOG_SIGHT = 120;
 const HIDE_DRAIN = 2500;
 // Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
 const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8], warden: [22, 26, 5, 4], leech: [28, 24, 2, 4], hound: [20, 22, 6, 8], pack: [22, 24, 5, 6], wisp: [14, 14, 9, 9], drowned: [20, 26, 6, 4],
-  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4], captain: [22, 24, 5, 6], harrier: [22, 18, 5, 8], mosquito: [20, 16, 6, 8], scorpion: [24, 16, 4, 12], brood: [26, 20, 3, 8], apprentice: [22, 22, 5, 8], viper: [26, 20, 3, 10] };
+  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4], captain: [22, 24, 5, 6], harrier: [22, 18, 5, 8], mosquito: [20, 16, 6, 8], scorpion: [24, 16, 4, 12], brood: [26, 20, 3, 8], apprentice: [22, 22, 5, 8], viper: [26, 20, 3, 10], hornet: [20, 16, 6, 8], spider: [26, 16, 3, 12], duellist: [20, 22, 6, 8], cuckoo: [22, 22, 5, 8] };
 // Whether the last save succeeded, shared by every area.
 let saved = true;
 // The way out of a conversation, offered whenever the hero comes back to the replies.
@@ -117,6 +117,9 @@ export class AreaScene extends Phaser.Scene {
   private pendingCook = false;
   private pendingTravel?: keyof typeof WAYSTONES;
   private pendingChurch = false;
+  // Guards who throw out anyone they can see, and what a guard said on the way down.
+  private sentries: { sprite: Phaser.GameObjects.Sprite; range: number }[] = [];
+  private thrownOut?: string[];
   private waystone?: Phaser.GameObjects.Image;
   private pendingDice?: { stake: number; opponent: string };
   private campPoint?: string;
@@ -131,9 +134,11 @@ export class AreaScene extends Phaser.Scene {
 
   constructor(private area: Area) { super(area.key); }
 
-  init(data: { spawn?: string }) {
+  init(data: { spawn?: string; caught?: string[] }) {
     // Scene instances are reused, so every visit starts from a clean slate.
     this.arrival = data?.spawn ?? 'spawn';
+    this.thrownOut = data?.caught;
+    this.sentries = [];
     this.cleanup = new AbortController();
     this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.pendingChurch = false; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
     this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false; this.pendingShop = undefined; this.pendingRest = undefined; this.pendingFight = undefined;
@@ -178,6 +183,15 @@ export class AreaScene extends Phaser.Scene {
     }
     const context = this.context();
     this.refreshFoes(context);
+    // Sentries stand where they can see, with their sight drawn faintly on the ground.
+    for (const { point, range, texture } of this.area.sentries ?? []) {
+      const at = this.point(point);
+      this.add.ellipse(at.x, at.y + 4, range * 2, range * 2, 0xc8b878, 0.06).setStrokeStyle(1, 0xc8b878, 0.25).setDepth(2);
+      const sprite = this.physics.add.staticSprite(at.x, at.y, texture).setDepth(4);
+      this.physics.add.collider(this.player, sprite);
+      this.breathe(sprite);
+      this.sentries.push({ sprite, range });
+    }
     for (const { point, texture, solid, hiddenIf } of this.area.props ?? []) {
       const at = this.point(point);
       const sprite = solid ? this.physics.add.staticSprite(at.x, at.y, texture) : this.physics.add.sprite(at.x, at.y, texture);
@@ -219,6 +233,7 @@ export class AreaScene extends Phaser.Scene {
     this.renderMemory();
     // A wipe that was not yet paid for, such as one interrupted by a reload, is still owed.
     if (loadMemory().pending) this.wake();
+    else if (this.thrownOut) { const lines = this.thrownOut; this.thrownOut = undefined; this.time.delayedCall(450, () => this.say({ speaker: 'THROWN OUT', lines }, undefined)); }
     this.events.once('shutdown', () => {
       // Leaving an area keeps the time it is.
       if (!loadMemory().pending) saved = saveWorld(loadWorld());
@@ -300,7 +315,7 @@ export class AreaScene extends Phaser.Scene {
     this.notice(night ? 'NIGHT FALLS' : 'DAWN');
     this.refreshProps();
     for (const foe of this.foes) {
-      foe.ambush = foe.lurks || (night && Boolean(CHASE[foe.encounter]));
+      foe.ambush = foe.lurks || (night && Boolean(CHASE[foe.encounter]) && !foe.decoy);
       if (!foe.ambush && foe.hidden) { foe.hidden = false; this.tweens.killTweensOf([foe.sprite]); foe.sprite.setAlpha(1); foe.signature.setAlpha(1); }
     }
   }
@@ -374,9 +389,9 @@ export class AreaScene extends Phaser.Scene {
       }
   }
 
-  private createFoe(at: Point, { encounter, defeat, ambush: lurks, point, waves }: Area['enemies'][number]) {
+  private createFoe(at: Point, { encounter, defeat, ambush: lurks, point, waves, decoy, shows }: Area['enemies'][number]) {
     // At night every ordinary enemy hunts unseen.
-    const ambush = lurks || (Boolean(loadWorld().night) && Boolean(CHASE[encounter]));
+    const ambush = lurks || (Boolean(loadWorld().night) && Boolean(CHASE[encounter]) && !decoy);
     const [width, height, x, y] = BODY[encounter];
     // Chasers move, so they need a body that collides with the walls; the rest stand where they are.
     const sprite = (CHASE[encounter] ? this.physics.add.sprite(at.x, at.y, encounter) : this.physics.add.staticSprite(at.x, at.y, encounter)).setDepth(4);
@@ -385,11 +400,23 @@ export class AreaScene extends Phaser.Scene {
     // Veiled mana reads as a faint, cool shimmer; open mana as a warm ring.
     const veiled = ENEMIES[encounter].veiled;
     const ring = this.add.ellipse(0, veiled ? 5 : 4, veiled ? 34 : 37, veiled ? 18 : 20).setStrokeStyle(1, veiled ? 0x9dbbb4 : 0xd2b675, veiled ? 0.65 : 0.7);
-    const mana = this.add.text(0, veiled ? -24 : -23, `◇ ${enemyMana(createBattle(encounter))}`, { fontFamily: 'monospace', fontSize: '8px', color: veiled ? '#b7d3c7' : '#dbc58b' }).setOrigin(0.5);
+    const mana = this.add.text(0, veiled ? -24 : -23, `◇ ${shows ?? enemyMana(createBattle(encounter))}`, { fontFamily: 'monospace', fontSize: '8px', color: veiled ? '#b7d3c7' : '#dbc58b' }).setOrigin(0.5);
     const signature = this.add.container(at.x, at.y, [ring, mana]).setDepth(5);
     this.tweens.add({ targets: ring, alpha: veiled ? 0.15 : 0.35, duration: veiled ? 1400 : 1000, yoyo: true, repeat: -1 });
-    const foe: Foe = { encounter, sprite, signature, defeat, ambush, lurks, home: { x: at.x, y: at.y }, phase: this.foes.length * 1.7, point, waves };
+    const foe: Foe = { encounter, sprite, signature, defeat, ambush, lurks, decoy, home: { x: at.x, y: at.y }, phase: this.foes.length * 1.7, point, waves };
     this.foes.push(foe);
+    // A decoy is a signature and nothing else: walk into it and it comes apart.
+    if (decoy) {
+      sprite.setAlpha(0);
+      this.physics.add.overlap(this.player, sprite, () => {
+        if (!sprite.active) return;
+        sprite.disableBody(true, true);
+        this.tweens.add({ targets: signature, alpha: 0, scale: 1.6, duration: 500, onComplete: () => signature.destroy() });
+        music.effect('barrier');
+        this.notice('A DECOY');
+      });
+      return;
+    }
     this.physics.add.overlap(this.player, sprite, () => this.beginBattle(foe));
   }
 
@@ -858,7 +885,7 @@ export class AreaScene extends Phaser.Scene {
   // Everyone who has joined, or, for a fight, only those who fight: three at most, with one on the bench.
   private partyOptions(fighting = false): BattleOptions {
     const world = loadWorld();
-    return { hollow: hollow(loadMemory()), gear: loadGear(), books: settle(loadBooks(), roster(world)), roster: fighting ? lineup(world) : roster(world), tempered: world.tempered ?? [], supplies: world.supplies, wounds: world.wounds, drained: world.drained };
+    return { hollow: hollow(loadMemory()), gear: loadGear(), books: settle(loadBooks(), roster(world)), roster: this.area.solo ? ['chameleon'] : fighting ? lineup(world) : roster(world), tempered: world.tempered ?? [], supplies: world.supplies, wounds: world.wounds, drained: world.drained };
   }
 
   private toggleHud() {
@@ -885,7 +912,8 @@ export class AreaScene extends Phaser.Scene {
         <div class="mana-bar" role="meter" aria-label="${MEMBERS[member.id].name} mana" aria-valuemin="0" aria-valuemax="${member.maxMana}" aria-valuenow="${member.mana}" aria-valuetext="${member.mana} of ${member.maxMana} mana" style="--mana:${member.mana / member.maxMana * 100}%"><span></span></div>
         <span class="hud-numbers">◇ ${member.mana} / ${member.maxMana}</span></div></div>`;
     }).join('');
-    element('memory-status').textContent = `${held(loadMemory()).length} of ${MEMORY_IDS.length} memories remain${saved ? '' : ' · not saved'}`;
+    // A memory found, not lost: the laboratory, which no death took.
+    element('memory-status').textContent = `${held(loadMemory()).length} of ${MEMORY_IDS.length} memories remain${loadWorld().flags.includes('lab-remembered') ? ' · one found: the laboratory' : ''}${saved ? '' : ' · not saved'}`;
   }
 
   private resumeExploration() {
@@ -922,7 +950,7 @@ export class AreaScene extends Phaser.Scene {
     for(const foe of this.foes) {
       if(!foe.sprite.active) continue;
       const toHero=Phaser.Math.Distance.Between(this.player.x,this.player.y,foe.sprite.x,foe.sprite.y);
-      const chase=CHASE[foe.encounter];
+      const chase=foe.decoy ? undefined : CHASE[foe.encounter];
       if(chase) {
         const fromHome=Phaser.Math.Distance.Between(foe.sprite.x,foe.sprite.y,foe.home.x,foe.home.y);
         // Talking stops the world; a foe just fled from gives the hero a moment and goes home.
@@ -939,6 +967,14 @@ export class AreaScene extends Phaser.Scene {
       foe.sprite.setOrigin(0.5,0.5+Math.sin(time/320+foe.phase)*0.025);
     }
     for(const person of this.people) if(person.active && Phaser.Math.Distance.Between(this.player.x,this.player.y,person.x,person.y)<80) person.setFlipX(this.player.x<person.x);
+    // A sentry sees anyone whose mana isn't hidden, and they are thrown out.
+    if(!this.active && !this.leaving && this.area.caught && !this.sneaking && this.sentries.some(({ sprite, range }) => Phaser.Math.Distance.Between(this.player.x,this.player.y,sprite.x,sprite.y) < range)) {
+      const { to, spawn, lines } = this.area.caught;
+      music.effect('hit');
+      this.leaving=true; this.player.setVelocity(0); this.cameras.main.shake(200, 0.006); this.cameras.main.fadeOut(500,16,27,24);
+      this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.start(to,{ spawn, caught: lines }));
+      return;
+    }
     // In fog, an open signature can't be seen from far off.
     if(this.area.fog) for(const foe of this.foes) if(!foe.ambush && foe.sprite.active) {
       const seen=Phaser.Math.Distance.Between(this.player.x,this.player.y,foe.sprite.x,foe.sprite.y)<FOG_SIGHT;

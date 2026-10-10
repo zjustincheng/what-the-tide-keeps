@@ -25,5 +25,9 @@ export const BESTIARY: Record<Encounter, string> = {
   brood: 'The mother of the reed-bed mosquitoes. Her blood cloud poisons through any guard, she drinks what she bites, and she hatches more.',
   apprentice: 'The viper\'s apprentice, a toad who believed her. Casts Souring: once it lands, any healing burns for two turns. Study it, and hold the healing back.',
   viper: 'A healer whose patients feared her venom. Everyone starts poisoned in her apothecary, and her Souring turns your healing on you. Race the poison; let the frog poison her. Brought down once, she sheds her skin.',
+  hornet: 'Hornets of the cliff paths, as long as your arm. Their sting poisons.',
+  spider: 'Shows almost no mana, and is the size of a cart. Its silk can\'t be dodged. On the climb, a small signature can hide something large.',
+  duellist: 'A kestrel of the house, wearing a charm that shows almost no mana. Its display never moves, even as it casts Talon hex: real mana drops when a spell is cast. That is how you know a lie.',
+  cuckoo: 'Raised as a son of the house, and thrown out when they learned what he was. He slips into your party wearing a friend\'s shape; orders to that friend are quietly betrayed. Find the one whose mana never moves, and strike him. Strike the wrong one, and you hurt a friend.',
   inquisitor: 'A royal investigator, certain of your guilt. His Verdict cannot be dodged or barred. You cannot win this yet. Run.',
 };

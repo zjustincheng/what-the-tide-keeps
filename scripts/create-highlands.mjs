@@ -348,7 +348,7 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
   put(furniture,15,24,H.CAIRN);
   write('rookery-road','highland',HROWS,HIGHLAND_SOLID,m,[
     ['south',80,760],['from-keep',80,736],
-    ['holds-gate',...at(25,3)],['frozen-courier',...at(30,14)],['shelter',...at(15,25)],['camp-rookery',...at(13,23)],
+    ['holds-gate',...at(25,3)],['gate',...at(26,3)],['from-holds',...at(26,4)],['frozen-courier',...at(30,14)],['shelter',...at(15,25)],['camp-rookery',...at(13,23)],
     ['harrier-1',...at(18,39)],['harrier-2',...at(14,12)],['hound-1',...at(22,26)],['forage-1',...at(24,36)],
   ]);
 }

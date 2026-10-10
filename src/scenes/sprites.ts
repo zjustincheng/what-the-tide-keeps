@@ -48,6 +48,15 @@ const VILLAGERS: Record<string, Villager> = {
   steward: { fur: 0x8a5a3a, muzzle: 0xe8d8c0, cloth: 0x3a2a2a, trim: 0xb89a5a, ears: 'pointed' },
   cleaner: { fur: 0xe0e0dc, muzzle: 0x2a2a28, cloth: 0x6a6a5a, trim: 0x8a8a7a, ears: 'pointed' },
   smith: { fur: 0x4a3a2c, muzzle: 0x8a6a4a, cloth: 0x3a3028, trim: 0x8a8a8a, ears: 'pointed' },
+  // The mountain holds.
+  goshawk: { fur: 0x6a6e74, muzzle: 0xe0b040, cloth: 0x6a2a2a, trim: 0xc8a848, ears: 'none' },
+  magpie: { fur: 0x1e1e24, muzzle: 0x3a3a40, cloth: 0xe8e8e4, trim: 0x2a4a6a, ears: 'none' },
+  pigeon: { fur: 0x8a8e98, muzzle: 0xc8a0a0, cloth: 0x4a5a6a, trim: 0x6a8a7a, ears: 'none' },
+  wren: { fur: 0x8a6a4a, muzzle: 0xc8a878, cloth: 0x5a4a3a, trim: 0x8a7a5a, ears: 'none' },
+  sparrow: { fur: 0x7a5a3a, muzzle: 0xc8b090, cloth: 0x5a5040, trim: 0x8a7a5a, ears: 'none' },
+  swift: { fur: 0x2a2a30, muzzle: 0xe8e8e4, cloth: 0x3a3a44, trim: 0xa89060, ears: 'none' },
+  falcon: { fur: 0x5a5e66, muzzle: 0xe0b040, cloth: 0x6a2a2a, trim: 0xc8a848, ears: 'none' },
+  owl: { fur: 0x8a7458, muzzle: 0xe8d8b0, cloth: 0x4a3a2a, trim: 0xc8b878, ears: 'pointed' },
   // The marsh.
   coypu: { fur: 0x6a5240, muzzle: 0xc87a3a, cloth: 0x3a4038, trim: 0x6a6a5a, ears: 'pointed' },
   magistrate: { fur: 0x9aa0a4, muzzle: 0xd8b84a, cloth: 0x2a2a34, trim: 0xd8d0b8, ears: 'none' },

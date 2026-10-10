@@ -1,7 +1,7 @@
 // The old roads: standing stones that remember each other. Woken ones can be travelled between.
 import type { Flag, World } from './world';
 
-export type WaystoneId = 'crossroads' | 'millbrook' | 'downs' | 'weir' | 'fort' | 'square' | 'wickmere';
+export type WaystoneId = 'crossroads' | 'millbrook' | 'downs' | 'weir' | 'fort' | 'square' | 'wickmere' | 'holds';
 export const WAYSTONES: Record<WaystoneId, { area: string; name: string; flag: Flag }> = {
   crossroads: { area: 'farmland', name: 'The crossroads', flag: 'way-crossroads' },
   millbrook: { area: 'town', name: 'Millbrook', flag: 'way-millbrook' },
@@ -10,6 +10,7 @@ export const WAYSTONES: Record<WaystoneId, { area: string; name: string; flag: F
   fort: { area: 'fort', name: 'The fort town', flag: 'way-fort' },
   square: { area: 'square', name: 'The church square', flag: 'way-square' },
   wickmere: { area: 'wickmere', name: 'Wickmere', flag: 'way-wickmere' },
+  holds: { area: 'hold', name: 'The hold', flag: 'way-holds' },
 };
 export const WAYSTONE_IDS = Object.keys(WAYSTONES) as WaystoneId[];
 

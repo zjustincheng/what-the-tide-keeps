@@ -347,7 +347,7 @@ The vulture's note teaches **anchors**. Once she has joined, every rest at a fir
 
 The **journal** (J) opens with the church's current **orders**: the region's aim, in the priest's words, and the next thing that would move it on (where to go, or who to ask). Below them are your open **leads**: what you are carrying and who it is for, and promises still to keep. Both are worked out from where the story stands (`src/rules/orders.ts`).
 
-Beating a region's lieutenant (the boar, the hyena, the viper) finishes the church's orders there. The brand on the hero's wrist goes warm, and you can **go back to the priest** at once for the next orders, or stay and walk the region a while. The priest always has them waiting.
+Beating a region's lieutenant (the boar, the hyena, the viper, the cuckoo) finishes the church's orders there. The brand on the hero's wrist goes warm, and you can **go back to the priest** at once for the next orders, or stay and walk the region a while. The priest always has them waiting.
 
 ## The marsh
 
@@ -361,6 +361,19 @@ Once the hyena is dead, the priest sends the party downriver: a sickness in the 
 - **The flooded apothecary.** Only with the frog. The **viper**, a healer whose patient died of a fever and who was blamed and drowned for it, talks before she fights. Everyone starts **poisoned** in her shop, and her Souring turns healing into harm. Brought down once, she sheds her skin and the air goes bitter. Beaten, she lies in the water and still talks: the man with no fur was the only one who ever asked what really happened. She leaves the **Viper's fang** (frog: dart hits 3 harder, 3 less health); afterwards the hospice sister gives you her **handbell** (6 more health, shows 2 more mana).
 
 **Poison** bites at the end of every enemy turn (2 health) and counts down. A poisoned blow only poisons if it lands: a perfect dodge keeps it out. Heals draw it out; antivenom draws it out without healing. **Souring** is a spell: for two turns after it lands, every heal (spells, supplies, the frog's dose) burns for as much as it would have mended. Like other spells it is hidden until studied. **The frog** fights with one toxin in two doses: her **dart** poisons the enemy (3 a round for 3 rounds), and her **Dose** mends the ally chosen on her card by 6 and draws out their poison. Her grimoire, the **Hospice litany**, teaches **Bitter tonic** (5 health to everyone, and the poison out of them).
+
+## The mountain holds
+
+After the viper, the priest sends you to reopen the messenger routes: the birds have stopped flying and the holds have shut their gate. The **holds' gate** at the top of the rookery road now opens for the church's convicts. No companion joins here; this region is the hero's.
+
+- **The climb.** Switchbacks up a cliff face in the wind, where **mana lies**: some big signatures are decoys (humming charms that come apart when you walk into them), and a crack in the rock showing ◇ 1 holds a **crag spider** the size of a cart. Cliff hornets poison.
+- **The hold.** A city up a cliff face, ranked by height: the ground-dwellers' tier at the bottom (sparrows, porters, a fire), the market tier above (a magpie's shop, an out-of-work pigeon courier, a wren whose son stopped writing, the chained **rookery**), and the house's **great stair**, shut by a goshawk who won't let ground-dwellers, least of all a scavenger, any higher. The waystone is on the market tier.
+- **The lesson fight.** The **house duellist** guards the old climbers' path. His mana reads 2 and never moves, even when he casts Talon hex: real mana drops when a spell is cast, and a false display never does. He leaves the **Liar's charm** (shows 4 less mana, hits 1 softer).
+- **The upper tiers.** Only the hero climbs the cliff, **alone**. Falcon sentries stand on the noble house's terraces with their sight drawn on the ground; one who sees you with your mana showing throws you down to the hold. **Hide your mana (Q)** past them, and mind how much you have. Somewhere up here is the **stair lever** that lets the others up, a gallery with one chick painted out of a family portrait, and the archive.
+- **The archive.** Copies of every letter the rookeries carried. An old church order transfers a young guard away from "the island project": *he is not to be told why*. The name is yours, and you **remember the laboratory**: a long white room, a child with no fur in a cage, and the keys in your hand. (The memory line under the map now reads "one found: the laboratory".) A copy of a letter to the feast hall's steward says the house would send its own hooded cupbearer. Then the **inquisitor** is behind you, reading over your shoulder, and for the first time he doesn't attack: "I will look into this. Then I will come for you."
+- **The lord's hall.** The lord's mana reads 3 and never moves. He is the **cuckoo**, raised as the house's son and thrown out when they saw the eggshell. In the fight he **slips into the party**, wearing whichever companion shows the most mana: everyone else's mana is shaken loose, his doesn't move, orders given to that companion are quietly betrayed, and a knife comes from inside the party every round. Choose an ally on a hero's card and **Strike ally** to throw him out of the shape (a heavy blow to him), but strike the wrong one and you hurt a friend. Brought down once, he gets up wearing no one's face.
+
+Afterwards the rookery opens and letters fly again. Among a year of undelivered mail is a letter to you from the octopus, at sea; and a swift has seen a lighthouse on an island that is on no chart, with ships going out to it full of fish.
 
 ## The capital
 

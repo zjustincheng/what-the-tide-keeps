@@ -12,6 +12,7 @@ import { fen, weir } from '../content/fen';
 import { feastHall, harbour, square } from '../content/capital';
 import { abbey, barracks, battlefield, drove, fort, keep, ossuary, pass, rookery, tarn } from '../content/highlands';
 import { apothecary, causeway, farBank, hospice, wickmere } from '../content/marsh';
+import { archive, climb, hold, houseHall, upper } from '../content/holds';
 import type { Encounter } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
@@ -29,6 +30,11 @@ export type Area = {
   bounds?: [x: number, y: number, width: number, height: number];
   // Fog: enemies see the hero from less far off, and their mana can't be seen until they are close.
   fog?: true;
+  // Solo: only the hero goes here. Sentries: guards who see anyone not hiding their mana within range, and throw them out.
+  solo?: true;
+  sentries?: { point: string; range: number; texture: string }[];
+  // Where a sentry throws you, and what they say.
+  caught?: { to: string; spawn: string; lines: string[] };
   dialogue: Dialogue;
   // People on the map. One whose hiddenIf condition holds has left.
   // lit: carries a lantern, which shows after dark.
@@ -36,7 +42,8 @@ export type Area = {
   // Enemies respawn on every visit unless hiddenIf holds; defeat applies once the fight is won.
   // An ambusher's signature flickers out as the hero comes near, and it strikes first.
   // waves: how many times it comes on before the fight is won.
-  enemies: { point: string; encounter: Encounter; hiddenIf?: Condition[]; defeat?: Effect; ambush?: true; waves?: number }[];
+  // decoy: a signature with nothing behind it, which comes apart when touched. shows: the mana the signature shows, when it lies.
+  enemies: { point: string; encounter: Encounter; hiddenIf?: Condition[]; defeat?: Effect; ambush?: true; waves?: number; decoy?: true; shows?: number }[];
   // SVG art in public/assets to load, beyond the map, tiles, and enemies.
   assets?: string[];
   // Objects on the map that disappear once any hiddenIf condition holds. Solid ones block the way.
@@ -560,7 +567,12 @@ export const ROOKERY_ROAD: Area = {
   props: [{ point: 'frozen-courier', texture: 'courier', hiddenIf: [] }, { point: 'camp-rookery', texture: 'campfire', hiddenIf: [] }],
   forage: { 'forage-1': 'herb' },
   camps: { 'camp-rookery': { prompt: 'Rest in the couriers\' shelter', cost: 4, lines: ['You burn the last of someone\'s kindling in the couriers\' cairn. The wind never stops.'] } },
-  exits: { south: { to: 'border-keep', spawn: 'from-rookery', prompt: 'Go back down to the old border fort' } },
+  exits: {
+    south: { to: 'border-keep', spawn: 'from-rookery', prompt: 'Go back down to the old border fort' },
+    // The holds' gate opens to the church's convicts once the church sends them.
+    gate: { to: 'climb', spawn: 'from-rookery', prompt: 'Go through the holds\' gate', requires: { flag: 'viper-slain' },
+      barred: { speaker: 'THE HOLDS\' GATE', lines: ['The black gate stays shut. BY ORDER OF THE HOUSE.'] } },
+  },
   decorate: scene => snowfall(scene, 576, 768),
 };
 
@@ -658,4 +670,91 @@ export const APOTHECARY: Area = {
   exits: { out: { to: 'far-bank', spawn: 'from-apothecary', prompt: 'Wade back out' } },
 };
 
-export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY];
+// The mountain holds: the birds' city up a cliff face, above the holds' gate.
+const HOLDS_GROUND: Pick<Area, 'region' | 'tileset' | 'ground' | 'surfaces' | 'music'> = {
+  region: 'THE MOUNTAIN HOLDS', tileset: 'holds', ground: 'stone', music: 'highlands',
+  surfaces: { 3: 'snow', 7: 'stone', 14: 'wood', 15: 'wood', 23: 'wood' },
+};
+// Wind across the cliff face: thin streaks blowing past.
+function wind(scene: Phaser.Scene, width: number, height: number) {
+  for (let i = 0; i < 12; i++) {
+    const streak = scene.add.rectangle((i * 173) % width, 20 + (i * 89) % height, 28 + (i % 4) * 10, 1, 0xd8dce0, 0.35).setDepth(6);
+    scene.tweens.add({ targets: streak, x: streak.x + width, alpha: 0, duration: 1600 + (i % 5) * 400, delay: i * 230, repeat: -1 });
+  }
+}
+
+export const CLIMB: Area = {
+  ...HOLDS_GROUND, key: 'climb', map: 'climb', place: 'The climb', dialogue: climb,
+  grade: { saturation: -0.45, brightness: 0.78, vignette: 0.5 },
+  npcs: [],
+  enemies: [
+    { point: 'hornet-1', encounter: 'hornet' }, { point: 'hornet-2', encounter: 'hornet', ambush: true },
+    // A crack in the rock with almost nothing in it, on the signature.
+    { point: 'spider', encounter: 'spider' },
+    // Signatures with nothing behind them: charms that hum in the wind.
+    { point: 'decoy-1', encounter: 'hornet', decoy: true, shows: 14 }, { point: 'decoy-2', encounter: 'hornet', decoy: true, shows: 22 }, { point: 'decoy-3', encounter: 'hornet', decoy: true, shows: 9 },
+  ],
+  props: [{ point: 'camp-climb', texture: 'campfire', hiddenIf: [] }],
+  forage: { 'forage-1': 'herb' },
+  camps: { 'camp-climb': { prompt: 'Rest in the wind shelter', cost: 4, lines: ['A hollow in the rock, out of the wind, black with old fires. The charms on the cliff hum all the while.'] } },
+  exits: {
+    south: { to: 'rookery-road', spawn: 'from-holds', prompt: 'Go back down through the gate' },
+    north: { to: 'hold', spawn: 'from-climb', prompt: 'Climb on to the hold' },
+  },
+  decorate: scene => wind(scene, 576, 640),
+};
+
+export const HOLD: Area = {
+  ...HOLDS_GROUND, key: 'hold', map: 'hold', place: 'The hold', dialogue: hold,
+  grade: { saturation: -0.4, brightness: 0.8, vignette: 0.45 }, assets: ['falcon-lord'],
+  npcs: [
+    { point: 'goshawk', texture: 'goshawk' }, { point: 'magpie', texture: 'magpie' }, { point: 'pigeon', texture: 'pigeon' }, { point: 'wren', texture: 'wren' },
+    { point: 'sparrow', texture: 'sparrow' }, { point: 'courier', texture: 'swift', hiddenIf: [{ not: { flag: 'cuckoo-slain' } }] },
+  ],
+  enemies: [{ point: 'duellist', encounter: 'duellist', hiddenIf: [{ flag: 'duellist-beaten' }], defeat: { set: 'duellist-beaten', find: 'liars-charm' } }],
+  props: [{ point: 'camp-hold', texture: 'campfire', hiddenIf: [] }],
+  camps: { 'camp-hold': { prompt: 'Rest in the porters\' yard', cost: 3, lines: ['The sparrows make room by their fire, and don\'t ask what the brand is for. Down here, everybody has one of some kind.'] } },
+  exits: {
+    south: { to: 'climb', spawn: 'from-hold', prompt: 'Go back down the climb' },
+    'great-stair': { to: 'hall-of-house', spawn: 'spawn', prompt: 'Climb the great stair to the lord\'s hall', requires: { flag: 'stair-open' },
+      barred: { speaker: 'THE GOSHAWK', lines: ['"The great stair is the house\'s. Ground-dwellers stay on the ground tiers."', 'The gate behind him is shut, and the lever that opens it is somewhere above.'] } },
+    cliff: { to: 'upper', spawn: 'from-hold', prompt: 'Climb the cliff alone', requires: { flag: 'duellist-beaten' },
+      barred: { speaker: 'THE HOUSE DUELLIST', lines: ['The duellist stands at the foot of the old climbers\' path. Nobody climbs past him.'] } },
+  },
+  decorate: scene => wind(scene, 704, 544),
+};
+
+export const UPPER: Area = {
+  ...HOLDS_GROUND, key: 'upper', map: 'upper', place: 'The upper tiers', dialogue: upper, music: 'wilds', solo: true,
+  grade: { saturation: -0.4, brightness: 0.74, vignette: 0.6 },
+  npcs: [], enemies: [],
+  sentries: [
+    { point: 'sentry-1', range: 64, texture: 'falcon' }, { point: 'sentry-2', range: 72, texture: 'falcon' },
+    { point: 'sentry-3', range: 64, texture: 'falcon' }, { point: 'sentry-4', range: 64, texture: 'falcon' },
+  ],
+  caught: { to: 'hold', spawn: 'from-upper', lines: ['A falcon sentry sees you. Then a great many talons, and the cliff, and the ground tier coming up very fast.', 'Hide your mana before they can feel it (Q), and keep it hidden past them.'] },
+  exits: {
+    down: { to: 'hold', spawn: 'from-upper', prompt: 'Climb back down the cliff' },
+    'archive-door': { to: 'archive', spawn: 'spawn', prompt: 'Slip into the archive' },
+  },
+  decorate: scene => wind(scene, 576, 416),
+};
+
+export const ARCHIVE: Area = {
+  ...HOLDS_GROUND, key: 'archive', map: 'archive', place: 'The archive', dialogue: archive, music: 'church', ground: 'wood', solo: true,
+  grade: { saturation: -0.45, brightness: 0.66, vignette: 0.65 }, assets: ['inquisitor'],
+  npcs: [{ point: 'clerk', texture: 'owl' }, { point: 'inquisitor', texture: 'inquisitor', hiddenIf: [{ not: { flag: 'lab-remembered' } }, { flag: 'inquisitor-spoke' }] }],
+  enemies: [],
+  exits: { out: { to: 'upper', spawn: 'from-archive', prompt: 'Go back out onto the terraces' } },
+};
+
+export const HOUSE_HALL: Area = {
+  ...HOLDS_GROUND, key: 'hall-of-house', map: 'hall-of-house', place: 'The lord\'s hall', dialogue: houseHall, music: 'wilds', ground: 'wood',
+  grade: { saturation: -0.4, brightness: 0.7, vignette: 0.6 }, assets: ['falcon-lord'],
+  npcs: [{ point: 'lord', texture: 'falcon-lord', hiddenIf: [{ flag: 'cuckoo-challenged' }, { flag: 'cuckoo-slain' }] }],
+  enemies: [{ point: 'lord', encounter: 'cuckoo', hiddenIf: [{ flag: 'cuckoo-slain' }, { not: { flag: 'cuckoo-challenged' } }], defeat: { set: 'cuckoo-slain' } }],
+  props: [{ point: 'den', texture: 'cuckoo', hiddenIf: [{ not: { flag: 'cuckoo-slain' } }] }],
+  exits: { out: { to: 'hold', spawn: 'from-hall', prompt: 'Go back down the great stair' } },
+};
+
+export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY, CLIMB, HOLD, UPPER, ARCHIVE, HOUSE_HALL];

@@ -33,9 +33,16 @@ export function orders(world: World): Orders {
       : !has('frog-free') ? (carrying('venom-vial') ? 'Show the frog in the hospice what you found.' : 'Search the storehouse on the far bank.')
       : 'The viper is in the flooded apothecary on the far bank. Take the frog.',
   };
+  if (!has('cuckoo-slain')) return {
+    title: 'The mountain holds', given: 'The messenger birds have stopped flying and the holds have shut their gate. Reopen the routes.',
+    next: !has('duellist-beaten') ? 'Through the holds\' gate at the top of the rookery road, and up the climb to the hold. Only the old climbers\' path goes higher, and the house\'s duellist guards it.'
+      : !has('stair-open') ? 'Climb the cliff alone. Hide your mana past the falcons (Q). Somewhere above is the lever for the great stair.'
+      : !has('lab-remembered') ? 'The great stair is open. The rookeries\' archive is on the upper tiers, by the cliff: the lord read something there before he closed the rookery.'
+      : 'Climb the great stair to the lord\'s hall.',
+  };
   return {
-    title: 'Waiting', given: 'Wickmere is quiet. Someone asked the church what the lighthouse is. Nobody has come back down with an answer.',
-    next: 'The holds\' gate is shut at the top of the rookery road. For now, walk where you like.',
+    title: 'Waiting', given: 'Letters are moving again. A courier saw a lighthouse on an island that is on no chart, and ships going out to it with fish.',
+    next: 'The church has no orders past the coast. The sea is not the church\'s.',
   };
 }
 

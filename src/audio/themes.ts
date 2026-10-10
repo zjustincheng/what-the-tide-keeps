@@ -175,7 +175,7 @@ export const THEMES: Record<ThemeId, Theme> = {
 export const THEME_IDS = Object.keys(THEMES) as ThemeId[];
 
 // Elites and bosses get the darker battle music.
-const BOSSES: readonly Encounter[] = ['boar', 'warden', 'leech', 'swarm', 'pack', 'drowned', 'vulture', 'pair', 'hyena', 'inquisitor', 'captain', 'brood', 'apprentice', 'viper'];
+const BOSSES: readonly Encounter[] = ['boar', 'warden', 'leech', 'swarm', 'pack', 'drowned', 'vulture', 'pair', 'hyena', 'inquisitor', 'captain', 'brood', 'apprentice', 'viper', 'duellist', 'cuckoo'];
 export function battleTheme(encounter: Encounter): ThemeId {
   return BOSSES.includes(encounter) ? 'boss' : 'battle';
 }
