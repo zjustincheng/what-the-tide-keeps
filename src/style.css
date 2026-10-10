@@ -847,3 +847,7 @@ button.die[aria-pressed="true"] { border-color: #bc755e; color: #d8a890; }
 .orders ul { margin: 0; padding-left: 18px; color: #c8ccb8; font: 13px/1.5 Georgia, serif; }
 
 .enemy-traits { margin: 0 0 4px; color: #c8b878; font: 10px ui-monospace, monospace; letter-spacing: 1px; text-transform: uppercase; cursor: help; }
+
+.unmask-row { margin: 6px 0 2px; font: 10px ui-monospace, monospace; color: #c8b878; }
+.unmask-row button { margin: 3px 3px 0 0; padding: 3px 6px; background: #3a2424; border: 1px solid #8a4a3a; color: #e8d8c8; font: 11px Georgia, serif; cursor: pointer; }
+.unmask-row button:disabled { opacity: 0.4; cursor: default; }
