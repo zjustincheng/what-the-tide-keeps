@@ -111,11 +111,13 @@ test('arm-wrestling in the barracks: push him down before he pushes you', async 
   await expect(page.getByRole('heading', { name: 'Elbows on the table.' })).toBeVisible();
   await expect(page.locator('#arm-push')).toBeEnabled({ timeout: 4000 });
   // Nearly there; one more push.
+  // Nearly there, and one more push in the same breath, so a busy machine can't let him push back in between.
   await page.evaluate(async () => {
     const { game } = await import('/src/main.ts');
-    game.scene.getScenes(true)[0].overlay.at = 98;
+    const view = game.scene.getScenes(true)[0].overlay;
+    view.at = 98;
+    document.querySelector<HTMLElement>('.arm')!.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
   });
-  await page.keyboard.press(' ');
   await expect(page.locator('.dice-result')).toContainText('You win 10 coins');
   await page.getByRole('button', { name: 'Done' }).click();
   expect((await saved(page)).coins).toBe(20);
