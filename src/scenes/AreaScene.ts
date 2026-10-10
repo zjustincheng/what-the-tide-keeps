@@ -122,7 +122,7 @@ export class AreaScene extends Phaser.Scene {
   // The time of day, turning while the hero explores; written with the next save.
   private clock = 0;
   private lastClockShown = 0;
-  private shading?: { color?: Phaser.FX.ColorMatrix; vignette?: Phaser.FX.Vignette; wash: Phaser.GameObjects.Rectangle; glows: Phaser.GameObjects.Image[] };
+  private shading?: { color?: Phaser.FX.ColorMatrix; vignette?: Phaser.FX.Vignette; wash: Phaser.GameObjects.Rectangle; glows: Phaser.GameObjects.Image[]; carried: Phaser.GameObjects.Image };
   private forage: { point: string; sprite: Phaser.GameObjects.Image }[] = [];
 
   constructor(private area: Area) { super(area.key); }
@@ -235,16 +235,20 @@ export class AreaScene extends Phaser.Scene {
     const wash = webgl
       ? this.add.rectangle(0, 0, camera.width, camera.height, 0x0a1a3a, 0).setOrigin(0).setScrollFactor(0).setDepth(49).setBlendMode(Phaser.BlendModes.MULTIPLY)
       : this.add.rectangle(0, 0, camera.width, camera.height, 0x05090a, 0.38).setOrigin(0).setScrollFactor(0).setDepth(50);
-    // Fires are the only warm light after dark.
-    const glows = this.props.filter(({ sprite }) => sprite.texture.key === 'campfire').map(({ sprite }) => {
-      const glow = this.add.image(sprite.x, sprite.y, 'firelight').setDepth(48).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0);
-      this.tweens.add({ targets: glow, scale: 0.94, duration: 900, yoyo: true, repeat: -1 });
+    // Fires and lanterns are the only warm light after dark.
+    const lanterns = this.area.npcs.filter(npc => npc.lit).map(npc => this.point(npc.point));
+    const glows = [...this.props.filter(({ sprite }) => sprite.texture.key === 'campfire').map(({ sprite }) => ({ x: sprite.x, y: sprite.y, scale: 1 })),
+      ...lanterns.map(({ x, y }) => ({ x, y: y - 4, scale: 1.1 }))].map(({ x, y, scale }) => {
+      const glow = this.add.image(x, y, 'firelight').setDepth(50).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0).setScale(scale);
+      this.tweens.add({ targets: glow, scale: scale * 0.94, duration: 900, yoyo: true, repeat: -1 });
       return glow;
     });
+    // A little light of the hero's own, so the dark is never blind.
+    const carried = this.add.image(this.player.x, this.player.y, 'firelight').setDepth(50).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0).setScale(1.5).setTint(0xd8d0c0);
     this.shaded = -1;
     this.shading = webgl
-      ? { color: camera.postFX.addColorMatrix(), vignette: camera.postFX.addVignette(0.5, 0.5, 0.82, 0.45), wash, glows }
-      : { wash, glows };
+      ? { color: camera.postFX.addColorMatrix(), vignette: camera.postFX.addVignette(0.5, 0.5, 0.82, 0.45), wash, glows, carried }
+      : { wash, glows, carried };
     this.shade();
   }
 
@@ -258,15 +262,16 @@ export class AreaScene extends Phaser.Scene {
     this.shaded = dark;
     const base = this.area.grade ?? {};
     const saturation = (base.saturation ?? -0.5) - 0.2 * dark;
-    const brightness = (base.brightness ?? 0.72) * (1 - 0.45 * dark);
-    const vignette = Math.min(0.95, (base.vignette ?? 0.45) + 0.3 * dark);
-    const { color, vignette: edge, wash, glows } = this.shading;
+    const brightness = (base.brightness ?? 0.72) * (1 - 0.3 * dark);
+    const vignette = Math.min(0.85, (base.vignette ?? 0.45) + 0.18 * dark);
+    const { color, vignette: edge, wash, glows, carried } = this.shading;
     if (color) {
       color.reset(); color.saturate(saturation); color.brightness(brightness, true);
       edge!.strength = vignette;
-      wash.setAlpha(0.28 * dark);
-    } else wash.setAlpha(0.38 + 0.35 * dark);
+      wash.setAlpha(0.2 * dark);
+    } else wash.setAlpha(0.38 + 0.25 * dark);
     for (const glow of glows) glow.setAlpha(0.9 * dark);
+    carried.setAlpha(0.6 * dark);
   }
 
   private showClock() {
@@ -920,6 +925,7 @@ export class AreaScene extends Phaser.Scene {
     if(x) this.player.setFlipX(x<0);
     this.player.setDepth(4);
     this.shadow.setPosition(this.player.x,this.player.y+9);
+    this.shading?.carried.setPosition(this.player.x,this.player.y);
     // A restrained walking bob, or slow breathing when standing still, while the physics body stays steady.
     this.player.setOrigin(0.5,0.5+(x||y?Math.sin(time/85)*0.025:Math.sin(time/520)*0.012));
     const context=this.context();

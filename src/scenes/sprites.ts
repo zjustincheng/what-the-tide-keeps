@@ -181,7 +181,7 @@ export function createSprites(scene: Phaser.Scene) {
   const glow = scene.textures.createCanvas('firelight', 128, 128)!;
   const ctx = glow.getContext();
   const light = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-  light.addColorStop(0, 'rgba(240,170,80,0.55)'); light.addColorStop(0.45, 'rgba(220,130,60,0.22)'); light.addColorStop(1, 'rgba(200,110,50,0)');
+  light.addColorStop(0, 'rgba(250,180,90,0.85)'); light.addColorStop(0.45, 'rgba(230,140,60,0.35)'); light.addColorStop(1, 'rgba(200,110,50,0)');
   ctx.fillStyle = light; ctx.fillRect(0, 0, 128, 128); glow.refresh();
   // Things that grow wild and can be picked: thyme, mushrooms, and hedge berries.
   const herb = scene.make.graphics({ x: 0, y: 0 });

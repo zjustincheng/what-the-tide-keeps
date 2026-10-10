@@ -28,7 +28,8 @@ export type Area = {
   bounds?: [x: number, y: number, width: number, height: number];
   dialogue: Dialogue;
   // People on the map. One whose hiddenIf condition holds has left.
-  npcs: { point: string; texture: string; hiddenIf?: Condition[] }[];
+  // lit: carries a lantern, which shows after dark.
+  npcs: { point: string; texture: string; hiddenIf?: Condition[]; lit?: true }[];
   // Enemies respawn on every visit unless hiddenIf holds; defeat applies once the fight is won.
   // An ambusher's signature flickers out as the hero comes near, and it strikes first.
   // waves: how many times it comes on before the fight is won.
@@ -163,7 +164,7 @@ export const TOWN: Area = {
   dialogue: { ...town, ...townLore }, enemies: [], ground: 'stone', surfaces: { 3: 'grass', 4: 'dirt' },
   npcs: [...['reeve', 'innkeeper', 'shopkeeper', 'child', 'fishmonger', 'fox', 'scribe'].map(name => ({ point: name, texture: name })),
     // The night market opens behind the tannery after dark.
-    { point: 'night-trader', texture: 'marten', hiddenIf: [{ night: false }] }],
+    { point: 'night-trader', texture: 'marten', hiddenIf: [{ night: false }], lit: true }],
   props: [{ point: 'stocks', texture: 'stocks', solid: true, hiddenIf: [] }, { point: 'lectern', texture: 'lectern', solid: true, hiddenIf: [] }],
   exits: {
     north: { to: 'farmland', spawn: 'from-town', prompt: 'Return to the fields' },
