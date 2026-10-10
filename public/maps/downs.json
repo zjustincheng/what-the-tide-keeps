@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 32,
+  "nextobjectid": 34,
   "layers": [
     {
       "id": 1,
@@ -5220,6 +5220,30 @@
           "rotation": 0,
           "visible": true,
           "point": true
+        },
+        {
+          "id": 32,
+          "name": "climb-tower",
+          "type": "",
+          "x": 440,
+          "y": 72,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 33,
+          "name": "from-tower",
+          "type": "",
+          "x": 456,
+          "y": 88,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
         }
       ]
     }
@@ -5230,13 +5254,13 @@
       "name": "downs",
       "image": "../assets/downs-tiles.svg",
       "imagewidth": 128,
-      "imageheight": 64,
+      "imageheight": 80,
       "margin": 0,
       "spacing": 0,
       "tilewidth": 16,
       "tileheight": 16,
       "columns": 8,
-      "tilecount": 32,
+      "tilecount": 40,
       "tiles": [
         {
           "id": 3,
@@ -5423,6 +5447,16 @@
           "properties": [
             {
               "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 32,
+          "properties": [
+            {
+              "name": "climb",
               "type": "bool",
               "value": true
             }

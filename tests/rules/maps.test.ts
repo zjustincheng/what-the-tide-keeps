@@ -65,6 +65,7 @@ const LEAP_ONLY: Record<string, readonly string[]> = {
   'gorge.json': ['harrier-1', 'satchel', 'courier', 'carving', 'forage-1'],
   'spires.json': ['nest', 'letters', 'spider-1', 'forage-1'],
   'rows.json': ['register', 'counting', 'wisp-1', 'rows-spot', 'window'],
+  'falls.json': ['hollow', 'tally', 'harrier-1'],
 };
 test('leaping opens only the places meant for it, and reaches every one of them', async () => {
   const { reachable } = await import('../../src/rules/leap.ts');
@@ -97,6 +98,43 @@ test('leaping opens only the places meant for it, and reaches every one of them'
         if (!byLeap) problems.push(`${file}: ${point.name} can't be reached even by leaping`);
         if (onFoot) problems.push(`${file}: ${point.name} is meant to need a leap, but can be walked to`);
       } else if (byLeap && !onFoot) problems.push(`${file}: leaping reaches ${point.name}, which should need no leap`);
+    }
+  }
+  assert.deepEqual(problems, []);
+});
+
+// A climb is only fair if a full grip can finish it: every handhold must be within half a grip's reach of a ledge,
+// so any face can be climbed from one ledge to the next without the grip running out.
+test('every wall of handholds can be climbed ledge to ledge on one grip', async () => {
+  const { REACH } = await import('../../src/rules/climb.ts');
+  const problems: string[] = [];
+  for (const file of readdirSync('public/maps')) {
+    const map = JSON.parse(readFileSync(`public/maps/${file}`, 'utf8'));
+    const { width, height } = map;
+    const props = new Map<number, Record<string, boolean>>(map.tilesets[0].tiles.map((tile: { id: number; properties: { name: string; value: boolean }[] }) =>
+      [tile.id + 1, Object.fromEntries(tile.properties.map(({ name, value }) => [name, value]))]));
+    const [floor, furniture] = [map.layers[0].data as number[], map.layers[1].data as number[]];
+    const at = (tx: number, ty: number) => ty * width + tx;
+    const inside = (tx: number, ty: number) => tx >= 0 && ty >= 0 && tx < width && ty < height;
+    const climb = (tx: number, ty: number) => inside(tx, ty) && !furniture[at(tx, ty)] && Boolean(props.get(floor[at(tx, ty)] & 0x1fffffff)?.climb);
+    const firm = (tx: number, ty: number) => inside(tx, ty) && !climb(tx, ty) && !props.get(furniture[at(tx, ty)] & 0x1fffffff)?.collides;
+    // Distance from the nearest ledge, through handholds.
+    const distance = new Map<string, number>();
+    const queue: [number, number][] = [];
+    for (let ty = 0; ty < height; ty++) for (let tx = 0; tx < width; tx++)
+      if (climb(tx, ty) && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => firm(tx + dx, ty + dy))) { distance.set(`${tx},${ty}`, 1); queue.push([tx, ty]); }
+    while (queue.length) {
+      const [tx, ty] = queue.shift()!;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const key = `${tx + dx},${ty + dy}`;
+        if (climb(tx + dx, ty + dy) && !distance.has(key)) { distance.set(key, distance.get(`${tx},${ty}`)! + 1); queue.push([tx + dx, ty + dy]); }
+      }
+    }
+    for (let ty = 0; ty < height; ty++) for (let tx = 0; tx < width; tx++) {
+      if (!climb(tx, ty)) continue;
+      const far = distance.get(`${tx},${ty}`);
+      if (far === undefined) problems.push(`${file}: the handholds at ${tx},${ty} lead to no ledge`);
+      else if (far * 2 > REACH + 1) problems.push(`${file}: the handholds at ${tx},${ty} are ${far} from a ledge, too far for one grip`);
     }
   }
   assert.deepEqual(problems, []);

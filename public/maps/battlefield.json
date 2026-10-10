@@ -4814,13 +4814,13 @@
       "name": "highland",
       "image": "../assets/highland-tiles.svg",
       "imagewidth": 128,
-      "imageheight": 80,
+      "imageheight": 96,
       "margin": 0,
       "spacing": 0,
       "tilewidth": 16,
       "tileheight": 16,
       "columns": 8,
-      "tilecount": 40,
+      "tilecount": 48,
       "tiles": [
         {
           "id": 3,
@@ -5042,6 +5042,16 @@
           "properties": [
             {
               "name": "crumble",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 40,
+          "properties": [
+            {
+              "name": "climb",
               "type": "bool",
               "value": true
             }

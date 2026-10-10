@@ -14,7 +14,7 @@ import { abbey, barracks, battlefield, drove, fort, keep, ossuary, pass, rookery
 import { apothecary, causeway, creek, farBank, hospice, pens, wickmere } from '../content/marsh';
 import { archive, cellars, climb, hold, houseHall, ring, summit, upper } from '../content/holds';
 import { krakenGrave, openWater, port, reef, seaPens } from '../content/ocean';
-import { cistern, fleet, gorge, lanes, orchard, peat, quarry, rows, shieling, spires } from '../content/outskirts';
+import { cistern, falls, fleet, gorge, lanes, orchard, peat, quarry, rows, shieling, spires, watchtower } from '../content/outskirts';
 import type { Encounter, Escort } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
@@ -295,6 +295,9 @@ export const DOWNS: Area = {
     'barrow-door': { to: 'barrow', spawn: 'spawn', prompt: 'Squeeze past the slab into the barrow' },
     east: { to: 'drove', spawn: 'from-downs', prompt: 'Take the drove road up toward the highlands' },
     south: { to: 'orchard', spawn: 'from-downs', prompt: 'Go down the sunken lane to the orchard' },
+    // The tower's ivy, once the pack has gone from its foot.
+    'climb-tower': { to: 'watchtower', spawn: 'spawn', prompt: 'Climb the ivy inside the tower', facing: 'north', requires: { any: PACK_GONE },
+      barred: { speaker: 'THE WATCHTOWER', lines: ['Ivy, thick as rope, all the way up the inside of the tower. Nobody climbs with the pack at their back.'] } },
   },
   decorate(scene) {
     // Wind moving through the grass in long pale bands.
@@ -589,6 +592,7 @@ export const ROOKERY_ROAD: Area = {
   camps: { 'camp-rookery': { prompt: 'Rest in the couriers\' shelter', cost: 4, lines: ['You burn the last of someone\'s kindling in the couriers\' cairn. The wind never stops.'] } },
   exits: {
     south: { to: 'border-keep', spawn: 'from-rookery', prompt: 'Go back down to the old border fort' },
+    east: { to: 'falls', spawn: 'from-road', prompt: 'Follow the ice to the foot of the falls' },
     // The holds' gate opens to the church's convicts once the church sends them.
     gate: { to: 'climb', spawn: 'from-rookery', prompt: 'Go through the holds\' gate', requires: { flag: 'viper-slain' },
       barred: { speaker: 'THE HOLDS\' GATE', lines: ['The black gate stays shut. BY ORDER OF THE HOUSE.'] } },
@@ -1031,4 +1035,18 @@ export const ROWS: Area = {
   decorate: scene => marshFog(scene, 576, 448, 8),
 };
 
-export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY, CLIMB, HOLD, UPPER, ARCHIVE, HOUSE_HALL, PENS, CREEK, CELLARS, SUMMIT, RING, OUTLAW_PORT, OPEN_WATER, SEA_PENS, KRAKEN_GRAVE, REEF, ORCHARD, QUARRY, SHIELING, LANES, CISTERN, PEAT, FLEET, GORGE, SPIRES, ROWS];
+// Places you climb to: walls with handholds, climbed slowly while grip lasts, ledges to rest on.
+export const WATCHTOWER: Area = {
+  key: 'watchtower', map: 'watchtower', tileset: 'downs', music: 'downs', region: 'THE FARMLAND', place: 'The old watchtower', dialogue: watchtower,
+  ground: 'stone', grade: { saturation: -0.35, brightness: 0.82, vignette: 0.5 }, npcs: [], enemies: [],
+  exits: { down: { to: 'downs', spawn: 'from-tower', prompt: 'Climb back down and out' } },
+};
+
+export const FALLS: Area = {
+  ...HIGHLAND_GROUND, key: 'falls', map: 'falls', music: 'highlands', place: 'The frozen falls', dialogue: falls, grade: COLD,
+  npcs: [], enemies: [{ point: 'harrier-1', encounter: 'harrier' }],
+  exits: { west: { to: 'rookery-road', spawn: 'from-falls', prompt: 'Go back to the rookery road' } },
+  decorate: scene => { wind(scene, 384, 704); snowfall(scene, 384, 704); },
+};
+
+export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY, CLIMB, HOLD, UPPER, ARCHIVE, HOUSE_HALL, PENS, CREEK, CELLARS, SUMMIT, RING, OUTLAW_PORT, OPEN_WATER, SEA_PENS, KRAKEN_GRAVE, REEF, ORCHARD, QUARRY, SHIELING, LANES, CISTERN, PEAT, FLEET, GORGE, SPIRES, ROWS, WATCHTOWER, FALLS];

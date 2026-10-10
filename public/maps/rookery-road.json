@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 14,
+  "nextobjectid": 16,
   "layers": [
     {
       "id": 1,
@@ -3096,7 +3096,7 @@
         0,
         0,
         0,
-        4,
+        0,
         4,
         0,
         0,
@@ -3132,7 +3132,7 @@
         0,
         0,
         0,
-        4,
+        0,
         4,
         0,
         0,
@@ -3660,6 +3660,30 @@
           "rotation": 0,
           "visible": true,
           "point": true
+        },
+        {
+          "id": 14,
+          "name": "east",
+          "type": "",
+          "x": 568,
+          "y": 592,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 15,
+          "name": "from-falls",
+          "type": "",
+          "x": 536,
+          "y": 592,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
         }
       ]
     }
@@ -3670,13 +3694,13 @@
       "name": "highland",
       "image": "../assets/highland-tiles.svg",
       "imagewidth": 128,
-      "imageheight": 80,
+      "imageheight": 96,
       "margin": 0,
       "spacing": 0,
       "tilewidth": 16,
       "tileheight": 16,
       "columns": 8,
-      "tilecount": 40,
+      "tilecount": 48,
       "tiles": [
         {
           "id": 3,
@@ -3898,6 +3922,16 @@
           "properties": [
             {
               "name": "crumble",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 40,
+          "properties": [
+            {
+              "name": "climb",
               "type": "bool",
               "value": true
             }

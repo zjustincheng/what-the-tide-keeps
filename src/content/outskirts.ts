@@ -309,3 +309,38 @@ export const rows: Dialogue = {
     'Under the water, through a window, a room with the table still laid. Everyone got out. The plates are still there because nobody was allowed back for them.',
   ] },
 };
+
+// Places you climb to.
+
+// The old watchtower on the downs, climbed from the inside.
+export const watchtower: Dialogue = {
+  hearth: { speaker: 'THE WATCH-FIRE', prompt: 'Look at the hearth', lines: [
+    'A ring of blackened stones where the watch kept a fire to signal the fort. The last ashes are very old. Nobody lit it when the boar\'s farm burned, or when the carts stopped.',
+  ] },
+  cache: { speaker: 'A NICHE IN THE WALL', prompt: 'Reach into the niche', hiddenIf: [{ owns: 'watch-flint' }], lines: [
+    'A flint and steel in a greased rag, kept dry for whoever had the next watch. Nobody came for the next watch.',
+    'Found: the watch\'s flint.',
+  ], then: { find: 'watch-flint' } },
+  view: { speaker: 'FROM THE TOP', prompt: 'Look out', lines: [
+    'The whole farmland, small: the mill, Millbrook\'s roofs, smoke still going up from the burned farm. The carts on the border road. Far off, the capital\'s spire.',
+    'Past it, where the sea must be, a light. It doesn\'t move like a ship\'s light. It turns.',
+  ] },
+  'ledge-bones': { speaker: 'AT THE FOOT OF THE WALL', prompt: 'Look at the bones', lines: [
+    'Somebody who tried the climb before you, without resting. The ivy has grown through the ribs.',
+  ] },
+};
+
+// The frozen falls above the rookery road.
+export const falls: Dialogue = {
+  pool: { speaker: 'THE FROZEN POOL', prompt: 'Look at the ice', lines: [
+    'Under the ice, held still in it, a courier\'s satchel and a single grey feather, as if they fell and the water stopped to keep them.',
+  ] },
+  hollow: { speaker: 'THE HOLLOW', prompt: 'Search the hollow', hiddenIf: [{ owns: 'ice-pick' }], lines: [
+    'A cave behind the falls, dry, with a fire-ring and a pile of picks for the ice, worn short. The couriers waited out storms here, before the routes closed.',
+    'One pick is newer than the rest, its handle wrapped in a church marine\'s cloth.',
+    'Found: a courier\'s ice pick.',
+  ], then: { find: 'ice-pick' } },
+  tally: { speaker: 'SCRATCHES ON THE WALL', prompt: 'Read the scratches', lines: [
+    'Tallies, in groups of five, one for every storm somebody sat out in here. Hundreds of them. The last group is only four.',
+  ] },
+};

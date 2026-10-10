@@ -1,7 +1,7 @@
 // Rebuild the placeholder downs tileset, the downs east of the fields, and the barrow under them.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
-import { rect as krect, rows, scatter, sheet, stairs, vary } from './tile-kit.mjs';
+import { handholds, rect as krect, rows, scatter, sheet, stairs, tileProps, vary } from './tile-kit.mjs';
 const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
 const turf = (base) => rect(0,0,16,16,base)+rect(3,5,1,2,'#7f8c5a')+rect(11,11,1,2,'#7f8c5a')+rect(8,2,2,1,'#5c6a44');
 const tree = (leaf,dark) => rect(0,0,16,16,'#66754a')+rect(1,1,14,11,dark)+rect(3,2,9,6,leaf)+rect(7,11,3,5,'#3e3226');
@@ -48,6 +48,9 @@ tiles.push(
   rect(0,0,16,16,'#66754a')+rect(1,3,14,12,'#5a4430')+rect(2,4,12,3,'#7a5e40')+rect(6,1,4,4,'#3e3226')+rect(3,9,10,5,'#4a3622')+rect(4,10,8,1,'#8a3424'), // cider press
   rect(0,0,16,16,'#66754a')+rect(7,3,2,13,'#7a5e40')+rect(6,2,4,2,'#9a7a50')+rect(4,13,8,2,'#55603c')+rect(9,5,4,1,'#c8c0a8'),        // grafting stake with a tag
 );
+// The watchtower's face, grown over with ivy thick enough to climb.
+const IVY = tiles.length + 1;
+tiles.push(handholds({ face: '#6e6c62', light: '#8a887c', hold: '#3e3c34', accent: rect(0,0,3,16,'#3e5a32')+rect(1,3,4,3,'#4e6a3a')+rect(11,1,5,5,'#3e5a32')+rect(9,9,4,3,'#4e6a3a')+rect(13,12,3,4,'#3e5a32') }));
 const svg = sheet(tiles);
 writeFileSync('public/assets/downs-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
 const [TURF,CHALKY,PATH,GORSE,WALL,TOWER,RUBBLE,MOUND,SLAB,POND,FIG_A,HUT,THATCH,THORN,BORDER,SIGN,HURDLE,BFLOOR,BWALL,VOID,GRAVE,NEST,BONES,CAIRN,FIG_D,FIG_C]=tiles.map((_,i)=>i+1);
@@ -59,7 +62,7 @@ function write(name,{w,h,floor,furniture},points){
   const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
     layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([n,x,y],i)=>({id:i+1,name:n,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
     tilesets:[{firstgid:1,name:'downs',image:'../assets/downs-tiles.svg',imagewidth:128,imageheight:rows(tiles)*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows(tiles)*8,
-      tiles:solid.map(id=>({id,properties:[{name:'collides',type:'bool',value:true}]}))}]};
+      tiles:tileProps(solid,[],[],[IVY-1])}]};
   vary(floor,w,1,TURF_VARIANTS,7);
   writeFileSync(`public/maps/${name}.json`,JSON.stringify(map,null,2)+'\n');
 }
@@ -110,7 +113,7 @@ const at=(x,y)=>[x*16+8,y*16+8];
     ['barrow-door',368,472],['from-barrow',368,456],
     ['figure',...at(42,33)],['east',952,160],['from-drove',932,160],['cairn',...at(8,31)],['bard',136,468],['waystone',...at(27,22)],['from-waystone',...at(27,23)],['forage-1',...at(20,12)],['forage-2',...at(40,8)],['forage-3',...at(39,18)],['forage-4',...at(26,26)],
     ['hound-west',...at(12,13)],['hound-east',...at(46,33)],
-    ['south',112,632],['from-orchard',112,600],
+    ['south',112,632],['from-orchard',112,600],['climb-tower',...at(27,4)],['from-tower',...at(28,5)],
   ]);
 }
 
@@ -151,4 +154,30 @@ const at=(x,y)=>[x*16+8,y*16+8];
     ['weevil-1',...at(9,10)],['weevil-2',...at(29,18)],['locust-1',...at(14,19)],['blight',...at(33,22)],
     ['camp-orchard',...at(22,9)],['forage-1',...at(6,16)],['forage-2',...at(34,13)],
   ]);
+}
+
+// The old watchtower on the downs, climbed from the inside: ivy up the broken walls, ledges where floors used to be,
+// and the top, where the watch kept its fire, open to the sky.
+{
+  const m=grid(16,40,RUBBLE);const {floor,furniture,put,fill}=m;
+  fill(furniture,0,0,15,39,TOWER);
+  const ledge=(x0,y0,x1,y1)=>{fill(furniture,x0,y0,x1,y1,0);fill(floor,x0,y0,x1,y1,RUBBLE);};
+  const ivy=(x0,y0,x1,y1)=>{fill(furniture,x0,y0,x1,y1,0);fill(floor,x0,y0,x1,y1,IVY);};
+  // The bottom of the tower, where the stair has fallen in.
+  ledge(3,34,12,38);fill(furniture,7,39,8,39,0);fill(floor,7,39,8,39,RUBBLE);
+  // Up the ivy, ledge to ledge: each run short enough to climb on one grip.
+  ivy(5,27,10,33);ledge(3,25,9,26);
+  ivy(3,19,7,24);ledge(2,17,12,18);
+  ivy(9,11,13,16);ledge(7,9,13,10);
+  ivy(7,5,10,8);
+  // The top: the watch-fire's hearth, open to the sky.
+  ledge(2,1,13,4);put(furniture,7,2,CAIRN);put(floor,10,3,BONES);
+  for(const [x,y] of [[3,36],[11,35]]) put(floor,x,y,BONES);
+  // Narrower than the view: stand it in the middle of a wider map of wall, so it doesn't sit against one side.
+  const ox=Math.floor((30-m.w)/2), wide={...m,w:30,floor:Array(30*m.h).fill(m.floor[0]),furniture:Array(30*m.h).fill(TOWER)};
+  for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++){wide.floor[y*30+x+ox]=m.floor[y*m.w+x];wide.furniture[y*30+x+ox]=m.furniture[y*m.w+x];}
+  write('watchtower',wide,[
+    ['down',128,632],['spawn',128,600],
+    ['hearth',...at(7,3)],['cache',...at(11,2)],['view',...at(4,2)],['ledge-bones',...at(11,36)],
+  ].map(([n,x,y])=>[n,x+ox*16,y]));
 }

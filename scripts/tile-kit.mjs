@@ -68,14 +68,23 @@ export function vary(floor, W, base, variants, seed = 1, share = 0.35) {
 
 // The tileset's per-tile properties for Tiled: solid tiles collide; gap tiles collide but can be leapt;
 // crumble tiles are walkable ground that gives way under someone who stands on it too long. All ids 0-based.
-export function tileProps(solid, gaps = [], crumbles = []) {
+// climbs: walls with handholds, walkable slowly while grip lasts.
+export function tileProps(solid, gaps = [], crumbles = [], climbs = []) {
   const bool = name => ({ name, type: 'bool', value: true });
-  const ids = [...new Set([...solid, ...gaps, ...crumbles])].sort((a, b) => a - b);
+  const ids = [...new Set([...solid, ...gaps, ...crumbles, ...climbs])].sort((a, b) => a - b);
   return ids.map(id => ({ id, properties: [
     ...(solid.includes(id) || gaps.includes(id) ? [bool('collides')] : []),
     ...(gaps.includes(id) ? [bool('gap')] : []),
     ...(crumbles.includes(id) ? [bool('crumble')] : []),
+    ...(climbs.includes(id) ? [bool('climb')] : []),
   ] }));
+}
+
+// A wall you can climb: the face, lit from above, with handholds picked out in shadow and light, in a staggered run up the tile.
+export function handholds({ face, light, hold, accent }) {
+  let out = rect(0, 0, 16, 16, face) + rect(0, 0, 16, 1, light, 0.6) + rect(0, 8, 16, 1, '#000000', 0.12);
+  for (const [x, y] of [[2, 2], [10, 4], [5, 7], [12, 10], [3, 12], [8, 14]]) out += rect(x, y, 3, 2, hold) + rect(x, y, 3, 1, light, 0.5);
+  return out + (accent ? accent : '');
 }
 
 // A gap that can be leapt: a drop with its near lip lit and its far wall falling into dark, so it reads as narrow enough.

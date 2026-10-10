@@ -27,6 +27,7 @@ import { ShellView } from '../ui/ShellView';
 import { ArmView } from '../ui/ArmView';
 import { boutAfter, boutWon, BOUTS } from '../rules/ring';
 import { landing } from '../rules/leap';
+import { CLIMB_SPEED, grip } from '../rules/climb';
 import type { Ground } from '../rules/leap';
 import { ShopView } from '../ui/ShopView';
 import { FishingView } from '../ui/FishingView';
@@ -132,6 +133,9 @@ export class AreaScene extends Phaser.Scene {
   // The tileset's leapable gap tile, which crumbling ground turns into when it goes; and when each crumbling tile was first stood on.
   private gapTile?: number;
   private crumbling = new Map<string, number>();
+  // Climbing: how much grip is left, from 1 to 0, and the meter over the hero's head that shows it.
+  private grip = 1;
+  private gripMeter?: Phaser.GameObjects.Graphics;
   // What the church took, in memories, to raise one of the fallen: said once the conversation closes.
   private pendingTithe?: string[];
   private pendingFight?: Foe;
@@ -168,7 +172,7 @@ export class AreaScene extends Phaser.Scene {
     this.thrownOut = data?.caught;
     this.sentries = [];
     this.cleanup = new AbortController();
-    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.pendingChurch = false; this.exitMarkers = []; this.pendingBout = undefined; this.pendingTithe = undefined; this.leaping = false; this.lift = 0; this.crumbling = new Map(); this.pendingSail = undefined; this.pendingShells = undefined; this.pendingArm = undefined; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
+    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.pendingChurch = false; this.exitMarkers = []; this.pendingBout = undefined; this.pendingTithe = undefined; this.leaping = false; this.lift = 0; this.crumbling = new Map(); this.grip = 1; this.gripMeter = undefined; this.pendingSail = undefined; this.pendingShells = undefined; this.pendingArm = undefined; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
     this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false; this.pendingShop = undefined; this.pendingRest = undefined; this.pendingFight = undefined;
   }
 
@@ -264,7 +268,12 @@ export class AreaScene extends Phaser.Scene {
     element('game').setAttribute('aria-label', `${this.area.place} map. Move with WASD or arrow keys. Press E or Space to interact.`);
     this.cameras.main.fadeIn(650, 16, 27, 24);
     // The first time in a place with gaps to leap, say how.
-    if(this.gapTile!==undefined && !HINTED.has(this.area.key) && this.walls.findTile(tile=>tile.index===this.gapTile)) { HINTED.add(this.area.key); this.time.delayedCall(900, () => this.notice('Shift (or Leap) to jump a gap. Loose ground won\'t hold you for long.', 5000)); }
+    const climbable=Boolean(this.floor.findTile(tile=>Boolean((tile.tileset?.getTileProperties(tile.index) as { climb?: boolean } | null)?.climb)));
+    const gaps=this.gapTile!==undefined && Boolean(this.walls.findTile(tile=>tile.index===this.gapTile));
+    if((gaps || climbable) && !HINTED.has(this.area.key)) { HINTED.add(this.area.key); this.time.delayedCall(900, () => this.notice([
+      ...(climbable ? ['Walls with handholds can be climbed while your grip lasts. Rest on the ledges.'] : []),
+      ...(gaps ? ['Shift (or Leap) to jump a gap. Loose ground won\'t hold you for long.'] : []),
+    ].join(' '), 6000)); }
     music.play(this.area.music);
     this.renderMemory();
     // A wipe that was not yet paid for, such as one interrupted by a reload, is still owed.
@@ -467,9 +476,32 @@ export class AreaScene extends Phaser.Scene {
     return { tx: Math.floor(body.center.x / 16), ty: Math.floor(body.center.y / 16) };
   }
 
+  // Whether the hero is on a wall of handholds.
+  private onHandholds(): boolean {
+    const at = this.feet();
+    const tile = this.floor.getTileAt(at.tx, at.ty);
+    return Boolean(tile && (tile.tileset?.getTileProperties(tile.index) as { climb?: boolean } | null)?.climb) && !this.walls.getTileAt(at.tx, at.ty);
+  }
+
+  // Grip: it drains on the wall and comes back on a ledge. The meter over his head shows it while it is less than full.
+  // When it runs out, he falls.
+  private hold(delta: number, climbing: boolean, moving: boolean) {
+    this.grip = grip(this.grip, delta / 1000, { climbing, moving });
+    this.gripMeter ??= this.add.graphics().setDepth(8);
+    this.gripMeter.clear();
+    if (this.grip < 1) {
+      const x = this.player.x - 9, y = this.player.y - 20;
+      this.gripMeter.fillStyle(0x0c1210, 0.8).fillRect(x - 1, y - 1, 20, 4);
+      this.gripMeter.fillStyle(this.grip < 0.3 ? 0xc86a4a : 0xc8b878, 1).fillRect(x, y, 18 * this.grip, 2);
+    }
+    if (climbing && this.grip <= 0) { this.grip = 1; this.notice('Your grip goes.', 2000); this.fall(); }
+  }
+
   // A leap the way the hero faces: over a gap of up to two tiles, or a hop forward on open ground. Short of the far side, he falls.
   private leap() {
     if(this.leaping || this.overlay || this.leaving || this.active) return;
+    // Both hands are busy on a wall.
+    if(this.onHandholds()) return;
     const from = this.feet();
     const { dx, dy } = this.facing;
     const lands = landing((tx, ty) => this.ground(tx, ty), from, dx, dy);
@@ -525,7 +557,7 @@ export class AreaScene extends Phaser.Scene {
     const crumbles = Boolean(tile && (tile.tileset?.getTileProperties(tile.index) as { crumble?: boolean } | null)?.crumble) && !this.walls.getTileAt(at.tx, at.ty);
     const key = `${at.tx},${at.ty}`;
     for (const other of [...this.crumbling.keys()]) if (other !== key) this.crumbling.delete(other);
-    if (!crumbles) { if (!this.walls.getTileAt(at.tx, at.ty)) this.safe = { x: this.player.x, y: this.player.y }; return; }
+    if (!crumbles) { if (!this.walls.getTileAt(at.tx, at.ty) && !this.onHandholds()) this.safe = { x: this.player.x, y: this.player.y }; return; }
     const since = this.crumbling.get(key) ?? time;
     this.crumbling.set(key, since);
     if (time - since > CRACKS) tile!.tint = 0x8a7a6a;
@@ -1216,8 +1248,9 @@ export class AreaScene extends Phaser.Scene {
     let y=Number(pressed('down','S','DOWN'))-Number(pressed('up','W','UP'));
     if(this.active || this.leaping){x=0;y=0;}
     if(x||y) this.facing=Math.abs(x)>=Math.abs(y) ? { dx: Math.sign(x), dy: 0 } : { dx: 0, dy: Math.sign(y) };
-    const motion=new Phaser.Math.Vector2(x,y).normalize().scale(this.sneaking ? 42 : 70);
-    if(!this.leaping) { this.player.setVelocity(motion.x,motion.y); this.slideAroundCorners(x,y); this.footing(time); }
+    const climbing=!this.leaping && this.onHandholds();
+    const motion=new Phaser.Math.Vector2(x,y).normalize().scale(climbing ? CLIMB_SPEED : this.sneaking ? 42 : 70);
+    if(!this.leaping) { this.player.setVelocity(motion.x,motion.y); this.slideAroundCorners(x,y); this.footing(time); this.hold(delta, climbing, Boolean(x||y)); }
     // Holding the party's mana down costs mana: a point from everyone every few seconds. When the hero runs dry, it shows again.
     if(this.sneaking && time-this.lastDrain>HIDE_DRAIN) {
       this.lastDrain=time;

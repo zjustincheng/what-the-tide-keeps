@@ -2,7 +2,7 @@
 // the battlefield, the ruined abbey, and the ossuary under it.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
-import { crumble, gap, grain, rect as krect, scatter as speckle, stairs, tileProps, vary } from './tile-kit.mjs';
+import { crumble, gap, grain, handholds, rect as krect, scatter as speckle, stairs, tileProps, vary } from './tile-kit.mjs';
 const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
 const sheet = (name, tiles) => {
   const rows = Math.ceil(tiles.length / 8);
@@ -74,6 +74,9 @@ const BLOCK = HIGHLAND.length + 1, CRACK = HIGHLAND.length + 2, LOOSE = HIGHLAND
 HIGHLAND.push(rect(0,0,16,16,'#6a6a62')+rect(1,2,14,12,'#9a968a')+rect(1,2,14,1,'#b4b0a2')+rect(1,8,14,1,'#7a766c')+rect(8,2,1,6,'#7a766c')+rect(4,8,1,6,'#7a766c')+rect(1,13,14,1,'#5a5850')+rect(3,4,3,1,'#a8a498'),
   // A crack in the rock, narrow enough to leap; a loose ledge that won't hold you long.
   HIGHLAND[14], crumble({ top: '#8a8578', crack: '#3a3630', under: '#121418' }));
+// The frozen falls: a face of ice, chipped into handholds by whoever climbed it last.
+const ICEFACE = HIGHLAND.length + 1;
+HIGHLAND.push(handholds({ face: '#a8bcc4', light: '#e4eef2', hold: '#5a7280', accent: rect(4,0,1,16,'#c8dae0')+rect(11,0,1,16,'#94aab4') }));
 sheet('highland', HIGHLAND);
 const HIGHLAND_SOLID = [3,5,7,8,9,10,11,13,14,16,18,19,21,22,24,26,27,29,30,BLOCK-1];
 const HIGHLAND_GAPS = [CRACK-1], HIGHLAND_CRUMBLES = [LOOSE-1];
@@ -128,7 +131,7 @@ function write(name,tileset,rows,solid,{w,h,floor,furniture},points){
   const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
     layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([n,x,y],i)=>({id:i+1,name:n,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
     tilesets:[{firstgid:1,name:tileset,image:`../assets/${tileset}-tiles.svg`,imagewidth:128,imageheight:rows*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows*8,
-      tiles:tileset==='highland'?tileProps(solid,HIGHLAND_GAPS,HIGHLAND_CRUMBLES):tileProps(solid)}]};
+      tiles:tileset==='highland'?tileProps(solid,HIGHLAND_GAPS,HIGHLAND_CRUMBLES,[ICEFACE-1]):tileProps(solid)}]};
   writeFileSync(`public/maps/${name}.json`,JSON.stringify(map,null,2)+'\n');
 }
 const at=(x,y)=>[x*16+8,y*16+8];
@@ -384,10 +387,13 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
   for(const [x,y] of [[3,30],[14,30],[20,36],[30,44],[5,10],[18,8],[3,24],[22,23],[12,44]]) put(furniture,x,y,H.PINE);
   for(const [x,y] of [[16,37],[11,29],[20,15],[6,43]]) put(furniture,x,y,H.BOULDER);
   put(furniture,15,24,H.CAIRN);
+  // East, below the falls, a way along the ice to where they come down.
+  fill(furniture,35,36,35,37,0);
   write('rookery-road','highland',HROWS,HIGHLAND_SOLID,m,[
     ['south',80,760],['from-keep',80,736],
     ['holds-gate',...at(25,3)],['gate',...at(26,3)],['from-holds',...at(26,4)],['gate-art',416,22],['frozen-courier',...at(30,14)],['shelter',...at(15,25)],['camp-rookery',...at(13,23)],
     ['harrier-1',...at(18,39)],['harrier-2',...at(14,12)],['hound-1',...at(22,26)],['forage-1',...at(24,36)],
+    ['east',568,592],['from-falls',536,592],
   ]);
 }
 
@@ -462,4 +468,33 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
     ['west',8,208],['from-pass',40,208],
     ['satchel',...at(40,6)],['courier',...at(40,8)],['carving',...at(12,22)],['harrier-1',...at(30,8)],['forage-1',...at(14,23)],
   ]);
+}
+
+// The frozen falls above the rookery road: a face of ice to climb, ledge by ledge, a crack to leap, loose ice to cross,
+// and behind the falls at the top, a hollow where the couriers used to wait out storms.
+{
+  const m=grid(24,44,H.SNOW);const {floor,furniture,put,fill}=m;
+  fill(furniture,0,0,23,43,H.ROCK);
+  const ledge=(x0,y0,x1,y1,ground=H.SNOW)=>{fill(furniture,x0,y0,x1,y1,0);fill(floor,x0,y0,x1,y1,ground);};
+  const ice=(x0,y0,x1,y1)=>{fill(furniture,x0,y0,x1,y1,0);fill(floor,x0,y0,x1,y1,ICEFACE);};
+  // The pool at the bottom, frozen, and the way in from the road.
+  ledge(1,38,22,42,H.ICE);ledge(0,40,0,41,H.ICE);
+  // Up the first face to a ledge; up the second; across a crack; up the third.
+  ice(9,31,14,37);ledge(6,29,16,30);
+  ice(14,22,18,28);ledge(12,19,20,21);
+  fill(furniture,10,19,11,21,CRACK);ledge(3,19,9,21);
+  ice(4,12,8,18);
+  // The top shelf behind the falls; a run of loose ice to the hollow.
+  ledge(2,6,10,11);for(let x=11;x<=15;x++){fill(furniture,x,9,x,9,0);put(floor,x,9,LOOSE);}ledge(16,5,21,11,H.FLAG);
+  put(furniture,21,5,H.CAIRN);put(floor,18,7,H.BONES);put(furniture,2,6,H.BOULDER);
+  for(const [x,y] of [[3,39],[20,41],[18,38]]) put(furniture,x,y,H.BOULDER);
+  // Narrower than the view: stand it in the middle of a wider map of rock, so it doesn't sit against one side.
+  const ox=Math.floor((30-m.w)/2), wide={...m,w:30,floor:Array(30*m.h).fill(m.floor[0]),furniture:Array(30*m.h).fill(H.ROCK)};
+  for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++){wide.floor[y*30+x+ox]=m.floor[y*m.w+x];wide.furniture[y*30+x+ox]=m.furniture[y*m.w+x];}
+  // Keep the way out at the map's west edge.
+  for(let x=0;x<ox;x++) for(const y of [40,41]){wide.furniture[y*30+x]=0;wide.floor[y*30+x]=H.ICE;}
+  write('falls','highland',HROWS,HIGHLAND_SOLID,wide,[
+    ['west',8,656],['from-road',40,656],
+    ['hollow',...at(19,8)],['tally',...at(17,6)],['harrier-1',...at(6,8)],['pool',...at(12,40)],
+  ].map(([n,x,y])=>[n,n==='west'?x:x+ox*16,y]));
 }

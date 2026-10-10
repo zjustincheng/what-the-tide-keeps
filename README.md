@@ -27,6 +27,8 @@ Walking into a wall you only clip by a few pixels slides you along it, so narrow
 
 **Leaping (Shift, or Leap on a touch screen).** A hop the way you're facing: one tile on open ground, or over a gap up to two tiles wide onto the far side. Only some drops can be leapt, the narrow ones in places built for it; walls, and the wide water and chasms that guard the story, can't. Some ground is **loose**: it holds while you keep moving, cracks if you stop, and gives way under you a moment later (it comes back after a while). Leap short or stand too long, and you **fall**: back to where you last stood firm, 3 health down (a fall never takes the last of it). The rules are in `src/rules/leap.ts`, and a map test checks that leaping reaches every parkour reward and opens nothing else anywhere.
 
+**Climbing.** Walls with handholds (ivy on stone, chipped ice) can be climbed any way, at about half walking speed, while **grip** lasts: about four and a half seconds climbing, twice that hanging still. A bar over the hero's head shows it draining; any ledge brings it back. When it runs out on the wall, you fall to the last ledge, 3 health down. You can't leap off a wall: both hands are busy. A map test checks that every climb can be done ledge to ledge on one grip (`src/rules/climb.ts`).
+
 **Every way out is marked** with a small gold arrow just in front of it, pointing the way through: left through a door in a west wall, down through a door in a south wall, off the edge of the map at a road's end. The direction is read from the walls around the exit (an exit can set it with `facing` where they don't make it plain). A way that is still barred, by a locked gate or a guard, is marked in grey, so you know it's there, and turns gold the moment it opens.
 ## Run locally
 
@@ -458,6 +460,11 @@ Three places reached only by leaping, Hollow Knight style: gaps, single pillars 
 - **The gorge**, east off the high pass. Islands of rock over the drop; a crack, a wider crack, a ledge of loose stone, and a lone pillar to the last ledge, where a marten courier died taking the short way to the holds. Her satchel holds **climber's chalk** (+15% dodge timing, 2 less health) and a letter that never reached the house. A shelf below has a carving from before the Covenant.
 - **The old spires**, west off the climb. The tops of the old rookery towers standing out of the drop; slate bridges that slide away underfoot, two lone pillars, and at the far tower the oldest nest in the holds, with the **falconer's hood** (vulture: +20% dodge timing, shows 1 less mana, hits 1 softer). Undelivered post on the couriers' perch.
 - **The sunken rows**, up the old alley north of Wickmere. The first town, drowned when the church cut the river a new course; rooftops over deep water, rotten boards, and the belfry with the parish register, which shows who owned the ground before the flood, and a **reed charm** (frog: 4 more health, +10% dodge timing, shows 1 more mana).
+
+### Places you climb to
+
+- **The old watchtower** on the downs, climbed from the inside once the pack has gone from its foot: four runs of ivy between ledges where the floors used to be, to the watch's hearth at the top. The **watch's flint** (hits 2 harder, -5% dodge timing) is in a niche, and from the top you can see the whole farmland, and far out past the capital, a light that turns.
+- **The frozen falls**, east off the rookery road: three faces of ice to climb, a crack to leap, and loose ice to the hollow behind the falls, where couriers waited out storms. A courier's **ice pick** (bear: hits 2 harder, 3 more health, shows 1 more mana) is with the old picks.
 
 ## The old roads and the bestiary
 
