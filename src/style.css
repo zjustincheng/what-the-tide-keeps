@@ -845,3 +845,5 @@ button.die[aria-pressed="true"] { border-color: #bc755e; color: #d8a890; }
 .orders p { margin: 0 0 6px; color: #d7d9c8; font: 14px/1.5 Georgia, serif; }
 .orders .orders-next { color: #abbf9b; font-style: italic; }
 .orders ul { margin: 0; padding-left: 18px; color: #c8ccb8; font: 13px/1.5 Georgia, serif; }
+
+.enemy-traits { margin: 0 0 4px; color: #c8b878; font: 10px ui-monospace, monospace; letter-spacing: 1px; text-transform: uppercase; cursor: help; }

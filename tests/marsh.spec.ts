@@ -166,3 +166,19 @@ test('the tidal road joins Wickmere to the capital\'s harbour, by day, once the 
   await go(page, 'wickmere', 176, 510, 'Take the tidal road down to the capital');
   await expect(page.locator('#dialogue-text')).toContainText('under the tide');
 });
+
+test('the hero can wait out an ordinary fight, and the battle says whose blows will land', async ({ page }) => {
+  await start(page, { flags: [...HIGHLANDS_DONE, 'frog-free'] }, 'causeway', 'from-weir');
+  await page.keyboard.press('p');
+  await page.locator('.party-screen [data-member="chameleon"] .bench-toggle').click();
+  await expect(page.locator('.party-screen [data-member="chameleon"] .bench-toggle')).toHaveText(/Waits/);
+  await expect(page.locator('.party-screen [data-member="vulture"] .party-always')).toHaveText('Strong against flying; weak against armoured.');
+  await page.getByRole('button', { name: 'Done' }).click();
+  // The mosquito flies, and is an insect.
+  await touch(page, 'causeway', 248, 296, 'Marsh mosquito');
+  await expect(page.locator('.enemy-traits')).toHaveText('Insect · Flying');
+  await expect(page.locator('.member-card h3')).toHaveText(['Bear', 'Vulture', 'Frog']);
+  await expect(page.getByRole('button', { name: 'Vulture attack', exact: true })).toContainText('strong');
+  await expect(page.getByRole('button', { name: 'Bear attack', exact: true })).toContainText('weak');
+  await expect(page.getByRole('button', { name: 'Frog attack', exact: true })).toContainText('Poison · strong');
+});

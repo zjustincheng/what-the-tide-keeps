@@ -44,7 +44,7 @@ function parse(raw: string | null): World | undefined {
     night: timed(clock) ? clock >= NIGHT : night === true,
     clock: timed(clock) ? clock : night === true ? NIGHT : 0.1,
     // Older saves kept a single benched companion.
-    waiting: MEMBER_IDS.filter(id => id !== 'chameleon' && ((Array.isArray(waiting) && waiting.includes(id)) || bench === id)),
+    waiting: MEMBER_IDS.filter(id => (Array.isArray(waiting) && waiting.includes(id)) || bench === id),
     tempered: Array.isArray(tempered) ? KEEPSAKE_IDS.filter(id => tempered.includes(id)) : [],
     pantry: Object.fromEntries(INGREDIENT_IDS.map(id => {
       const count = (pantry as Record<string, unknown>)?.[id];

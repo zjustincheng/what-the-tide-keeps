@@ -16,6 +16,28 @@ export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm' | 'wa
   | 'mosquito' | 'scorpion' | 'brood' | 'apprentice' | 'viper'
   | 'hornet' | 'spider' | 'duellist' | 'cuckoo';
 export const SPELL = 'Salt lance';
+// What an enemy is, which decides whose blows it fears. Spells ignore all of it: magic is the equaliser.
+export type Trait = 'armoured' | 'flying' | 'caster' | 'insect' | 'dead';
+export const TRAITS: Record<Encounter, readonly Trait[]> = {
+  locust: ['insect'], weevil: ['insect', 'armoured'], acolyte: ['caster'], boar: ['armoured'], swarm: ['insect', 'flying'], warden: ['caster'],
+  leech: [], hound: [], pack: [], wisp: ['flying', 'dead'], drowned: ['dead'], raider: [], ghoul: ['dead'], vulture: ['flying'], pair: ['caster'],
+  hyena: [], inquisitor: ['caster'], captain: ['armoured'], harrier: ['flying'], mosquito: ['insect', 'flying'], scorpion: ['insect', 'armoured'],
+  brood: ['insect', 'flying'], apprentice: ['caster'], viper: ['caster'], hornet: ['insect', 'flying'], spider: ['insect'], duellist: ['caster', 'flying'], cuckoo: ['caster', 'flying'],
+};
+// How each hero's own blow fares against each kind: the bear's maul breaks armour and can't reach what flies;
+// the vulture's talons take things out of the air and skid off plate; the chameleon strikes casters as they gather.
+export const MATCHUPS: Record<MemberId, Partial<Record<Trait, number>>> = {
+  bear: { armoured: 1.5, flying: 0.5 }, vulture: { flying: 1.5, armoured: 0.5 }, chameleon: { caster: 1.5 }, frog: {},
+};
+// The frog's poison: double in an insect, nothing at all in the dead.
+export const VENOM: Partial<Record<Trait, number>> = { insect: 2, dead: 0 };
+export function matchup(member: MemberId, encounter: Encounter): number {
+  return TRAITS[encounter].reduce((total, trait) => total * (MATCHUPS[member][trait] ?? 1), 1);
+}
+export function venom(encounter: Encounter): number {
+  return TRAITS[encounter].reduce((total, trait) => total * (VENOM[trait] ?? 1), 1);
+}
+
 // Mana that lies: these show a fixed number, whatever they really hold. A false display never moves, even when they cast.
 export const FALSE_MANA: Partial<Record<Encounter, number>> = { spider: 1, duellist: 2, cuckoo: 3 };
 // How hard unmasking the cuckoo hits him.
@@ -728,11 +750,15 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
   const definition = MEMBERS[actor];
   // Forgetting his training leaves the hero with an ordinary reveal.
   const reveal = (actor === 'chameleon' && battle.hollow.trained ? 4 : 2) + member.gear.reveal;
-  const damage = definition.damage + member.gear.damage + (actor === 'chameleon' ? battle.hollow.damage : 0) + (member.focused ? 3 : 0) + (member.suppressed ? reveal : 0);
+  const base = definition.damage + member.gear.damage + (actor === 'chameleon' ? battle.hollow.damage : 0) + (member.focused ? 3 : 0) + (member.suppressed ? reveal : 0);
+  // Against the main enemy, what it is decides how well this hero's blow lands. Its followers are ordinary.
+  const fit = foe === 0 ? matchup(actor, battle.encounter) : 1;
+  const damage = Math.max(1, Math.round(base * fit));
   const { enemy, followers, fury, shielded, blocked } = action === 'attack' ? land(battle, damage, foe)
     : { enemy: battle.enemy, followers: battle.followers, fury: battle.fury, shielded: false, blocked: false };
   // The frog's dart leaves its toxin in the main enemy; her dose mends an ally and draws out their poison.
   const dart = actor === 'frog' && action === 'attack' && foe === 0 && !blocked && enemy.health > 0;
+  const poisons = dart && venom(battle.encounter) > 0;
   const dose = actor === 'frog' && action === 'support';
   const party = battle.party.map(current => ({
     ...current,
@@ -755,13 +781,13 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
     : blocked && battle.impostor ? `${definition.name}'s ${definition.attack.toLowerCase()} finds nothing. The lord's chair is empty: he is somewhere among you.`
     : blocked ? `${definition.name}'s ${definition.attack.toLowerCase()} breaks on the candlelight. The warden is untouched while its votives burn.`
     : shielded ? `The boar throws himself in front of the ${battle.followers[foe - 1].name.toLowerCase()}. ${definition.name}'s ${definition.attack.toLowerCase()} strikes him instead, and his fury grows.`
-    : action === 'attack' ? `${definition.name}'s ${definition.attack.toLowerCase()} strikes the ${foe > 0 ? battle.followers[foe - 1].name.toLowerCase() : ENEMIES[battle.encounter].short}${member.suppressed ? ' in a burst of revealed mana' : ''}${member.focused ? ' with focused force' : ''}.${dart ? ' The toxin goes in.' : ''}`
+    : action === 'attack' ? `${definition.name}'s ${definition.attack.toLowerCase()} strikes the ${foe > 0 ? battle.followers[foe - 1].name.toLowerCase() : ENEMIES[battle.encounter].short}${member.suppressed ? ' in a burst of revealed mana' : ''}${member.focused ? ' with focused force' : ''}.${fit > 1 ? ' It lands hard.' : fit < 1 ? ' It barely tells.' : ''}${dart ? (venom(battle.encounter) === 0 ? ' The toxin does nothing to the dead.' : ' The toxin goes in.') : ''}`
     : dose ? (battle.soured ? `Frog doses ${target === actor ? 'herself' : MEMBERS[target].name}, and it burns: everything is soured.` : `Frog doses ${target === actor ? 'herself' : MEMBERS[target].name}. A small dose mends.`)
     : actor === 'vulture' ? 'Vulture steadies her aim. Her next attack will strike harder.'
     : actor === 'bear' && target !== actor ? `Bear steps in front of ${MEMBERS[target].name}.`
     : `${definition.name} plants their feet and guards.`;
   return staged({
-    ...battle, party, enemy, followers, fury, enemyPoison: dart ? Math.max(battle.enemyPoison, DART) : battle.enemyPoison, studied: action === 'analyze' ? [...battle.studied, ENEMY_SPELLS[battle.encounter]!] : battle.studied, phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
+    ...battle, party, enemy, followers, fury, enemyPoison: poisons ? Math.max(battle.enemyPoison, DART) : battle.enemyPoison, studied: action === 'analyze' ? [...battle.studied, ENEMY_SPELLS[battle.encounter]!] : battle.studied, phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
     log: [...battle.log, message, ...fallen(battle, after), ...(victory ? [QUIET] : [])],
   });
 }
@@ -888,10 +914,10 @@ function enemyTurnEnds(battle: Battle): Battle {
     // The shape the cuckoo wears shows the same mana, round after round: it never moves.
     mana: !defeat && member.health > 0 && member.id !== battle.impostor?.as ? Math.min(member.maxMana, member.mana + MANA_REGEN) : member.mana,
   }));
-  const venom = battle.enemyPoison > 0 && battle.enemy.health > 0 ? Math.min(ENEMY_POISON, battle.enemy.health - (SURVIVE[battle.encounter] ? 1 : 0)) : 0;
+  const toxin = battle.enemyPoison > 0 && battle.enemy.health > 0 ? Math.min(ENEMY_POISON * venom(battle.encounter), battle.enemy.health - (SURVIVE[battle.encounter] ? 1 : 0)) : 0;
   const poisonLog = [
     ...poisoned.map(member => `The poison works in ${MEMBERS[member.id].name}.${party.find(after => after.id === member.id)!.health === 0 ? ' They fall.' : ''}`),
-    ...(venom ? [`The frog's toxin works in the ${ENEMIES[battle.encounter].short}.`] : []),
+    ...(toxin ? [`The frog's toxin works in the ${ENEMIES[battle.encounter].short}.`] : []),
   ];
   const cast = !battle.snared && battle.enemy.health > 0 && plainIntent(battle).type === 'spell' ? plainIntent(battle).spell : undefined;
   const sours = Boolean(cast && plainIntent(battle).sour);
@@ -900,7 +926,7 @@ function enemyTurnEnds(battle: Battle): Battle {
   // A fight the party only had to survive ends once they have.
   const survived = !defeat && SURVIVE[battle.encounter] !== undefined && battle.round >= SURVIVE[battle.encounter]!;
   if (survived) return { ...battle, party, step: 0, snared: false, phase: 'victory', log: [...battle.log, 'She lands and folds her wings. "Grave thieves run. You didn\'t."'] };
-  const enemyHealth = battle.enemy.health - venom;
+  const enemyHealth = battle.enemy.health - toxin;
   const after: Battle = {
     ...battle, party, step: 0, snared: false,
     enemyPoison: Math.max(0, battle.enemyPoison - 1),

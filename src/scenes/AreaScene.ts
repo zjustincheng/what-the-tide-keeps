@@ -744,7 +744,7 @@ export class AreaScene extends Phaser.Scene {
         saved = saveMemory(wipe(loadMemory())) && saveWorld(drop(loadWorld()));
         this.scene.start('church');
       }
-    }, foe.encounter, { ...this.partyOptions(true), ambush: Boolean(foe.ambush && foe.hidden), surprise: this.sneaking, waves: foe.waves });
+    }, foe.encounter, { ...this.partyOptions(true, LIEUTENANTS.includes(foe.encounter)), ambush: Boolean(foe.ambush && foe.hidden), surprise: this.sneaking, waves: foe.waves });
   }
 
   // A shop opens after its keeper has spoken, if there is anything left to sell.
@@ -883,9 +883,9 @@ export class AreaScene extends Phaser.Scene {
 
   // The party as it stands: memories, keepsakes, grimoires, companions, supplies, wounds, and spent mana.
   // Everyone who has joined, or, for a fight, only those who fight: three at most, with one on the bench.
-  private partyOptions(fighting = false): BattleOptions {
+  private partyOptions(fighting = false, lieutenant = false): BattleOptions {
     const world = loadWorld();
-    return { hollow: hollow(loadMemory()), gear: loadGear(), books: settle(loadBooks(), roster(world)), roster: this.area.solo ? ['chameleon'] : fighting ? lineup(world) : roster(world), tempered: world.tempered ?? [], supplies: world.supplies, wounds: world.wounds, drained: world.drained };
+    return { hollow: hollow(loadMemory()), gear: loadGear(), books: settle(loadBooks(), roster(world)), roster: this.area.solo ? ['chameleon'] : fighting ? lineup(world, lieutenant) : roster(world), tempered: world.tempered ?? [], supplies: world.supplies, wounds: world.wounds, drained: world.drained };
   }
 
   private toggleHud() {

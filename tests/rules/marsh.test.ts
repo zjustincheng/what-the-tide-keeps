@@ -27,7 +27,7 @@ test("the frog's dart poisons the enemy, and her dose mends an ally and draws ou
   assert.equal(battle.enemyPoison, DART);
   const health = battle.enemy.health;
   battle = resolveEnemy(act(act(battle, 'chameleon', 'support'), 'bear', 'support'));
-  assert.equal(battle.enemy.health, health - ENEMY_POISON);
+  assert.equal(battle.enemy.health, health - ENEMY_POISON * 2, 'a scorpion is an insect: the poison bites twice as hard');
   const hurt: Battle = { ...createBattle('scorpion', [], { roster: [...MARSH] }), party: createBattle('scorpion', [], { roster: [...MARSH] }).party.map(member => member.id === 'bear' ? { ...member, health: 10, poison: 3 } : member) };
   const dosed = act(hurt, 'frog', 'support', 'bear');
   assert.deepEqual([dosed.party[1].health, dosed.party[1].poison], [10 + DOSE, 0]);
@@ -56,17 +56,38 @@ test('everyone starts poisoned in the viper\'s apothecary', () => {
   assert.match(battle.log.join(' '), /poisoned already/);
 });
 
-test('up to three fight: any companion can be sent to wait, never the hero, and bringing a fourth back sends the newest to wait', () => {
+test('any three fight: anyone can wait, someone always fights, and the hero always faces a lieutenant', () => {
   const world = { ...createWorld(), flags: ['bear-free', 'vulture-free', 'frog-free'] } as never;
   assert.deepEqual(roster(world), ['chameleon', 'bear', 'vulture', 'frog']);
   assert.deepEqual(lineup(world), ['chameleon', 'bear', 'vulture'], 'the newest waits by default');
-  const bearWaits = toggleWaiting(world, 'bear');
-  assert.deepEqual(lineup(bearWaits), ['chameleon', 'vulture', 'frog']);
-  assert.deepEqual(lineup(toggleWaiting(world, 'chameleon')), lineup(world), 'the hero always fights');
-  // Two can wait: the hero goes in with one companion.
-  assert.deepEqual(lineup(toggleWaiting(bearWaits, 'vulture')), ['chameleon', 'frog']);
-  // Bringing the bear back, with three already fighting, sends the newest fighter to wait.
-  const back = toggleWaiting(bearWaits, 'bear');
+  // The hero can wait out an ordinary fight.
+  const heroWaits = toggleWaiting(world, 'chameleon');
+  assert.deepEqual(lineup(heroWaits), ['bear', 'vulture', 'frog']);
+  // Against a lieutenant he steps in for the newest.
+  assert.deepEqual(lineup(heroWaits, true), ['chameleon', 'bear', 'vulture']);
+  // Bringing a waiting one back, with three already fighting, sends the newest fighter to wait.
+  const back = toggleWaiting(heroWaits, 'chameleon');
   assert.deepEqual(lineup(back), ['chameleon', 'bear', 'vulture']);
   assert.deepEqual(back.waiting, ['frog']);
+  // The last one fighting stays.
+  const alone = ['bear', 'vulture', 'frog'].reduce((next, member) => toggleWaiting(next, member as never), world);
+  assert.deepEqual(lineup(alone), ['chameleon']);
+  assert.deepEqual(lineup(toggleWaiting(alone, 'chameleon')), ['chameleon']);
+});
+
+test('whose blows land depends on what the enemy is: bear on armour, vulture on flyers, chameleon on casters, frog\'s poison on insects', async () => {
+  const { matchup, venom } = await import('../../src/rules/battle.ts');
+  assert.equal(matchup('bear', 'weevil'), 1.5);
+  assert.equal(matchup('bear', 'harrier'), 0.5);
+  assert.equal(matchup('vulture', 'harrier'), 1.5);
+  assert.equal(matchup('vulture', 'captain'), 0.5);
+  assert.equal(matchup('chameleon', 'acolyte'), 1.5);
+  assert.equal(venom('mosquito'), 2);
+  assert.equal(venom('ghoul'), 0);
+  // In a fight: the bear's maul on armour hits half again as hard; his strike on the followers is ordinary.
+  const bear = act(createBattle('weevil'), 'bear', 'attack');
+  assert.equal(createBattle('weevil').enemy.health - bear.enemy.health, Math.round(5 * 1.5));
+  assert.match(bear.log.at(-1)!, /lands hard/);
+  const dead = act(createBattle('ghoul', [], { roster: ['chameleon', 'frog'] }), 'frog', 'attack');
+  assert.equal(dead.enemyPoison, 0, 'the dead don\'t take poison');
 });

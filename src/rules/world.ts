@@ -121,24 +121,30 @@ export function roster(world: World): MemberId[] {
     ...(world.flags.includes('frog-free') ? ['frog' as const] : [])];
 }
 
-// Three fight at a time. Any companion can be sent to wait; the hero never waits.
-// If more than three are left fighting, the newest to join waits too.
+// Three fight at a time, any three who have joined; the rest wait. If more than three are left fighting, the newest waits too.
+// Someone always fights. Against a region's lieutenant the hero always does: it is his story, and he takes the place of the newest.
 export const FIGHTERS = 3;
-export function lineup(world: World): MemberId[] {
+export function lineup(world: World, lieutenant = false): MemberId[] {
   const waiting = world.waiting ?? [];
-  return roster(world).filter(member => member === 'chameleon' || !waiting.includes(member)).slice(0, FIGHTERS);
+  const joined = roster(world);
+  const chosen = joined.filter(member => !waiting.includes(member)).slice(0, FIGHTERS);
+  const fighting = chosen.length ? chosen : ['chameleon' as const];
+  if (!lieutenant || fighting.includes('chameleon')) return fighting;
+  return ['chameleon', ...fighting.slice(0, FIGHTERS - 1)];
 }
 
-// Send a companion to wait, or bring one back to fight. Bringing a fourth back sends the newest fighter to wait in their place.
+// Send someone to wait, or bring them back to fight. Bringing a fourth back sends the newest fighter to wait in their place.
+// The last one fighting can't be sent to wait.
 export function toggleWaiting(world: World, member: MemberId): World {
-  if (member === 'chameleon' || !roster(world).includes(member)) return world;
+  if (!roster(world).includes(member)) return world;
   const waiting = world.waiting ?? [];
   if (!lineup(world).includes(member)) {
     const back = { ...world, waiting: waiting.filter(other => other !== member) };
-    const fighting = roster(back).filter(other => other === 'chameleon' || !(back.waiting ?? []).includes(other));
-    const bumped = fighting.length > FIGHTERS ? fighting.filter(other => other !== member && other !== 'chameleon').at(-1) : undefined;
+    const fighting = roster(back).filter(other => !(back.waiting ?? []).includes(other));
+    const bumped = fighting.length > FIGHTERS ? fighting.filter(other => other !== member).at(-1) : undefined;
     return bumped ? { ...back, waiting: [...(back.waiting ?? []), bumped] } : back;
   }
+  if (lineup(world).length <= 1) return world;
   return { ...world, waiting: [...waiting, member] };
 }
 
