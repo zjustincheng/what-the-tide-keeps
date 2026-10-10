@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { attackUntilWiped, doom } from './helpers';
+import { attackUntilWiped, doom, win } from './helpers';
 
 // A fresh game except for what each test seeds.
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -56,38 +56,37 @@ const panel = (page: Page, field: string) => page.evaluate(async field => {
 }, field);
 const LATE = ['bear-free', 'boar-defeated', 'vulture-free', 'hyena-slain', 'frog-free', 'viper-slain'];
 
-test('the Talon Ring: win a bout for its prize; lose one and walk out hurt, not dead', async ({ page }) => {
-  await start(page, { flags: LATE, coins: 0 }, 'hold', 'from-climb');
+test('the Talon Ring: pay to go in, then the bouts come one straight after another, and nobody dies', async ({ page }) => {
+  await start(page, { flags: LATE, coins: 5 }, 'hold', 'from-climb');
   await go(page, 'hold', 680, 368, 'Go into the Talon Ring', 'ring');
+  // Too poor to go in.
   await go(page, 'ring', 200, 264, 'Speak to the shrike');
-  await talk(page, 'Hornets, two at a time');
+  await talk(page, 'Go in');
+  await expect(page.getByRole('heading', { name: 'Cliff hornet' })).toHaveCount(0);
+  await start(page, { flags: LATE, coins: 25 }, 'ring', 'from-hold');
+  await go(page, 'ring', 200, 264, 'Speak to the shrike');
+  await talk(page, 'Go in');
+  // Two hornets at once.
   await expect(page.getByRole('heading', { name: 'Cliff hornet' })).toBeVisible();
+  await expect(page.locator('.follower')).toHaveCount(1);
   await expect(page.locator('#flee')).toHaveText('Yield');
-  // The second hornet, at one health.
-  await page.evaluate(async () => {
-    const { game } = await import('/src/main.ts');
-    const view = game.scene.getScenes(true)[0].overlay;
-    view.state = { ...view.state, wave: 2, enemy: { ...view.state.enemy, health: 1 } };
-    view.render();
-  });
-  await page.getByRole('button', { name: 'Vulture attack', exact: true }).click();
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  await expect(page.locator('#speaker')).toHaveText('THE RINGMASTER');
-  await talk(page);
+  await win(page);
+  // Straight into the next bout: no ringmaster, no rest.
+  await expect(page.getByRole('heading', { name: 'Crag spider' })).toBeVisible();
+  await expect(page.getByRole('log')).toContainText('No water, no rest');
   let world = await saved(page);
   expect(world.flags).toContain('ring-1');
-  expect(world.coins).toBe(15);
-  // The next bout: lost. Nobody dies in the ring.
-  await go(page, 'ring', 200, 264, 'Speak to the shrike');
-  await talk(page, 'Something from the cracks');
-  await expect(page.getByRole('heading', { name: 'Crag spider' })).toBeVisible();
+  expect(world.coins).toBe(25 - 20 + 15);
+  // Lost: walked out hurt, with what was won before.
   await doom(page);
   await attackUntilWiped(page).catch(() => undefined);
   await page.getByRole('button', { name: 'Leave the ring' }).click();
+  await expect(page.locator('#dialogue-text')).toContainText('15 coins in prize money');
   await talk(page);
   world = await saved(page);
   expect(world.deaths ?? 0).toBe(0);
   expect(world.flags).not.toContain('ring-2');
+  expect(world.coins).toBe(20);
   expect(await at(page, 'ring')).not.toBeNull();
 });
 

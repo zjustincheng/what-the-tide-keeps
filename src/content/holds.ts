@@ -1,5 +1,5 @@
-import { BOUTS } from '../rules/ring';
-import type { Dialogue } from './dialogue';
+import { BOUTS, RING_FEE } from '../rules/ring';
+import type { Choice, Dialogue } from './dialogue';
 
 // The mountain holds: the birds' city, ranked by height, where the messenger birds have stopped flying.
 // People talk about what is in front of them. Names are placeholders.
@@ -224,20 +224,27 @@ export const summit: Dialogue = {
   ] },
 };
 
-// The Talon Ring: bouts for the houses' amusement, one after another, until the champion.
+// What can be said to the ringmaster, champion or not.
+const ringReplies: Choice[] = [
+  { text: `Go in. (${RING_FEE} coins)`, if: { coins: RING_FEE }, ends: true, lines: [
+    'He takes the coins and doesn\'t count them. "All four. If you want to stop, yield, and that\'s the end of it."', '"In you go."',
+  ], then: { pay: RING_FEE, bout: 0 } },
+  { text: `Go in. (${RING_FEE} coins)`, if: { not: { coins: RING_FEE } }, lines: [
+    '"Coins first. Ground-dwellers who can\'t pay don\'t fight. They get thrown in for nothing, and that\'s a different show."',
+  ] },
+  { text: 'What are the bouts?', lines: BOUTS.map(bout => `${bout.name}: ${bout.prize} coins${bout.find ? ', and the champion\'s torc' : ''}. ${bout.text}`) },
+];
+
+// The Talon Ring: pay to go in, then every bout straight through, until the champion or until he calls it.
 export const ring: Dialogue = {
   ringmaster: { speaker: 'THE RINGMASTER', prompt: 'Speak to the shrike', portrait: 'shrike', lines: [
     'Ground-dwellers! The houses love a ground-dweller. They bleed so honestly.',
-    'Bouts in order, prize in hand, nobody dies in my ring. I call it before that. The crowd prefers it that way: it means you come back.',
+    `${RING_FEE} coins to go in. Then it\'s all four bouts, one after the other, no water, no rest, no stopping. Every bout you win pays. Nobody dies in my ring: I call it before that. The crowd prefers it that way. It means you come back.`,
   ], variants: [{ if: { flag: 'ring-champion' }, lines: [
-    'The champion\'s torc on a ground-dweller. The houses are furious. Business has never been better.',
-  ] }], choices: BOUTS.map((bout, index) => ({
-    text: `${bout.name}. (${bout.prize} coins${bout.find ? ', and the torc' : ''})`,
-    if: index === 0 ? { not: { flag: bout.flag } } : { all: [{ flag: BOUTS[index - 1].flag }, { not: { flag: bout.flag } }] },
-    ends: true, lines: [bout.text, '"In you go."'], then: { bout: index },
-  })) },
+    'The champion\'s torc on a ground-dweller. The houses are furious. Business has never been better. Go round again, if you like. They\'ll pay to watch you try.',
+  ], choices: ringReplies }], choices: ringReplies },
   board: { speaker: 'THE BOUT BOARD', prompt: 'Read the board', lines: [
-    'Chalked up in order: HORNETS, TWO AT A TIME. SOMETHING FROM THE CRACKS. THE KESTREL BROTHERS. THE CHAMPION.',
+    `Chalked up in order, under ENTRY ${RING_FEE}, NO REST BETWEEN: HORNETS, TWO AT A TIME. SOMETHING FROM THE CRACKS. THE KESTREL BROTHERS. THE CHAMPION.`,
     'Beside it, a longer list, wiped half clean: the names of ground-dwellers who fought here. Most have a little thorn drawn next to them.',
   ] },
   crowd: { speaker: 'THE STANDS', prompt: 'Look up at the stands', lines: [

@@ -406,13 +406,15 @@ export type BattleOptions = Readonly<{
   tempered?: readonly KeepsakeId[]; waves?: number;
   // company: others who fight beside the enemy from the first round.
   company?: readonly Escort[];
+  // herald: a line called out before the fight opens, such as the ringmaster announcing the next bout.
+  herald?: string;
   // arena: a bout in the Talon Ring, where losing isn't dying.
   arena?: boolean;
 }>;
 // A fight's party when none is given: the three who fought together first.
 const TRIO: readonly MemberId[] = ['chameleon', 'bear', 'vulture'];
 export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], options: BattleOptions = {}): Battle {
-  const { hollow = UNHOLLOWED, gear, books = STARTING_BOOKS, roster = TRIO, supplies = NO_SUPPLIES, wounds = {}, drained = {}, ambush = false, surprise = false, tempered = [], waves = 1, company = [] } = options;
+  const { hollow = UNHOLLOWED, gear, books = STARTING_BOOKS, roster = TRIO, supplies = NO_SUPPLIES, wounds = {}, drained = {}, ambush = false, surprise = false, tempered = [], waves = 1, company = [], herald } = options;
   const member = (id: MemberId, base: number, mana: number): Member => {
     const kept = gear ? mods(gear, id, tempered) : NO_MODS;
     const worn = hollow.kraken === false ? { ...kept, agility: kept.agility - NO_KRAKEN } : kept;
@@ -434,7 +436,7 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
       ...company.map(({ name, art, health, weapon, damage }) => ({ name, art, weapon, damage, health: scaled(health), maxHealth: scaled(health), mana: 4, maxMana: 4 })),
     ],
     fury: 0, step: 0, snared: surprise && !ambush, stage: 1, wave: 1, waves, supplies, enemyPoison: 0, soured: 0, impostor: null, lastSpell: null, enemyWard: 0, stunned: null,
-    log: [ENEMIES[encounter].opening, ...(STARTS_POISONED[encounter] ? ['The air in here is thick with venom. Everyone is poisoned already.'] : []), ...(ambush ? ['Ambush! It moves before you can.'] : surprise ? ['It never saw you coming. It loses its first move.'] : [])],
+    log: [...(herald ? [herald] : []), ENEMIES[encounter].opening, ...(STARTS_POISONED[encounter] ? ['The air in here is thick with venom. Everyone is poisoned already.'] : []), ...(ambush ? ['Ambush! It moves before you can.'] : surprise ? ['It never saw you coming. It loses its first move.'] : [])],
   };
 }
 

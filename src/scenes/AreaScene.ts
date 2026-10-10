@@ -25,7 +25,7 @@ import { EquipmentView } from '../ui/EquipmentView';
 import { PartyView } from '../ui/PartyView';
 import { ShellView } from '../ui/ShellView';
 import { ArmView } from '../ui/ArmView';
-import { BOUTS } from '../rules/ring';
+import { boutAfter, boutWon, BOUTS } from '../rules/ring';
 import { ShopView } from '../ui/ShopView';
 import { FishingView } from '../ui/FishingView';
 import { SettingsView } from '../ui/SettingsView';
@@ -859,8 +859,9 @@ export class AreaScene extends Phaser.Scene {
     }, foe.encounter, { ...this.partyOptions(true, LIEUTENANTS.includes(foe.encounter)), ambush: Boolean(foe.ambush && foe.hidden), surprise: this.sneaking, waves: foe.waves, company: foe.company });
   }
 
-  // A bout in the Talon Ring. Winning pays the prize; losing or yielding walks the party out hurt, but nobody dies in the ring.
-  private fightBout(index: number) {
+  // A run in the Talon Ring: every bout, one straight after another. Each win pays its prize and sends the next one in at once,
+  // with no rest: wounds and spent mana carry. Losing or yielding walks the party out hurt, but nobody dies in the ring.
+  private fightBout(index: number, earned = 0) {
     const bout = BOUTS[index];
     if(this.overlay || this.leaving || !bout) return;
     this.player.setVelocity(0);
@@ -869,20 +870,26 @@ export class AreaScene extends Phaser.Scene {
     element('prompt').textContent = '';
     this.setExplorationEnabled(false);
     music.play(battleTheme(bout.encounter));
+    const herald = index === 0 ? `"${bout.name}!" The gate goes up. ${bout.text}`
+      : `No water, no rest. The gate goes up again before the last one is dragged out. "${bout.name}!" ${bout.text}`;
     this.overlay = new BattleView(this.textures.getBase64('hero'), (won, battle) => {
       this.overlay = undefined;
-      music.play(this.area.music);
-      // Nobody leaves the ring dead: the fallen are carried out with a little life left.
-      const wounds = Object.fromEntries(Object.entries(woundsAfter(battle)).map(([id, wound]) => [id, Math.min(wound, (battle.party.find(member => member.id === id)?.maxHealth ?? 1) - 1)]));
+      const next = won ? boutAfter(index) : undefined;
+      // Between bouts, wounds carry as they are. At the end, nobody leaves the ring dead: the fallen are carried out with a little life left.
+      const wounds = next !== undefined ? woundsAfter(battle)
+        : Object.fromEntries(Object.entries(woundsAfter(battle)).map(([id, wound]) => [id, Math.min(wound, (battle.party.find(member => member.id === id)?.maxHealth ?? 1) - 1)]));
       const world = loadWorld();
-      saved = saveWorld({ ...world, supplies: battle.supplies, wounds, drained: drainedAfter(battle),
-        ...(won ? { coins: world.coins + bout.prize, flags: [...world.flags, bout.flag], found: bout.find && !world.found.includes(bout.find) ? [...world.found, bout.find] : world.found } : {}) });
+      const kept = { ...world, supplies: battle.supplies, wounds, drained: drainedAfter(battle) };
+      saved = saveWorld(won ? boutWon(kept, index) : kept);
       this.renderMemory();
+      const total = earned + (won ? bout.prize : 0);
+      if (next !== undefined) { this.time.delayedCall(300, () => this.fightBout(next, total)); return; }
+      music.play(this.area.music);
       this.resumeExploration();
       this.say({ speaker: 'THE RINGMASTER', lines: won
-        ? [`"${bout.name}: won!" The stands stamp. He counts ${bout.prize} coins into your hand without looking at you.${bout.find ? ' Then he puts the champion\'s torc round your neck, as if hanging something on a thorn.' : ''}`]
-        : ['"Called!" He waves the attendants in. They drag you out by the feet, and the crowd is already looking at the next thing.'] }, 'shrike');
-    }, bout.encounter, { ...this.partyOptions(true), waves: bout.waves, arena: true });
+        ? [`"The champion is down!" The stands come apart. He counts out ${bout.prize} coins, ${total} in all tonight, without looking at you.${bout.find && !world.found.includes(bout.find) ? ' Then he puts the champion\'s torc round your neck, as if hanging something on a thorn.' : ''}`]
+        : [`"Called!" He waves the attendants in. They drag you out by the feet${total ? `, with ${total} coins in prize money for what you won before it` : ''}. The crowd is already looking at the next thing.`] }, 'shrike');
+    }, bout.encounter, { ...this.partyOptions(true), company: bout.company, arena: true, herald });
   }
 
   // A shop opens after its keeper has spoken, if there is anything left to sell.
