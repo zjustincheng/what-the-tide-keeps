@@ -8,13 +8,14 @@ import type { Books, SpellId } from './spells';
 import { NO_SUPPLIES, SUPPLIES } from './economy.ts';
 import type { Supplies, SupplyId } from './economy';
 import type { Drained, Wounds } from './world';
-export type MemberId = 'chameleon' | 'bear' | 'vulture' | 'frog';
+export type MemberId = 'chameleon' | 'bear' | 'vulture' | 'frog' | 'octopus';
 // unmask: strike an ally, in case they are not who they seem.
 export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze' | 'gather' | 'unmask';
 export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm' | 'warden' | 'leech' | 'hound' | 'pack' | 'wisp' | 'drowned'
   | 'raider' | 'ghoul' | 'vulture' | 'pair' | 'hyena' | 'inquisitor' | 'captain' | 'harrier'
   | 'mosquito' | 'scorpion' | 'brood' | 'apprentice' | 'viper'
-  | 'hornet' | 'spider' | 'duellist' | 'cuckoo' | 'warder' | 'cricket' | 'flight' | 'champion';
+  | 'hornet' | 'spider' | 'duellist' | 'cuckoo' | 'warder' | 'cricket' | 'flight' | 'champion'
+  | 'shark' | 'barracuda' | 'jelly' | 'eel' | 'cuttlefish';
 export const SPELL = 'Salt lance';
 // What an enemy is, which decides whose blows it fears. Spells ignore all of it: magic is the equaliser.
 export type Trait = 'armoured' | 'flying' | 'caster' | 'insect' | 'dead';
@@ -24,11 +25,14 @@ export const TRAITS: Record<Encounter, readonly Trait[]> = {
   hyena: [], inquisitor: ['caster'], captain: ['armoured'], harrier: ['flying'], mosquito: ['insect', 'flying'], scorpion: ['insect', 'armoured'],
   brood: ['insect', 'flying'], apprentice: ['caster'], viper: ['caster'], hornet: ['insect', 'flying'], spider: ['insect'], duellist: ['caster', 'flying'], cuckoo: ['caster', 'flying'],
   warder: ['armoured'], cricket: ['insect'], flight: ['dead', 'flying'], champion: ['flying'],
+  shark: ['armoured'], barracuda: [], jelly: [], eel: ['caster'], cuttlefish: ['caster'],
 };
 // How each hero's own blow fares against each kind: the bear's maul breaks armour and can't reach what flies;
 // the vulture's talons take things out of the air and skid off plate; the chameleon strikes casters as they gather.
 export const MATCHUPS: Record<MemberId, Partial<Record<Trait, number>>> = {
   bear: { armoured: 1.5, flying: 0.5 }, vulture: { flying: 1.5, armoured: 0.5 }, chameleon: { caster: 1.5 }, frog: {},
+  // The octopus's grapple wraps round anything with a body, and can't reach what flies.
+  octopus: { armoured: 1.25, flying: 0.5 },
 };
 // The frog's poison: double in an insect, nothing at all in the dead.
 export const VENOM: Partial<Record<Trait, number>> = { insect: 2, dead: 0 };
@@ -37,6 +41,14 @@ export function matchup(member: MemberId, encounter: Encounter): number {
 }
 export function venom(encounter: Encounter): number {
   return TRAITS[encounter].reduce((total, trait) => total * (VENOM[trait] ?? 1), 1);
+}
+
+// What a spell the party studied hits for when the octopus throws it back, by its name.
+export const SPELL_POWER: Record<string, number> = { 'Salt lance': 14, Judgement: 14, 'Drowning toll': 10, 'Marsh-fire': 9, Souring: 7, 'Talon hex': 13, Verdict: 16 };
+export const MIMIC_COST = 4;
+// The spell an octopus can throw back: the last one written into the grimoire.
+export function mimicry(battle: Pick<Battle, 'studied'>): string | undefined {
+  return battle.studied.at(-1);
 }
 
 // Mana that lies: these show a fixed number, whatever they really hold. A false display never moves, even when they cast.
@@ -62,11 +74,12 @@ export type Foe = number;
 // window: this blow's dodge timing, tighter for stronger enemies. undodgeable: only a guard or barrier answers it.
 // feed: the hyena feeds on a fallen body instead of striking, unless a barrier covers it.
 // hits: the move lands this many times, each dodged on its own. unblockable: no guard or barrier stops it.
+// mirror: a hero spell an enemy throws back at the party, with that spell's effect turned on them.
 // spell: for a spell, which one it is. poison: rounds of poison a blow leaves, if it lands at all.
 // sour: a spell that turns the party's healing to harm for a while once cast.
 // dodge: how this blow is dodged, when it differs from what dodgeKind would choose.
 type Move = { name: string; type: 'physical' | 'spell'; spell?: string; dodge?: DodgeKind; damage: number; piercing?: number; revive?: boolean; drain?: boolean; feed?: boolean; hits?: number; unblockable?: boolean;
-  poison?: number; sour?: true;
+  poison?: number; sour?: true; mirror?: SpellId;
   window?: { perfect: number; graze: number }; undodgeable?: boolean };
 export type Member = Fighter & Readonly<{
   id: MemberId;
@@ -112,6 +125,8 @@ export type Battle = Readonly<{
   enemyPoison: number;
   // The cuckoo, hiding in the party as one of them: whose shape he wears, and the mana that shape shows, which never moves.
   impostor: { as: MemberId; shown: number } | null;
+  // The last spell the party cast, which the cuttlefish throws back; a ward it raised by copying one; a hero it snared.
+  lastSpell: SpellId | null; enemyWard: number; stunned: MemberId | null;
   // While soured, every heal burns for as much as it would have mended.
   soured: number;
   log: readonly string[];
@@ -135,6 +150,8 @@ export const MEMBERS = {
   vulture: { name: 'Vulture', attack: 'Talons', support: 'Focus', damage: 9, agility: 1.25 },
   // One toxin, two doses: a small one mends an ally, a large one poisons the enemy.
   frog: { name: 'Frog', attack: 'Toxin dart', support: 'Dose', damage: 4, agility: 1.1 },
+  // The copier: what the party has studied, it can throw back.
+  octopus: { name: 'Octopus', attack: 'Grapple', support: 'Mimic', damage: 6, agility: 1.15 },
 } as const;
 // Crop pests hide nothing and only strike physically; the exile veils its mana and casts.
 export const ENEMIES = {
@@ -209,6 +226,17 @@ export const ENEMIES = {
   // The Talon Ring's champion.
   champion: { name: 'The ring\'s champion', short: 'shrike', health: 176, mana: 8, veiled: false,
     opening: 'The shrike steps into the sand, and the stands go quiet in a way that means they have seen this before. Outside the gate, on the thorns, are the ones who lost.' },
+  // The sea: the shark clans' enforcers, what hunts in open water, and the cuttlefish.
+  shark: { name: 'Shark enforcer', short: 'shark', health: 96, mana: 6, veiled: true,
+    opening: 'A shark in a clan\'s tattoos rises out of the water between the wrecks. "That octopus is ours. The bounty\'s ours. You\'re in the way."' },
+  barracuda: { name: 'Barracuda', short: 'barracuda', health: 54, mana: 3, veiled: true,
+    opening: 'Nothing on the water, and then teeth, very fast, from under it.' },
+  jelly: { name: 'Lantern jelly', short: 'jelly', health: 46, mana: 8, veiled: false,
+    opening: 'A jellyfish the size of a boat drifts up, lit from inside. Everything it brushes, it stings.' },
+  eel: { name: 'Mirror eel', short: 'eel', health: 78, mana: 18, veiled: true,
+    opening: 'An eel with a skin like a mirror slides out of the wreck. It has been watching you fight. It opens its mouth, and your own spell comes out of it.' },
+  cuttlefish: { name: 'The cuttlefish', short: 'cuttlefish', health: 112, mana: 30, veiled: false,
+    opening: 'The cuttlefish rises over the reef in shifting colours, and the colours are your own spells, written on its skin. "You came down here with the land\'s magic. Let me show you what it looks like from below."' },
   inquisitor: { name: 'The inquisitor', short: 'inquisitor', health: 600, mana: 60, veiled: false,
     opening: 'The largest signature you have ever felt. A ram in grey, the royal seal at his collar. "Convict. You are a long way from your church." You cannot win this. Run.' },
 } as const satisfies Record<Encounter, unknown>;
@@ -230,6 +258,8 @@ export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; healt
   brood: [{ name: 'Wriggler', health: 12, weapon: 'needle', damage: 3 }, { name: 'Wriggler', health: 12, weapon: 'needle', damage: 3 }],
   // The lost flight comes in formation.
   flight: [{ name: 'Courier', health: 20, weapon: 'frozen talons', damage: 4 }, { name: 'Courier', health: 20, weapon: 'frozen talons', damage: 4 }],
+  // The cuttlefish keeps two of the sea's pilot fish at its side.
+  cuttlefish: [{ name: 'Pilot', health: 16, weapon: 'bite', damage: 4 }, { name: 'Pilot', health: 16, weapon: 'bite', damage: 4 }],
   // The hyena's dead get up again, unless she has eaten them.
   hyena: [{ name: 'Ghoul', health: 24, weapon: 'claws', damage: 5 }, { name: 'Ghoul', health: 24, weapon: 'claws', damage: 5 }],
 };
@@ -290,6 +320,12 @@ export const STAGES: Partial<Record<Encounter, { title: string; line: string; sc
     { who: 'THE CUCKOO', line: 'He remembers you. He told me you opened a door, once. He said you\'d understand.' },
     { who: '', line: 'He gets up, and for a moment he is every one of you, and then he is no one.' },
   ], enter: () => ({ impostor: null }) },
+  cuttlefish: { title: 'The cuttlefish, in its own colours', line: 'The cuttlefish comes up off the reef in no colour at all, and throws your spells back every time now.', rise: 0.4, scene: [
+    { who: '', line: 'The cuttlefish sinks onto the reef, its colours going grey.' },
+    { who: 'THE CUTTLEFISH', line: 'The kraken came up after the nets took a whole reef in one night. Every shell, every child. It came up to make it stop.' },
+    { who: 'THE CUTTLEFISH', line: 'You killed it for that. Then you went to a feast. Do you remember what you ate?' },
+    { who: '', line: 'Its skin floods with every spell you have ever cast, all at once, and it rises.' },
+  ] },
   viper: { title: 'The viper, shed', line: 'The viper comes out of her own skin, and the air goes bitter.', rise: 0.4, scene: [
     { who: '', line: 'The viper goes down among the jars, and the water closes over her.' },
     { who: 'THE VIPER', line: 'I set his bones. I sat up with him three nights. They said I bit him.' },
@@ -335,7 +371,7 @@ function staged(battle: Battle): Battle {
 }
 
 // The human's lieutenants, one to a region. Beating one finishes that region's orders, and the church has more.
-export const LIEUTENANTS: readonly Encounter[] = ['boar', 'hyena', 'viper', 'cuckoo'];
+export const LIEUTENANTS: readonly Encounter[] = ['boar', 'hyena', 'viper', 'cuckoo', 'cuttlefish'];
 
 // Followers who give up once their leader falls. Everyone else fights until the last of them is down.
 export const YIELDING: Partial<Record<Encounter, true>> = { boar: true, hyena: true, brood: true };
@@ -386,10 +422,10 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
   const scaled = (health: number) => Math.round(health * PARTY_SCALE[size - 1]);
   return {
     round: 1, phase: ambush ? 'enemy' : 'player', encounter, studied: studied.filter(name => STUDIABLE.includes(name)), hollow, enemyRevealed: false,
-    party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10), member('frog', 18, 12)].filter(member => roster.includes(member.id)),
+    party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10), member('frog', 18, 12), member('octopus', 22, 14)].filter(member => roster.includes(member.id)),
     enemy: { health: scaled(ENEMIES[encounter].health), maxHealth: scaled(ENEMIES[encounter].health), mana: ENEMIES[encounter].mana, maxMana: ENEMIES[encounter].mana },
     followers: (FOLLOWERS[encounter] ?? []).map(({ name, health }) => ({ name, health: scaled(health), maxHealth: scaled(health), mana: 4, maxMana: 4 })),
-    fury: 0, step: 0, snared: surprise && !ambush, stage: 1, wave: 1, waves, supplies, enemyPoison: 0, soured: 0, impostor: null,
+    fury: 0, step: 0, snared: surprise && !ambush, stage: 1, wave: 1, waves, supplies, enemyPoison: 0, soured: 0, impostor: null, lastSpell: null, enemyWard: 0, stunned: null,
     log: [ENEMIES[encounter].opening, ...(STARTS_POISONED[encounter] ? ['The air in here is thick with venom. Everyone is poisoned already.'] : []), ...(ambush ? ['Ambush! It moves before you can.'] : surprise ? ['It never saw you coming. It loses its first move.'] : [])],
   };
 }
@@ -574,6 +610,35 @@ function plainIntent(battle: Battle): Move & { tell: string } {
       return { name: 'Talon hex', type: 'spell', spell: 'Talon hex', tell: 'He traces the house\'s sign in the air: Talon hex, a spell.', damage: 14, window: { perfect: 45, graze: 120 } };
     return { name: 'Borrowed blade', type: 'physical', tell: 'He fights with the lord\'s sword, the way the lord was taught.', damage: 12, piercing: 3, window: { perfect: 50, graze: 130 } };
   }
+  if (battle.encounter === 'shark') return battle.round % 2 === 0
+    ? { name: 'Frenzy bite', type: 'physical', tell: 'It rolls its eyes back. A bite is coming that a guard won\'t stop all of.', damage: 13, piercing: 5, window: { perfect: 45, graze: 120 } }
+    : { name: 'Ram', type: 'physical', tell: 'It goes under and comes up hard.', damage: 9 };
+  if (battle.encounter === 'barracuda') return battle.round % 2 === 0
+    ? { name: 'Strike', type: 'physical', tell: 'It hangs perfectly still. Then it will be somewhere else, very fast.', damage: 11, window: { perfect: 35, graze: 95 } }
+    : { name: 'Slash', type: 'physical', tell: 'It slashes past, twice.', damage: 5, hits: 2 };
+  if (battle.encounter === 'jelly') return battle.round % 2 === 0
+    ? { name: 'Drift', type: 'physical', tell: 'It drifts over someone, trailing everything. Nobody dodges a jellyfish.', damage: 6, poison: 3, undodgeable: true }
+    : { name: 'Sting', type: 'physical', tell: 'A tentacle lifts out of the water.', damage: 5, poison: 2 };
+  if (battle.encounter === 'eel') {
+    // It opens with the party's own strongest spell, and comes back to it.
+    const strongest = battle.party.filter(member => member.spell && SPELLS[member.spell].kind === 'damage').map(member => member.spell!).sort((a, b) => SPELLS[b].power - SPELLS[a].power)[0];
+    if (strongest && battle.round % 3 === 1)
+      return { name: `${SPELLS[strongest].name}, mirrored`, type: 'spell', mirror: strongest, tell: `Its skin shows your own ${SPELLS[strongest].name}, backwards. It is going to cast it at you, and you can\'t dodge your own spell coming the wrong way.`, damage: SPELLS[strongest].power };
+    return { name: 'Bite', type: 'physical', tell: 'It bites, and keeps what it takes.', damage: 8, drain: true, window: { perfect: 50, graze: 130 } };
+  }
+  if (battle.encounter === 'cuttlefish') {
+    // It throws the party's last spell back at them: every other round, or every round once it is down to its own colours.
+    const mirrors = battle.lastSpell && (battle.stage === 2 || battle.round % 2 === 0);
+    if (mirrors) {
+      const spell = SPELLS[battle.lastSpell!];
+      const what = spell.kind === 'damage' ? 'at you' : spell.kind === 'heal' ? 'on itself' : spell.kind === 'ward' ? 'round itself' : 'at whoever shows the most mana';
+      return { name: `${spell.name}, thrown back`, type: 'spell', mirror: battle.lastSpell!, damage: spell.kind === 'damage' ? spell.power : 0,
+        tell: `Its skin turns to your ${spell.name}, the last thing you cast. It will throw it back ${what}. You can\'t dodge your own spell coming the wrong way.` };
+    }
+    return battle.round % 3 === 0
+      ? { name: 'Ink', type: 'physical', tell: 'It clouds the water with ink, and strikes out of it, twice.', damage: 7, hits: 2, window: { perfect: 45, graze: 120 } }
+      : { name: 'Arms', type: 'physical', tell: 'Its arms come over the reef for someone, and a guard won\'t hold all of them.', damage: 12, piercing: 4, window: { perfect: 55, graze: 140 } };
+  }
   if (battle.encounter === 'champion') {
     if (battle.round % 3 === 0) return { name: 'Larder', type: 'physical', tell: 'He picks someone out to hang on his thorns. He will take what he needs from them, fast.', damage: 15, drain: true, window: { perfect: 50, graze: 120 } };
     return battle.round % 3 === 2
@@ -663,6 +728,8 @@ export function canAct(battle: Battle, actor: MemberId, action: Action, target: 
   if (action === 'analyze' && (!casts || battle.studied.includes(casts))) return false;
   // A barrier can cover a fallen ally too, which keeps the hyena off the body.
   if (action === 'barrier' && !battle.party.some(ally => ally.id === target)) return false;
+  // The octopus throws back the last spell the grimoire studied, at the main enemy.
+  if (action === 'support' && actor === 'octopus') return member.mana >= MIMIC_COST && Boolean(mimicry(battle)) && standing(battle, 0);
   // Striking an ally is only for the fight with the cuckoo, and never at oneself.
   if (action === 'unmask') return battle.encounter === 'cuckoo' && target !== actor && battle.party.some(member => member.id === target && member.health > 0);
   if (action === 'support') {
@@ -676,7 +743,7 @@ export function canAct(battle: Battle, actor: MemberId, action: Action, target: 
 function land(battle: Battle, damage: number, foe: Foe) {
   const shielded = foe > 0 && battle.encounter === 'boar' && battle.enemy.health > 0;
   const blocked = foe === 0 && (warded(battle) || Boolean(battle.impostor));
-  const dealt = blocked ? 0 : shielded ? Math.floor(damage / 2) : damage;
+  const dealt = blocked ? 0 : shielded || (foe === 0 && battle.enemyWard > 0) ? Math.floor(damage / 2) : damage;
   // An enemy the party only has to survive cannot be brought down.
   const floor = SURVIVE[battle.encounter] ? 1 : 0;
   const enemy = foe === 0 || shielded ? { ...battle.enemy, health: Math.max(floor, battle.enemy.health - dealt) } : battle.enemy;
@@ -770,6 +837,7 @@ export function cast(battle: Battle, actor: MemberId, success: boolean, foe: Foe
   return staged({
     ...battle, party, enemy, followers: hit?.followers ?? battle.followers, fury: hit?.fury ?? battle.fury,
     snared: battle.snared || (success && spell.kind === 'snare' && enemy.health > 0),
+    lastSpell: success ? member.spell : battle.lastSpell,
     phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
     log: [...battle.log, message, ...fallen(battle, after), ...(victory ? [QUIET] : [])],
   });
@@ -779,6 +847,7 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
   if (!canAct(battle, actor, action, target, foe)) return battle;
   if (battle.impostor?.as === actor) return betray(battle, actor, action);
   if (action === 'unmask') return unmask(battle, actor, target);
+  if (action === 'support' && actor === 'octopus') return mimic(battle);
   const member = battle.party.find(member => member.id === actor)!;
   const definition = MEMBERS[actor];
   // Forgetting his training leaves the hero with an ordinary reveal.
@@ -915,6 +984,20 @@ export function strike(battle: Battle, dodge: Dodge = 'miss'): Battle {
     const after = { ...battle, followers, step: battle.step + 1, log: [...battle.log, risen ? `The ${ENEMIES[battle.encounter].short} calls. ${risen === 1 ? kin[0] : kin[1]} again.` : `The ${ENEMIES[battle.encounter].short} calls, but ${kin[2]}.`] };
     return enemyMoves(after)[after.step] ? after : enemyTurnEnds(after);
   }
+  // A thrown-back heal, ward, or snare does its work on the wrong side.
+  if (next.move.mirror && SPELLS[next.move.mirror].kind !== 'damage') {
+    const spell = SPELLS[next.move.mirror];
+    const after: Battle = {
+      ...battle, step: battle.step + 1,
+      enemy: spell.kind === 'heal' ? { ...battle.enemy, health: Math.min(battle.enemy.maxHealth, battle.enemy.health + spell.power * 2) } : battle.enemy,
+      enemyWard: spell.kind === 'ward' ? 2 : battle.enemyWard,
+      stunned: spell.kind === 'snare' ? next.target.id : battle.stunned,
+      log: [...battle.log, spell.kind === 'heal' ? `It throws your ${spell.name} on itself. Its wounds close.`
+        : spell.kind === 'ward' ? `It throws your ${spell.name} round itself. Blows will only half land on it, next turn.`
+        : `It throws your ${spell.name} at ${MEMBERS[next.target.id].name}. They will lose their next move.`],
+    };
+    return enemyMoves(after)[after.step] ? after : enemyTurnEnds(after);
+  }
   const { move, target, guarded, blocked } = next;
   const avoided = next.dodgeable ? dodge : 'miss';
   const damage = avoided === 'perfect' ? 0 : avoided === 'graze' ? Math.ceil(next.damage / 2) : next.damage;
@@ -941,7 +1024,8 @@ function enemyTurnEnds(battle: Battle): Battle {
   const poisoned = battle.party.filter(member => member.health > 0 && member.poison > 0);
   const defeat = battle.party.every(member => member.health === 0 || (member.poison > 0 && member.health <= POISON));
   const party = battle.party.map(member => ({
-    ...member, guardingFor: null, barrier: false, acted: false, flaring: false, cooldown: Math.max(0, member.cooldown - 1),
+    // A hero the cuttlefish snared with the party's own spell loses this move.
+    ...member, guardingFor: null, barrier: false, acted: member.id === battle.stunned, flaring: false, cooldown: Math.max(0, member.cooldown - 1),
     health: member.health > 0 && member.poison > 0 ? Math.max(0, member.health - POISON) : member.health,
     poison: Math.max(0, member.poison - 1),
     // The shape the cuckoo wears shows the same mana, round after round: it never moves.
@@ -963,6 +1047,7 @@ function enemyTurnEnds(battle: Battle): Battle {
   const after: Battle = {
     ...battle, party, step: 0, snared: false,
     enemyPoison: Math.max(0, battle.enemyPoison - 1),
+    enemyWard: Math.max(0, battle.enemyWard - 1), stunned: null,
     soured: sours && !defeat ? SOUR : Math.max(0, battle.soured - 1),
     studied: learned && !defeat ? [...battle.studied, cast!] : battle.studied,
     enemyRevealed: battle.enemyRevealed || spell,
@@ -988,6 +1073,21 @@ function enemyTurnEnds(battle: Battle): Battle {
   if (defeat || enemyHealth > 0 || battle.enemy.health <= 0) return after;
   const victory = won(after);
   return staged({ ...after, phase: victory ? 'victory' : 'player', log: [...after.log, ...fallen(battle, after), ...(victory ? [QUIET] : [])] });
+}
+
+// The octopus throws back what the grimoire studied: the last spell written into it, at the main enemy.
+function mimic(battle: Battle): Battle {
+  const spell = mimicry(battle)!;
+  const hit = land(battle, SPELL_POWER[spell] ?? 10, 0);
+  const party = battle.party.map(member => member.id === 'octopus' ? { ...member, acted: true, mana: member.mana - MIMIC_COST, flaring: true } : member);
+  const after = { encounter: battle.encounter, enemy: hit.enemy, followers: hit.followers };
+  const victory = won(after);
+  const allActed = party.every(member => member.health <= 0 || member.acted);
+  return staged({
+    ...battle, party, enemy: hit.enemy, followers: hit.followers, fury: hit.fury,
+    phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
+    log: [...battle.log, hit.blocked ? `Octopus throws ${spell} back. It finds nothing to hit.` : `Octopus's skin shows ${spell} for a moment, and then throws it, exactly as it was cast.`, ...fallen(battle, after), ...(victory ? [QUIET] : [])],
+  });
 }
 
 // An order given to the cuckoo, wearing a friend's shape. It looks as if it was carried out, and it wasn't.

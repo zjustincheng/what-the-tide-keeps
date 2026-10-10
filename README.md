@@ -356,7 +356,7 @@ Anchors and reminders are saved with the memories in `tide-keeps.memory.v1`.
 
 The **journal** (J) opens with the church's current **orders**: the region's aim, in the priest's words, and the next thing that would move it on (where to go, or who to ask). Below them are your open **leads**: what you are carrying and who it is for, and promises still to keep. Both are worked out from where the story stands (`src/rules/orders.ts`).
 
-Beating a region's lieutenant (the boar, the hyena, the viper, the cuckoo) finishes the church's orders there. The brand on the hero's wrist goes warm, and you can **go back to the priest** at once for the next orders, or stay and walk the region a while. The priest always has them waiting.
+Beating a region's lieutenant (the boar, the hyena, the viper, the cuckoo, the cuttlefish) finishes the church's orders there. The brand on the hero's wrist goes warm, and you can **go back to the priest** at once for the next orders, or stay and walk the region a while. The priest always has them waiting.
 
 ## The marsh
 
@@ -393,6 +393,22 @@ Off the holds' roads:
 - **The old eyrie**, up from the rope-bridge pillar on the climb. An old eagle, the holds' first courier, keeps the oldest letters (one, from before the Covenant: *I am so hungry. Are you?*) and remembers flying the church's monthly supplies to *a white house on a rock* past the coast: food, medicine, and cages. His **lost flight** froze in a storm and still flies: dead and flying, so poison does nothing and the vulture's talons are strong, and their whiteout can't be guarded. Put them down for the **Courier's bell** (+15% dodge timing, shows 2 more mana).
 
 Afterwards the rookery opens and letters fly again. Among a year of undelivered mail is a letter to you from the octopus, at sea; and a swift has seen a lighthouse on an island that is on no chart, with ships going out to it full of fish.
+
+## The ocean
+
+After the cuckoo, the church has no orders past the coast: going to sea is the hero's first act of desertion, and the priest looks the other way. **The seal at the smugglers' creek** takes passengers out, **by night only** ("Take me out to sea"). At sea the rules change:
+
+- **Dying at sea costs two memories.** The church can't fetch you back cleanly; the wake-up screen shows both.
+- **Depth hides mana.** In the open water, enemies show on the map only when they come up to breathe, then sink again.
+
+The places:
+
+- **Wrecktown**, a port of wrecks lashed together, where nobody looks at the brand. A gull runs the port; a seal fishes only what the port eats; a pirate won't follow the church's boats to the light. **The chandler** sells the **Riptide codex** (Riptide: 22 damage, the strongest spell a hero can carry) and other things the church banned. A **hooded sailor** at the rail calls you by a name you don't remember, and you know it's yours: it's **the octopus**, hiding from a shark clan's bounty hunter at the next rail. Deal with the **shark enforcer** (armoured: bring the bear), and the octopus joins. It remembers the feast best of anyone: the cupbearer had hands with no fur and no claws.
+- **The octopus** fights as the copier. Its **Mimic** throws back the last spell written into the grimoire, at its full power, for 4 mana: study a caster's spell and the octopus can hit with it. Its grapple is strong against armour and can't reach flyers; its grimoire, **Tide tables**, teaches **Ink cloud**, a quick snare. It teaches the party to **ride the currents**, which opens the open water.
+- **The open water**, past Wrecktown's last hulk: currents between reefs and rocks, barracuda that strike from under the swell, lantern jellies whose drift can't be dodged, and in a wreck to the north-east the **mirror eel**, the lesson fight: it opens with the party's own strongest spell, backwards, and nobody can dodge their own spell coming the wrong way.
+- **The fleet's pens** (south-west): the land's catch kept alive in church nets, fish and not only fish. The salt barrels are stamped SMOKED FISH, WICKMERE: the same rations you have healed with since the farmland. **Cut the nets.** **The elder**, an old seal, keeps count of everyone the land has taken and let go: if you've freed the squid or the harbour crab, opened cages on the land (the pens, the otters' brother, the newt), and cut these nets, she gives you **the elder's pearl** (8 more health, shows 2 more mana), and the cuttlefish will tell you where the island is.
+- **The kraken's grave** (south-east), a sandbar of ribs as tall as houses. Under them the sand is full of church net, wrapped round the kraken's arms: it didn't rise to attack the land; it came up tangled, after the nets took a whole reef in one night. The octopus won't look while you take its **tooth** (octopus: grapple hits 4 harder, 4 less health).
+- **The cuttlefish's reef** (north, once you've seen the grave). Kin to the kraken, uniting the sea to end the fish trade. It **throws back the last spell you cast**: a damage spell comes back at you at full power, a heal heals it, a ward wards it, a snare costs a hero their next move. Feed it the small spells and fight with your hands. Brought down once, it rises in no colour at all and throws back every turn. Afterwards the octopus brokers a truce, not the old one, and the sea tells you where the island is: south, past the charts, where the light is.
 
 ## The capital
 

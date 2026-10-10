@@ -57,6 +57,13 @@ const VILLAGERS: Record<string, Villager> = {
   swift: { fur: 0x2a2a30, muzzle: 0xe8e8e4, cloth: 0x3a3a44, trim: 0xa89060, ears: 'none' },
   falcon: { fur: 0x5a5e66, muzzle: 0xe0b040, cloth: 0x6a2a2a, trim: 0xc8a848, ears: 'none' },
   owl: { fur: 0x8a7458, muzzle: 0xe8d8b0, cloth: 0x4a3a2a, trim: 0xc8b878, ears: 'pointed' },
+  // The sea.
+  gull: { fur: 0xe8e8e4, muzzle: 0xd8a83a, cloth: 0x2a3a5a, trim: 0xc8a848, ears: 'none' },
+  hooded: { fur: 0x3a3a44, muzzle: 0x5a4a6a, cloth: 0x2a2a30, trim: 0x4a4a54, ears: 'none' },
+  chandler: { fur: 0x6a5a48, muzzle: 0xd8c8a8, cloth: 0x3a4a5a, trim: 0xc8b878, ears: 'pointed' },
+  pirate: { fur: 0x6a7480, muzzle: 0xd8dce0, cloth: 0x5a2a2a, trim: 0xc8a848, ears: 'none' },
+  pup: { fur: 0x8a8e90, muzzle: 0xa8acae, cloth: 0x4a5a6a, trim: 0x8a9aa8, ears: 'none', child: true },
+  elder: { fur: 0xb8bcbc, muzzle: 0xe8e8e4, cloth: 0x3a4a5a, trim: 0xa8b0b0, ears: 'none' },
   // The games.
   shrike: { fur: 0x8a8e94, muzzle: 0x1a1a1e, cloth: 0x6a2a2a, trim: 0xd8d0b8, ears: 'none' },
   jay: { fur: 0xb8a088, muzzle: 0x3a5a8a, cloth: 0x4a4038, trim: 0x2a4a7a, ears: 'none' },

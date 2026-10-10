@@ -40,9 +40,16 @@ export function orders(world: World): Orders {
       : !has('lab-remembered') ? 'The great stair is open. The rookeries\' archive is on the upper tiers, by the cliff: the lord read something there before he closed the rookery.'
       : 'Climb the great stair to the lord\'s hall.',
   };
+  if (!has('cuttlefish-slain')) return {
+    title: 'The sea', given: has('deserted') ? 'No orders. You went anyway. Find the octopus; find out what the sea knows about the lighthouse.' : 'The church has no orders past the coast. A courier saw a lighthouse on an island that is on no chart, and ships going out to it with fish.',
+    next: !has('deserted') ? 'The seal at the smugglers\' creek takes passengers out to sea, by night. Dying at sea costs two memories.'
+      : !has('octopus-free') ? (has('octopus-met') ? 'Deal with the shark at the next rail, and the hooded sailor in Wrecktown will take the hood off.' : 'Someone in Wrecktown knows your name.')
+      : !has('grave-seen') ? 'Ride the currents out of Wrecktown. The kraken\'s grave is on a sandbar in the far south-east of the open water.'
+      : 'The cuttlefish waits on its reef, at the north of the open water. It throws back the last spell you cast.',
+  };
   return {
-    title: 'Waiting', given: 'Letters are moving again. A courier saw a lighthouse on an island that is on no chart, and ships going out to it with fish.',
-    next: 'The church has no orders past the coast. The sea is not the church\'s.',
+    title: 'The island', given: 'The sea has always known where the island is: south, past the charts, where the light is.',
+    next: 'The island is not built yet. For now, walk where you like.',
   };
 }
 

@@ -33,5 +33,10 @@ export const BESTIARY: Record<Encounter, string> = {
   cricket: 'Pale and long-legged, from the dark under the house. It leaps.',
   flight: 'Couriers who froze on the peak in harness, and still fly. They are dead, so poison does nothing; they fly, so the vulture takes them out of the air. Their whiteout can\'t be guarded.',
   champion: 'The Talon Ring\'s champion, a shrike who hangs the losers on the thorns outside the gate. His larder drains, his impale goes through a guard. The vulture takes him out of the air.',
+  shark: 'A shark clan\'s enforcer, hunting bounties in Wrecktown. Its frenzy bite goes through a guard; its hide is thick, so bring the bear.',
+  barracuda: 'Depth hides it until it strikes, and it strikes very fast.',
+  jelly: 'A lantern jelly. Nobody dodges a jellyfish drifting over them, and everything it brushes, it poisons.',
+  eel: 'It has watched the party fight. It casts the party\'s own strongest spell back at them, and nobody can dodge their own spell coming the wrong way.',
+  cuttlefish: 'Kin to the kraken, uniting the sea to end the fish trade. It throws back the last spell you cast: a big damage spell comes back at you, a heal heals it, a ward wards it. Feed it the small ones, a snare or a ward, and fight with your hands.',
   inquisitor: 'A royal investigator, certain of your guilt. His Verdict cannot be dodged or barred. You cannot win this yet. Run.',
 };

@@ -8,13 +8,13 @@ function parse(raw: string | null): Memory | undefined {
   if (raw === null) return undefined;
   const saved: unknown = JSON.parse(raw);
   if (typeof saved !== 'object' || saved === null) return undefined;
-  const { lost, pending, anchors = [], reminded = [] } = saved as Record<string, unknown>;
+  const { lost, pending, anchors = [], reminded = [], owed } = saved as Record<string, unknown>;
   if (!Array.isArray(lost) || typeof pending !== 'boolean') return undefined;
   const ids = MEMORY_IDS.filter(id => lost.includes(id));
   // Keep the order memories were lost in, dropping anything unknown.
   const kept = lost.filter((id, index): id is MemoryId => ids.includes(id) && lost.indexOf(id) === index);
   const back = Array.isArray(reminded) ? MEMORY_IDS.filter(id => reminded.includes(id) && kept.includes(id)) : [];
-  return { lost: kept, pending, reminded: back, anchors: Array.isArray(anchors) ? MEMORY_IDS.filter(id => anchors.includes(id) && (!kept.includes(id) || back.includes(id))) : [] };
+  return { lost: kept, pending, owed: typeof owed === 'number' && owed > 1 ? Math.min(3, Math.floor(owed)) : undefined, reminded: back, anchors: Array.isArray(anchors) ? MEMORY_IDS.filter(id => anchors.includes(id) && (!kept.includes(id) || back.includes(id))) : [] };
 }
 
 export function loadMemory(): Memory {

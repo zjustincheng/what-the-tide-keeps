@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { createBattle, drainedAfter, enemyMana, ENEMIES, LIEUTENANTS, MEMBERS, woundsAfter } from '../rules/battle';
 import type { BattleOptions } from '../rules/battle';
 import type { Encounter } from '../rules/battle';
-import { anchor, forget, held, hollow, MEMORY_IDS, remind, tideTakes, wipe } from '../rules/memory';
+import { anchor, forgetAll, held, hollow, MEMORY_IDS, remind, tideTakesAll, wipe } from '../rules/memory';
 import type { Companion } from '../rules/memory';
 import { apply, conversation, drop, fill, fleeing, holds, lineup, replies, rest, roster } from '../rules/world';
 import type { Condition, Context, Effect, ShopId } from '../rules/world';
@@ -55,7 +55,7 @@ type Foe = { encounter: Encounter; defeat?: Effect; fledAt?: number; ambush?: bo
 const CHASE: Partial<Record<Encounter, { sight: number; speed: number }>> = {
   locust: { sight: 90, speed: 44 }, weevil: { sight: 80, speed: 36 }, acolyte: { sight: 96, speed: 40 }, hound: { sight: 120, speed: 58 },
   wisp: { sight: 100, speed: 50 }, raider: { sight: 110, speed: 52 }, ghoul: { sight: 90, speed: 34 }, inquisitor: { sight: 170, speed: 40 },
-  harrier: { sight: 140, speed: 62 }, hornet: { sight: 130, speed: 60 }, cricket: { sight: 110, speed: 56 },
+  harrier: { sight: 140, speed: 62 }, hornet: { sight: 130, speed: 60 }, cricket: { sight: 110, speed: 56 }, barracuda: { sight: 120, speed: 66 }, jelly: { sight: 80, speed: 26 },
 };
 // How far a chaser will follow from where it stands before giving up and going back.
 const LEASH = 200;
@@ -70,7 +70,7 @@ const FOG_SIGHT = 120;
 const HIDE_DRAIN = 2500;
 // Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
 const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8], warden: [22, 26, 5, 4], leech: [28, 24, 2, 4], hound: [20, 22, 6, 8], pack: [22, 24, 5, 6], wisp: [14, 14, 9, 9], drowned: [20, 26, 6, 4],
-  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4], captain: [22, 24, 5, 6], harrier: [22, 18, 5, 8], mosquito: [20, 16, 6, 8], scorpion: [24, 16, 4, 12], brood: [26, 20, 3, 8], apprentice: [22, 22, 5, 8], viper: [26, 20, 3, 10], hornet: [20, 16, 6, 8], spider: [26, 16, 3, 12], duellist: [20, 22, 6, 8], cuckoo: [22, 22, 5, 8], warder: [26, 18, 3, 12], cricket: [22, 14, 5, 14], flight: [26, 20, 3, 8], champion: [22, 22, 5, 8] };
+  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4], captain: [22, 24, 5, 6], harrier: [22, 18, 5, 8], mosquito: [20, 16, 6, 8], scorpion: [24, 16, 4, 12], brood: [26, 20, 3, 8], apprentice: [22, 22, 5, 8], viper: [26, 20, 3, 10], hornet: [20, 16, 6, 8], spider: [26, 16, 3, 12], duellist: [20, 22, 6, 8], cuckoo: [22, 22, 5, 8], warder: [26, 18, 3, 12], cricket: [22, 14, 5, 14], flight: [26, 20, 3, 8], champion: [22, 22, 5, 8], shark: [26, 18, 3, 10], barracuda: [24, 12, 4, 12], jelly: [22, 20, 5, 8], eel: [26, 14, 3, 12], cuttlefish: [28, 22, 2, 8] };
 // Whether the last save succeeded, shared by every area.
 let saved = true;
 // The way out of a conversation, offered whenever the hero comes back to the replies.
@@ -125,6 +125,7 @@ export class AreaScene extends Phaser.Scene {
   private exitMarkers: { name: string; marker: Phaser.GameObjects.Image }[] = [];
   // A bout in the Talon Ring, or a stake at the shells or the arm-wrestling, to begin once the conversation closes.
   private pendingBout?: number;
+  private pendingSail?: 'out' | 'home';
   private pendingShells?: number;
   private pendingArm?: number;
   // Guards who throw out anyone they can see, and what a guard said on the way down.
@@ -150,7 +151,7 @@ export class AreaScene extends Phaser.Scene {
     this.thrownOut = data?.caught;
     this.sentries = [];
     this.cleanup = new AbortController();
-    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.pendingChurch = false; this.exitMarkers = []; this.pendingBout = undefined; this.pendingShells = undefined; this.pendingArm = undefined; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
+    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.pendingChurch = false; this.exitMarkers = []; this.pendingBout = undefined; this.pendingSail = undefined; this.pendingShells = undefined; this.pendingArm = undefined; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
     this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false; this.pendingShop = undefined; this.pendingRest = undefined; this.pendingFight = undefined;
   }
 
@@ -159,7 +160,7 @@ export class AreaScene extends Phaser.Scene {
     this.load.svg(`${this.area.tileset}-tiles`, `${base}assets/${this.area.tileset}-tiles.svg`);
     this.load.tilemapTiledJSON(`${this.area.map}-map`, `${base}maps/${this.area.map}.json`);
     // Companions' art is needed everywhere, for their portraits in the health display.
-    for (const key of [...this.area.enemies.map(enemy => enemy.encounter), ...this.area.assets ?? [], 'bear', 'vulture', 'frog']) if (!this.textures.exists(key)) this.load.svg(key, `${base}assets/${key}.svg`);
+    for (const key of [...this.area.enemies.map(enemy => enemy.encounter), ...this.area.assets ?? [], 'bear', 'vulture', 'frog', 'octopus']) if (!this.textures.exists(key)) this.load.svg(key, `${base}assets/${key}.svg`);
   }
 
   create() {
@@ -675,6 +676,7 @@ export class AreaScene extends Phaser.Scene {
     if(then.travel) this.pendingTravel=then.travel;
     if(then.church) this.pendingChurch=true;
     if(then.bout!==undefined) this.pendingBout=then.bout;
+    if(then.sail) this.pendingSail=then.sail;
     if(then.shells) this.pendingShells=then.shells;
     if(then.arm) this.pendingArm=then.arm;
     if(then.dice) this.pendingDice={ stake: then.dice, opponent: (this.active?.speaker ?? 'the house').toLowerCase().replace(/^(a|an|the) /, 'the ') };
@@ -726,6 +728,14 @@ export class AreaScene extends Phaser.Scene {
       music.effect('barrier');
       this.leaving=true; this.cameras.main.fadeOut(700,16,27,24);
       this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.start('church'));
+      return;
+    }
+    // Out to sea on the seal's boat, in the dark.
+    const sail=this.pendingSail;this.pendingSail=undefined;
+    if(sail && !this.leaving) {
+      music.effect('step-water');
+      this.leaving=true; this.cameras.main.fadeOut(900,8,14,20);
+      this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.start(sail==='out' ? 'outlaw-port' : 'creek',{ spawn: sail==='out' ? 'from-creek' : 'from-causeway' }));
       return;
     }
     const bout=this.pendingBout;this.pendingBout=undefined;
@@ -810,7 +820,8 @@ export class AreaScene extends Phaser.Scene {
         this.resumeExploration();
       } else {
         // Every wipe wakes the party at the church, wherever it fell.
-        saved = saveMemory(wipe(loadMemory())) && saveWorld(drop(loadWorld()));
+        // At sea the church can't fetch you back cleanly: the tide takes two.
+        saved = saveMemory(wipe(loadMemory(), this.area.region === 'THE OCEAN' ? 2 : 1)) && saveWorld(drop(loadWorld()));
         this.scene.start('church');
       }
     }, foe.encounter, { ...this.partyOptions(true, LIEUTENANTS.includes(foe.encounter)), ambush: Boolean(foe.ambush && foe.hidden), surprise: this.sneaking, waves: foe.waves });
@@ -971,12 +982,12 @@ export class AreaScene extends Phaser.Scene {
     this.setExplorationEnabled(false);
     music.play('wake');
     // The tide chooses: the same memory however often the game is reloaded, until he stands.
-    const taken = tideTakes(loadMemory(), loadWorld().deaths);
-    if (!taken) { saved = saveMemory({ ...loadMemory(), pending: false }); this.resumeExploration(); return; }
+    const taken = tideTakesAll(loadMemory(), loadWorld().deaths);
+    if (!taken.length) { saved = saveMemory({ ...loadMemory(), pending: false }); this.resumeExploration(); return; }
     this.overlay = new ResurrectionView(loadMemory(), taken, () => {
       this.overlay?.destroy();
       this.overlay = undefined;
-      saved = saveMemory(forget(loadMemory(), taken));
+      saved = saveMemory(forgetAll(loadMemory(), taken));
       this.renderMemory();
       this.cameras.main.fadeIn(900, 16, 27, 24);
       music.play(this.area.music);
@@ -1077,6 +1088,12 @@ export class AreaScene extends Phaser.Scene {
       this.leaving=true; this.player.setVelocity(0); this.cameras.main.shake(200, 0.006); this.cameras.main.fadeOut(500,16,27,24);
       this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.start(to,{ spawn, caught: lines }));
       return;
+    }
+    // At sea, things live under the water: they show only when they come up to breathe, and then go down again.
+    if(this.area.deep) for(const foe of this.foes) if(!foe.ambush && foe.sprite.active) {
+      const up=Math.sin(time/1400+foe.phase*2.3)>0.2;
+      foe.signature.setAlpha(up ? 1 : 0);
+      foe.sprite.setAlpha(up ? 1 : 0.18);
     }
     // In fog, an open signature can't be seen from far off.
     if(this.area.fog) for(const foe of this.foes) if(!foe.ambush && foe.sprite.active) {

@@ -13,6 +13,7 @@ import { feastHall, harbour, square } from '../content/capital';
 import { abbey, barracks, battlefield, drove, fort, keep, ossuary, pass, rookery, tarn } from '../content/highlands';
 import { apothecary, causeway, creek, farBank, hospice, pens, wickmere } from '../content/marsh';
 import { archive, cellars, climb, hold, houseHall, ring, summit, upper } from '../content/holds';
+import { krakenGrave, openWater, port, reef, seaPens } from '../content/ocean';
 import type { Encounter } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
@@ -30,6 +31,8 @@ export type Area = {
   bounds?: [x: number, y: number, width: number, height: number];
   // Fog: enemies see the hero from less far off, and their mana can't be seen until they are close.
   fog?: true;
+  // Deep: enemies are under the water, and their mana shows only when they come up.
+  deep?: true;
   // Solo: only the hero goes here. Sentries: guards who see anyone not hiding their mana within range, and throw them out.
   solo?: true;
   sentries?: { point: string; range: number; texture: string }[];
@@ -825,4 +828,69 @@ export const RING: Area = {
   decorate: scene => wind(scene, 416, 320),
 };
 
-export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY, CLIMB, HOLD, UPPER, ARCHIVE, HOUSE_HALL, PENS, CREEK, CELLARS, SUMMIT, RING];
+// The ocean: Wrecktown, the open water, the land's pens, the kraken's grave, and the cuttlefish's reef.
+const SEA_GROUND: Pick<Area, 'region' | 'tileset' | 'ground' | 'surfaces' | 'music'> = {
+  region: 'THE OCEAN', tileset: 'sea', ground: 'water', music: 'marsh',
+  surfaces: { 3: 'dirt', 4: 'wood', 17: 'dirt', 19: 'wood', 27: 'dirt' },
+};
+
+export const OUTLAW_PORT: Area = {
+  ...SEA_GROUND, key: 'outlaw-port', map: 'outlaw-port', place: 'Wrecktown', dialogue: port, ground: 'wood',
+  grade: { saturation: -0.4, brightness: 0.76, vignette: 0.5 }, assets: ['octopus'],
+  npcs: [
+    { point: 'portmaster', texture: 'gull' }, { point: 'stranger', texture: 'hooded', hiddenIf: [{ flag: 'octopus-free' }] }, { point: 'chandler', texture: 'chandler' },
+    { point: 'fisher', texture: 'smuggler-seal' }, { point: 'pirate', texture: 'pirate' }, { point: 'child', texture: 'pup' },
+  ],
+  enemies: [{ point: 'shark', encounter: 'shark', hiddenIf: [{ flag: 'shark-slain' }, { not: { flag: 'octopus-met' } }], defeat: { set: 'shark-slain' } }],
+  props: [{ point: 'camp-port', texture: 'campfire', hiddenIf: [] }],
+  camps: { 'camp-port': { prompt: 'Rest in a hammock in the tavern hold', cost: 6, lines: ['Nobody asks about the brand. Somebody steals one of your boots in the night and brings it back in the morning, apologising.'] } },
+  exits: {
+    ferry: { to: 'creek', spawn: 'from-causeway', prompt: 'Take the seal\'s boat back to the creek' },
+    currents: { to: 'open-water', spawn: 'from-port', prompt: 'Ride the currents out to sea', requires: { flag: 'octopus-free' },
+      barred: { speaker: 'THE OPEN WATER', lines: ['Past the last hulk the sea runs fast and deep, in currents you can see from here. Nobody from the land could ride them.', 'Not without someone who knows the sea.'] } },
+  },
+};
+
+export const OPEN_WATER: Area = {
+  ...SEA_GROUND, key: 'open-water', map: 'open-water', place: 'The open water', dialogue: openWater, deep: true,
+  grade: { saturation: -0.35, brightness: 0.8, vignette: 0.55 },
+  npcs: [],
+  enemies: [
+    { point: 'barracuda-1', encounter: 'barracuda', ambush: true }, { point: 'barracuda-2', encounter: 'barracuda', ambush: true },
+    { point: 'jelly-1', encounter: 'jelly' }, { point: 'jelly-2', encounter: 'jelly' },
+    { point: 'eel', encounter: 'eel', hiddenIf: [{ flag: 'eel-slain' }], defeat: { set: 'eel-slain' } },
+  ],
+  exits: {
+    port: { to: 'outlaw-port', spawn: 'from-sea', prompt: 'Ride the current back to Wrecktown' },
+    pens: { to: 'sea-pens', spawn: 'from-sea', prompt: 'Swim in to the fleet\'s pens' },
+    grave: { to: 'kraken-grave', spawn: 'from-sea', prompt: 'Wade onto the sandbar' },
+    reef: { to: 'reef', spawn: 'from-sea', prompt: 'Dive down to the cuttlefish\'s reef', requires: { flag: 'grave-seen' },
+      barred: { speaker: 'THE OCTOPUS', lines: ['"Not yet. You don\'t know what you\'re fighting for. Go and see the kraken first. South-east, on the sandbar."'] } },
+  },
+};
+
+export const SEA_PENS: Area = {
+  ...SEA_GROUND, key: 'sea-pens', map: 'sea-pens', place: 'The fleet\'s pens', dialogue: seaPens, ground: 'wood',
+  grade: { saturation: -0.45, brightness: 0.72, vignette: 0.6 },
+  npcs: [{ point: 'elder', texture: 'elder' }],
+  enemies: [],
+  exits: { out: { to: 'open-water', spawn: 'from-pens', prompt: 'Swim back out to the open water' } },
+};
+
+export const KRAKEN_GRAVE: Area = {
+  ...SEA_GROUND, key: 'kraken-grave', map: 'kraken-grave', place: 'The kraken\'s grave', dialogue: krakenGrave, ground: 'dirt',
+  grade: { saturation: -0.5, brightness: 0.78, vignette: 0.6 },
+  npcs: [], enemies: [],
+  exits: { out: { to: 'open-water', spawn: 'from-grave', prompt: 'Wade back into the open water' } },
+};
+
+export const REEF: Area = {
+  ...SEA_GROUND, key: 'reef', map: 'reef', place: 'The cuttlefish\'s reef', dialogue: reef, music: 'wilds',
+  grade: { saturation: -0.3, brightness: 0.66, vignette: 0.7 },
+  npcs: [{ point: 'cuttlefish', texture: 'cuttlefish', hiddenIf: [{ flag: 'cuttlefish-challenged' }, { flag: 'cuttlefish-slain' }] }],
+  enemies: [{ point: 'cuttlefish', encounter: 'cuttlefish', hiddenIf: [{ flag: 'cuttlefish-slain' }, { not: { flag: 'cuttlefish-challenged' } }], defeat: { set: 'cuttlefish-slain' } }],
+  props: [{ point: 'den', texture: 'cuttlefish', hiddenIf: [{ not: { flag: 'cuttlefish-slain' } }] }],
+  exits: { out: { to: 'open-water', spawn: 'from-reef', prompt: 'Rise back up to the open water' } },
+};
+
+export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY, CLIMB, HOLD, UPPER, ARCHIVE, HOUSE_HALL, PENS, CREEK, CELLARS, SUMMIT, RING, OUTLAW_PORT, OPEN_WATER, SEA_PENS, KRAKEN_GRAVE, REEF];

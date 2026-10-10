@@ -49,6 +49,12 @@ export const SHOPS: Record<ShopId, { title: string; note: string; wares: Ware[] 
     note: 'Salt fish, firepots wrapped in tar, and a few things from further out. No prices. She looks at you and decides.',
     wares: [{ supply: 'fish-stew' }, { supply: 'smoked-fish' }, { supply: 'firepot' }, { supply: 'antivenom' }, { gear: 'smuggled-blade', price: 30 }],
   },
+  // Wrecktown's chandler: the best shop in the game, and the grimoires the church banned.
+  chandler: {
+    title: 'Under the counter',
+    note: 'Oilcloth bundles, ship\'s stores, and books with the church\'s seal scratched off. Prices in coin, no questions in any language.',
+    wares: [{ gear: 'riptide-codex', price: 70 }, { gear: 'sea-glass', price: 45 }, { supply: 'fish-stew', fair: true }, { supply: 'herb-salve', fair: true }, { supply: 'antivenom', fair: true }, { supply: 'firepot', fair: true }],
+  },
   // After dark, behind the tannery: things the church would rather nobody owned.
   'night-market': {
     title: 'The shuttered stall, open',

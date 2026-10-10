@@ -276,6 +276,13 @@ export const creek: Dialogue = {
     { text: 'Are you a citizen?', lines: [
       'Of what? The sea doesn\'t have citizens. It has crews. The Covenant stops at the tideline, and so do I.',
     ] },
+    { text: 'Take me out to sea.', if: { all: [{ flag: 'cuckoo-slain' }, { night: true }] }, ends: true, lines: [
+      'She looks at the brand on your wrist for a long time. "The church won\'t come for you out there. Not cleanly. You know that? You die out there, it costs you twice."',
+      '"Get in. Keep your head down. If anyone asks, you were never on my boat."',
+    ], then: { set: 'deserted', sail: 'out' } },
+    { text: 'Take me out to sea.', if: { all: [{ flag: 'cuckoo-slain' }, { night: false }] }, lines: [
+      '"By night. Nobody sails out of here by day who wants to come back."',
+    ] },
   ] },
   tally: { speaker: 'A TALLY ON A CRATE', prompt: 'Read the tally', lines: [
     'Chalked on the lid: what came in, what went out, who was paid. One line says only: LIGHTHOUSE BOATS, 3 THIS MONTH. DON\'T BID AGAINST THEM.',

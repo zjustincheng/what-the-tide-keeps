@@ -17,7 +17,9 @@ test('the orders follow the story: each region, and the next step within it', ()
   assert.match(orders(at(['boar-defeated', 'hyena-slain', 'brood-slain', 'channel-firm', 'apprentice-slain'], ['venom-vial'])).next, /Show the frog/);
   assert.equal(orders(at(['boar-defeated', 'hyena-slain', 'viper-slain'])).title, 'The mountain holds');
   assert.match(orders(at(['boar-defeated', 'hyena-slain', 'viper-slain', 'duellist-beaten'])).next, /falcons/);
-  assert.equal(orders(at(['boar-defeated', 'hyena-slain', 'viper-slain', 'cuckoo-slain'])).title, 'Waiting');
+  assert.equal(orders(at(['boar-defeated', 'hyena-slain', 'viper-slain', 'cuckoo-slain'])).title, 'The sea');
+  assert.match(orders(at(['boar-defeated', 'hyena-slain', 'viper-slain', 'cuckoo-slain'])).next, /seal at the smugglers' creek/);
+  assert.equal(orders(at(['boar-defeated', 'hyena-slain', 'viper-slain', 'cuckoo-slain', 'cuttlefish-slain'])).title, 'The island');
 });
 
 test('leads name what is carried and who it is for', () => {

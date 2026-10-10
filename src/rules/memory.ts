@@ -3,7 +3,8 @@ export type MemoryId = 'feast' | 'trial' | 'kraken' | 'bear' | 'vulture' | 'frog
 export type Perk = 'mana' | 'force';
 // anchors: memories written down at a fire. Each survives the next death, then has to be written again.
 // reminded: lost memories a companion has reminded the hero of. They are his again until the next death, which takes them back.
-export type Memory = Readonly<{ lost: readonly MemoryId[]; pending: boolean; anchors?: readonly MemoryId[]; reminded?: readonly MemoryId[] }>;
+// owed: how many memories this wipe takes, when it is more than one: at sea, the church can't fetch you back cleanly.
+export type Memory = Readonly<{ lost: readonly MemoryId[]; pending: boolean; anchors?: readonly MemoryId[]; reminded?: readonly MemoryId[]; owed?: number }>;
 // kraken: whether he still has the party's technique from the kraken fight, which keeps everyone's dodging sharp.
 export type Hollow = Readonly<{ mana: number; damage: number; trained: boolean; kraken: boolean }>;
 
@@ -27,9 +28,22 @@ export function held(memory: Memory): MemoryId[] {
   return MEMORY_IDS.filter(id => !memory.lost.includes(id) || (memory.reminded ?? []).includes(id));
 }
 
-// A wipe leaves a choice owed; with nothing left to take, the hero simply wakes.
-export function wipe(memory: Memory): Memory {
-  return held(memory).length ? { ...memory, pending: true } : memory;
+// A wipe leaves a debt owed: one memory, or more at sea. With nothing left to take, the hero simply wakes.
+export function wipe(memory: Memory, owed = 1): Memory {
+  return held(memory).length ? { ...memory, pending: true, owed } : memory;
+}
+
+// Everything the tide takes for this wipe, in order: one roll per memory owed, never the same twice.
+export function tideTakesAll(memory: Memory, deaths: number): MemoryId[] {
+  const taken: MemoryId[] = [];
+  let left = memory;
+  for (let i = 0; i < (memory.owed ?? 1); i++) {
+    const id = tideTakes(left, deaths + i * 997);
+    if (!id) break;
+    taken.push(id);
+    left = { ...left, lost: [...left.lost, id] };
+  }
+  return taken;
 }
 
 // What the tide can take after a wipe: anything truly held and not written down, unless everything left is written down.
@@ -55,7 +69,12 @@ export function tideTakes(memory: Memory, deaths: number): MemoryId | undefined 
 export function forget(memory: Memory, id: MemoryId): Memory {
   if (!memory.pending || !forgettable(memory).includes(id)) return memory;
   const restored = (memory.reminded ?? []).filter(other => (memory.anchors ?? []).includes(other));
-  return { lost: [...memory.lost.filter(other => !restored.includes(other)), id], pending: false, anchors: [], reminded: [] };
+  return { lost: [...memory.lost.filter(other => !restored.includes(other)), id], pending: false, anchors: [], reminded: [], owed: undefined };
+}
+
+// Pay a whole wipe's debt at once.
+export function forgetAll(memory: Memory, ids: readonly MemoryId[]): Memory {
+  return ids.reduce<Memory>((paid, id, index) => index === 0 ? forget(paid, id) : forget({ ...paid, pending: true }, id), memory);
 }
 
 // A companion the hero still remembers can remind him of something he lost, until his next death. They can't remind him of themselves.

@@ -7,10 +7,17 @@ export const church: Dialogue = {
     'Easy. Sit up slowly. You were a long time coming back this time.',
     'You asked me to remember something for you, last time. I am sorry. You never told me what it was.',
     'The church has work for you. Grain has stopped reaching the highlands. Take the south door into the farmland and find out why.',
-  ], variants: [{ if: { flag: 'cuckoo-slain' }, lines: [
+  ], variants: [{ if: { flag: 'cuttlefish-slain' }, lines: [
+    'You came back from the sea. I wrote that you were lost. I am going to go on writing it.',
+    'They say the fish isn\'t coming any more. They say it in the cellars, not the chapel. Whatever you did out there, the ledger doesn\'t have a column for it.',
+  ] }, { if: { flag: 'deserted' }, lines: [
+    'You went out to sea. No orders sent you. I have not reported it. The ledger has your name, and today\'s date, and I have not written anything after it.',
+    'Go back out, if you are going. I won\'t ask where.',
+  ] }, { if: { flag: 'cuckoo-slain' }, lines: [
     'Letters again. The church\'s own mail came down from the holds in a sack the size of a cart, a year of it.',
     'One of the couriers saw a lighthouse on an island that is on no chart. The church has no orders about that. That is not the same as not knowing about it.',
     'There is nothing more I can send you to. Not by any road. The sea is not the church\'s.',
+    'If you go anyway, you go as a deserter. I would not see it. I would not be looking.',
   ] }, { if: { flag: 'viper-slain' }, lines: [
     'Wickmere writes that the sickness has stopped. A venomous outbreak, properly contained. The church is satisfied.',
     'Someone also wrote to ask what the lighthouse is. The letter went upstairs, and nobody has come back down with an answer.',

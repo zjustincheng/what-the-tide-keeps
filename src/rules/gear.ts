@@ -2,7 +2,7 @@
 import type { MemberId } from './battle';
 
 export type KeepsakeId = 'cracked-mirror' | 'crow-feather' | 'covenant-token' | 'yoke-peg' | 'wool-charm' | 'boar-tusk' | 'iron-collar' | 'famine-spoon' | 'weir-hook' | 'frost-ring' | 'tide-shell'
-  | 'garrison-buckler' | 'saints-medal' | 'night-cloak' | 'smuggled-blade' | 'raven-quill' | 'viper-fang' | 'hospice-bell' | 'liars-charm' | 'adders-coil' | 'house-signet' | 'courier-bell' | 'wren-feather' | 'champions-torc';
+  | 'garrison-buckler' | 'saints-medal' | 'night-cloak' | 'smuggled-blade' | 'raven-quill' | 'viper-fang' | 'hospice-bell' | 'liars-charm' | 'adders-coil' | 'house-signet' | 'courier-bell' | 'wren-feather' | 'champions-torc' | 'elder-pearl' | 'kraken-tooth' | 'sea-glass';
 // What a keepsake changes about its holder in battle.
 // agility: in hundredths of a hero's dodge windows; +15 makes every window 15% wider.
 export type Mods = Readonly<{ health: number; damage: number; reveal: number; suppressCost: number; shown: number; agility: number }>;
@@ -10,7 +10,7 @@ export type Gear = Readonly<Record<MemberId, readonly KeepsakeId[]>>;
 
 export const NO_MODS: Mods = { health: 0, damage: 0, reveal: 0, suppressCost: 0, shown: 0, agility: 0 };
 export const SLOTS = 2;
-export const MEMBER_IDS: readonly MemberId[] = ['chameleon', 'bear', 'vulture', 'frog'];
+export const MEMBER_IDS: readonly MemberId[] = ['chameleon', 'bear', 'vulture', 'frog', 'octopus'];
 
 // Each keepsake changes how its holder plays, usually with a drawback. Some fit only one hero.
 export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; effect: string; drawback: string; mods: Partial<Mods> }> = {
@@ -47,6 +47,10 @@ export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; ef
   'courier-bell': { name: 'Courier\'s bell', effect: 'Dodges come much easier (+15% timing).', drawback: 'Shows 2 more mana: it rings.', mods: { agility: 15, shown: 2 } },
   'wren-feather': { name: 'Wren\'s feather', holder: 'vulture', effect: 'Hits 2 harder.', drawback: 'Shows 1 more mana.', mods: { damage: 2, shown: 1 } },
   'champions-torc': { name: 'Champion\'s torc', effect: 'Hits 3 harder.', drawback: 'Shows 3 more mana: everyone in the holds knows that torc.', mods: { damage: 3, shown: 3 } },
+  // The sea.
+  'elder-pearl': { name: 'The elder\'s pearl', effect: '8 more health. The sea knows who carries it.', drawback: 'Shows 2 more mana.', mods: { health: 8, shown: 2 } },
+  'kraken-tooth': { name: 'The kraken\'s tooth', holder: 'octopus', effect: 'Its grapple hits 4 harder.', drawback: '4 less health: it weighs on it.', mods: { damage: 4, health: -4 } },
+  'sea-glass': { name: 'Sea glass charm', effect: 'Dodges come easier (+12% timing).', drawback: 'Hits 1 softer.', mods: { agility: 12, damage: -1 } },
   // Sold rather than found.
   'garrison-buckler': { name: 'Garrison buckler',
     effect: '7 more health.', drawback: 'Attacks hit 1 softer, and dodging is harder (-10% timing).', mods: { health: 7, damage: -1, agility: -10 } },
@@ -62,7 +66,7 @@ export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; ef
 export const KEEPSAKE_IDS = Object.keys(KEEPSAKES) as KeepsakeId[];
 
 export function createGear(): Gear {
-  return { chameleon: [], bear: [], vulture: [], frog: [] };
+  return { chameleon: [], bear: [], vulture: [], frog: [], octopus: [] };
 }
 
 export function canEquip(owned: readonly KeepsakeId[], member: MemberId, id: KeepsakeId): boolean {

@@ -13,14 +13,15 @@ import type { Effect as Sound } from '../audio/effects';
 const LEAD = 900;
 
 // Who appears in a boss's scene when they speak, by the name the scene gives them.
-const SPEAKER_ART: Record<string, string> = { 'THE BOAR': 'boar', 'THE BADGER': 'badger', 'THE RAT': 'rat', 'THE HYENA': 'hyena', 'THE VIPER': 'viper', 'THE CUCKOO': 'cuckoo' };
+const SPEAKER_ART: Record<string, string> = { 'THE BOAR': 'boar', 'THE BADGER': 'badger', 'THE RAT': 'rat', 'THE HYENA': 'hyena', 'THE VIPER': 'viper', 'THE CUCKOO': 'cuckoo', 'THE CUTTLEFISH': 'cuttlefish' };
 
 // What each hero's support does. A guard stops physical blows; a barrier (under Spellcraft) stops studied spells.
-const SUPPORT_SHORT: Record<MemberId, string> = { chameleon: 'Stops blows', bear: 'Guards an ally', vulture: 'Next hit harder', frog: 'Mends an ally' };
+const SUPPORT_SHORT: Record<MemberId, string> = { chameleon: 'Stops blows', bear: 'Guards an ally', vulture: 'Next hit harder', frog: 'Mends an ally', octopus: 'Throws a spell back' };
 const SUPPORT_HELP: Record<MemberId, string> = {
   chameleon: 'Guard: stops physical blows aimed at him this turn. It does nothing against spells: a barrier does that.',
   bear: 'Protect: the bear guards the ally chosen on his card against physical blows this turn, himself included. Spells pass through: use a barrier.',
   vulture: 'Focus: her next attack hits 3 harder.',
+  octopus: 'Mimic: throws back the last spell written into the grimoire, at the main enemy, for 4 mana. It needs something studied to copy.',
   frog: 'Dose: a small dose of her toxin mends the ally chosen on her card by 6 and draws out their poison. While the party is soured, it burns instead. Her dart, a large dose, poisons the enemy.',
 };
 
@@ -228,7 +229,7 @@ export class BattleView {
     this.strikeKind = action === 'attack' ? 'slash' : undefined;
     this.state = act(this.state, actor, action, target, foe);
     // Each hero strikes with their own sound; spellcraft has its own.
-    const sounds: Record<Action, Sound> = { attack: ({ chameleon: 'lash', bear: 'maul', vulture: 'talons', frog: 'lash' } as const)[actor], support: actor === 'vulture' || actor === 'frog' ? 'gather' : 'block', suppress: 'open', barrier: 'barrier', analyze: 'key', gather: 'gather', unmask: 'hit' };
+    const sounds: Record<Action, Sound> = { attack: ({ chameleon: 'lash', bear: 'maul', vulture: 'talons', frog: 'lash', octopus: 'maul' } as const)[actor], support: actor === 'vulture' || actor === 'frog' ? 'gather' : actor === 'octopus' ? 'barrier' : 'block', suppress: 'open', barrier: 'barrier', analyze: 'key', gather: 'gather', unmask: 'hit' };
     music.effect(sounds[action]);
     this.afterAction();
   }
