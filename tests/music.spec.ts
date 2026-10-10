@@ -51,6 +51,7 @@ test('each place has its theme, battles switch to battle music, and the music ca
 });
 
 test('every theme renders with sound and without clipping', async ({ page }) => {
+  test.setTimeout(180_000);
   await page.goto('/?practice');
   await expect(page.locator('canvas')).toBeVisible();
   const levels = await page.evaluate(async () => {

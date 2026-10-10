@@ -75,7 +75,18 @@ The score is original and synthesised live in the browser with Web Audio, with n
 | The church | Slow organ and bells, A minor |
 | The fields | Harp arpeggios and a flute over strings, 3/4, D Dorian |
 | Millbrook | A plucked folk tune, E minor |
-| The border road and the burned farm | A drone, a distant choir, a harp note now and then |
+| The downs | One flute over a drone, like someone whistling with nobody to hear, 3/4, A Mixolydian |
+| The border road, the burned farm, the fen, the weir, the abbey, the upper tiers | A drone, a distant choir, a harp note now and then |
+| The barrow, the ossuary, the apothecary, the cellars | Low choir clusters and a slow bell, C minor |
+| The highlands | Cold strings, a sparse plucked line, a lonely flute, G minor |
+| The fort town and the old border fort | A far-off snare and a bugle line nobody answers, E minor |
+| The capital: the square, the harbour, the feast hall | A slow organ procession under cold bells, D minor |
+| The marsh | A low choir, celesta drips, a harp turning between two chords, B Phrygian |
+| The mountain holds | A harp turning high and quick, a flute above it, 3/4, F Lydian |
+| The Talon Ring | War drums and a fanfare on staccato strings, G minor |
+| The open sea, the pens, the kraken's grave | A bass rising and falling like a swell, choir far off, A minor |
+| Wrecktown | A tired sea shanty, 3/4, D Dorian |
+| The cuttlefish's reef | A drone, and celesta rising like bubbles, B Locrian |
 | Inside buildings | A music-box lullaby, F major |
 | Battle | A string ostinato over drums, A minor |
 | The boar, the warden, the leech, the swarm-mother | Faster and darker, with choir, D Phrygian |

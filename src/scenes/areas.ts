@@ -263,7 +263,7 @@ export const MILL: Area = { ...INDOORS, key: 'mill-inside', map: 'mill-inside', 
 // The downs, east of the fields: the ram's lambs, the hounds who take them, and the barrow where the hounds den.
 const PACK_GONE = [{ flag: 'pack-slain' as const }, { flag: 'hounds-fed' as const }];
 export const DOWNS: Area = {
-  key: 'downs', map: 'downs', tileset: 'downs', music: 'fields', region: 'THE FARMLAND', place: 'The downs',
+  key: 'downs', map: 'downs', tileset: 'downs', music: 'downs', region: 'THE FARMLAND', place: 'The downs',
   dialogue: { ...downs, ...downsLore }, assets: ['hound'], ground: 'grass', surfaces: { 3: 'dirt', 7: 'stone', 11: 'dirt', 25: 'dirt', 26: 'dirt' },
   grade: { saturation: -0.3, brightness: 0.86, vignette: 0.4 },
   npcs: [{ point: 'ram', texture: 'ram' }, { point: 'kid', texture: 'kid' }, { point: 'bard', texture: 'bard' }],
@@ -298,7 +298,7 @@ export const DOWNS: Area = {
   },
 };
 export const BARROW: Area = {
-  key: 'barrow', map: 'barrow', tileset: 'downs', music: 'wilds', region: 'THE FARMLAND', place: 'The barrow',
+  key: 'barrow', map: 'barrow', tileset: 'downs', music: 'crypt', region: 'THE FARMLAND', place: 'The barrow',
   dialogue: barrow, enemies: [], ground: 'stone', surfaces: { 22: 'straw' }, grade: { saturation: -0.4, brightness: 0.62, vignette: 0.7 },
   npcs: [{ point: 'hound-mother', texture: 'hound-mother', hiddenIf: PACK_GONE }],
   exits: { out: { to: 'downs', spawn: 'from-barrow', prompt: 'Go back out into the light' } },
@@ -364,7 +364,7 @@ export const PASS: Area = {
   decorate: scene => snowfall(scene, 640, 1024),
 };
 export const FORT: Area = {
-  key: 'fort', map: 'fort', tileset: 'fort', music: 'highlands', region: 'THE HIGHLANDS', place: 'The fort town', dialogue: { ...fort, ...fortLore },
+  key: 'fort', map: 'fort', tileset: 'fort', music: 'garrison', region: 'THE HIGHLANDS', place: 'The fort town', dialogue: { ...fort, ...fortLore },
   ground: 'dirt', surfaces: { 2: 'stone', 5: 'stone', 20: 'grass', 22: 'water' }, grade: COLD, enemies: [],
   npcs: [...['sergeant', 'quartermaster', 'lynx', 'veteran', 'merchant', 'fence', 'chaplain', 'raven', 'teacher'].map(name => ({ point: name, texture: name })),
     // The schoolmistress's two pupils, sitting for a lesson in the square.
@@ -420,7 +420,7 @@ export const ABBEY: Area = {
   decorate: scene => snowfall(scene, 640, 480),
 };
 export const OSSUARY: Area = {
-  ...HIGHLAND_GROUND, key: 'ossuary', map: 'ossuary', music: 'wilds', place: 'The ossuary', dialogue: ossuary,
+  ...HIGHLAND_GROUND, key: 'ossuary', map: 'ossuary', music: 'crypt', place: 'The ossuary', dialogue: ossuary,
   ground: 'stone', grade: { saturation: -0.45, brightness: 0.6, vignette: 0.75 }, assets: ['ghoul'],
   npcs: [{ point: 'hyena', texture: 'hyena', hiddenIf: [{ flag: 'hyena-challenged' }, { flag: 'hyena-slain' }] }],
   enemies: [{ point: 'hyena', encounter: 'hyena', hiddenIf: [{ flag: 'hyena-slain' }, { not: { flag: 'hyena-challenged' } }], defeat: { set: 'hyena-slain' } }],
@@ -504,7 +504,7 @@ export const DROVE: Area = {
 // The capital: the square outside the church, the harbour below, and the hall where the feast was held. Nobody fights here.
 const CITY = { saturation: -0.35, brightness: 0.8, vignette: 0.5 };
 export const SQUARE: Area = {
-  key: 'square', map: 'square', tileset: 'city', music: 'town', region: 'THE CAPITAL', place: 'The church square', dialogue: square,
+  key: 'square', map: 'square', tileset: 'city', music: 'capital', region: 'THE CAPITAL', place: 'The church square', dialogue: square,
   ground: 'stone', surfaces: { 1: 'stone', 2: 'stone', 11: 'stone' }, grade: CITY, enemies: [],
   npcs: [
     { point: 'crier', texture: 'crier' }, { point: 'broadsheets', texture: 'broadsheet' }, { point: 'lamplighter', texture: 'lamplighter' },
@@ -518,7 +518,7 @@ export const SQUARE: Area = {
   },
 };
 export const HARBOUR: Area = {
-  key: 'harbour', map: 'harbour', tileset: 'city', music: 'town', region: 'THE CAPITAL', place: 'The harbour', dialogue: harbour,
+  key: 'harbour', map: 'harbour', tileset: 'city', music: 'capital', region: 'THE CAPITAL', place: 'The harbour', dialogue: harbour,
   ground: 'stone', surfaces: { 15: 'wood', 11: 'stone' }, grade: CITY, enemies: [],
   npcs: [
     { point: 'fishwife', texture: 'fishwife' }, { point: 'crab', texture: 'crab', hiddenIf: [{ flag: 'crab-freed' }] },
@@ -541,7 +541,7 @@ export const HARBOUR: Area = {
   },
 };
 export const FEAST_HALL: Area = {
-  ...INDOORS, region: 'THE CAPITAL', music: 'church', key: 'feast-hall', map: 'feast-hall', place: 'The hall of the Long Table', dialogue: feastHall,
+  ...INDOORS, region: 'THE CAPITAL', music: 'capital', key: 'feast-hall', map: 'feast-hall', place: 'The hall of the Long Table', dialogue: feastHall,
   grade: { saturation: -0.45, brightness: 0.66, vignette: 0.65 }, ground: 'stone',
   npcs: [{ point: 'cleaner', texture: 'cleaner' }],
   props: ([1, 2, 3] as const).map(i => ({ point: `kraken-${i}`, texture: 'kraken-arm', solid: true, hiddenIf: [] })),
@@ -550,7 +550,7 @@ export const FEAST_HALL: Area = {
 
 // The old border fort above the fort town.
 export const BORDER_KEEP: Area = {
-  ...HIGHLAND_GROUND, key: 'border-keep', map: 'border-keep', music: 'highlands', place: 'The old border fort', dialogue: keep,
+  ...HIGHLAND_GROUND, key: 'border-keep', map: 'border-keep', music: 'garrison', place: 'The old border fort', dialogue: keep,
   grade: { saturation: -0.45, brightness: 0.74, vignette: 0.55 }, npcs: [], assets: ['lieutenant'],
   enemies: [
     { point: 'hound-1', encounter: 'hound', ambush: true }, { point: 'hound-2', encounter: 'hound', ambush: true },
@@ -673,7 +673,7 @@ export const FAR_BANK: Area = {
 };
 
 export const APOTHECARY: Area = {
-  ...MARSH_GROUND, key: 'apothecary', map: 'apothecary', music: 'wilds', place: 'The flooded apothecary', dialogue: apothecary, ground: 'water',
+  ...MARSH_GROUND, key: 'apothecary', map: 'apothecary', music: 'crypt', place: 'The flooded apothecary', dialogue: apothecary, ground: 'water',
   grade: { saturation: -0.5, brightness: 0.6, vignette: 0.75 },
   npcs: [{ point: 'viper', texture: 'viper', hiddenIf: [{ flag: 'viper-challenged' }, { flag: 'viper-slain' }] }],
   enemies: [{ point: 'viper', encounter: 'viper', hiddenIf: [{ flag: 'viper-slain' }, { not: { flag: 'viper-challenged' } }], defeat: { set: 'viper-slain', find: 'viper-fang' } }],
@@ -684,7 +684,7 @@ export const APOTHECARY: Area = {
 
 // The mountain holds: the birds' city up a cliff face, above the holds' gate.
 const HOLDS_GROUND: Pick<Area, 'region' | 'tileset' | 'ground' | 'surfaces' | 'music'> = {
-  region: 'THE MOUNTAIN HOLDS', tileset: 'holds', ground: 'stone', music: 'highlands',
+  region: 'THE MOUNTAIN HOLDS', tileset: 'holds', ground: 'stone', music: 'holds',
   surfaces: { 3: 'snow', 7: 'stone', 14: 'wood', 15: 'wood', 23: 'wood', 28: 'snow' },
 };
 // Wind across the cliff face: thin streaks blowing past.
@@ -802,7 +802,7 @@ export const CREEK: Area = {
 
 // Off the holds' roads: the cellars under the lord's hall, and the old eyrie on the peak.
 export const CELLARS: Area = {
-  ...HOLDS_GROUND, key: 'cellars', map: 'cellars', place: 'The cellars', dialogue: cellars, music: 'wilds',
+  ...HOLDS_GROUND, key: 'cellars', map: 'cellars', place: 'The cellars', dialogue: cellars, music: 'crypt',
   grade: { saturation: -0.5, brightness: 0.58, vignette: 0.75 }, assets: ['falcon-lord'],
   npcs: [{ point: 'lord', texture: 'falcon-lord', hiddenIf: [{ flag: 'lord-freed' }] }, { point: 'son', texture: 'wren-son', hiddenIf: [{ flag: 'son-freed' }] }],
   enemies: [{ point: 'cricket-1', encounter: 'cricket' }, { point: 'cricket-2', encounter: 'cricket', ambush: true }, { point: 'spider', encounter: 'spider' }],
@@ -820,7 +820,7 @@ export const SUMMIT: Area = {
 
 // The Talon Ring, off the hold's market tier.
 export const RING: Area = {
-  ...HOLDS_GROUND, key: 'ring', map: 'ring', place: 'The Talon Ring', dialogue: ring, music: 'boss',
+  ...HOLDS_GROUND, key: 'ring', map: 'ring', place: 'The Talon Ring', dialogue: ring, music: 'arena',
   grade: { saturation: -0.4, brightness: 0.78, vignette: 0.55 },
   npcs: [{ point: 'ringmaster', texture: 'shrike' }, { point: 'bettor', texture: 'jay' }],
   enemies: [],
@@ -830,12 +830,12 @@ export const RING: Area = {
 
 // The ocean: Wrecktown, the open water, the land's pens, the kraken's grave, and the cuttlefish's reef.
 const SEA_GROUND: Pick<Area, 'region' | 'tileset' | 'ground' | 'surfaces' | 'music'> = {
-  region: 'THE OCEAN', tileset: 'sea', ground: 'water', music: 'marsh',
+  region: 'THE OCEAN', tileset: 'sea', ground: 'water', music: 'sea',
   surfaces: { 3: 'dirt', 4: 'wood', 17: 'dirt', 19: 'wood', 27: 'dirt' },
 };
 
 export const OUTLAW_PORT: Area = {
-  ...SEA_GROUND, key: 'outlaw-port', map: 'outlaw-port', place: 'Wrecktown', dialogue: port, ground: 'wood',
+  ...SEA_GROUND, key: 'outlaw-port', map: 'outlaw-port', place: 'Wrecktown', dialogue: port, ground: 'wood', music: 'shanty',
   grade: { saturation: -0.4, brightness: 0.76, vignette: 0.5 }, assets: ['octopus'],
   npcs: [
     { point: 'portmaster', texture: 'gull' }, { point: 'stranger', texture: 'hooded', hiddenIf: [{ flag: 'octopus-free' }] }, { point: 'chandler', texture: 'chandler' },
@@ -885,7 +885,7 @@ export const KRAKEN_GRAVE: Area = {
 };
 
 export const REEF: Area = {
-  ...SEA_GROUND, key: 'reef', map: 'reef', place: 'The cuttlefish\'s reef', dialogue: reef, music: 'wilds',
+  ...SEA_GROUND, key: 'reef', map: 'reef', place: 'The cuttlefish\'s reef', dialogue: reef, music: 'deep',
   grade: { saturation: -0.3, brightness: 0.66, vignette: 0.7 },
   npcs: [{ point: 'cuttlefish', texture: 'cuttlefish', hiddenIf: [{ flag: 'cuttlefish-challenged' }, { flag: 'cuttlefish-slain' }] }],
   enemies: [{ point: 'cuttlefish', encounter: 'cuttlefish', hiddenIf: [{ flag: 'cuttlefish-slain' }, { not: { flag: 'cuttlefish-challenged' } }], defeat: { set: 'cuttlefish-slain' } }],
