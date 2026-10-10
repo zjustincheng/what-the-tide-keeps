@@ -1,6 +1,7 @@
 // Rebuild the placeholder interior tileset and the four building interiors: the inn, the reeve's hall, the mill, and the tannery.
 // Each room sits in the middle of a dark map the size of the view. Edit the JSON in Tiled for content work; this script resets them.
 import { writeFileSync } from 'node:fs';
+import { rect as krect, rows, scatter, sheet, stairs, vary } from './tile-kit.mjs';
 const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
 const planks = (a,b) => rect(0,0,16,16,a)+[3,7,11,15].map(y=>rect(0,y,16,1,b)).join('')+rect(5,0,1,3,b)+rect(11,4,1,3,b)+rect(3,8,1,3,b)+rect(13,12,1,3,b);
 const tiles = [
@@ -29,8 +30,15 @@ const tiles = [
   rect(0,0,16,16,'#5a5030')+rect(2,3,5,1,'#7a6a40')+rect(9,9,6,1,'#7a6a40')+rect(4,12,4,1,'#6a5a34'),            // 22 straw floor
   rect(0,0,16,16,'#3e403c')+rect(3,0,2,16,'#6a5036')+rect(11,0,2,16,'#6a5036')+[2,6,10,14].map(y=>rect(3,y,10,1,'#8a6a46')).join(''), // 23 ladder
 ];
-const svg = tiles.map((s,i)=>`<g transform="translate(${i%8*16} ${Math.floor(i/8)*16})">${s}</g>`).join('');
-writeFileSync('public/assets/interior-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="48" shape-rendering="crispEdges">${svg}</svg>\n`);
+// Variants of the floors: a knot and a worn board in the planks, a cracked flag in the stone.
+const PLANK_VARIANTS = [tiles.length + 1, tiles.length + 2], STONE_VARIANTS = [tiles.length + 3];
+tiles.push(
+  tiles[1] + krect(6,9,2,2,'#33261a') + krect(7,10,1,1,'#5a4634'),
+  tiles[1] + krect(0,4,16,3,'#54402e') + krect(0,4,16,1,'#5e4a36'),
+  tiles[2] + krect(3,2,1,3,'#2c2e2a') + krect(4,4,2,1,'#2c2e2a') + krect(6,5,1,2,'#2c2e2a'),
+);
+const svg = sheet(tiles);
+writeFileSync('public/assets/interior-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
 const [VOID,PLANK,STONE,WALL,TOP,MAT,BED,TABLE,STOOL,BARREL,SHELF,HEARTH,COUNTER,SACKS,MILLSTONE,GEAR,RACK,VAT,RUG,WINDOW,DESK,CABINET,STRAW,LADDER]=tiles.map((_,i)=>i+1);
 const solid=[0,3,4,6,7,9,10,11,12,13,14,15,16,17,19,20,21,23];
 
@@ -50,8 +58,9 @@ function write(name,{w,h,floor,furniture},points){
   const layer=(n,data,id)=>({id,name:n,type:'tilelayer',width:w,height:h,x:0,y:0,opacity:1,visible:true,data});
   const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
     layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([n,x,y],i)=>({id:i+1,name:n,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
-    tilesets:[{firstgid:1,name:'interior',image:'../assets/interior-tiles.svg',imagewidth:128,imageheight:48,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:24,
+    tilesets:[{firstgid:1,name:'interior',image:'../assets/interior-tiles.svg',imagewidth:128,imageheight:rows(tiles)*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows(tiles)*8,
       tiles:solid.map(id=>({id,properties:[{name:'collides',type:'bool',value:true}]}))}]};
+  vary(floor,w,2,PLANK_VARIANTS,name.length*13,0.3);vary(floor,w,3,STONE_VARIANTS,name.length*17,0.2);
   writeFileSync(`public/maps/${name}.json`,JSON.stringify(map,null,2)+'\n');
 }
 const at=(x,y)=>[x*16+8,y*16+8];

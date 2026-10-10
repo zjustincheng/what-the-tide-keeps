@@ -1654,13 +1654,13 @@
       "name": "interior",
       "image": "../assets/interior-tiles.svg",
       "imagewidth": 128,
-      "imageheight": 48,
+      "imageheight": 64,
       "margin": 0,
       "spacing": 0,
       "tilewidth": 16,
       "tileheight": 16,
       "columns": 8,
-      "tilecount": 24,
+      "tilecount": 32,
       "tiles": [
         {
           "id": 0,

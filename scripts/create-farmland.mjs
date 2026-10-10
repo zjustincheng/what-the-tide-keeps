@@ -1,6 +1,7 @@
 // Rebuild the placeholder farmland tileset and Tiled JSON map: the open country south of the church.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
+import { rows, scatter, sheet, vary } from './tile-kit.mjs';
 const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
 const grass = (base) => rect(0,0,16,16,base)+rect(3,4,1,2,'#7d8f55')+rect(11,10,1,2,'#7d8f55')+rect(7,13,2,1,'#55693f');
 const water = (a,b) => rect(0,0,16,16,a)+rect(2,4,5,1,b)+rect(9,10,5,1,b)+rect(5,13,3,1,b);
@@ -37,8 +38,14 @@ const tiles = [
   water('#2f5560','#4a7682')+rect(3,3,4,3,'#5f8a4a')+rect(10,9,4,3,'#5f8a4a')+rect(4,4,1,1,'#e0d6c0'), // 28 lily pond
   rect(0,0,16,16,'#5f7442')+rect(1,4,14,11,'#3f5f36')+rect(3,5,4,4,'#4f7442')+rect(9,8,4,4,'#4f7442'),   // 29 bush
 ];
-const svg = tiles.map((s,i)=>`<g transform="translate(${i%8*16} ${Math.floor(i/8)*16})">${s}</g>`).join('');
-writeFileSync('public/assets/fields-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="64" shape-rendering="crispEdges">${svg}</svg>\n`);
+// Variants of the grass, scattered over the fields so they don't read as a grid: tufts and clover, and a little bare earth.
+const GRASS_VARIANTS = [tiles.length + 1, tiles.length + 2];
+tiles.push(
+  scatter(grass('#5f7442'), 1, [['#7d8f55',1,2],['#6f8a4a',1,3],['#55693f',2,1],['#c9bb6e',1,1],['#d8d0b8',1,1]], 8),
+  scatter(grass('#5f7442'), 2, [['#53663c',3,2],['#6a5a3c',2,1],['#7d8f55',1,2],['#4c5e36',2,2]], 6),
+);
+const svg = sheet(tiles);
+writeFileSync('public/assets/fields-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
 
 const w=64,h=48, floor=Array(w*h).fill(0), furniture=Array(w*h).fill(0);
 const put=(a,x,y,t)=>a[y*w+x]=t;
@@ -102,6 +109,8 @@ const points=[
 ];
 const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
   layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([name,x,y],i)=>({id:i+1,name,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
-  tilesets:[{firstgid:1,name:'fields',image:'../assets/fields-tiles.svg',imagewidth:128,imageheight:64,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:32,
+  tilesets:[{firstgid:1,name:'fields',image:'../assets/fields-tiles.svg',imagewidth:128,imageheight:rows(tiles)*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows(tiles)*8,
     tiles:[3,4,5,6,7,8,9,11,12,13,14,17,18,19,20,21,22,23,24,25,27,28,29].map(id=>({id,properties:[{name:'collides',type:'bool',value:true}]}))}]};
+vary(floor,w,G,GRASS_VARIANTS,11);
+map.layers[0].data=floor;
 writeFileSync('public/maps/farmland.json',JSON.stringify(map,null,2)+'\n');

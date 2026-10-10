@@ -1,6 +1,7 @@
 // Rebuild the placeholder burned-farm tileset and Tiled JSON map.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
+import { rect as krect, rows, scatter, sheet, stairs, vary } from './tile-kit.mjs';
 const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
 const tiles = [
   rect(0,0,16,16,'#4b4a38')+rect(3,4,3,1,'#2c2b22')+rect(9,10,4,1,'#2c2b22')+rect(6,13,1,1,'#7a6f4a'),                          // 0 scorched grass
@@ -12,8 +13,14 @@ const tiles = [
   rect(0,0,16,16,'#4b4a38')+rect(7,6,2,10,'#4a3a28')+rect(2,1,12,7,'#5a4630')+rect(3,2,10,5,'#d8d0b4')+rect(4,3,6,1,'#5a5248')+rect(4,5,8,1,'#5a5248'), // 6 gatepost notice
   rect(0,0,16,16,'#4b4a38')+rect(0,6,16,2,'#2e2620')+rect(2,4,2,9,'#2e2620')+rect(12,4,2,9,'#2e2620'),                          // 7 burned fence
 ];
-const svg = tiles.map((s,i)=>`<g transform="translate(${i%8*16} ${Math.floor(i/8)*16})">${s}</g>`).join('');
-writeFileSync('public/assets/ash-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="16" shape-rendering="crispEdges">${svg}</svg>\n`);
+// Variants of the scorched grass: ash drifted into it, and a little green coming back.
+const SCORCH_VARIANTS = [tiles.length + 1, tiles.length + 2];
+tiles.push(
+  scatter(tiles[0], 9, [['#2c2b22',2,1],['#56524a',2,2],['#6a5a48',1,1]], 7),
+  scatter(tiles[0], 10, [['#5a6a3a',1,2],['#4a5a32',2,1],['#2c2b22',3,1]], 6),
+);
+const svg = sheet(tiles);
+writeFileSync('public/assets/ash-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
 
 const w=32,h=24, floor=Array(w*h).fill(0), furniture=Array(w*h).fill(0);
 const put=(a,x,y,t)=>a[y*w+x]=t;
@@ -35,6 +42,7 @@ const layer=(name,data,id)=>({id,name,type:'tilelayer',width:w,height:h,x:0,y:0,
 const points=[['spawn',256,40],['north',256,20],['notice',216,56],['boar',256,232],['badger',216,240],['rat',296,240],['cup',256,236],['ruin-cache',104,88],['tusk-cache',56,216]];
 const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
   layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([name,x,y],i)=>({id:i+1,name,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
-  tilesets:[{firstgid:1,name:'ash',image:'../assets/ash-tiles.svg',imagewidth:128,imageheight:16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:8,
+  tilesets:[{firstgid:1,name:'ash',image:'../assets/ash-tiles.svg',imagewidth:128,imageheight:rows(tiles)*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows(tiles)*8,
     tiles:[3,4,5,6,7].map(id=>({id,properties:[{name:'collides',type:'bool',value:true}]}))}]};
+vary(floor,w,1,SCORCH_VARIANTS,12);
 writeFileSync('public/maps/boar-farm.json',JSON.stringify(map,null,2)+'\n');

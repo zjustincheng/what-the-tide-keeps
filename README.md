@@ -473,6 +473,10 @@ What each memory is worth:
 
 When no memories remain, a wipe takes nothing. Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is saved before the screen is shown, so reloading brings it back instead of skipping it. The footer shows how many memories remain (and the laboratory, once found).
 
+## Tiles
+
+The placeholder tilesets are drawn in code by the `scripts/create-*.mjs` scripts, with shared helpers in `scripts/tile-kit.mjs`: every tile gets a fine **grain** of light and dark pixels so no surface is flat; **stairs** are drawn as flights of lit treads over shadowed risers; rock, cliffs, chasms, and boulders are lit from above. Each region's main ground (grass, turf, heather, snow, cobbles, flagstones, planks, decks) has **variants** (tufts, clover, flowers, pebbles, drifts, cracked slabs, worn boards) scattered over the maps by position, the same every run, so open ground doesn't read as a grid. Variants keep the footstep sound of the tile they replace. A unit test checks that every map uses only tiles its sheet actually draws.
+
 ## Project layout
 
 - `src/scenes/AreaScene.ts` — Phaser exploration, collision, input, encounters, and travel, shared by every area.

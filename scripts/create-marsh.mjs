@@ -2,6 +2,7 @@
 // its church hospice, the far bank with the spoiled stores, and the flooded apothecary.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
+import { rect as krect, rows, scatter, sheet, stairs, vary } from './tile-kit.mjs';
 const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
 const tree = (leaf,dark,ground) => rect(0,0,16,16,ground)+rect(1,1,14,11,dark)+rect(3,2,9,6,leaf)+rect(7,11,3,5,'#3a2e22');
 const WATER_BG = '#101a1c';
@@ -35,8 +36,15 @@ const tiles = [
   rect(0,0,16,16,'#5a4832')+rect(7,2,2,14,'#3a3028')+rect(5,1,6,3,'#2a2420')+rect(6,2,4,1,'#e0a850'),          // 26 lantern post
   rect(0,0,16,16,'#4a3e30')+rect(2,2,12,12,'#5a5a56')+rect(4,4,8,8,'#2a2a28')+rect(6,6,4,4,'#3a4a4a'),          // 27 hospice basin
 ];
-const svg = tiles.map((s,i)=>`<g transform="translate(${i%8*16} ${Math.floor(i/8)*16})">${s}</g>`).join('');
-writeFileSync('public/assets/marsh-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="64" shape-rendering="crispEdges">${svg}</svg>\n`);
+// Variants of the marsh grass, and of the town decks: sedge and puddles; a patched board, a coil of rope.
+const GRASS_VARIANTS = [tiles.length + 1, tiles.length + 2], DECK_VARIANTS = [tiles.length + 3];
+tiles.push(
+  scatter(tiles[0], 15, [['#52603a',1,3],['#323c28',2,1],['#5e6e40',1,2],['#b8b48a',1,1]], 8),
+  scatter(tiles[0], 16, [['#28302a',3,2],['#2e3a3a',2,1],['#52603a',1,2]], 6),
+  tiles[7] + krect(9,5,5,3,'#6a5840') + krect(9,5,5,1,'#7a6848') + krect(2,10,4,4,'#8a7a5a') + krect(3,11,2,2,'#5a4832'),
+);
+const svg = sheet(tiles);
+writeFileSync('public/assets/marsh-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
 const [GRASS,MUD,WALK,WATER,REEDS,WILLOW,BORDER,DECK,HWALL,ROOF,SMOKE,HOSPICE,DOOR,CRATES,LIGHTHOUSE,SACK,SHELVES,COUNTER,FLOOD,BOARDS,COT,GRATE,EGGS,POST,BOAT,CELLAR,LANTERN,BASIN]=tiles.map((_,i)=>i+1);
 // Collides lists 0-based tile ids.
 const solid=[3,4,5,6,8,9,10,11,13,14,15,16,17,20,21,22,23,24,25,26,27];
@@ -55,8 +63,9 @@ function write(name,{W,H,floor,furniture},points){
   const layer=(lname,data,id)=>({id,name:lname,type:'tilelayer',width:W,height:H,x:0,y:0,opacity:1,visible:true,data});
   const map={compressionlevel:-1,width:W,height:H,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
     layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([pname,x,y],i)=>({id:i+1,name:pname,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
-    tilesets:[{firstgid:1,name:'marsh',image:'../assets/marsh-tiles.svg',imagewidth:128,imageheight:64,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:32,
+    tilesets:[{firstgid:1,name:'marsh',image:'../assets/marsh-tiles.svg',imagewidth:128,imageheight:rows(tiles)*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows(tiles)*8,
       tiles:solid.map(id=>({id,properties:[{name:'collides',type:'bool',value:true}]}))}]};
+  vary(floor,W,1,GRASS_VARIANTS,name.length*7);vary(floor,W,8,DECK_VARIANTS,name.length*11,0.15);
   writeFileSync(`public/maps/${name}.json`,JSON.stringify(map,null,2)+'\n');
 }
 

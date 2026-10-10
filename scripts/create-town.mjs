@@ -1,6 +1,7 @@
 // Rebuild the placeholder market-town tileset and Tiled JSON map.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
+import { rect as krect, rows, scatter, sheet, stairs, vary } from './tile-kit.mjs';
 const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
 const cobble = (a,b) => rect(0,0,16,16,a)+rect(0,0,7,7,b)+rect(8,0,8,7,b)+rect(4,8,8,7,b)+rect(0,8,3,7,b)+rect(13,8,3,7,b);
 const roof = (a,b) => rect(0,0,16,16,a)+[2,6,10,14].map(y=>rect(0,y,16,1,b)).join('');
@@ -29,8 +30,15 @@ const tiles = [
   wall('#cbbf9c','#8f8468')+rect(3,3,10,6,'#6a5236')+rect(4,4,8,4,'#c5b275')+rect(6,5,4,2,'#6a5236'), // 20 inn sign
   wall('#6e5a45','#4a3c2e')+rect(4,3,8,13,'#3a2d20')+rect(5,4,6,12,'#4b3a29'),                         // 21 dark door
 ];
-const svg = tiles.map((s,i)=>`<g transform="translate(${i%8*16} ${Math.floor(i/8)*16})">${s}</g>`).join('');
-writeFileSync('public/assets/town-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="48" shape-rendering="crispEdges">${svg}</svg>\n`);
+// Variants of the grass and the cobbles, so the town's ground isn't a grid: tufts, clover, a stone gone, moss in the joints.
+const GRASS_VARIANTS = [tiles.length + 1, tiles.length + 2], COBBLE_VARIANTS = [tiles.length + 3];
+tiles.push(
+  scatter(tiles[2], 3, [['#7d8f55',1,2],['#6f8a4a',1,3],['#55693f',2,1],['#c9bb6e',1,1],['#d8d0b8',1,1]], 8),
+  scatter(tiles[2], 4, [['#53663c',3,2],['#6a5a3c',2,1],['#7d8f55',1,2],['#4c5e36',2,2]], 6),
+  tiles[0] + krect(8,8,4,4,'#4a4338') + krect(2,2,2,1,'#5a6a3a') + krect(13,12,2,1,'#5a6a3a'),
+);
+const svg = sheet(tiles);
+writeFileSync('public/assets/town-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
 
 const w=32,h=24, floor=Array(w*h).fill(0), furniture=Array(w*h).fill(0);
 const put=(a,x,y,t)=>a[y*w+x]=t;
@@ -72,6 +80,7 @@ const points=[
 ];
 const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
   layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([name,x,y],i)=>({id:i+1,name,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
-  tilesets:[{firstgid:1,name:'town',image:'../assets/town-tiles.svg',imagewidth:128,imageheight:48,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:24,
+  tilesets:[{firstgid:1,name:'town',image:'../assets/town-tiles.svg',imagewidth:128,imageheight:rows(tiles)*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows(tiles)*8,
     tiles:[4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21].map(id=>({id,properties:[{name:'collides',type:'bool',value:true}]}))}]};
+vary(floor,w,3,GRASS_VARIANTS,5);vary(floor,w,1,COBBLE_VARIANTS,6,0.2);
 writeFileSync('public/maps/town.json',JSON.stringify(map,null,2)+'\n');

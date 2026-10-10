@@ -1,6 +1,7 @@
 // Rebuild the placeholder border-road tileset and Tiled JSON map.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
+import { rect as krect, rows, scatter, sheet, stairs, vary } from './tile-kit.mjs';
 const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
 const tiles = [
   rect(0,0,16,16,'#5f7442')+rect(3,4,1,2,'#7d8f55')+rect(11,10,1,2,'#7d8f55'),                                 // 0 grass
@@ -14,8 +15,14 @@ const tiles = [
   rect(0,0,16,16,'#5f7442')+rect(7,4,2,12,'#5d4630')+rect(2,1,12,5,'#7b3a2e')+rect(3,2,10,3,'#c5b275'),           // 8 border marker
   rect(0,0,16,16,'#4b4a38')+rect(3,4,3,1,'#2c2b22')+rect(9,10,4,1,'#2c2b22')+rect(6,13,1,1,'#7a6f4a'),          // 9 scorched grass
 ];
-const svg = tiles.map((s,i)=>`<g transform="translate(${i%8*16} ${Math.floor(i/8)*16})">${s}</g>`).join('');
-writeFileSync('public/assets/border-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="32" shape-rendering="crispEdges">${svg}</svg>\n`);
+// Variants of the verge grass: tufts and clover, and a bare patch where the carts pulled over.
+const GRASS_VARIANTS = [tiles.length + 1, tiles.length + 2];
+tiles.push(
+  scatter(tiles[0], 7, [['#7d8f55',1,2],['#6f8a4a',1,3],['#55693f',2,1],['#c9bb6e',1,1],['#d8d0b8',1,1]], 8),
+  scatter(tiles[0], 8, [['#53663c',3,2],['#6a5a3c',2,1],['#7d8f55',1,2],['#4c5e36',2,2]], 6),
+);
+const svg = sheet(tiles);
+writeFileSync('public/assets/border-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
 
 const w=32,h=24, floor=Array(w*h).fill(0), furniture=Array(w*h).fill(0);
 const put=(a,x,y,t)=>a[y*w+x]=t;
@@ -48,6 +55,7 @@ const points=[
 ];
 const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
   layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([name,x,y],i)=>({id:i+1,name,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
-  tilesets:[{firstgid:1,name:'border',image:'../assets/border-tiles.svg',imagewidth:128,imageheight:32,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:16,
+  tilesets:[{firstgid:1,name:'border',image:'../assets/border-tiles.svg',imagewidth:128,imageheight:rows(tiles)*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows(tiles)*8,
     tiles:[2,4,5,6,7,8].map(id=>({id,properties:[{name:'collides',type:'bool',value:true}]}))}]};
+vary(floor,w,1,GRASS_VARIANTS,9);
 writeFileSync('public/maps/border-road.json',JSON.stringify(map,null,2)+'\n');

@@ -172,7 +172,7 @@ export const FARMLAND: Area = {
 
 export const TOWN: Area = {
   key: 'town', map: 'town', tileset: 'town', music: 'town', region: 'THE FARMLAND', place: 'Millbrook',
-  dialogue: { ...town, ...townLore }, enemies: [], ground: 'stone', surfaces: { 3: 'grass', 4: 'dirt' },
+  dialogue: { ...town, ...townLore }, enemies: [], ground: 'stone', surfaces: { 3: 'grass', 4: 'dirt', 23: 'grass', 24: 'grass' },
   npcs: [...['reeve', 'innkeeper', 'shopkeeper', 'child', 'fishmonger', 'fox', 'scribe'].map(name => ({ point: name, texture: name })), { point: 'seeker', texture: 'kid' },
     // Hide and seek: once the game is on, the hiders can be spotted, if you look. Found, they run home.
     { point: 'hide-1', texture: 'child', peek: true, hiddenIf: [{ not: { flag: 'hide-started' } }, { flag: 'hide-1' }] },
@@ -223,7 +223,7 @@ export const BOAR_FARM: Area = {
   key: 'boar-farm', map: 'boar-farm', tileset: 'ash', music: 'wilds', region: 'THE FARMLAND', place: 'The burned farm',
   dialogue: farm, assets: ['badger', 'rat'],
   // The boar talks before he fights; once challenged, he stands up to fight.
-  npcs: [{ point: 'boar', texture: 'boar', hiddenIf: [{ flag: 'boar-challenged' }, { flag: 'boar-defeated' }] }], ground: 'dirt', surfaces: { 1: 'grass' },
+  npcs: [{ point: 'boar', texture: 'boar', hiddenIf: [{ flag: 'boar-challenged' }, { flag: 'boar-defeated' }] }], ground: 'dirt', surfaces: { 1: 'grass', 9: 'grass', 10: 'grass' },
   enemies: [{ point: 'boar', encounter: 'boar', hiddenIf: [{ flag: 'boar-defeated' }, { not: { flag: 'boar-challenged' } }], defeat: { set: 'boar-defeated' } }],
   props: [
     // The boar's followers leave, one way or another, once the hero decides what becomes of them.
@@ -245,7 +245,7 @@ export const BOAR_FARM: Area = {
 
 // Building interiors: small rooms in the dark, lit warmer than the fields outside.
 const INDOORS: Pick<Area, 'region' | 'tileset' | 'grade' | 'enemies' | 'music' | 'ground' | 'surfaces'> = { region: 'THE FARMLAND', tileset: 'interior', music: 'hearth', grade: { saturation: -0.3, brightness: 0.74, vignette: 0.55 }, enemies: [],
-  ground: 'wood', surfaces: { 3: 'stone', 19: 'straw', 23: 'straw' } };
+  ground: 'wood', surfaces: { 3: 'stone', 19: 'straw', 23: 'straw', 27: 'stone' } };
 export const INN: Area = { ...INDOORS, key: 'inn', map: 'inn', place: 'Millbrook · The inn', dialogue: { ...inn, ...innLore },
   npcs: [{ point: 'drinker', texture: 'drinker' }, { point: 'patron', texture: 'patron' }, { point: 'marine', texture: 'marine' }],
   camps: { bed: { prompt: 'Sleep in the bed', noCooking: true, lines: ['You lie down in a real bed for the first time you can remember. Your wounds close and your mana returns.'] } },
@@ -331,7 +331,7 @@ export const FEN: Area = {
 // The highlands: carnivore country, militarized and distrusted. Every map shares the highland tileset except the fort town.
 const HIGHLAND_GROUND: Pick<Area, 'region' | 'tileset' | 'ground' | 'surfaces'> = {
   region: 'THE HIGHLANDS', tileset: 'highland', ground: 'grass',
-  surfaces: { 3: 'dirt', 5: 'stone', 7: 'snow', 13: 'stone', 16: 'wood', 18: 'stone', 21: 'stone', 24: 'stone', 26: 'dirt', 33: 'snow' },
+  surfaces: { 3: 'dirt', 5: 'stone', 7: 'snow', 13: 'stone', 16: 'wood', 18: 'stone', 21: 'stone', 24: 'stone', 26: 'dirt', 33: 'snow', 36: 'snow', 37: 'stone' },
 };
 const COLD = { saturation: -0.4, brightness: 0.8, vignette: 0.5 };
 const snowfall = (scene: Phaser.Scene, width: number, height: number) => {
@@ -586,7 +586,7 @@ export const ROOKERY_ROAD: Area = {
 // The rivers and marsh: downriver from the weir, where the river meets the tide.
 const MARSH_GROUND: Pick<Area, 'region' | 'tileset' | 'ground' | 'surfaces' | 'music'> = {
   region: 'THE MARSH', tileset: 'marsh', ground: 'grass', music: 'marsh',
-  surfaces: { 2: 'dirt', 3: 'wood', 8: 'wood', 13: 'wood', 19: 'water', 20: 'wood' },
+  surfaces: { 2: 'dirt', 3: 'wood', 8: 'wood', 13: 'wood', 19: 'water', 20: 'wood', 31: 'wood' },
 };
 // Low fog on the water, drifting.
 function marshFog(scene: Phaser.Scene, width: number, height: number, thick = 14) {
@@ -682,7 +682,7 @@ export const APOTHECARY: Area = {
 // The mountain holds: the birds' city up a cliff face, above the holds' gate.
 const HOLDS_GROUND: Pick<Area, 'region' | 'tileset' | 'ground' | 'surfaces' | 'music'> = {
   region: 'THE MOUNTAIN HOLDS', tileset: 'holds', ground: 'stone', music: 'highlands',
-  surfaces: { 3: 'snow', 7: 'stone', 14: 'wood', 15: 'wood', 23: 'wood' },
+  surfaces: { 3: 'snow', 7: 'stone', 14: 'wood', 15: 'wood', 23: 'wood', 28: 'snow' },
 };
 // Wind across the cliff face: thin streaks blowing past.
 function wind(scene: Phaser.Scene, width: number, height: number) {

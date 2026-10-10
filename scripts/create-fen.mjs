@@ -1,6 +1,7 @@
 // Rebuild the placeholder fen tileset and the fen upstream of the mill, over the drowned hamlet.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
+import { rect as krect, rows, scatter, sheet, stairs, vary } from './tile-kit.mjs';
 const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
 const tree = (leaf,dark,ground) => rect(0,0,16,16,ground)+rect(1,1,14,11,dark)+rect(3,2,9,6,leaf)+rect(7,11,3,5,'#3a2e22');
 const tiles = [
@@ -24,11 +25,19 @@ const tiles = [
   rect(0,0,16,16,'#2a4a50')+[1,5,9,13].map(x=>rect(x,0,2,16,'#4a3a28')).join('')+rect(0,6,16,2,'#5a4630'),  // 17 weir stakes
   rect(0,0,16,16,'#6a6058')+rect(0,13,16,3,'#4a4038')+rect(0,4,16,1,'#5a5048')+rect(5,6,6,7,'#2a2420'),    // 18 toll hut wall
   rect(0,0,16,16,'#2a4a50')+rect(1,4,14,9,'#4a3a28')+rect(2,5,12,6,'#6a5236')+rect(3,7,10,2,'#3a2e20'),    // 19 boat
-  rect(0,0,16,16,'#4a4a46')+[0,4,8,12].map((y,i)=>rect(1,y,14,4,['#6a6a62','#5e5e56','#525248','#46463e'][i])).join(''), // 20 rock stair
+  null, // 20 rock stair, drawn with the kit below
   rect(0,0,16,16,'#3a3a36')+rect(1,1,7,6,'#4a4a46')+rect(8,8,7,7,'#46463f')+rect(0,7,16,1,'#2a2a26'),     // 21 cliff
 ];
-const svg = tiles.map((s,i)=>`<g transform="translate(${i%8*16} ${Math.floor(i/8)*16})">${s}</g>`).join('');
-writeFileSync('public/assets/fen-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="48" shape-rendering="crispEdges">${svg}</svg>\n`);
+// The smugglers' stair, cut in the rock: steps that read as steps.
+tiles[20] = stairs({ tread: '#6e6e66', riser: '#3a3a36', lip: '#8a8a80', side: '#4a4a46', sideDark: '#2e2e2a' });
+// Variants of the marsh grass: tufts, sedge, a puddle.
+const GRASS_VARIANTS = [tiles.length + 1, tiles.length + 2];
+tiles.push(
+  scatter(tiles[0], 13, [['#5e6a40',1,3],['#3a4228',2,1],['#6a7a48',1,2],['#c8c0a0',1,1]], 8),
+  scatter(tiles[0], 14, [['#2e3a2a',3,2],['#3a4a48',2,1],['#5e6a40',1,2]], 6),
+);
+const svg = sheet(tiles);
+writeFileSync('public/assets/fen-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
 const [GRASS,MUD,WALK,WATER,REEDS,WILLOW,ROOF,STUB,CHAPEL,CFLOOR,SLUICE,BORDER,SIGN,STREAM,DEAD,TRAPS,LEANTO,WEIR,TOLL,BOAT,STAIR,CLIFF]=tiles.map((_,i)=>i+1);
 const solid=[3,4,5,6,7,8,10,11,12,13,14,15,16,17,18,19,21];
 
@@ -87,8 +96,9 @@ const points=[
 const layer=(name,data,id)=>({id,name,type:'tilelayer',width:w,height:h,x:0,y:0,opacity:1,visible:true,data});
 const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
   layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([name,x,y],i)=>({id:i+1,name,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
-  tilesets:[{firstgid:1,name:'fen',image:'../assets/fen-tiles.svg',imagewidth:128,imageheight:48,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:24,
+  tilesets:[{firstgid:1,name:'fen',image:'../assets/fen-tiles.svg',imagewidth:128,imageheight:rows(tiles)*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows(tiles)*8,
     tiles:solid.map(id=>({id,properties:[{name:'collides',type:'bool',value:true}]}))}]};
+vary(floor,w,1,GRASS_VARIANTS,19);
 writeFileSync('public/maps/fen.json',JSON.stringify(map,null,2)+'\n');
 
 // The weir: the church fishery across the river above the fen, the otters' holt, and the smugglers' stair up to the tarn.
@@ -123,7 +133,8 @@ writeFileSync('public/maps/fen.json',JSON.stringify(map,null,2)+'\n');
   const layer=(name,data,id)=>({id,name,type:'tilelayer',width:W,height:Hh,x:0,y:0,opacity:1,visible:true,data});
   const map={compressionlevel:-1,width:W,height:Hh,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
     layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([name,x,y],i)=>({id:i+1,name,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
-    tilesets:[{firstgid:1,name:'fen',image:'../assets/fen-tiles.svg',imagewidth:128,imageheight:48,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:24,
+    tilesets:[{firstgid:1,name:'fen',image:'../assets/fen-tiles.svg',imagewidth:128,imageheight:rows(tiles)*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows(tiles)*8,
       tiles:solid.map(id=>({id,properties:[{name:'collides',type:'bool',value:true}]}))}]};
+  vary(floor,W,1,GRASS_VARIANTS,23);
   writeFileSync('public/maps/weir.json',JSON.stringify(map,null,2)+'\n');
 }

@@ -1,6 +1,7 @@
 // Rebuild the placeholder city tileset and the capital's maps: the church square and the harbour below it.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
+import { rect as krect, rows, scatter, sheet, stairs, vary } from './tile-kit.mjs';
 const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
 const cobbles = (a,b) => rect(0,0,16,16,a)+[[0,0,7,5],[8,0,8,5],[0,6,5,5],[6,6,10,5],[0,12,9,4],[10,12,6,4]].map(([x,y,w,h])=>rect(x+1,y+1,w-2,h-2,b)).join('');
 const wall = (a,b) => rect(0,0,16,16,a)+rect(0,5,16,1,b)+rect(0,11,16,1,b)+rect(5,0,1,5,b)+rect(11,6,1,5,b)+rect(3,12,1,4,b);
@@ -31,8 +32,17 @@ const TILES = [
   rect(0,0,16,16,'#3a3a36')+rect(0,0,16,3,'#4a4a46'),                                                        // 22 wall top
   rect(0,0,16,16,'#5e5a52')+rect(2,4,12,10,'#5a4630')+rect(3,5,10,2,'#7a5e40')+rect(4,9,8,1,'#3a2e20'),        // 23 bench
 ];
-const svg = TILES.map((s,i)=>`<g transform="translate(${i%8*16} ${Math.floor(i/8)*16})">${s}</g>`).join('');
-writeFileSync('public/assets/city-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="48" shape-rendering="crispEdges">${svg}</svg>\n`);
+// The city's steps, down to the harbour: steps that read as steps.
+TILES[10] = stairs({ tread: '#6e6a62', riser: '#3a3630', lip: '#8a867a', side: '#4e4a42', sideDark: '#36322c' });
+// Variants of the cobbles and the flagstones: a stone gone, moss in the joints, a dropped scale from the fish market.
+const COBBLE_VARIANTS = [TILES.length + 1, TILES.length + 2], FLAG_VARIANTS = [TILES.length + 3];
+TILES.push(
+  TILES[0] + krect(8,7,6,4,'#3a3832') + krect(2,1,3,1,'#4e5a3a'),
+  TILES[0] + krect(1,6,4,1,'#4e5a3a') + krect(11,12,4,1,'#4e5a3a') + krect(6,3,1,1,'#a8b0b0'),
+  TILES[1] + krect(10,2,1,3,'#57534b') + krect(11,4,1,1,'#57534b') + krect(3,11,2,1,'#5a6450'),
+);
+const svg = sheet(TILES);
+writeFileSync('public/assets/city-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(TILES)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
 const T = Object.fromEntries(['COBBLE','FLAG','WALL','ROOF','DOOR','WINDOW','FOUNTAIN','STATUE','AWNING','LAMP','STEPS','GATE','SEA','QUAY','PIER','BOLLARD','CRATES','NETS','BOAT','BONE','SHRINE','TANK','TOP','BENCH'].map((n,i)=>[n,i+1]));
 const SOLID = [2,3,4,5,6,7,8,9,11,12,15,16,17,18,19,20,21,22,23];
 
@@ -46,8 +56,9 @@ function write(name,{w,h,floor,furniture},points){
   const layer=(n,data,id)=>({id,name:n,type:'tilelayer',width:w,height:h,x:0,y:0,opacity:1,visible:true,data});
   const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
     layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([n,x,y],i)=>({id:i+1,name:n,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
-    tilesets:[{firstgid:1,name:'city',image:'../assets/city-tiles.svg',imagewidth:128,imageheight:48,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:24,
+    tilesets:[{firstgid:1,name:'city',image:'../assets/city-tiles.svg',imagewidth:128,imageheight:rows(TILES)*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows(TILES)*8,
       tiles:SOLID.map(id=>({id,properties:[{name:'collides',type:'bool',value:true}]}))}]};
+  vary(floor,w,1,COBBLE_VARIANTS,name.length*7,0.3);vary(floor,w,2,FLAG_VARIANTS,name.length*11,0.2);
   writeFileSync(`public/maps/${name}.json`,JSON.stringify(map,null,2)+'\n');
 }
 const at=(x,y)=>[x*16+8,y*16+8];

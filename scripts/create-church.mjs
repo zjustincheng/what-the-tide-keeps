@@ -1,6 +1,7 @@
 // Rebuild the original placeholder tileset and Tiled JSON map.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
+import { sheet } from './tile-kit.mjs';
 const colors = ['#344b42','#293e38','#4c5a4d','#644b39','#57624e','#7a7861','#263e3b','#777257'];
 const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
 const tiles = [];
@@ -21,9 +22,9 @@ for(let i=0;i<16;i++){
  if(i===13){s=rect(0,0,16,16,'#3b5045')+rect(2,5,12,9,'#484438')+rect(4,1,8,11,'#65765f')+rect(5,2,6,2,'#94a087')+rect(7,4,2,7,'#b1b395')+rect(5,6,6,2,'#b1b395')+rect(2,13,12,2,'#8c9476');}
  if(i===14){s=rect(0,0,16,16,'#142722')+rect(0,0,16,3,'#344e3f');}
  if(i===15){s=rect(0,0,16,16,'#3b5045')+rect(1,6,14,7,'#53614e')+rect(2,5,12,2,'#9b9c78')+rect(4,2,8,4,'#748365')+rect(7,1,2,5,'#b7b58c');}
- tiles.push(`<g transform="translate(${i%8*16} ${Math.floor(i/8)*16})">${s}</g>`);
+ tiles.push(s);
 }
-writeFileSync('public/assets/church-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="32" shape-rendering="crispEdges">${tiles.join('')}</svg>\n`);
+writeFileSync('public/assets/church-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="32" shape-rendering="crispEdges">${sheet(tiles)}</svg>\n`);
 const w=32,h=24, floor=Array(w*h).fill(0),furniture=Array(w*h).fill(0);
 const put=(a,x,y,t)=>a[y*w+x]=t;
 for(let y=0;y<h;y++)for(let x=0;x<w;x++)put(floor,x,y,(x+y)%3===0?2:1);

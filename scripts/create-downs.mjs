@@ -1,6 +1,7 @@
 // Rebuild the placeholder downs tileset, the downs east of the fields, and the barrow under them.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
+import { rect as krect, rows, scatter, sheet, stairs, vary } from './tile-kit.mjs';
 const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
 const turf = (base) => rect(0,0,16,16,base)+rect(3,5,1,2,'#7f8c5a')+rect(11,11,1,2,'#7f8c5a')+rect(8,2,2,1,'#5c6a44');
 const tree = (leaf,dark) => rect(0,0,16,16,'#66754a')+rect(1,1,14,11,dark)+rect(3,2,9,6,leaf)+rect(7,11,3,5,'#3e3226');
@@ -33,8 +34,14 @@ const tiles = [
   rect(0,0,16,16,'#66754a')+rect(6,0,4,16,'#dcd6c2'),                                                     // 24 chalk figure, down
   rect(0,0,16,16,'#66754a')+rect(0,6,10,4,'#dcd6c2')+rect(6,0,4,10,'#dcd6c2'),                             // 25 chalk figure, corner
 ];
-const svg = tiles.map((s,i)=>`<g transform="translate(${i%8*16} ${Math.floor(i/8)*16})">${s}</g>`).join('');
-writeFileSync('public/assets/downs-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="64" shape-rendering="crispEdges">${svg}</svg>\n`);
+// Variants of the turf, so the downs roll instead of tiling: tufts, chalk showing through, a few wild flowers.
+const TURF_VARIANTS = [tiles.length + 1, tiles.length + 2];
+tiles.push(
+  scatter(turf('#66754a'), 5, [['#7f8c5a',1,2],['#5c6a44',2,1],['#c8b8d8',1,1],['#d8d2bc',1,1]], 8),
+  scatter(turf('#66754a'), 6, [['#5a6842',3,2],['#d8d2bc',2,1],['#7f8c5a',1,2]], 6),
+);
+const svg = sheet(tiles);
+writeFileSync('public/assets/downs-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
 const [TURF,CHALKY,PATH,GORSE,WALL,TOWER,RUBBLE,MOUND,SLAB,POND,FIG_A,HUT,THATCH,THORN,BORDER,SIGN,HURDLE,BFLOOR,BWALL,VOID,GRAVE,NEST,BONES,CAIRN,FIG_D,FIG_C]=tiles.map((_,i)=>i+1);
 const solid=[3,4,5,7,8,9,11,12,13,14,15,16,18,19,20,23].map(t=>t);
 
@@ -42,8 +49,9 @@ function write(name,{w,h,floor,furniture},points){
   const layer=(n,data,id)=>({id,name:n,type:'tilelayer',width:w,height:h,x:0,y:0,opacity:1,visible:true,data});
   const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
     layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([n,x,y],i)=>({id:i+1,name:n,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
-    tilesets:[{firstgid:1,name:'downs',image:'../assets/downs-tiles.svg',imagewidth:128,imageheight:64,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:32,
+    tilesets:[{firstgid:1,name:'downs',image:'../assets/downs-tiles.svg',imagewidth:128,imageheight:rows(tiles)*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows(tiles)*8,
       tiles:solid.map(id=>({id,properties:[{name:'collides',type:'bool',value:true}]}))}]};
+  vary(floor,w,1,TURF_VARIANTS,7);
   writeFileSync(`public/maps/${name}.json`,JSON.stringify(map,null,2)+'\n');
 }
 const grid=(w,h,base)=>{

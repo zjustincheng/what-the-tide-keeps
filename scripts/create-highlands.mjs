@@ -2,10 +2,11 @@
 // the battlefield, the ruined abbey, and the ossuary under it.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
+import { grain, rect as krect, scatter as speckle, stairs, vary } from './tile-kit.mjs';
 const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
 const sheet = (name, tiles) => {
   const rows = Math.ceil(tiles.length / 8);
-  const svg = tiles.map((s,i)=>`<g transform="translate(${i%8*16} ${Math.floor(i/8)*16})">${s}</g>`).join('');
+  const svg = tiles.map((s,i)=>`<g transform="translate(${i%8*16} ${Math.floor(i/8)*16})">${s}${grain(i)}</g>`).join('');
   writeFileSync(`public/assets/${name}-tiles.svg`,`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
   return rows;
 };
@@ -49,8 +50,26 @@ const HIGHLAND = [
   rect(0,0,16,16,'#9aaab0')+rect(3,5,10,6,'#7a8288')+rect(4,6,4,3,'#a89878')+rect(10,7,2,2,'#6a5a48')+rect(2,4,1,1,'#b8c6ca'), // 31 a body under the ice
   heather('#55573e')+rect(0,0,16,6,'#c4cacb')+rect(0,6,11,2,'#c4cacb')+rect(0,8,7,2,'#c4cacb')+rect(0,10,4,2,'#c4cacb')+rect(0,12,2,2,'#c4cacb')+rect(12,6,2,1,'#bcc2c3')+rect(8,9,2,1,'#bcc2c3')+rect(5,11,1,1,'#bcc2c3')+rect(3,2,1,2,'#7a5a6a')+rect(10,3,1,2,'#6a6a48'), // 32 drift edge
 ];
-sheet('highland', HIGHLAND);
 const H = Object.fromEntries(['HEATHER','STONES','ROAD','ROCK','SCREE','PINE','SNOW','BOULDER','CAIRN','SIGN','DEAD','MOUND','BONES','PIT','CHASM','BRIDGE','AWALL','FLAG','PILLAR','BONEWALL','OFLOOR','VOID','NICHE','STAIR','BANNER','TRENCH','STREAM','TENT','ICE','HOLE','HUT','FROZEN','DUST'].map((n,i)=>[n,i+1]));
+// Rock with light on it: lit facets above, cracks and shadow below, so outcrops read as stone and not holes.
+HIGHLAND[3] = rect(0,0,16,16,'#62625a')+rect(1,1,7,5,'#7c7c72')+rect(9,2,6,4,'#74746a')+rect(2,8,5,6,'#6e6e66')+rect(8,9,7,5,'#6a6a62')
+  +rect(1,1,7,1,'#94948a')+rect(9,2,6,1,'#8a8a80')+rect(2,8,5,1,'#86867c')+rect(8,9,7,1,'#7e7e76')+rect(0,7,16,1,'#44443e')+rect(8,0,1,7,'#4c4c46')+rect(7,8,1,8,'#4c4c46')
+  +rect(12,12,2,1,'#5a6a44')+rect(3,4,1,1,'#5a6a44');
+// The chasm: not a black square but a drop, its far wall falling away into dark, a little mist in the bottom.
+HIGHLAND[14] = rect(0,0,16,16,'#121418')+rect(0,0,16,3,'#1e2024')+[2,6,11,14].map(x=>rect(x,3,1,6+(x%3)*2,'#1a1c20')).join('')+rect(3,12,5,1,'#24282c')+rect(10,14,4,1,'#24282c');
+// A boulder sitting on the heather, lit from above, with its shadow under it.
+HIGHLAND[7] = rect(0,0,16,16,'#55573e')+rect(2,13,13,2,'#3a3c2a')+rect(2,4,12,10,'#666660')+rect(3,3,9,4,'#7a7a72')+rect(4,3,5,1,'#8e8e84')+rect(11,8,3,5,'#56564f')+rect(5,8,2,1,'#56564f');
+// The abbey's stair down to the ossuary, as real steps going down into the dark.
+HIGHLAND[23] = stairs({ tread: '#4a463e', riser: '#1e1c18', lip: '#625e54', side: '#3a3630', sideDark: '#26231f' });
+// Variants of the heather, the snow, and the flagstones, scattered so the highlands don't tile.
+const HEATHER_VARIANTS = [HIGHLAND.length + 1, HIGHLAND.length + 2], SNOW_VARIANTS = [HIGHLAND.length + 3], FLAG_VARIANTS = [HIGHLAND.length + 4];
+HIGHLAND.push(
+  speckle(heather('#55573e'), 17, [['#7a5a6a',1,2],['#8a6a7a',1,1],['#6a6a48',2,1],['#4a4a34',2,2]], 8),
+  speckle(heather('#55573e'), 18, [['#6a5e48',3,2],['#4a4a34',2,1],['#7a5a6a',1,1],['#8a8a7a',1,1]], 6),
+  HIGHLAND[6] + krect(1,9,8,2,'#b4bcbe') + krect(2,8,6,1,'#d4dada') + krect(11,3,3,1,'#b4bcbe'),
+  HIGHLAND[17] + krect(9,2,1,3,'#524e46') + krect(10,4,1,1,'#524e46') + krect(3,10,2,1,'#525a44'),
+);
+sheet('highland', HIGHLAND);
 const HIGHLAND_SOLID = [3,5,7,8,9,10,11,13,14,16,18,19,21,22,24,26,27,29,30];
 
 // The fort town: a carnivore garrison behind stone walls.
@@ -80,8 +99,14 @@ const FORT = [
   rect(0,0,16,16,'#7a7468')+rect(0,13,16,3,'#5a564c')+rect(4,3,8,8,'#2a3a40')+rect(7,3,2,8,'#7a7468'),     // 22 window
   rect(0,0,16,16,'#4a4034')+rect(0,1,16,2,'#3a3632')+[3,8,13].map(x=>rect(x,3,1,4,'#8a8a8a')+rect(x-1,7,3,6,'#7a3a34')).join(''), // 23 meat hooks
 ];
-sheet('fort', FORT);
 const F = Object.fromEntries(['STREET','FLAG','WALL','TOP','GATE','ROOF','HOUSE','DOOR','BARRACKS','TABLE','BARREL','CRATE','BRAZIER','BANNER','COMPOUND','BARS','AWNING','WELL','BOARD','GRASS','PINE','ALLEY','WINDOW','HOOKS'].map((n,i)=>[n,i+1]));
+// Variants of the fort's street: a puddle frozen over, a scatter of straw from the line.
+const STREET_VARIANTS = [FORT.length + 1, FORT.length + 2];
+FORT.push(
+  FORT[0] + krect(3,6,6,3,'#8a9298') + krect(4,6,4,1,'#a8b0b4'),
+  speckle(FORT[0], 19, [['#a89a5a',2,1],['#8a7a48',1,2],['#544e46',2,1]], 6),
+);
+sheet('fort', FORT);
 const FORT_SOLID = [2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20,22,23];
 
 function grid(w,h,base){
@@ -91,6 +116,8 @@ function grid(w,h,base){
   return {w,h,floor,furniture,put,fill};
 }
 function write(name,tileset,rows,solid,{w,h,floor,furniture},points){
+  if (tileset === 'highland') { vary(floor,w,1,HEATHER_VARIANTS,name.length*5); vary(floor,w,7,SNOW_VARIANTS,name.length*3,0.25); vary(floor,w,18,FLAG_VARIANTS,name.length*9,0.2); }
+  else vary(floor,w,1,STREET_VARIANTS,name.length*5,0.2);
   const layer=(n,data,id)=>({id,name:n,type:'tilelayer',width:w,height:h,x:0,y:0,opacity:1,visible:true,data});
   const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
     layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([n,x,y],i)=>({id:i+1,name:n,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],

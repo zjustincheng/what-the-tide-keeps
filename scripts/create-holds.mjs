@@ -2,6 +2,7 @@
 // (a city up a cliff face, ranked by height), the noble house's upper tiers, the rookeries' archive, and the lord's hall.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
+import { rect as krect, rows, scatter, sheet, stairs, vary } from './tile-kit.mjs';
 const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
 const tiles = [
   rect(0,0,16,16,'#3a3a3e')+rect(1,1,7,6,'#46464a')+rect(8,8,7,7,'#424246')+rect(0,7,16,1,'#2a2a2e')+rect(3,12,4,1,'#2e2e32'), // 0 cliff
@@ -30,8 +31,21 @@ const tiles = [
   rect(0,0,16,16,'#5e5a54')+rect(4,2,8,12,'#8a8478')+rect(5,0,6,4,'#9a9488')+rect(6,1,4,2,'#3a3a40')+rect(3,13,10,3,'#6a665c'), // 23 statue of a lord
   rect(0,0,16,16,'#7a7468')+rect(0,5,16,1,'#5e5850')+rect(0,11,16,1,'#5e5850')+rect(6,3,4,9,'#1a1e24')+rect(7,4,2,7,'#2a3a4a'), // 24 wall with a window slit
 ];
-const svg = tiles.map((s,i)=>`<g transform="translate(${i%8*16} ${Math.floor(i/8)*16})">${s}</g>`).join('');
-writeFileSync('public/assets/holds-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="64" shape-rendering="crispEdges">${svg}</svg>\n`);
+// The cliff, lit along its ledges; the drop, falling away into dark rather than a flat black square.
+tiles[0] = rect(0,0,16,16,'#34343a')+rect(1,1,7,5,'#46464c')+rect(9,2,6,4,'#404046')+rect(2,8,5,6,'#3e3e44')+rect(8,9,7,5,'#3a3a40')
+  +rect(1,1,7,1,'#56565c')+rect(9,2,6,1,'#505056')+rect(2,8,5,1,'#4c4c52')+rect(0,7,16,1,'#26262a')+rect(8,0,1,7,'#2a2a2e');
+tiles[7] = rect(0,0,16,16,'#0e1218')+rect(0,0,16,2,'#181c24')+[3,7,12].map(x=>rect(x,2,1,5+(x%4),'#141820')).join('')+rect(4,11,6,1,'#1c222a')+rect(11,14,3,1,'#1c222a');
+// The holds' stairs, cut in the cliff: steps that read as steps.
+tiles[6] = stairs({ tread: '#8a8678', riser: '#4a4740', lip: '#a8a494', side: '#5a564c', sideDark: '#3e3b34' });
+// Variants of the terrace flags, the ledges, and the snow.
+const FLAG_VARIANTS = [tiles.length + 1], LEDGE_VARIANTS = [tiles.length + 2], SNOW_VARIANTS = [tiles.length + 3];
+tiles.push(
+  tiles[3] + krect(2,9,1,3,'#57534c') + krect(3,11,1,1,'#57534c') + krect(11,3,2,1,'#5e6656'),
+  scatter(tiles[1], 21, [['#5a564c',2,1],['#7a766a',1,1],['#4e4a42',3,1]], 7),
+  tiles[2] + krect(1,10,9,2,'#a8acb2') + krect(2,9,7,1,'#d4d8dc') + krect(10,3,4,1,'#a8acb2'),
+);
+const svg = sheet(tiles);
+writeFileSync('public/assets/holds-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
 const [CLIFF,LEDGE,SNOW,FLAGS,TWALL,ROOF,STAIR,DROP,BANNER,GATE,DOOR,NEST,LETTERS,BOARDS,CARPET,CHAIR,PILLAR,PERCH,BRAZIER,LEVER,PINE,BOULDER,BRIDGE,STATUE,SLIT]=tiles.map((_,i)=>i+1);
 // Collides lists 0-based tile ids.
 const solid=[0,4,5,7,8,9,11,12,15,16,17,18,19,20,21,23,24];
@@ -50,8 +64,9 @@ function write(name,{W,H,floor,furniture},points){
   const layer=(lname,data,id)=>({id,name:lname,type:'tilelayer',width:W,height:H,x:0,y:0,opacity:1,visible:true,data});
   const map={compressionlevel:-1,width:W,height:H,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
     layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([pname,x,y],i)=>({id:i+1,name:pname,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
-    tilesets:[{firstgid:1,name:'holds',image:'../assets/holds-tiles.svg',imagewidth:128,imageheight:64,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:32,
+    tilesets:[{firstgid:1,name:'holds',image:'../assets/holds-tiles.svg',imagewidth:128,imageheight:rows(tiles)*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows(tiles)*8,
       tiles:solid.map(id=>({id,properties:[{name:'collides',type:'bool',value:true}]}))}]};
+  vary(floor,W,4,FLAG_VARIANTS,name.length*7,0.22);vary(floor,W,2,LEDGE_VARIANTS,name.length*5,0.3);vary(floor,W,3,SNOW_VARIANTS,name.length*3,0.25);
   writeFileSync(`public/maps/${name}.json`,JSON.stringify(map,null,2)+'\n');
 }
 
