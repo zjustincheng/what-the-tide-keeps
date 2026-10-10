@@ -153,3 +153,16 @@ test('after a region\'s lieutenant falls, the brand offers the way back to the p
   await talk(page, 'Go back to the priest');
   await expect.poll(() => at(page, 'church')).not.toBeNull();
 });
+
+test('the tidal road joins Wickmere to the capital\'s harbour, by day, once the church sends you', async ({ page }) => {
+  await start(page, { flags: ['bear-free', 'boar-defeated'], clock: 0.3 }, 'harbour', 'from-square');
+  await go(page, 'harbour', 28, 208, 'Take the tidal road to Wickmere');
+  await expect(page.locator('#dialogue-text')).toContainText('tide comes in at dark');
+  await start(page, { flags: HIGHLANDS_DONE, clock: 0.3 }, 'harbour', 'from-square');
+  await go(page, 'harbour', 28, 208, 'Take the tidal road to Wickmere', 'wickmere');
+  await go(page, 'wickmere', 176, 510, 'Take the tidal road down to the capital', 'harbour');
+  // At night the road is under the tide.
+  await start(page, { flags: HIGHLANDS_DONE, clock: 0.8 }, 'wickmere', 'from-harbour');
+  await go(page, 'wickmere', 176, 510, 'Take the tidal road down to the capital');
+  await expect(page.locator('#dialogue-text')).toContainText('under the tide');
+});

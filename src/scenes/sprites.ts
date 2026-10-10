@@ -196,6 +196,13 @@ export function createSprites(scene: Phaser.Scene) {
   const light = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
   light.addColorStop(0, 'rgba(250,180,90,0.85)'); light.addColorStop(0.45, 'rgba(230,140,60,0.35)'); light.addColorStop(1, 'rgba(200,110,50,0)');
   ctx.fillStyle = light; ctx.fillRect(0, 0, 128, 128); glow.refresh();
+  // A fog bank: a long, soft ellipse of mist that fades to nothing at every edge.
+  const fog = scene.textures.createCanvas('fogbank', 256, 64)!;
+  const mist = fog.getContext();
+  mist.setTransform(1, 0, 0, 0.25, 0, 24);
+  const bank = mist.createRadialGradient(128, 32, 0, 128, 32, 128);
+  bank.addColorStop(0, 'rgba(200,210,206,0.55)'); bank.addColorStop(0.5, 'rgba(190,200,196,0.25)'); bank.addColorStop(1, 'rgba(180,190,186,0)');
+  mist.fillStyle = bank; mist.fillRect(0, -96, 256, 256); fog.refresh();
   // Things that grow wild and can be picked: thyme, mushrooms, and hedge berries.
   const herb = scene.make.graphics({ x: 0, y: 0 });
   herb.fillStyle(0x3e5a32).fillRect(3, 6, 2, 6).fillRect(7, 3, 2, 9).fillRect(11, 5, 2, 7);

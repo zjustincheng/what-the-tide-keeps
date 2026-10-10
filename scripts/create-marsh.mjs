@@ -110,13 +110,15 @@ function write(name,{W,H,floor,furniture},points){
   // The channel: deep, fast water east of the main deck. The ferryman's post, and the far bank past it.
   put(furniture,37,17,POST);put(furniture,38,15,BOAT);
   fill(furniture,40,15,42,18,0);fill(floor,40,15,42,18,MUD);fill(furniture,43,16,43,17,0);fill(floor,43,16,43,17,MUD);
+  // South off the decks, the tidal road down the estuary to the capital's harbour.
+  walk(10,31,11,33,MUD);
   write('wickmere',m,[
     ['west',8,264],['from-causeway',...at(2,16)],['channel',...at(36,16)],['from-far-bank',...at(35,17)],
     ['hospice-door',...at(34,8)],['from-hospice',...at(34,9)],
     ['magistrate',...at(24,14)],['cage',...at(26,14)],['newt',...at(26,14)],['ferryman',...at(36,18)],
     ['smoker',...at(16,26)],['herbalist',...at(12,9)],['widow',...at(29,8)],['child',...at(10,29)],['mourner',...at(30,28)],
     ['waystone',...at(18,17)],['from-waystone',...at(18,18)],['camp-wickmere',...at(9,19)],['wickmere-spot',...at(21,23)],
-    ['notice',...at(20,13)],['barrels',...at(33,22)],
+    ['notice',...at(20,13)],['barrels',...at(33,22)],['south',176,536],['from-harbour',176,500],
   ]);
 }
 

@@ -38,6 +38,7 @@ import type { Surface } from '../audio/effects';
 import { battleTheme } from '../audio/themes';
 import { reclaim, settle } from '../rules/spells';
 import { createSprites } from './sprites';
+import { leads, orders } from '../rules/orders';
 import { advance, darkness, phase, timeName } from '../rules/clock';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
@@ -402,7 +403,7 @@ export class AreaScene extends Phaser.Scene {
       if(['e','E',' ','Enter'].includes(event.key)) this.interact(event);
       if(['h','H'].includes(event.key) && !event.repeat && !this.active) this.toggleHud();
       if(['q','Q'].includes(event.key) && !event.repeat && !this.active) this.toggleSneak();
-      if(['j','J'].includes(event.key) && !event.repeat && !this.active) this.openPanel(()=>new JournalView(loadJournal(), ()=>this.closePanel()));
+      if(['j','J'].includes(event.key) && !event.repeat && !this.active) this.openPanel(()=>new JournalView(loadJournal(), ()=>this.closePanel(), orders(loadWorld()), leads(loadWorld())));
       if(['b','B'].includes(event.key) && !event.repeat && !this.active) this.openPanel(()=>new BestiaryView(loadBestiary(), loadGrimoire(), ()=>this.closePanel()));
       if(['p','P'].includes(event.key) && !event.repeat && !this.active) this.openParty();
       // Number keys pick a reply.
@@ -760,7 +761,7 @@ export class AreaScene extends Phaser.Scene {
       close,
       equipment: () => { close(); this.openEquipment(); },
       party: () => { close(); this.openParty(); },
-      journal: () => { close(); this.openPanel(()=>new JournalView(loadJournal(), ()=>this.closePanel())); },
+      journal: () => { close(); this.openPanel(()=>new JournalView(loadJournal(), ()=>this.closePanel(), orders(loadWorld()), leads(loadWorld()))); },
       bestiary: () => { close(); this.openPanel(()=>new BestiaryView(loadBestiary(), loadGrimoire(), ()=>this.closePanel())); },
       // Returning to the cot always restarts the church, which also resets its encounters.
       restart: () => { close(); this.scene.start('church'); },

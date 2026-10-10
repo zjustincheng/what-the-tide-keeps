@@ -73,6 +73,8 @@ test('what people say is written in the journal, and bones can be won or lost', 
   await page.keyboard.press('Escape');
   await page.keyboard.press('j');
   await expect(page.getByRole('heading', { name: 'Journal' })).toBeVisible();
+  // The church's orders come first, with the next step.
+  await expect(page.getByRole('region', { name: 'Orders' })).toContainText('Orders · The');
   await page.locator('.journal summary', { hasText: 'A SEAL WITH A FISH CART' }).click();
   await expect(page.locator('.journal-entries')).toContainText("I'm from the sea. The sea was never at the Long Table.");
   await page.getByRole('button', { name: 'Close' }).click();

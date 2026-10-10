@@ -1,11 +1,12 @@
 import type { Entry } from '../storage/journal';
+import type { Orders } from '../rules/orders';
 
-// Everything people have told the hero, grouped by who said it.
+// The church's current orders and the hero's open leads, then everything people have told him, grouped by who said it.
 export class JournalView {
   private root: HTMLElement;
   private cleanup = new AbortController();
 
-  constructor(entries: readonly Entry[], onClose: () => void) {
+  constructor(entries: readonly Entry[], onClose: () => void, orders?: Orders, leads: readonly string[] = []) {
     this.root = document.createElement('section');
     this.root.className = 'battle journal';
     this.root.setAttribute('role', 'dialog');
@@ -17,6 +18,8 @@ export class JournalView {
     this.root.innerHTML = `
       <div class="battle-heading"><p class="eyebrow">WRITTEN DOWN</p><h2 id="journal-title">Journal</h2>
       <p class="resurrection-intro">${entries.length ? 'What people have told you, in their own words. Paper keeps it when you can\'t.' : 'Nothing yet. Ask people things, and what they tell you is written down here.'}</p></div>
+      ${orders ? `<section class="orders" aria-label="Orders"><h3>Orders · ${escape(orders.title)}</h3><p>${escape(orders.given)}</p><p class="orders-next">${escape(orders.next)}</p>
+        ${leads.length ? `<h3>Leads</h3><ul>${leads.map(lead => `<li>${escape(lead)}</li>`).join('')}</ul>` : ''}</section>` : ''}
       <div class="journal-entries">${speakers.map(speaker => {
         const said = entries.filter(entry => entry.speaker === speaker);
         return `<details><summary>${escape(speaker)} <small>${escape(said[0].place)} · ${said.length}</small></summary>${said.map(entry => `<h3>${escape(entry.topic)}</h3>${entry.lines.map(line => `<p>${escape(line)}</p>`).join('')}`).join('')}</details>`;

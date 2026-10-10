@@ -312,10 +312,7 @@ export const FEN: Area = {
   },
   decorate(scene) {
     // Mist lying on the water.
-    for (let i = 0; i < 14; i++) {
-      const mist = scene.add.rectangle(30 + (i * 197) % 860, 40 + (i * 131) % 600, 150, 22, 0xc0c8c4, 0.08).setDepth(5);
-      scene.tweens.add({ targets: mist, x: mist.x - 50, alpha: 0.03, duration: 7000 + i * 500, yoyo: true, repeat: -1 });
-    }
+    marshFog(scene, 860, 600, 14);
   },
 };
 
@@ -443,10 +440,7 @@ export const WEIR: Area = {
       barred: { speaker: 'THE CLIFF', lines: ['Willow roots hang over a crack in the rock. If there is a way up, only the otters know it.'] } },
   },
   decorate(scene) {
-    for (let i = 0; i < 10; i++) {
-      const mist = scene.add.rectangle(20 + (i * 151) % 620, 40 + (i * 97) % 460, 130, 18, 0xc0c8c4, 0.08).setDepth(5);
-      scene.tweens.add({ targets: mist, x: mist.x - 40, alpha: 0.03, duration: 6500 + i * 500, yoyo: true, repeat: -1 });
-    }
+    marshFog(scene, 620, 460, 10);
   },
 };
 // The high tarn: a frozen lake under the pass, linking the otters' stair to the garrison road.
@@ -517,7 +511,12 @@ export const HARBOUR: Area = {
   ],
   props: [{ point: 'kraken-arm', texture: 'kraken-arm-long', solid: true, hiddenIf: [] }],
   fishing: { 'harbour-spot': 'stream' },
-  exits: { north: { to: 'square', spawn: 'from-harbour', prompt: 'Climb the steps to the square' } },
+  exits: {
+    north: { to: 'square', spawn: 'from-harbour', prompt: 'Climb the steps to the square' },
+    // The tidal road up the estuary: shut by the church until it sends you, and only above water by day.
+    west: { to: 'wickmere', spawn: 'from-harbour', prompt: 'Take the tidal road to Wickmere', requires: { all: [{ flag: 'hyena-slain' }, { night: false }] },
+      barred: { speaker: 'THE TIDAL ROAD', lines: ['A causeway of shingle along the estuary, upriver to Wickmere. It\'s under water at high tide, and the tide comes in at dark.', 'A church marine stands at the start of it. "Sickness upriver. Only the church\'s own go up, and only by day."'] } },
+  },
   decorate(scene) {
     // Gulls wheeling over the water.
     for (let i = 0; i < 6; i++) {
@@ -573,8 +572,8 @@ const MARSH_GROUND: Pick<Area, 'region' | 'tileset' | 'ground' | 'surfaces' | 'm
 // Low fog on the water, drifting.
 function marshFog(scene: Phaser.Scene, width: number, height: number, thick = 14) {
   for (let i = 0; i < thick; i++) {
-    const mist = scene.add.rectangle(20 + (i * 151) % width, 30 + (i * 97) % height, 150, 22, 0xb8c4c0, 0.1).setDepth(6);
-    scene.tweens.add({ targets: mist, x: mist.x - 50, alpha: 0.04, duration: 7000 + i * 430, yoyo: true, repeat: -1 });
+    const mist = scene.add.image(20 + (i * 151) % width, 30 + (i * 97) % height, 'fogbank').setDepth(6).setAlpha(0.6).setScale(1 + (i % 3) * 0.35, 1 + (i % 2) * 0.4);
+    scene.tweens.add({ targets: mist, x: mist.x - 60, alpha: 0.3, duration: 7000 + i * 430, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
   }
 }
 
@@ -612,6 +611,8 @@ export const WICKMERE: Area = {
   camps: { 'camp-wickmere': { prompt: 'Rest by the brazier', cost: 4, lines: ['A brazier on the deck, where the smokehouse workers warm their hands. Nobody sits near you.'] } },
   exits: {
     west: { to: 'causeway', spawn: 'from-wickmere', prompt: 'Go back along the causeway' },
+    south: { to: 'harbour', spawn: 'from-marsh', prompt: 'Take the tidal road down to the capital', requires: { night: false },
+      barred: { speaker: 'THE TIDAL ROAD', lines: ['The shingle road down the estuary is under the tide. It comes back out at first light.'] } },
     'hospice-door': { to: 'hospice', spawn: 'spawn', prompt: 'Enter the hospice' },
     channel: { to: 'far-bank', spawn: 'from-wickmere', prompt: 'Speak the word, and walk across the channel', requires: { flag: 'channel-firm' },
       barred: { speaker: 'THE CHANNEL', lines: ['Deep, fast water between Wickmere and the far bank. The ferryman\'s boat is tied up, and he isn\'t in it.'] } },

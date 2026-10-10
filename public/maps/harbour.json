@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 12,
+  "nextobjectid": 14,
   "layers": [
     {
       "id": 1,
@@ -2149,7 +2149,7 @@
         0,
         0,
         23,
-        23,
+        0,
         0,
         0,
         0,
@@ -2197,7 +2197,7 @@
         0,
         0,
         23,
-        23,
+        0,
         0,
         0,
         0,
@@ -3147,6 +3147,30 @@
         },
         {
           "id": 3,
+          "name": "west",
+          "type": "",
+          "x": 8,
+          "y": 208,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 4,
+          "name": "from-marsh",
+          "type": "",
+          "x": 28,
+          "y": 208,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 5,
           "name": "harbour-wall",
           "type": "",
           "x": 88,
@@ -3158,7 +3182,7 @@
           "point": true
         },
         {
-          "id": 4,
+          "id": 6,
           "name": "kraken-arm",
           "type": "",
           "x": 176,
@@ -3170,7 +3194,7 @@
           "point": true
         },
         {
-          "id": 5,
+          "id": 7,
           "name": "sea-shrine",
           "type": "",
           "x": 712,
@@ -3182,7 +3206,7 @@
           "point": true
         },
         {
-          "id": 6,
+          "id": 8,
           "name": "crab",
           "type": "",
           "x": 328,
@@ -3194,7 +3218,7 @@
           "point": true
         },
         {
-          "id": 7,
+          "id": 9,
           "name": "fishwife",
           "type": "",
           "x": 280,
@@ -3206,7 +3230,7 @@
           "point": true
         },
         {
-          "id": 8,
+          "id": 10,
           "name": "harbourmaster",
           "type": "",
           "x": 504,
@@ -3218,7 +3242,7 @@
           "point": true
         },
         {
-          "id": 9,
+          "id": 11,
           "name": "steward",
           "type": "",
           "x": 600,
@@ -3230,7 +3254,7 @@
           "point": true
         },
         {
-          "id": 10,
+          "id": 12,
           "name": "dockhand",
           "type": "",
           "x": 440,
@@ -3242,7 +3266,7 @@
           "point": true
         },
         {
-          "id": 11,
+          "id": 13,
           "name": "harbour-spot",
           "type": "",
           "x": 504,

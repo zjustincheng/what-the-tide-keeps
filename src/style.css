@@ -838,3 +838,10 @@ button.die[aria-pressed="true"] { border-color: #bc755e; color: #d8a890; }
 .cutscene.jolt img { animation: jolt .3s ease-out, breathe 2.2s ease-in-out .3s infinite; }
 .cutscene img { transition: opacity .2s; }
 .bestiary summary img { height: 22px; vertical-align: middle; image-rendering: pixelated; margin-right: 4px; }
+
+/* The church's orders, at the top of the journal. */
+.orders { max-width: 640px; margin: 0 auto 14px; padding: 10px 14px; border: 1px solid #5d7253; background: #1c2e24; text-align: left; }
+.orders h3 { margin: 0 0 6px; font: 11px ui-monospace, monospace; letter-spacing: 1px; color: #c8b878; text-transform: uppercase; }
+.orders p { margin: 0 0 6px; color: #d7d9c8; font: 14px/1.5 Georgia, serif; }
+.orders .orders-next { color: #abbf9b; font-style: italic; }
+.orders ul { margin: 0; padding-left: 18px; color: #c8ccb8; font: 13px/1.5 Georgia, serif; }

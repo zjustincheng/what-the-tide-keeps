@@ -345,6 +345,8 @@ The vulture's note teaches **anchors**. Once she has joined, every rest at a fir
 
 ## Orders
 
+The **journal** (J) opens with the church's current **orders**: the region's aim, in the priest's words, and the next thing that would move it on (where to go, or who to ask). Below them are your open **leads**: what you are carrying and who it is for, and promises still to keep. Both are worked out from where the story stands (`src/rules/orders.ts`).
+
 Beating a region's lieutenant (the boar, the hyena, the viper) finishes the church's orders there. The brand on the hero's wrist goes warm, and you can **go back to the priest** at once for the next orders, or stay and walk the region a while. The priest always has them waiting.
 
 ## The marsh
@@ -352,7 +354,7 @@ Beating a region's lieutenant (the boar, the hyena, the viper) finishes the chur
 Once the hyena is dead, the priest sends the party downriver: a sickness in the river towns, and the church's stores spoiling at Wickmere. The **crane at the weir** ferries you down ("Take the ferry downriver"); until then she turns you back.
 
 - **The causeway.** Boardwalks over black water, in **fog**: enemies see you from less far off, and you can't see their mana until you are close. Mosquitoes poison; water scorpions wait under the boards. An old coypu eats only what he catches and hasn't been sick once. Off the main walk, the **reed-bed queen** guards her eggs: her blood cloud poisons through any guard, she drinks what she bites, and she hatches more of her brood.
-- **Wickmere.** A stilt town where the river meets the tide. The magistrate has caged everyone venomous (pay the newt's "fine" to free her); the smokehouse otter notices the church barrels come upriver already resealed; a widow says her husband was sick after supper, not after a cough. The herbalist sells **antivenom**. There is a waystone, a fire, and fishing under the decks.
+- **Wickmere.** A stilt town where the river meets the tide. The **tidal road** runs south from its decks down the estuary to the capital's harbour; it is under water at night. From the harbour end, a church marine lets you up only once the church has sent you downriver. The magistrate has caged everyone venomous (pay the newt's "fine" to free her); the smokehouse otter notices the church barrels come upriver already resealed; a widow says her husband was sick after supper, not after a cough. The herbalist sells **antivenom**. There is a waystone, a fire, and fishing under the decks.
 - **The ferryman.** Kill the reed-bed queen and he teaches you **Still the water**, an old river word that makes the channel firm enough to walk on.
 - **The far bank.** The church storehouse, roof fallen in. The viper's **apprentice**, a toad who believed her, casts **Souring**. Under his apron is a vial of milked venom and a dropper the size of the holes in every sack. Three crates nobody spoiled are sealed and marked FOR THE LIGHTHOUSE.
 - **The hospice.** The **frog** heals under guard behind a grate. She remembers the party but not the feast, and no longer believes you were framed. Show her the vial and she comes to stop a poisoner: not for you.

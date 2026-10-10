@@ -100,11 +100,13 @@ const at=(x,y)=>[x*16+8,y*16+8];
   for(const [x,y] of [[24,12],[25,12],[26,16],[3,9],[4,9],[44,10],[44,11]]) put(furniture,x,y,T.CRATES);
   for(const [x,y] of [[6,18],[7,18],[40,16],[41,16]]) put(furniture,x,y,T.NETS);
   for(const x of [3,9,15,25,36,43]) put(furniture,x,20,T.BOLLARD);
+  // The tidal road west, up the estuary to Wickmere.
+  fill(furniture,0,12,0,13,0);
   // The last shrine, where the fish come ashore, at the east end of the quay.
   put(furniture,44,19,T.SHRINE);
   for(const [x,y] of [[22,8],[34,12],[10,16]]) put(furniture,x,y,T.LAMP);
   write('harbour',m,[
-    ['north',344,8],['from-square',344,40],
+    ['north',344,8],['from-square',344,40],['west',8,208],['from-marsh',28,208],
     ['harbour-wall',...at(5,20)],['kraken-arm',176,316],['sea-shrine',...at(44,20)],['crab',328,232],
     ['fishwife',...at(17,15)],['harbourmaster',...at(31,18)],['steward',...at(37,9)],['dockhand',...at(27,19)],['harbour-spot',...at(31,29)],
   ]);
