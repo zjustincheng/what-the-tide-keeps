@@ -122,7 +122,7 @@ export class AreaScene extends Phaser.Scene {
   private pendingTravel?: keyof typeof WAYSTONES;
   private pendingChurch = false;
   // A marker at every way out: gold where it can be taken, grey where something still bars it.
-  private exitMarkers: { name: string; marker: Phaser.GameObjects.Image; glow: Phaser.GameObjects.Ellipse }[] = [];
+  private exitMarkers: { name: string; marker: Phaser.GameObjects.Image }[] = [];
   // A bout in the Talon Ring, or a stake at the shells or the arm-wrestling, to begin once the conversation closes.
   private pendingBout?: number;
   private pendingShells?: number;
@@ -338,35 +338,30 @@ export class AreaScene extends Phaser.Scene {
     return { world: loadWorld(), lost: loadMemory().lost, studied: loadGrimoire() };
   }
 
-  // Every way out is marked, so nobody has to find an exit by walking into it. At a map's edge, an arrow points out and drifts that way;
+  // Every way out is marked with a small arrow, so nobody has to find an exit by walking into it. At a map's edge, it points out and drifts that way;
   // in the middle of a map, a chevron bobs above the spot. A barred way is marked in grey until it opens.
   private markExits(width: number, height: number) {
     for (const name of Object.keys(this.area.exits)) {
       const at = this.point(name);
       if (!at) continue;
       const edge = at.x < 28 ? Math.PI : at.x > width - 28 ? 0 : at.y < 28 ? -Math.PI / 2 : at.y > height - 28 ? Math.PI / 2 : undefined;
-      const inward = 18;
+      const inward = 14;
       const x = edge === Math.PI ? at.x + inward : edge === 0 ? at.x - inward : at.x;
-      const y = edge === -Math.PI / 2 ? at.y + inward : edge === Math.PI / 2 ? at.y - inward : edge === undefined ? at.y - 20 : at.y;
-      // A soft pool of light on the ground where the way out is, and the arrow over it.
-      const glow = this.add.ellipse(at.x, at.y + 4, 30, 14, 0xe8c870, 0.18).setDepth(2);
-      this.tweens.add({ targets: glow, scaleX: 1.25, scaleY: 1.25, alpha: 0.08, duration: 1100, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-      const marker = this.add.image(x, y, 'exit-arrow').setDepth(7).setRotation(edge ?? Math.PI / 2).setAlpha(0.95).setScale(1.5);
-      const drift = 6;
+      const y = edge === -Math.PI / 2 ? at.y + inward : edge === Math.PI / 2 ? at.y - inward : edge === undefined ? at.y - 16 : at.y;
+      const marker = this.add.image(x, y, 'exit-arrow').setDepth(7).setRotation(edge ?? Math.PI / 2).setAlpha(0.95).setScale(0.8);
+      const drift = 4;
       this.tweens.add({ targets: marker, x: x + Math.round(Math.cos(edge ?? Math.PI / 2) * drift), y: y + Math.round(Math.sin(edge ?? Math.PI / 2) * drift),
         alpha: 0.4, duration: 750, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-      this.exitMarkers.push({ name, marker, glow });
+      this.exitMarkers.push({ name, marker });
     }
     this.shadeExits();
   }
 
   private shadeExits() {
     const context = this.context();
-    for (const { name, marker, glow } of this.exitMarkers) {
+    for (const { name, marker } of this.exitMarkers) {
       const requires = this.area.exits[name].requires;
-      const open = !requires || holds(context, requires);
-      marker.setTint(open ? 0xe8c870 : 0x8a8a84);
-      glow.setFillStyle(open ? 0xe8c870 : 0x8a8a84);
+      marker.setTint(!requires || holds(context, requires) ? 0xe8c870 : 0x8a8a84);
     }
   }
 
