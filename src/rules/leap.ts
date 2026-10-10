@@ -21,7 +21,8 @@ export function landing(ground: (tx: number, ty: number) => Ground, from: Tile, 
 const previous = (from: Tile, dx: number, dy: number, step: number): Tile => ({ tx: from.tx + dx * (step - 1), ty: from.ty + dy * (step - 1) });
 
 // Every tile reachable from a start, walking and leaping: for checking that leaps open only what they are meant to.
-export function reachable(ground: (tx: number, ty: number) => Ground, starts: readonly Tile[], leaping: boolean): Set<string> {
+// links: pairs of tiles joined some other way, such as a climb from the foot of a wall to the ledge above.
+export function reachable(ground: (tx: number, ty: number) => Ground, starts: readonly Tile[], leaping: boolean, links: readonly (readonly [Tile, Tile])[] = []): Set<string> {
   const seen = new Set<string>();
   const queue = [...starts];
   const key = (t: Tile) => `${t.tx},${t.ty}`;
@@ -34,6 +35,7 @@ export function reachable(ground: (tx: number, ty: number) => Ground, starts: re
       if (leaping) { const lands = landing(ground, at, dx, dy); if (lands && !lands.falls) steps.push(lands); }
       for (const step of steps) if (!seen.has(key(step))) { seen.add(key(step)); queue.push(step); }
     }
+    for (const [a, b] of links) for (const [from, to] of [[a, b], [b, a]]) if (key(from) === key(at) && !seen.has(key(to))) { seen.add(key(to)); queue.push(to); }
   }
   return seen;
 }

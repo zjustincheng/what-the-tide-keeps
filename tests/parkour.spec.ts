@@ -51,29 +51,70 @@ test('facing a sheer drop with nothing to land on, a leap goes nowhere', async (
 });
 
 test.describe('climbing', () => {
+  const overlay = (page: Page, run: string) => page.evaluate(async run => {
+    const { game } = await import('/src/main.ts');
+    const view = game.scene.getScene('watchtower').overlay;
+    return new Function('view', run)(view);
+  }, run);
   test.beforeEach(async ({ page }) => {
     await page.evaluate(async () => { const { game } = await import('/src/main.ts'); game.scene.getScenes(true)[0].scene.start('watchtower', { spawn: 'spawn' }); });
     await expect.poll(() => at(page, 'watchtower')).not.toBeNull();
     await page.locator('#game').focus();
+    // The foot of the first climb.
+    await page.evaluate(async () => {
+      const { game } = await import('/src/main.ts');
+      const scene = game.scene.getScene('watchtower');
+      const foot = scene.points.find((p: { name: string }) => p.name === 'climb-1');
+      scene.player.setPosition(foot.x, foot.y + 4);
+    });
+    await expect(page.locator('#prompt')).toContainText('Climb the ivy');
+    await page.keyboard.press('e');
+    await expect(page.getByRole('heading', { name: 'The ivy, low down' })).toBeVisible();
+    // Nothing falls while the test climbs, unless a test drops it.
+    await overlay(page, 'view.timers.forEach(clearTimeout); view.timers = [];');
   });
 
-  test('the ivy can be climbed, slowly, and grip comes back on a ledge', async ({ page }) => {
-    await page.evaluate(async () => { const { game } = await import('/src/main.ts'); game.scene.getScene('watchtower').player.setPosition(240, 540); });
-    await page.keyboard.down('w'); await page.waitForTimeout(1000); await page.keyboard.up('w');
-    const climbed = 540 - (await at(page, 'watchtower'))!.y;
-    // Climbing goes at about half walking speed (70 a second).
-    expect(climbed).toBeGreaterThan(20);
-    expect(climbed).toBeLessThan(50);
-    expect(await page.evaluate(async () => { const { game } = await import('/src/main.ts'); return game.scene.getScene('watchtower').grip; })).toBeLessThan(1);
+  test('hold to hold with the arrows, to the top, and onto the ledge above', async ({ page }) => {
+    // Work out a way up the wall, then climb it with the keys.
+    const ways: string[] = await page.evaluate(async () => {
+      const { game } = await import('/src/main.ts');
+      const { move } = await import('/src/rules/climb.ts');
+      const view = game.scene.getScene('watchtower').overlay;
+      const start = view.state;
+      const seen = new Map([[`${start.at.col},${start.at.row}`, [] as string[]]]);
+      const queue = [start];
+      while (queue.length) {
+        const climb = queue.shift();
+        const path = seen.get(`${climb.at.col},${climb.at.row}`)!;
+        if (climb.done === 'top') return path;
+        for (const way of ['up', 'left', 'right', 'down']) {
+          const next = move(climb, way);
+          const key = `${next.at.col},${next.at.row}`;
+          if (!seen.has(key)) { seen.set(key, [...path, way]); queue.push(next); }
+        }
+      }
+      return [];
+    });
+    expect(ways.length).toBeGreaterThan(0);
+    const keys: Record<string, string> = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight' };
+    for (const way of ways) await page.keyboard.press(keys[way]);
+    await expect(page.getByRole('heading', { name: 'The ivy, low down' })).toHaveCount(0);
+    const top = await page.evaluate(async () => { const { game } = await import('/src/main.ts'); return game.scene.getScene('watchtower').points.find((p: { name: string }) => p.name === 'top-1'); });
+    expect(await at(page, 'watchtower')).toEqual({ x: top.x, y: top.y });
+    await expect(page.locator('#prompt')).toContainText('Climb back down');
   });
 
-  test('when grip runs out on the wall, the hero falls back to the ledge, hurt', async ({ page }) => {
-    await page.evaluate(async () => { const { game } = await import('/src/main.ts'); game.scene.getScene('watchtower').player.setPosition(240, 560); });
-    await page.waitForTimeout(200);
-    await page.evaluate(async () => { const { game } = await import('/src/main.ts'); const s = game.scene.getScene('watchtower'); s.player.setPosition(240, 500); s.grip = 0.02; });
-    await page.keyboard.down('w'); await page.waitForTimeout(300); await page.keyboard.up('w');
-    await expect(page.locator('#sneaking')).toContainText(/grip goes|You fall/);
-    await expect.poll(async () => (await at(page, 'watchtower'))!.y).toBeGreaterThan(540);
+  test('three stones knock you off the wall, and the landing hurts; letting go costs nothing', async ({ page }) => {
+    await overlay(page, 'view.hit(view.state.at.col); view.hit(view.state.at.col); view.hit(view.state.at.col);');
+    await expect(page.locator('#climb-note')).toContainText('come off the wall');
+    await expect(page.getByRole('heading', { name: 'The ivy, low down' })).toHaveCount(0);
+    expect((await saved(page)).wounds.chameleon).toBe(3);
+    // Again, and this time let go.
+    await page.keyboard.press('e');
+    await expect(page.getByRole('heading', { name: 'The ivy, low down' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('heading', { name: 'The ivy, low down' })).toHaveCount(0);
+    expect((await saved(page)).wounds.chameleon).toBe(3);
   });
 });
 

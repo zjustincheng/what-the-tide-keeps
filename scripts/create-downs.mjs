@@ -62,7 +62,7 @@ function write(name,{w,h,floor,furniture},points){
   const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
     layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([n,x,y],i)=>({id:i+1,name:n,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
     tilesets:[{firstgid:1,name:'downs',image:'../assets/downs-tiles.svg',imagewidth:128,imageheight:rows(tiles)*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows(tiles)*8,
-      tiles:tileProps(solid,[],[],[IVY-1])}]};
+      tiles:tileProps([...solid,IVY-1])}]};
   vary(floor,w,1,TURF_VARIANTS,7);
   writeFileSync(`public/maps/${name}.json`,JSON.stringify(map,null,2)+'\n');
 }
@@ -162,10 +162,10 @@ const at=(x,y)=>[x*16+8,y*16+8];
   const m=grid(16,40,RUBBLE);const {floor,furniture,put,fill}=m;
   fill(furniture,0,0,15,39,TOWER);
   const ledge=(x0,y0,x1,y1)=>{fill(furniture,x0,y0,x1,y1,0);fill(floor,x0,y0,x1,y1,RUBBLE);};
-  const ivy=(x0,y0,x1,y1)=>{fill(furniture,x0,y0,x1,y1,0);fill(floor,x0,y0,x1,y1,IVY);};
+  const ivy=(x0,y0,x1,y1)=>{fill(furniture,x0,y0,x1,y1,IVY);};
   // The bottom of the tower, where the stair has fallen in.
   ledge(3,34,12,38);fill(furniture,7,39,8,39,0);fill(floor,7,39,8,39,RUBBLE);
-  // Up the ivy, ledge to ledge: each run short enough to climb on one grip.
+  // Up the ivy, ledge to ledge: each face a climb of its own, from a point at its foot to one on the ledge above.
   ivy(5,27,10,33);ledge(3,25,9,26);
   ivy(3,19,7,24);ledge(2,17,12,18);
   ivy(9,11,13,16);ledge(7,9,13,10);
@@ -179,5 +179,6 @@ const at=(x,y)=>[x*16+8,y*16+8];
   write('watchtower',wide,[
     ['down',128,632],['spawn',128,600],
     ['hearth',...at(7,3)],['cache',...at(11,2)],['view',...at(4,2)],['ledge-bones',...at(11,36)],
+    ['climb-1',...at(7,34)],['top-1',...at(7,26)],['climb-2',...at(4,25)],['top-2',...at(5,18)],['climb-3',...at(11,17)],['top-3',...at(11,10)],['climb-4',...at(8,9)],['top-4',...at(8,4)],
   ].map(([n,x,y])=>[n,x+ox*16,y]));
 }

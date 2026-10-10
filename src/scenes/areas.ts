@@ -55,6 +55,9 @@ export type Area = {
   // Points that lead elsewhere when the hero interacts with them. A barred exit only opens once requires holds.
   // facing: which way the exit's arrow points, where the walls around it don't make that plain.
   exits: Record<string, { to: string; spawn: string; prompt: string; requires?: Condition; barred?: { speaker: string; lines: string[] }; facing?: 'north' | 'south' | 'east' | 'west' }>;
+  // Climbs, by the point at their foot: a wall climbed side on, hold to hold (src/ui/ClimbView.ts). top: the point on the ledge above,
+  // where he stands after, and where he can climb back down. height: rows of holds. every: how often something falls, in milliseconds.
+  climbs?: Record<string, { top: string; prompt: string; title: string; height: number; hazard: 'stones' | 'icicles'; every?: number }>;
   // Points where the hero can fish.
   fishing?: Record<string, SpotId>;
   // Places to rest: resting heals every wound and brings the area's enemies back.
@@ -1039,12 +1042,23 @@ export const ROWS: Area = {
 export const WATCHTOWER: Area = {
   key: 'watchtower', map: 'watchtower', tileset: 'downs', music: 'downs', region: 'THE FARMLAND', place: 'The old watchtower', dialogue: watchtower,
   ground: 'stone', grade: { saturation: -0.35, brightness: 0.82, vignette: 0.5 }, npcs: [], enemies: [],
+  climbs: {
+    'climb-1': { top: 'top-1', prompt: 'Climb the ivy', title: 'The ivy, low down', height: 9, hazard: 'stones', every: 1700 },
+    'climb-2': { top: 'top-2', prompt: 'Climb the ivy', title: 'The ivy, past the first floor', height: 10, hazard: 'stones', every: 1500 },
+    'climb-3': { top: 'top-3', prompt: 'Climb the ivy', title: 'The ivy, where the stair fell', height: 11, hazard: 'stones', every: 1350 },
+    'climb-4': { top: 'top-4', prompt: 'Climb the last of the ivy', title: 'The ivy, to the top', height: 8, hazard: 'stones', every: 1200 },
+  },
   exits: { down: { to: 'downs', spawn: 'from-tower', prompt: 'Climb back down and out' } },
 };
 
 export const FALLS: Area = {
   ...HIGHLAND_GROUND, key: 'falls', map: 'falls', music: 'highlands', place: 'The frozen falls', dialogue: falls, grade: COLD,
   npcs: [], enemies: [{ point: 'harrier-1', encounter: 'harrier' }],
+  climbs: {
+    'climb-1': { top: 'top-1', prompt: 'Climb the ice', title: 'The falls, the first face', height: 12, hazard: 'icicles', every: 1400 },
+    'climb-2': { top: 'top-2', prompt: 'Climb the ice', title: 'The falls, the second face', height: 13, hazard: 'icicles', every: 1250 },
+    'climb-3': { top: 'top-3', prompt: 'Climb the ice', title: 'The falls, to the top', height: 14, hazard: 'icicles', every: 1100 },
+  },
   exits: { west: { to: 'rookery-road', spawn: 'from-falls', prompt: 'Go back to the rookery road' } },
   decorate: scene => { wind(scene, 384, 704); snowfall(scene, 384, 704); },
 };

@@ -5456,7 +5456,7 @@
           "id": 32,
           "properties": [
             {
-              "name": "climb",
+              "name": "collides",
               "type": "bool",
               "value": true
             }

@@ -27,7 +27,7 @@ import { ShellView } from '../ui/ShellView';
 import { ArmView } from '../ui/ArmView';
 import { boutAfter, boutWon, BOUTS } from '../rules/ring';
 import { landing } from '../rules/leap';
-import { CLIMB_SPEED, grip } from '../rules/climb';
+import { ClimbView } from '../ui/ClimbView';
 import type { Ground } from '../rules/leap';
 import { ShopView } from '../ui/ShopView';
 import { FishingView } from '../ui/FishingView';
@@ -120,7 +120,7 @@ export class AreaScene extends Phaser.Scene {
   private props: Prop[] = [];
   private people: Phaser.Physics.Arcade.Sprite[] = [];
   private walls!: Phaser.Tilemaps.TilemapLayer;
-  private overlay?: BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView;
+  private overlay?: BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView;
   // A shop to open once the current conversation ends.
   private pendingShop?: ShopId;
   // A campfire to rest at once the current conversation ends.
@@ -133,9 +133,6 @@ export class AreaScene extends Phaser.Scene {
   // The tileset's leapable gap tile, which crumbling ground turns into when it goes; and when each crumbling tile was first stood on.
   private gapTile?: number;
   private crumbling = new Map<string, number>();
-  // Climbing: how much grip is left, from 1 to 0, and the meter over the hero's head that shows it.
-  private grip = 1;
-  private gripMeter?: Phaser.GameObjects.Graphics;
   // What the church took, in memories, to raise one of the fallen: said once the conversation closes.
   private pendingTithe?: string[];
   private pendingFight?: Foe;
@@ -172,7 +169,7 @@ export class AreaScene extends Phaser.Scene {
     this.thrownOut = data?.caught;
     this.sentries = [];
     this.cleanup = new AbortController();
-    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.pendingChurch = false; this.exitMarkers = []; this.pendingBout = undefined; this.pendingTithe = undefined; this.leaping = false; this.lift = 0; this.crumbling = new Map(); this.grip = 1; this.gripMeter = undefined; this.pendingSail = undefined; this.pendingShells = undefined; this.pendingArm = undefined; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
+    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.pendingChurch = false; this.exitMarkers = []; this.pendingBout = undefined; this.pendingTithe = undefined; this.leaping = false; this.lift = 0; this.crumbling = new Map(); this.pendingSail = undefined; this.pendingShells = undefined; this.pendingArm = undefined; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
     this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false; this.pendingShop = undefined; this.pendingRest = undefined; this.pendingFight = undefined;
   }
 
@@ -268,10 +265,10 @@ export class AreaScene extends Phaser.Scene {
     element('game').setAttribute('aria-label', `${this.area.place} map. Move with WASD or arrow keys. Press E or Space to interact.`);
     this.cameras.main.fadeIn(650, 16, 27, 24);
     // The first time in a place with gaps to leap, say how.
-    const climbable=Boolean(this.floor.findTile(tile=>Boolean((tile.tileset?.getTileProperties(tile.index) as { climb?: boolean } | null)?.climb)));
+    const climbable=Object.keys(this.area.climbs ?? {}).length>0;
     const gaps=this.gapTile!==undefined && Boolean(this.walls.findTile(tile=>tile.index===this.gapTile));
     if((gaps || climbable) && !HINTED.has(this.area.key)) { HINTED.add(this.area.key); this.time.delayedCall(900, () => this.notice([
-      ...(climbable ? ['Walls with handholds can be climbed while your grip lasts. Rest on the ledges.'] : []),
+      ...(climbable ? ['Walls with handholds can be climbed: go to the foot of one. Dodge what falls.'] : []),
       ...(gaps ? ['Shift (or Leap) to jump a gap. Loose ground won\'t hold you for long.'] : []),
     ].join(' '), 6000)); }
     music.play(this.area.music);
@@ -476,32 +473,38 @@ export class AreaScene extends Phaser.Scene {
     return { tx: Math.floor(body.center.x / 16), ty: Math.floor(body.center.y / 16) };
   }
 
-  // Whether the hero is on a wall of handholds.
-  private onHandholds(): boolean {
-    const at = this.feet();
-    const tile = this.floor.getTileAt(at.tx, at.ty);
-    return Boolean(tile && (tile.tileset?.getTileProperties(tile.index) as { climb?: boolean } | null)?.climb) && !this.walls.getTileAt(at.tx, at.ty);
+  // The foot of the climb whose top is this point, if it is one.
+  private climbDown(point: string): string | undefined {
+    return Object.entries(this.area.climbs ?? {}).find(([, climb]) => climb.top === point)?.[0];
   }
 
-  // Grip: it drains on the wall and comes back on a ledge. The meter over his head shows it while it is less than full.
-  // When it runs out, he falls.
-  private hold(delta: number, climbing: boolean, moving: boolean) {
-    this.grip = grip(this.grip, delta / 1000, { climbing, moving });
-    this.gripMeter ??= this.add.graphics().setDepth(8);
-    this.gripMeter.clear();
-    if (this.grip < 1) {
-      const x = this.player.x - 9, y = this.player.y - 20;
-      this.gripMeter.fillStyle(0x0c1210, 0.8).fillRect(x - 1, y - 1, 20, 4);
-      this.gripMeter.fillStyle(this.grip < 0.3 ? 0xc86a4a : 0xc8b878, 1).fillRect(x, y, 18 * this.grip, 2);
-    }
-    if (climbing && this.grip <= 0) { this.grip = 1; this.notice('Your grip goes.', 2000); this.fall(); }
+  // A climb: the wall side on, hold to hold, dodging what falls. At the top, the hero stands on the ledge above.
+  // Knocked off, he lands at the foot of it, hurt; letting go costs nothing.
+  private climb(point: string) {
+    const climb = this.area.climbs![point];
+    const seed = [...`${this.area.key}:${point}`].reduce((sum, char) => sum * 31 + char.charCodeAt(0), 7) >>> 0;
+    this.openPanel(() => new ClimbView(this.textures.getBase64('hero'), climb.title, climb.height, seed, climb.hazard, climb.every ?? 1500, (reached, gaveUp) => {
+      this.closePanel();
+      if (reached) {
+        const top = this.point(climb.top);
+        this.player.setPosition(top.x, top.y);
+        (this.player.body as Phaser.Physics.Arcade.Body).reset(top.x, top.y);
+        this.safe = { x: top.x, y: top.y };
+      } else if (!gaveUp) {
+        const world = loadWorld();
+        const hero = createBattle('locust', [], { ...this.partyOptions(), roster: roster(world) }).party.find(member => member.id === 'chameleon');
+        const hurt = hero ? Math.min(FALL_WOUND, Math.max(0, hero.health - 1)) : 0;
+        if (hurt) saved = saveWorld({ ...world, wounds: { ...world.wounds, chameleon: (world.wounds.chameleon ?? 0) + hurt } });
+        this.renderMemory();
+        this.cameras.main.shake(180, 0.004);
+        this.notice(hurt ? `You come off the wall and land hard. (−${hurt} health)` : 'You come off the wall and land hard.', 2500);
+      }
+    }));
   }
 
   // A leap the way the hero faces: over a gap of up to two tiles, or a hop forward on open ground. Short of the far side, he falls.
   private leap() {
     if(this.leaping || this.overlay || this.leaving || this.active) return;
-    // Both hands are busy on a wall.
-    if(this.onHandholds()) return;
     const from = this.feet();
     const { dx, dy } = this.facing;
     const lands = landing((tx, ty) => this.ground(tx, ty), from, dx, dy);
@@ -557,7 +560,7 @@ export class AreaScene extends Phaser.Scene {
     const crumbles = Boolean(tile && (tile.tileset?.getTileProperties(tile.index) as { crumble?: boolean } | null)?.crumble) && !this.walls.getTileAt(at.tx, at.ty);
     const key = `${at.tx},${at.ty}`;
     for (const other of [...this.crumbling.keys()]) if (other !== key) this.crumbling.delete(other);
-    if (!crumbles) { if (!this.walls.getTileAt(at.tx, at.ty) && !this.onHandholds()) this.safe = { x: this.player.x, y: this.player.y }; return; }
+    if (!crumbles) { if (!this.walls.getTileAt(at.tx, at.ty)) this.safe = { x: this.player.x, y: this.player.y }; return; }
     const since = this.crumbling.get(key) ?? time;
     this.crumbling.set(key, since);
     if (time - since > CRACKS) tile!.tint = 0x8a7a6a;
@@ -707,6 +710,15 @@ export class AreaScene extends Phaser.Scene {
       this.line++;
       if(this.line>=this.active.lines.length) this.closeDialogue();
       else this.showLine();
+    } else if(this.nearby && this.area.climbs?.[this.nearby.name]) {
+      this.climb(this.nearby.name);
+    } else if(this.nearby && this.climbDown(this.nearby.name)!==undefined) {
+      // Down is easy: you came up it.
+      const foot=this.point(this.climbDown(this.nearby.name)!);
+      music.effect('step-stone');
+      this.cameras.main.fadeOut(180, 16, 27, 24);
+      this.cameras.main.once('camerafadeoutcomplete', () => { this.player.setPosition(foot.x, foot.y); (this.player.body as Phaser.Physics.Arcade.Body).reset(foot.x, foot.y); this.cameras.main.fadeIn(220, 16, 27, 24); });
+      element('prompt').textContent='';
     } else if(this.nearby && this.nearby.name==='waystone' && waystoneIn(this.area.key)) {
       const here=waystoneIn(this.area.key)!;
       const world=loadWorld();
@@ -1103,7 +1115,7 @@ export class AreaScene extends Phaser.Scene {
   }
 
   // A panel over the map: cooking, the journal, or a game of bones.
-  private openPanel(make: () => CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView) {
+  private openPanel(make: () => CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView) {
     if(this.overlay || this.leaving) return;
     this.player.setVelocity(0);
     this.held.clear();
@@ -1248,9 +1260,8 @@ export class AreaScene extends Phaser.Scene {
     let y=Number(pressed('down','S','DOWN'))-Number(pressed('up','W','UP'));
     if(this.active || this.leaping){x=0;y=0;}
     if(x||y) this.facing=Math.abs(x)>=Math.abs(y) ? { dx: Math.sign(x), dy: 0 } : { dx: 0, dy: Math.sign(y) };
-    const climbing=!this.leaping && this.onHandholds();
-    const motion=new Phaser.Math.Vector2(x,y).normalize().scale(climbing ? CLIMB_SPEED : this.sneaking ? 42 : 70);
-    if(!this.leaping) { this.player.setVelocity(motion.x,motion.y); this.slideAroundCorners(x,y); this.footing(time); this.hold(delta, climbing, Boolean(x||y)); }
+    const motion=new Phaser.Math.Vector2(x,y).normalize().scale(this.sneaking ? 42 : 70);
+    if(!this.leaping) { this.player.setVelocity(motion.x,motion.y); this.slideAroundCorners(x,y); this.footing(time); }
     // Holding the party's mana down costs mana: a point from everyone every few seconds. When the hero runs dry, it shows again.
     if(this.sneaking && time-this.lastDrain>HIDE_DRAIN) {
       this.lastDrain=time;
@@ -1321,12 +1332,12 @@ export class AreaScene extends Phaser.Scene {
     // A restrained walking bob, or slow breathing when standing still, while the physics body stays steady.
     this.player.setOrigin(0.5,0.5+(x||y?Math.sin(time/85)*0.025:Math.sin(time/520)*0.012)+this.lift);
     const context=this.context();
-    this.nearby=this.points.filter(p=>p.name in this.area.exits || p.name in (this.area.fishing ?? {}) || p.name in (this.area.camps ?? {}) || this.forage.some(spot=>spot.point===p.name) || (p.name==='waystone' && Boolean(waystoneIn(this.area.key))) || (p.name in this.area.dialogue
+    this.nearby=this.points.filter(p=>p.name in this.area.exits || p.name in (this.area.climbs ?? {}) || this.climbDown(p.name)!==undefined || p.name in (this.area.fishing ?? {}) || p.name in (this.area.camps ?? {}) || this.forage.some(spot=>spot.point===p.name) || (p.name==='waystone' && Boolean(waystoneIn(this.area.key))) || (p.name in this.area.dialogue
       && !this.area.dialogue[p.name].hiddenIf?.some(condition=>holds(context, condition))))
       // The nearest thing in reach wins, so a door and the person beside it never steal each other's prompt.
       .map(p=>({ p, distance: Phaser.Math.Distance.Between(this.player.x,this.player.y,p.x,p.y) }))
       .filter(({ distance })=>distance<29).sort((a,b)=>a.distance-b.distance)[0]?.p;
     if(!this.active) element('prompt').textContent=this.nearby
-      ? `E · ${this.area.exits[this.nearby.name]?.prompt ?? (this.area.camps?.[this.nearby.name] ? `${this.area.camps[this.nearby.name].prompt}${this.area.camps[this.nearby.name].cost ? ` (${this.area.camps[this.nearby.name].cost} coins)` : ''}` : undefined) ?? (this.area.fishing?.[this.nearby.name] ? `Fish ${SPOTS[this.area.fishing[this.nearby.name]].name.replace(/^The /, 'the ')}` : undefined) ?? (this.area.forage?.[this.nearby.name] ? `Pick ${INGREDIENTS[this.area.forage[this.nearby.name]].plural}` : undefined) ?? (this.nearby.name==='waystone' ? 'Touch the waystone' : undefined) ?? this.area.dialogue[this.nearby.name].prompt ?? 'Examine '+this.nearby.name}` : '';
+      ? `E · ${this.area.climbs?.[this.nearby.name]?.prompt ?? (this.climbDown(this.nearby.name)!==undefined ? 'Climb back down' : undefined) ?? this.area.exits[this.nearby.name]?.prompt ?? (this.area.camps?.[this.nearby.name] ? `${this.area.camps[this.nearby.name].prompt}${this.area.camps[this.nearby.name].cost ? ` (${this.area.camps[this.nearby.name].cost} coins)` : ''}` : undefined) ?? (this.area.fishing?.[this.nearby.name] ? `Fish ${SPOTS[this.area.fishing[this.nearby.name]].name.replace(/^The /, 'the ')}` : undefined) ?? (this.area.forage?.[this.nearby.name] ? `Pick ${INGREDIENTS[this.area.forage[this.nearby.name]].plural}` : undefined) ?? (this.nearby.name==='waystone' ? 'Touch the waystone' : undefined) ?? this.area.dialogue[this.nearby.name].prompt ?? 'Examine '+this.nearby.name}` : '';
   }
 }

@@ -874,3 +874,25 @@ button.die[aria-pressed="true"] { border-color: #bc755e; color: #d8a890; }
 .arm-mine { left: 8px; } .arm-his { right: 8px; }
 .arm-marker { position: absolute; top: -6px; width: 8px; height: 40px; background: #e8d8a8; box-shadow: 0 0 4px #000; transition: left 90ms linear; }
 #arm-push { display: block; margin: 6px auto; padding: 10px 28px; font: 16px Georgia, serif; }
+
+/* Climbing: the wall side on, holds to climb, columns that glow before something falls down them. */
+.climb-wall { position: relative; margin: 10px auto; overflow: hidden; border: 1px solid #5d7253; background: repeating-linear-gradient(0deg, #4e4c44 0 21px, #44423b 21px 22px), #4e4c44; }
+.climb-wall[data-hazard="icicles"] { background: repeating-linear-gradient(0deg, #8a9ea6 0 21px, #7a8e96 21px 22px), #8a9ea6; }
+.climb-track { position: absolute; inset: 0 0 auto 0; transition: transform 160ms ease-out; }
+.climb-hold { position: absolute; width: 14px; height: 10px; border-radius: 3px; background: #2a2824; box-shadow: inset 0 2px 0 #8a887c; }
+.climb-wall[data-hazard="icicles"] .climb-hold { background: #3a4e58; box-shadow: inset 0 2px 0 #e4eef2; }
+.climb-top { position: absolute; left: 0; right: 0; background: linear-gradient(#6a7a4a, transparent); opacity: 0.6; }
+.climb-hero { position: absolute; width: 20px; height: 26px; image-rendering: pixelated; transition: left 90ms linear, top 90ms linear; z-index: 2; }
+.climb-warn { position: absolute; top: 0; bottom: 0; background: #e8c870; opacity: 0; transition: opacity 120ms; z-index: 1; pointer-events: none; }
+.climb-warn.on { opacity: 0.22; animation: climb-glow 260ms ease-in-out infinite alternate; }
+@keyframes climb-glow { to { opacity: 0.38; } }
+.climb-stone { position: absolute; top: -20px; width: 16px; height: 16px; border-radius: 4px; background: #6a665c; box-shadow: inset 0 3px 0 #8a867a, 0 2px 0 #1a1816; opacity: 0; z-index: 3; pointer-events: none; }
+.climb-wall[data-hazard="icicles"] .climb-stone { width: 8px; margin-left: 4px; height: 22px; border-radius: 0 0 4px 4px; background: #d8e8ee; box-shadow: inset -2px 0 0 #a8bcc4; }
+.climb-stone.falling { animation: climb-fall 380ms linear forwards; }
+@keyframes climb-fall { from { opacity: 1; transform: translateY(0); } to { opacity: 1; transform: translateY(380px); } }
+.climb-hits { margin: 4px 0; text-align: center; font: 12px ui-monospace, monospace; color: #c8b878; }
+.climb-pad { display: grid; grid-template-columns: repeat(3, 44px); gap: 4px; justify-content: center; margin: 6px auto; }
+.climb-pad button { height: 38px; padding: 0; font-size: 18px; touch-action: none; }
+.climb-pad button:first-child { grid-column: 2; }
+.climb-pad button:nth-child(2) { grid-column: 1; }
+#climb-quit { display: block; margin: 6px auto 0; }

@@ -131,7 +131,7 @@ function write(name,tileset,rows,solid,{w,h,floor,furniture},points){
   const map={compressionlevel:-1,width:w,height:h,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
     layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([n,x,y],i)=>({id:i+1,name:n,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
     tilesets:[{firstgid:1,name:tileset,image:`../assets/${tileset}-tiles.svg`,imagewidth:128,imageheight:rows*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows*8,
-      tiles:tileset==='highland'?tileProps(solid,HIGHLAND_GAPS,HIGHLAND_CRUMBLES,[ICEFACE-1]):tileProps(solid)}]};
+      tiles:tileset==='highland'?tileProps([...solid,ICEFACE-1],HIGHLAND_GAPS,HIGHLAND_CRUMBLES):tileProps(solid)}]};
   writeFileSync(`public/maps/${name}.json`,JSON.stringify(map,null,2)+'\n');
 }
 const at=(x,y)=>[x*16+8,y*16+8];
@@ -476,7 +476,7 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
   const m=grid(24,44,H.SNOW);const {floor,furniture,put,fill}=m;
   fill(furniture,0,0,23,43,H.ROCK);
   const ledge=(x0,y0,x1,y1,ground=H.SNOW)=>{fill(furniture,x0,y0,x1,y1,0);fill(floor,x0,y0,x1,y1,ground);};
-  const ice=(x0,y0,x1,y1)=>{fill(furniture,x0,y0,x1,y1,0);fill(floor,x0,y0,x1,y1,ICEFACE);};
+  const ice=(x0,y0,x1,y1)=>{fill(furniture,x0,y0,x1,y1,ICEFACE);};
   // The pool at the bottom, frozen, and the way in from the road.
   ledge(1,38,22,42,H.ICE);ledge(0,40,0,41,H.ICE);
   // Up the first face to a ledge; up the second; across a crack; up the third.
@@ -495,6 +495,7 @@ const HROWS=Math.ceil(HIGHLAND.length/8), FROWS=Math.ceil(FORT.length/8);
   for(let x=0;x<ox;x++) for(const y of [40,41]){wide.furniture[y*30+x]=0;wide.floor[y*30+x]=H.ICE;}
   write('falls','highland',HROWS,HIGHLAND_SOLID,wide,[
     ['west',8,656],['from-road',40,656],
-    ['hollow',...at(19,8)],['tally',...at(17,6)],['harrier-1',...at(6,8)],['pool',...at(12,40)],
+    ['hollow',...at(19,8)],['tally',...at(17,6)],['harrier-1',...at(6,8)],['pool',...at(13,41)],
+    ['climb-1',...at(11,38)],['top-1',...at(11,30)],['climb-2',...at(15,29)],['top-2',...at(16,21)],['climb-3',...at(6,19)],['top-3',...at(6,11)],
   ].map(([n,x,y])=>[n,n==='west'?x:x+ox*16,y]));
 }
