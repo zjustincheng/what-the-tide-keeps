@@ -37,12 +37,17 @@ test('every arrival point in every map can walk to every other, and to every way
     if (!start) { stranded.push(`${file}: ${arrivals[0].name} is inside a wall`); continue; }
     const seen = new Set([start.join()]);
     const queue = [start];
+    // A climb joins the foot of a wall to the ledge above it.
+    const points: { name: string; x: number; y: number }[] = map.layers[2].objects;
+    const climbs = points.filter(point => /^climb-\d+$/.test(point.name)).flatMap(foot => {
+      const top = points.find(point => point.name === foot.name.replace('climb', 'top'));
+      return top ? [[[Math.floor(foot.x / 16), Math.floor(foot.y / 16)], [Math.floor(top.x / 16), Math.floor(top.y / 16)]]] : [];
+    });
     while (queue.length) {
       const [x, y] = queue.pop()!;
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        const key = `${x + dx},${y + dy}`;
-        if (!seen.has(key) && open(x + dx, y + dy)) { seen.add(key); queue.push([x + dx, y + dy]); }
-      }
+      const steps = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => [x + dx, y + dy]).filter(([nx, ny]) => open(nx, ny));
+      for (const [a, b] of climbs) { if (a.join() === `${x},${y}`) steps.push(b); if (b.join() === `${x},${y}`) steps.push(a); }
+      for (const [nx, ny] of steps) if (!seen.has(`${nx},${ny}`)) { seen.add(`${nx},${ny}`); queue.push([nx, ny]); }
     }
     for (const point of arrivals.slice(1)) {
       const tile = tileOf(point);

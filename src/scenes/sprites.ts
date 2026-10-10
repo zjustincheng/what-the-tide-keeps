@@ -86,6 +86,8 @@ const VILLAGERS: Record<string, Villager> = {
   stoat: { fur: 0x8a5a34, muzzle: 0xe8dcc4, cloth: 0x2a2a2a, trim: 0x8a7a5a, ears: 'pointed' },
   'peat-vole': { fur: 0x5a4834, muzzle: 0x9a8268, cloth: 0x3a3424, trim: 0x2a2018, ears: 'pointed' },
   hermit: { fur: 0xc86a3a, muzzle: 0xe89a6a, cloth: 0x6a6e72, trim: 0x9a9ea2, ears: 'none' },
+  // The island: the man with no fur.
+  stranger: { fur: 0xd8b8a0, muzzle: 0xd0ae94, cloth: 0x3a3a44, trim: 0x8a8a7a, ears: 'none' },
   // The marsh.
   coypu: { fur: 0x6a5240, muzzle: 0xc87a3a, cloth: 0x3a4038, trim: 0x6a6a5a, ears: 'pointed' },
   magistrate: { fur: 0x9aa0a4, muzzle: 0xd8b84a, cloth: 0x2a2a34, trim: 0xd8d0b8, ears: 'none' },

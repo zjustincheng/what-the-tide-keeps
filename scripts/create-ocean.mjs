@@ -104,12 +104,14 @@ function write(name,{W,H,floor,furniture},points){
   // A wreck in the north-east, where the eel waits; sandbars at the edges.
   walk(38,3,45,9,DECK);fill(furniture,38,10,45,10,HULL);put(furniture,41,5,MAST);
   fill(floor,2,36,8,38,SAND);fill(floor,40,34,46,38,SAND);
+  // South, past the charts, a current the octopus knows: to the island.
+  fill(furniture,23,39,24,39,0);for(let y=36;y<40;y++){put(floor,23,y,CURRENT);put(floor,24,y,CURRENT);}
   // East, a current running out to where the church's boats went down.
   fill(furniture,47,14,47,15,0);for(let x=44;x<48;x++){put(floor,x,14,CURRENT);put(floor,x,15,CURRENT);}
   write('open-water',m,[
     ['port',8,312],['from-port',...at(2,19)],['pens',...at(4,37)],['from-pens',...at(5,36)],['grave',...at(44,37)],['from-grave',...at(43,36)],
     ['reef',...at(24,1)],['from-reef',...at(24,3)],
-    ['barracuda-1',...at(15,19)],['barracuda-2',...at(33,22)],['jelly-1',...at(20,27)],['jelly-2',...at(27,11)],['eel',...at(42,6)],['wreck',...at(39,7)],['fleet',760,240],['from-fleet',728,240],
+    ['barracuda-1',...at(15,19)],['barracuda-2',...at(33,22)],['jelly-1',...at(20,27)],['jelly-2',...at(27,11)],['eel',...at(42,6)],['wreck',...at(39,7)],['fleet',760,240],['from-fleet',728,240],['island',384,632],['from-island',384,600],
   ]);
 }
 

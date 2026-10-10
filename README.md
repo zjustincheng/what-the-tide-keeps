@@ -54,7 +54,7 @@ npm run test:unit # Pure TypeScript combat and memory rule tests
 
 Build the repeatable loop in miniature before adding the full story. The first playable milestone is a small Tiled map with a moving character, starting with the hero waking in the church. Add the feast opening after the loop works.
 
-The first eight build steps are playable: church exploration, visible encounters, basic combat, a party of three, mana-based magic, death, memory in the world, and one region. Speak to the priest and inspect the ledger and basin. The church is safe ground: the first fights are out in the farmland, where enemies show their mana signatures and touching one starts a battle. (The automated tests open the game at `/?practice`, which puts a crop locust and a hooded exile in the church to fight.) The priest gives the farmland mission, and the south door opens onto the farmland. The artwork and dialogue are original placeholders.
+The full regional route is playable, from the church and farmland through the highlands, marsh, mountain holds, ocean, and island finale. Speak to the priest and inspect the ledger and basin. The church is safe ground: the first fights are out in the farmland, where enemies show their mana signatures and touching one starts a battle. (The automated tests open the game at `/?practice`, which puts a crop locust and a hooded exile in the church to fight.) The priest gives the farmland mission, and the south door opens onto the farmland. The artwork and dialogue are original placeholders.
 
 In battle, command the chameleon and whichever companions have joined him (see **Companions**). Each living member acts once in any order; only then does the enemy act and each surviving companion regain 1 mana. Downed members cannot act, and the party only wipes when all three fall. Party members and enemies have health bars and condition descriptions; exact health and damage numbers remain hidden. Mana is numeric. Enemies target the living member with the most visible mana, preferring the bear in a tie.
 
@@ -64,7 +64,7 @@ Prototype tuning: ordinary fights last two or three rounds, and the boar about f
 
 Any fight but the boar can be run from with **Run**, at a price: half the coins you carry scatter behind you, and the enemy gets a free parting blow on whoever it's watching (the wound carries, though it never drops your last standing hero). The enemy stays where it was, and you get a moment's head start.
 
-Victory removes an enemy until you rest or leave the area. Defeat wakes you at the cot (see below). Wounds and spent mana both carry from one fight into the next (see **Wounds and rest**). **Gather**, on every hero's card, spends that hero's action to draw back 3 mana, so a drained hero is never stuck. Supplies are not implemented yet, and recruitment and travel beyond the church are still ahead. Encounter progress resets on reload; studied spells and memories persist.
+Victory removes an enemy until you rest or leave the area. Defeat wakes you at the cot (see below). Wounds and spent mana both carry from one fight into the next (see **Wounds and rest**). **Gather**, on every hero's card, spends that hero's action to draw back 3 mana, so a drained hero is never stuck. Supplies are not implemented yet. Encounter progress resets on reload; studied spells and memories persist.
 
 ## Replies
 
@@ -425,6 +425,12 @@ The places:
 - **The kraken's grave** (south-east), a sandbar of ribs as tall as houses. Under them the sand is full of church net, wrapped round the kraken's arms: it didn't rise to attack the land; it came up tangled, after the nets took a whole reef in one night. The octopus won't look while you take its **tooth** (octopus: grapple hits 4 harder, 4 less health).
 - **The cuttlefish's reef** (north, once you've seen the grave). Kin to the kraken, uniting the sea to end the fish trade. It **throws back the last spell you cast**: a damage spell comes back at you at full power, a heal heals it, a ward wards it, a snare costs a hero their next move. Feed it the small spells and fight with your hands. Brought down once, it rises in no colour at all and throws back every turn. Afterwards the octopus brokers a truce, not the old one, and the sea tells you where the island is: south, past the charts, where the light is.
 
+## The island
+
+After the cuttlefish, follow the current south to the island. The church's landing, the works, the old laboratory (the white house), and the lighthouse form the final route. Read the works' daybook to uncover what the land's food stores contain, open the cages, then explore the laboratory records to learn how the resurrection basin works and recover the hero's erased name. Climb the lighthouse and face its Keeper before speaking with the human.
+
+The final conversation offers two outcomes: put out the light with the human, or bring him back to the church. The ending epilogue reflects the party's recovered memories and evidence. The ocean route back north remains open from the island landing.
+
 ## The capital
 
 The church has a side door in its west wall, out into the capital. Nobody fights here; it's a place for listening.
@@ -547,6 +553,7 @@ The placeholder tilesets are drawn in code by the `scripts/create-*.mjs` scripts
 - `src/rules/spells.ts` — grimoires, their spells, and sequence checking.
 - `src/rules/gear.ts` — keepsakes, slots, and what they change in battle.
 - `src/rules/world.ts` — story flags, carried items, favor spells, and which dialogue variant applies.
+- `src/rules/ending.ts` — ending outcomes and epilogue text, based on story evidence and memories.
 - `src/content/memories.ts` — memory names and what forgetting each costs.
 - `src/storage/grimoire.ts` — versioned browser storage for studied spells.
 - `src/storage/memory.ts` — versioned browser storage for lost memories and an unpaid wipe.
@@ -558,6 +565,7 @@ The placeholder tilesets are drawn in code by the `scripts/create-*.mjs` scripts
 - `src/ui/EquipmentView.ts` — the equipment screen.
 - `src/ui/ShopView.ts` — a shopkeeper's wares.
 - `src/ui/FishingView.ts` — the fishing screen.
+- `src/ui/EndingView.ts` — the ending screen.
 - `src/content/shops.ts` — what each shop sells.
 - `src/audio/themes.ts` — the compositions, as notes on beats.
 - `src/audio/music.ts` — the synthesised instruments, reverb, scheduler, and crossfades.
@@ -570,6 +578,8 @@ The placeholder tilesets are drawn in code by the `scripts/create-*.mjs` scripts
 - `src/ui/AnchorView.ts` — writing a memory down at a fire.
 - `scripts/create-downs.mjs`, `scripts/create-fen.mjs` — the downs and barrow, and the fen.
 - `src/content/downs.ts`, `src/content/fen.ts` — what is said and found there.
+- `src/content/island.ts` — dialogue for the island, its works, laboratory, and lighthouse.
+- `scripts/create-island.mjs` — island maps and tileset.
 - `src/storage/progress.ts` — erasing a playthrough to start over.
 - `src/ui/fullscreen.ts` — the full screen button and the F key.
 - `src/ui/SettingsView.ts` — the controls list and menu actions.

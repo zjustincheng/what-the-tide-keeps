@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { createBattle, downed, drainedAfter, enemyMana, ENEMIES, LIEUTENANTS, MEMBERS, woundsAfter } from '../rules/battle';
 import type { Battle, BattleOptions } from '../rules/battle';
 import type { Encounter, Escort } from '../rules/battle';
-import { anchor, forgetAll, held, hollow, MEMORY_IDS, remind, tideTakesAll, wipe } from '../rules/memory';
+import { anchor, forgetAll, held, hollow, MEMORY_IDS, recall, remind, tideTakesAll, wipe } from '../rules/memory';
 import type { Companion } from '../rules/memory';
 import { apply, conversation, drop, fell, fill, fleeing, holds, lineup, replies, rest, roster } from '../rules/world';
 import type { Condition, Context, Effect, ShopId } from '../rules/world';
@@ -28,6 +28,9 @@ import { ArmView } from '../ui/ArmView';
 import { boutAfter, boutWon, BOUTS } from '../rules/ring';
 import { landing } from '../rules/leap';
 import { ClimbView } from '../ui/ClimbView';
+import { EndingView } from '../ui/EndingView';
+import { ENDING_TITLES, epilogue } from '../rules/ending';
+import type { Ending } from '../rules/ending';
 import type { Ground } from '../rules/leap';
 import { ShopView } from '../ui/ShopView';
 import { FishingView } from '../ui/FishingView';
@@ -59,7 +62,7 @@ type Foe = { encounter: Encounter; defeat?: Effect; fledAt?: number; ambush?: bo
 const CHASE: Partial<Record<Encounter, { sight: number; speed: number }>> = {
   locust: { sight: 90, speed: 44 }, weevil: { sight: 80, speed: 36 }, acolyte: { sight: 96, speed: 40 }, hound: { sight: 120, speed: 58 },
   wisp: { sight: 100, speed: 50 }, raider: { sight: 110, speed: 52 }, ghoul: { sight: 90, speed: 34 }, inquisitor: { sight: 170, speed: 40 },
-  harrier: { sight: 140, speed: 62 }, hornet: { sight: 130, speed: 60 }, cricket: { sight: 110, speed: 56 }, barracuda: { sight: 120, speed: 66 }, jelly: { sight: 80, speed: 26 },
+  harrier: { sight: 140, speed: 62 }, hornet: { sight: 130, speed: 60 }, cricket: { sight: 110, speed: 56 }, sentinel: { sight: 110, speed: 46 }, barracuda: { sight: 120, speed: 66 }, jelly: { sight: 80, speed: 26 },
 };
 // How far a chaser will follow from where it stands before giving up and going back.
 const LEASH = 200;
@@ -78,7 +81,7 @@ const HIDE_DRAIN = 2500;
 const FALL_WOUND = 3, CRACKS = 450, GIVES = 800, COMES_BACK = 3000;
 // Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
 const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8], warden: [22, 26, 5, 4], leech: [28, 24, 2, 4], hound: [20, 22, 6, 8], pack: [22, 24, 5, 6], wisp: [14, 14, 9, 9], drowned: [20, 26, 6, 4],
-  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4], captain: [22, 24, 5, 6], harrier: [22, 18, 5, 8], mosquito: [20, 16, 6, 8], scorpion: [24, 16, 4, 12], brood: [26, 20, 3, 8], apprentice: [22, 22, 5, 8], viper: [26, 20, 3, 10], hornet: [20, 16, 6, 8], spider: [26, 16, 3, 12], duellist: [20, 22, 6, 8], cuckoo: [22, 22, 5, 8], warder: [26, 18, 3, 12], cricket: [22, 14, 5, 14], flight: [26, 20, 3, 8], champion: [22, 22, 5, 8], shark: [26, 18, 3, 10], barracuda: [24, 12, 4, 12], jelly: [22, 20, 5, 8], eel: [26, 14, 3, 12], cuttlefish: [28, 22, 2, 8] };
+  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4], captain: [22, 24, 5, 6], harrier: [22, 18, 5, 8], mosquito: [20, 16, 6, 8], scorpion: [24, 16, 4, 12], brood: [26, 20, 3, 8], apprentice: [22, 22, 5, 8], viper: [26, 20, 3, 10], hornet: [20, 16, 6, 8], spider: [26, 16, 3, 12], duellist: [20, 22, 6, 8], cuckoo: [22, 22, 5, 8], warder: [26, 18, 3, 12], cricket: [22, 14, 5, 14], flight: [26, 20, 3, 8], champion: [22, 22, 5, 8], shark: [26, 18, 3, 10], barracuda: [24, 12, 4, 12], jelly: [22, 20, 5, 8], eel: [26, 14, 3, 12], cuttlefish: [28, 22, 2, 8], sentinel: [22, 24, 5, 6], keeper: [26, 26, 3, 4] };
 // Whether the last save succeeded, shared by every area.
 let saved = true;
 // The way out of a conversation, offered whenever the hero comes back to the replies.
@@ -120,7 +123,7 @@ export class AreaScene extends Phaser.Scene {
   private props: Prop[] = [];
   private people: Phaser.Physics.Arcade.Sprite[] = [];
   private walls!: Phaser.Tilemaps.TilemapLayer;
-  private overlay?: BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView;
+  private overlay?: BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView;
   // A shop to open once the current conversation ends.
   private pendingShop?: ShopId;
   // A campfire to rest at once the current conversation ends.
@@ -135,6 +138,8 @@ export class AreaScene extends Phaser.Scene {
   private crumbling = new Map<string, number>();
   // What the church took, in memories, to raise one of the fallen: said once the conversation closes.
   private pendingTithe?: string[];
+  // The ending, to tell once the last conversation closes.
+  private pendingEnding?: Ending;
   private pendingFight?: Foe;
   private pendingCook = false;
   private pendingTravel?: keyof typeof WAYSTONES;
@@ -169,7 +174,7 @@ export class AreaScene extends Phaser.Scene {
     this.thrownOut = data?.caught;
     this.sentries = [];
     this.cleanup = new AbortController();
-    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.pendingChurch = false; this.exitMarkers = []; this.pendingBout = undefined; this.pendingTithe = undefined; this.leaping = false; this.lift = 0; this.crumbling = new Map(); this.pendingSail = undefined; this.pendingShells = undefined; this.pendingArm = undefined; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
+    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.pendingChurch = false; this.exitMarkers = []; this.pendingBout = undefined; this.pendingTithe = undefined; this.pendingEnding = undefined; this.leaping = false; this.lift = 0; this.crumbling = new Map(); this.pendingSail = undefined; this.pendingShells = undefined; this.pendingArm = undefined; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
     this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false; this.pendingShop = undefined; this.pendingRest = undefined; this.pendingFight = undefined;
   }
 
@@ -872,6 +877,9 @@ export class AreaScene extends Phaser.Scene {
     if(then.earn || then.pay) music.effect('coins');
     if(then.rest) music.effect('rest');
     // Raised for a memory instead of coins: the tide chooses which, as it does at a death.
+    // A memory found again, written down where he could read it.
+    if(then.recall) { saved=saveMemory(recall(loadMemory(), then.recall)) && saved; music.effect('find'); }
+    if(then.ending) this.pendingEnding=then.ending;
     if(then.tithe) {
       const owing=wipe(loadMemory(), 1);
       const taken=tideTakesAll(owing, loadWorld().deaths + 101 * ((loadWorld().fallen ?? []).length + 1));
@@ -931,6 +939,8 @@ export class AreaScene extends Phaser.Scene {
       this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.start(sail==='out' ? 'outlaw-port' : 'creek',{ spawn: sail==='out' ? 'from-creek' : 'from-causeway' }));
       return;
     }
+    const ending=this.pendingEnding;this.pendingEnding=undefined;
+    if(ending && !this.leaving) { this.time.delayedCall(400, () => this.openPanel(()=>new EndingView(ENDING_TITLES[ending], epilogue(loadWorld(), ending, held(loadMemory()).includes('name')), ()=>{ this.closePanel(); music.play(this.area.music); }))); return; }
     const tithe=this.pendingTithe;this.pendingTithe=undefined;
     if(tithe && !this.leaving) { this.time.delayedCall(250, () => this.say({ speaker: 'THE PRIEST', lines: [
       'He doesn\'t ask for coins. He puts his hand on your head instead, and holds it there until something goes.',
@@ -1025,7 +1035,7 @@ export class AreaScene extends Phaser.Scene {
         saved = saveMemory(wipe(loadMemory(), this.area.region === 'THE OCEAN' ? 2 : 1)) && saveWorld(drop(loadWorld()));
         this.scene.start('church');
       }
-    }, foe.encounter, { ...this.partyOptions(true, LIEUTENANTS.includes(foe.encounter)), ambush: Boolean(foe.ambush && foe.hidden), surprise: this.sneaking, waves: foe.waves, company: foe.company });
+    }, foe.encounter, { ...this.partyOptions(true, LIEUTENANTS.includes(foe.encounter) || foe.encounter === 'keeper'), ambush: Boolean(foe.ambush && foe.hidden), surprise: this.sneaking, waves: foe.waves, company: foe.company });
   }
 
   // Anyone carried off the field: rest won't bring them back. Only the church can.
@@ -1116,7 +1126,7 @@ export class AreaScene extends Phaser.Scene {
   }
 
   // A panel over the map: cooking, the journal, or a game of bones.
-  private openPanel(make: () => CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView) {
+  private openPanel(make: () => CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView) {
     if(this.overlay || this.leaving) return;
     this.player.setVelocity(0);
     this.held.clear();

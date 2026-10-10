@@ -104,3 +104,8 @@ export function hollow(memory: Memory): Hollow {
     kraken: has.includes('kraken'),
   };
 }
+
+// A lost memory found again, written down somewhere he can read it: it is his once more.
+export function recall(memory: Memory, id: MemoryId): Memory {
+  return memory.lost.includes(id) ? { ...memory, lost: memory.lost.filter(other => other !== id) } : memory;
+}

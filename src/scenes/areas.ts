@@ -14,6 +14,7 @@ import { abbey, barracks, battlefield, drove, fort, keep, ossuary, pass, rookery
 import { apothecary, causeway, creek, farBank, hospice, pens, wickmere } from '../content/marsh';
 import { archive, cellars, climb, hold, houseHall, ring, summit, upper } from '../content/holds';
 import { krakenGrave, openWater, port, reef, seaPens } from '../content/ocean';
+import { landing, lamp, lighthouse, whitehouse, works } from '../content/island';
 import { cistern, falls, fleet, gorge, lanes, orchard, peat, quarry, rows, shieling, spires, watchtower } from '../content/outskirts';
 import type { Encounter, Escort } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
@@ -885,6 +886,9 @@ export const OPEN_WATER: Area = {
     pens: { to: 'sea-pens', spawn: 'from-sea', prompt: 'Swim in to the fleet\'s pens' },
     grave: { to: 'kraken-grave', spawn: 'from-sea', prompt: 'Wade onto the sandbar' },
     fleet: { to: 'fleet', spawn: 'from-sea', prompt: 'Ride the current east, to the sunken boats' },
+    // South, past the charts, once the sea has told you where.
+    island: { to: 'landing', spawn: 'from-sea', prompt: 'Ride the current south, past the charts, to the light', requires: { flag: 'cuttlefish-slain' },
+      barred: { speaker: 'THE OCTOPUS', lines: ['"South is past the charts. I know the current. I don\'t know what\'s at the end of it, and neither do you yet."', '"The cuttlefish knows. Ask it, one way or the other."'] } },
     reef: { to: 'reef', spawn: 'from-sea', prompt: 'Dive down to the cuttlefish\'s reef', requires: { flag: 'grave-seen' },
       barred: { speaker: 'THE OCTOPUS', lines: ['"Not yet. You don\'t know what you\'re fighting for. Go and see the kraken first. South-east, on the sandbar."'] } },
   },
@@ -1063,4 +1067,64 @@ export const FALLS: Area = {
   decorate: scene => { wind(scene, 384, 704); snowfall(scene, 384, 704); },
 };
 
-export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY, CLIMB, HOLD, UPPER, ARCHIVE, HOUSE_HALL, PENS, CREEK, CELLARS, SUMMIT, RING, OUTLAW_PORT, OPEN_WATER, SEA_PENS, KRAKEN_GRAVE, REEF, ORCHARD, QUARRY, SHIELING, LANES, CISTERN, PEAT, FLEET, GORGE, SPIRES, ROWS, WATCHTOWER, FALLS];
+// The island past the charts: the church's landing under the lighthouse, the works, the white house, the tower, and the lamp.
+const ISLAND_GROUND: Pick<Area, 'region' | 'tileset' | 'ground' | 'surfaces'> = { region: 'THE ISLAND', tileset: 'island', ground: 'stone', surfaces: { 2: 'dirt', 5: 'wood', 21: 'dirt' } };
+const OVERSEER: Escort = { name: 'Works hand', art: 'sentinel', health: 26, weapon: 'hook', damage: 5 };
+export const LANDING: Area = {
+  ...ISLAND_GROUND, key: 'landing', map: 'landing', music: 'sea', place: 'The landing', dialogue: landing,
+  grade: { saturation: -0.45, brightness: 0.74, vignette: 0.55 }, npcs: [],
+  enemies: [{ point: 'marine-1', encounter: 'sentinel' }, { point: 'marine-2', encounter: 'sentinel' }, { point: 'marine-3', encounter: 'sentinel', company: [OVERSEER] }],
+  exits: {
+    out: { to: 'open-water', spawn: 'from-island', prompt: 'Ride the current back north' },
+    'tower-door': { to: 'lighthouse', spawn: 'spawn', prompt: 'Go into the lighthouse' },
+    'works-door': { to: 'works', spawn: 'spawn', prompt: 'Go into the works' },
+    'house-door': { to: 'whitehouse', spawn: 'spawn', prompt: 'Go into the white house' },
+  },
+  decorate(scene) {
+    // The beam, going round overhead, lighting the rock for a moment and moving on.
+    const beam = scene.add.triangle(352, 64, 0, 0, 900, -60, 900, 60, 0xfff4c8, 0.07).setOrigin(0, 0.5).setDepth(6).setBlendMode('ADD');
+    scene.tweens.add({ targets: beam, angle: 360, duration: 9000, repeat: -1 });
+  },
+};
+export const WORKS: Area = {
+  ...ISLAND_GROUND, key: 'works', map: 'works', music: 'crypt', place: 'The works', dialogue: works, ground: 'stone',
+  grade: { saturation: -0.6, brightness: 0.8, vignette: 0.6 },
+  npcs: [
+    { point: 'caged-1', texture: 'newt', hiddenIf: [{ flag: 'cages-opened' }] }, { point: 'caged-2', texture: 'lodger', hiddenIf: [{ flag: 'cages-opened' }] },
+    { point: 'caged-3', texture: 'old-mole', hiddenIf: [{ flag: 'cages-opened' }] },
+  ],
+  enemies: [{ point: 'foreman', encounter: 'sentinel', company: [OVERSEER, OVERSEER], hiddenIf: [{ flag: 'works-taken' }], defeat: { set: 'works-taken' } }],
+  exits: { out: { to: 'landing', spawn: 'from-works', prompt: 'Go back out to the landing' } },
+};
+export const WHITEHOUSE: Area = {
+  ...ISLAND_GROUND, key: 'whitehouse', map: 'whitehouse', music: 'crypt', place: 'The white house', dialogue: whitehouse,
+  grade: { saturation: -0.7, brightness: 0.86, vignette: 0.55 }, npcs: [],
+  enemies: [{ point: 'ghoul-1', encounter: 'ghoul' }],
+  exits: { out: { to: 'landing', spawn: 'from-house', prompt: 'Go back out to the landing' } },
+};
+export const LIGHTHOUSE: Area = {
+  ...ISLAND_GROUND, key: 'lighthouse', map: 'lighthouse', music: 'wake', place: 'The lighthouse', dialogue: lighthouse,
+  grade: { saturation: -0.4, brightness: 0.7, vignette: 0.65 }, npcs: [], enemies: [],
+  climbs: {
+    'climb-1': { top: 'top-1', prompt: 'Climb the tower wall', title: 'The lighthouse, the lower wall', height: 14, hazard: 'stones', every: 1150 },
+    'climb-2': { top: 'top-2', prompt: 'Climb the tower wall', title: 'The lighthouse, up to the lamp', height: 16, hazard: 'stones', every: 950 },
+  },
+  exits: {
+    out: { to: 'landing', spawn: 'from-tower', prompt: 'Go back out to the landing' },
+    up: { to: 'lamp', spawn: 'spawn', prompt: 'Climb the last stair to the lamp' },
+  },
+};
+export const LAMP: Area = {
+  ...ISLAND_GROUND, key: 'lamp', map: 'lamp', music: 'wake', place: 'The lamp room', dialogue: lamp,
+  grade: { saturation: -0.2, brightness: 1, vignette: 0.45 }, assets: ['keeper'],
+  npcs: [
+    { point: 'keeper', texture: 'keeper', hiddenIf: [{ flag: 'keeper-challenged' }, { flag: 'keeper-slain' }] },
+    { point: 'stranger', texture: 'stranger', hiddenIf: [{ flag: 'light-kept' }] },
+  ],
+  enemies: [{ point: 'keeper', encounter: 'keeper', hiddenIf: [{ flag: 'keeper-slain' }, { not: { flag: 'keeper-challenged' } }], defeat: { set: 'keeper-slain' } }],
+  // Where the Keeper falls, he stays.
+  props: [{ point: 'keeper', texture: 'keeper', hiddenIf: [{ not: { flag: 'keeper-slain' } }] }],
+  exits: { down: { to: 'lighthouse', spawn: 'from-lamp', prompt: 'Go back down the stair' } },
+};
+
+export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY, CLIMB, HOLD, UPPER, ARCHIVE, HOUSE_HALL, PENS, CREEK, CELLARS, SUMMIT, RING, OUTLAW_PORT, OPEN_WATER, SEA_PENS, KRAKEN_GRAVE, REEF, ORCHARD, QUARRY, SHIELING, LANES, CISTERN, PEAT, FLEET, GORGE, SPIRES, ROWS, WATCHTOWER, FALLS, LANDING, WORKS, WHITEHOUSE, LIGHTHOUSE, LAMP];

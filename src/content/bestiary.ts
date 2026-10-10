@@ -38,5 +38,7 @@ export const BESTIARY: Record<Encounter, string> = {
   jelly: 'A lantern jelly. Nobody dodges a jellyfish drifting over them, and everything it brushes, it poisons.',
   eel: 'It has watched the party fight. It casts the party\'s own strongest spell back at them, and nobody can dodge their own spell coming the wrong way.',
   cuttlefish: 'Kin to the kraken, uniting the sea to end the fish trade. It throws back the last spell you cast: a big damage spell comes back at you, a heal heals it, a ward wards it. Feed it the small ones, a snare or a ward, and fight with your hands.',
+  sentinel: 'The church\'s marines on the island landing: armoured, with boarding pikes. Every third blow the pike goes partway through a guard.',
+  keeper: 'The Keeper of the Light, the church\'s abbot on the island. His Lamplight blinds whoever shows the most mana: they lose their next move. Hide, or study it and bar it. Brought down once, he opens the lens all the way.',
   inquisitor: 'A royal investigator, certain of your guilt. His Verdict cannot be dodged or barred. You cannot win this yet. Run.',
 };

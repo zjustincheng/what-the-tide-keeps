@@ -15,7 +15,8 @@ export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm' | 'wa
   | 'raider' | 'ghoul' | 'vulture' | 'pair' | 'hyena' | 'inquisitor' | 'captain' | 'harrier'
   | 'mosquito' | 'scorpion' | 'brood' | 'apprentice' | 'viper'
   | 'hornet' | 'spider' | 'duellist' | 'cuckoo' | 'warder' | 'cricket' | 'flight' | 'champion'
-  | 'shark' | 'barracuda' | 'jelly' | 'eel' | 'cuttlefish';
+  | 'shark' | 'barracuda' | 'jelly' | 'eel' | 'cuttlefish'
+  | 'sentinel' | 'keeper';
 export const SPELL = 'Salt lance';
 // What an enemy is, which decides whose blows it fears. Spells ignore all of it: magic is the equaliser.
 export type Trait = 'armoured' | 'flying' | 'caster' | 'insect' | 'dead';
@@ -26,6 +27,7 @@ export const TRAITS: Record<Encounter, readonly Trait[]> = {
   brood: ['insect', 'flying'], apprentice: ['caster'], viper: ['caster'], hornet: ['insect', 'flying'], spider: ['insect'], duellist: ['caster', 'flying'], cuckoo: ['caster', 'flying'],
   warder: ['armoured'], cricket: ['insect'], flight: ['dead', 'flying'], champion: ['flying'],
   shark: ['armoured'], barracuda: [], jelly: [], eel: ['caster'], cuttlefish: ['caster'],
+  sentinel: ['armoured'], keeper: ['caster', 'flying'],
 };
 // How each hero's own blow fares against each kind: the bear's maul breaks armour and can't reach what flies;
 // the vulture's talons take things out of the air and skid off plate; the chameleon strikes casters as they gather.
@@ -44,7 +46,7 @@ export function venom(encounter: Encounter): number {
 }
 
 // What a spell the party studied hits for when the octopus throws it back, by its name.
-export const SPELL_POWER: Record<string, number> = { 'Salt lance': 14, Judgement: 14, 'Drowning toll': 10, 'Marsh-fire': 9, Souring: 7, 'Talon hex': 13, Verdict: 16 };
+export const SPELL_POWER: Record<string, number> = { 'Salt lance': 14, Judgement: 14, 'Drowning toll': 10, 'Marsh-fire': 9, Souring: 7, 'Talon hex': 13, Lamplight: 15, Verdict: 16 };
 export const MIMIC_COST = 4;
 // The spell an octopus can throw back: the last one written into the grimoire.
 export function mimicry(battle: Pick<Battle, 'studied'>): string | undefined {
@@ -55,13 +57,15 @@ export function mimicry(battle: Pick<Battle, 'studied'>): string | undefined {
 export const FALSE_MANA: Partial<Record<Encounter, number>> = { spider: 1, duellist: 2, cuckoo: 3 };
 // How hard unmasking the cuckoo hits him.
 export const UNMASK = 18;
+// The island's spell: the great lens turned on someone. It blinds whoever it catches, and they lose their next move.
+export const LAMPLIGHT = 'Lamplight';
 // The marsh's spell: it does little harm itself, but for a while afterward every heal burns instead.
 export const SOURING = 'Souring';
 // Each caster's spell. Until a spell is studied (analyzed, or survived once) its name is hidden, it can't be dodged,
 // and no barrier stops it. Once studied, it can be seen coming, dodged, and barred.
 export const ENEMY_SPELLS: Partial<Record<Encounter, string>> = {
   acolyte: SPELL, pair: SPELL, warden: 'Judgement', drowned: 'Drowning toll', wisp: 'Marsh-fire', inquisitor: 'Verdict',
-  apprentice: SOURING, viper: SOURING, duellist: 'Talon hex', cuckoo: 'Talon hex',
+  apprentice: SOURING, viper: SOURING, duellist: 'Talon hex', cuckoo: 'Talon hex', keeper: LAMPLIGHT,
 };
 export const STUDIABLE: readonly string[] = [...new Set(Object.values(ENEMY_SPELLS))];
 export type Phase = 'player' | 'enemy' | 'victory' | 'defeat' | 'fled';
@@ -79,10 +83,10 @@ export type Foe = number;
 // hits: the move lands this many times, each dodged on its own. unblockable: no guard or barrier stops it.
 // mirror: a hero spell an enemy throws back at the party, with that spell's effect turned on them.
 // spell: for a spell, which one it is. poison: rounds of poison a blow leaves, if it lands at all.
-// sour: a spell that turns the party's healing to harm for a while once cast.
+// sour: a spell that turns the party's healing to harm for a while once cast. blind: whoever it catches loses their next move.
 // dodge: how this blow is dodged, when it differs from what dodgeKind would choose.
 type Move = { name: string; type: 'physical' | 'spell'; spell?: string; dodge?: DodgeKind; damage: number; piercing?: number; revive?: boolean; drain?: boolean; feed?: boolean; hits?: number; unblockable?: boolean;
-  poison?: number; sour?: true; mirror?: SpellId;
+  poison?: number; sour?: true; mirror?: SpellId; blind?: true;
   window?: { perfect: number; graze: number }; undodgeable?: boolean };
 export type Member = Fighter & Readonly<{
   id: MemberId;
@@ -240,6 +244,11 @@ export const ENEMIES = {
     opening: 'An eel with a skin like a mirror slides out of the wreck. It has been watching you fight. It opens its mouth, and your own spell comes out of it.' },
   cuttlefish: { name: 'The cuttlefish', short: 'cuttlefish', health: 112, mana: 30, veiled: false,
     opening: 'The cuttlefish rises over the reef in shifting colours, and the colours are your own spells, written on its skin. "You came down here with the land\'s magic. Let me show you what it looks like from below."' },
+  // The island: the church's marines on the landing, and the Keeper of the Light.
+  sentinel: { name: 'A church marine', short: 'marine', health: 64, mana: 2, veiled: false,
+    opening: 'A marine in the church\'s grey, a boarding pike in one hand and a lantern on his belt. "Nobody lands here who isn\'t carried."' },
+  keeper: { name: 'The Keeper of the Light', short: 'keeper', health: 190, mana: 24, veiled: false,
+    opening: 'An albatross in the church\'s white, too old to fly, the lens\'s light behind him so that you can hardly look at him. "Convict. You came all this way to see where the fish comes from. Look, then."' },
   inquisitor: { name: 'The inquisitor', short: 'inquisitor', health: 600, mana: 60, veiled: false,
     opening: 'The largest signature you have ever felt. A ram in grey, the royal seal at his collar. "Convict. You are a long way from your church." You cannot win this. Run.' },
 } as const satisfies Record<Encounter, unknown>;
@@ -261,6 +270,8 @@ export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; healt
   brood: [{ name: 'Wriggler', health: 12, weapon: 'needle', damage: 3 }, { name: 'Wriggler', health: 12, weapon: 'needle', damage: 3 }],
   // The lost flight comes in formation.
   flight: [{ name: 'Courier', health: 20, weapon: 'frozen talons', damage: 4 }, { name: 'Courier', health: 20, weapon: 'frozen talons', damage: 4 }],
+  // The Keeper's lamplighters tend the lens beside him, with the hooks they use in the works.
+  keeper: [{ name: 'Lamplighter', health: 20, weapon: 'hook', damage: 5 }, { name: 'Lamplighter', health: 20, weapon: 'hook', damage: 5 }],
   // The cuttlefish keeps two of the sea's pilot fish at its side.
   cuttlefish: [{ name: 'Pilot', health: 16, weapon: 'bite', damage: 4 }, { name: 'Pilot', health: 16, weapon: 'bite', damage: 4 }],
   // The hyena's dead get up again, unless she has eaten them.
@@ -277,6 +288,12 @@ export const FRENZY = 2;
 export type SceneLine = Readonly<{ who: string; line: string }>;
 // rise: a share of its health the boss gets back, when it differs from RISE.
 export const STAGES: Partial<Record<Encounter, { title: string; line: string; scene: readonly SceneLine[]; rise?: number; enter?: (battle: Battle) => Partial<Battle> }>> = {
+  keeper: { title: 'The Keeper, with the lens open', line: 'The Keeper opens the lens all the way, and the light comes round every other turn now.', rise: 0.4, scene: [
+    { who: '', line: 'The Keeper goes down against the lens, and the light stops turning.' },
+    { who: 'THE KEEPER', line: 'Every barrel inland is a mouth that doesn\'t eat its neighbour. Every light on this rock is a war that didn\'t happen. I kept the peace.' },
+    { who: 'THE KEEPER', line: 'You were a guard here once. You know what the peace is made of. You ate it at the feast.' },
+    { who: '', line: 'He reaches up and throws the shutters off the lens, and stands up inside the light.' },
+  ], enter: battle => ({ followers: battle.followers.map(follower => ({ ...follower, health: follower.maxHealth })) }) },
   boar: { title: 'The boar, cornered', line: 'The boar gets back up out of the ash. He will charge every round now.', scene: [
     { who: '', line: 'The boar goes down on his knees in the ash of his own house.' },
     { who: 'THE BADGER', line: 'Stay down! It\'s done. Stay down!' },
@@ -653,6 +670,17 @@ function plainIntent(battle: Battle): Move & { tell: string } {
     return battle.round % 3 === 0
       ? { name: 'Ink', type: 'physical', tell: 'It clouds the water with ink, and strikes out of it, twice.', damage: 7, hits: 2, window: { perfect: 45, graze: 120 } }
       : { name: 'Arms', type: 'physical', tell: 'Its arms come over the reef for someone, and a guard won\'t hold all of them.', damage: 12, piercing: 4, window: { perfect: 55, graze: 140 } };
+  }
+  if (battle.encounter === 'sentinel') return battle.round % 3 === 0
+    ? { name: 'Pike thrust', type: 'physical', tell: 'He sets the pike and drives it in. Part of it goes through a guard.', damage: 11, piercing: 4, window: { perfect: 45, graze: 120 } }
+    : { name: 'Boarding hook', type: 'physical', tell: 'He swings the hook end of the pike, to drag someone in.', damage: 8, window: { perfect: 55, graze: 140 } };
+  if (battle.encounter === 'keeper') {
+    // The lens comes round every third turn, then every other once he has opened it all the way.
+    if (battle.round % (battle.stage === 2 ? 2 : 3) === 0) return { name: LAMPLIGHT, type: 'spell', spell: LAMPLIGHT, blind: true,
+      tell: `He turns the lens on whoever shows the most mana: ${LAMPLIGHT}, a spell. Whoever it catches loses their next move.`, damage: 10, window: { perfect: 45, graze: 120 } };
+    return battle.round % 3 === 1
+      ? { name: 'Rendering hook', type: 'physical', tell: 'He swings a hook from the works, the kind they hang things on. It goes through a guard.', damage: battle.stage === 2 ? 15 : 12, piercing: 5, window: { perfect: 45, graze: 120 } }
+      : { name: 'Salt', type: 'physical', tell: 'He throws salt from the vats, twice, at the eyes.', damage: 6, hits: 2, window: { perfect: 55, graze: 140 } };
   }
   if (battle.encounter === 'champion') {
     if (battle.round % 3 === 0) return { name: 'Larder', type: 'physical', tell: 'He picks someone out to hang on his thorns. He will take what he needs from them, fast.', damage: 15, drain: true, window: { perfect: 50, graze: 120 } };
@@ -1034,7 +1062,9 @@ export function strike(battle: Battle, dodge: Dodge = 'miss'): Battle {
     : avoided === 'graze' ? `${name} half twists away. The ${move.name.toLowerCase()} only grazes them.${downed ? ' They fall.' : ''}`
     : `The ${move.name.toLowerCase()} catches ${name}.${downed ? ' They fall.' : ''}`;
   const frenzy = battle.encounter === 'hyena' && downed ? FRENZY : 0;
-  const after = { ...battle, party, enemy, fury: battle.fury + frenzy, step: battle.step + 1, log: [...battle.log, message, ...(enemy.health > battle.enemy.health ? [`The ${ENEMIES[battle.encounter].short} swells with what it took.`] : []), ...(frenzy ? ['The hyena laughs. Someone falling only makes her stronger.'] : [])] };
+  // A blinding spell that lands at all takes the target's next move.
+  const blinded = move.blind && !blocked && avoided !== 'perfect' && party.find(member => member.id === target.id)!.health > 0;
+  const after = { ...battle, party, enemy, fury: battle.fury + frenzy, step: battle.step + 1, stunned: blinded ? target.id : battle.stunned, log: [...battle.log, message, ...(blinded ? [`The light fills ${name}'s eyes. They will lose their next move.`] : []), ...(enemy.health > battle.enemy.health ? [`The ${ENEMIES[battle.encounter].short} swells with what it took.`] : []), ...(frenzy ? ['The hyena laughs. Someone falling only makes her stronger.'] : [])] };
   const done = party.every(member => member.health === 0) || !enemyMoves(battle)[battle.step + 1];
   return done ? enemyTurnEnds(after) : after;
 }
