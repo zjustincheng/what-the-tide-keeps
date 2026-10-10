@@ -68,7 +68,7 @@ export class BattleView {
           <h3>${info.name}</h3><div class="health-bar" role="meter" aria-label="${info.name} health" aria-valuemin="0" aria-valuemax="100"><span></span></div><p class="member-condition"></p><p class="mana member-mana"></p><p class="member-status"></p>
           <label class="protect-label">Ally <select aria-label="${member.id === 'bear' ? 'Bear protection target' : member.id === 'frog' ? 'Frog dose target' : info.name + ' barrier target'}">${this.state.party.map(target => `<option value="${target.id}" ${target.id === member.id ? 'selected' : ''}>${MEMBERS[target.id].name}</option>`).join('')}</select></label>
           <div class="member-actions"><button data-action="attack" aria-label="${info.name} attack">${info.attack}<small>${member.id === 'frog' ? (venom(encounter) > 1 ? 'Poison · strong' : venom(encounter) === 0 ? 'Poison · useless' : 'Physical') : matchup(member.id, encounter) > 1 ? 'Physical · strong' : matchup(member.id, encounter) < 1 ? 'Physical · weak' : 'Physical'}</small></button><button data-action="support" aria-label="${info.name} support" title="${SUPPORT_HELP[member.id]}">${info.support}<small>${SUPPORT_SHORT[member.id]}</small></button><button data-action="gather" aria-label="${info.name} gather">Gather<small>+${GATHER} mana</small></button></div>
-          ${encounter === 'cuckoo' ? `<div class="unmask-row" title="Strike a friend, in case they are the cuckoo. His mana never moves. Strike the wrong one, and you hurt a friend.">Strike, in case it's him: ${this.state.party.filter(ally => ally.id !== member.id).map(ally => `<button type="button" data-unmask="${ally.id}" aria-label="${info.name} strike ${MEMBERS[ally.id].name}">${MEMBERS[ally.id].name}</button>`).join('')}</div>` : ''}
+          ${encounter === 'cuckoo' ? `<button class="unmask-button" type="button" data-unmask="${member.id}" aria-label="Strike ${info.name}" title="Strike ${info.name}, in case it is the cuckoo wearing their shape. His mana never moves. The first ready hero does it. Strike the wrong one, and you hurt a friend.">Strike<small>In case it's him</small></button>` : ''}
           ${member.spell ? `<button class="cast-button" data-cast aria-label="${info.name} cast ${SPELLS[member.spell].name}">${SPELLS[member.spell].name}<small>${SPELLS[member.spell].cost} mana · ${SPELLS[member.spell].length} keys</small></button>` : ''}
           <details class="spellcraft"><summary>Spellcraft</summary><button data-action="suppress" aria-label="${info.name} suppress">Suppress · ${cost(member, 'suppress')} mana</button><button data-action="barrier" aria-label="${info.name} barrier" title="A barrier stops spells, but only ones you have studied, for the ally chosen on this card. It does nothing against physical blows: guard against those.">Barrier · 5 mana</button><button data-action="analyze" aria-label="${info.name} analyze">Analyze · 2 mana</button></details>
           ${SUPPLY_IDS.some(id => this.state.supplies[id] > 0) ? `<details class="spellcraft supplies-menu"><summary>Supplies</summary>${SUPPLY_IDS.map(id => `<button data-supply="${id}" aria-label="${info.name} use ${SUPPLIES[id].name}"></button>`).join('')}</details>` : ''}
@@ -88,7 +88,7 @@ export class BattleView {
     const signal = this.cleanup.signal;
     for (const member of this.state.party) {
       const card = this.card(member.id);
-      card.querySelectorAll<HTMLButtonElement>('[data-unmask]').forEach(button => button.addEventListener('click', () => this.choose(member.id, 'unmask', button.dataset.unmask as MemberId), { signal }));
+      card.querySelector<HTMLButtonElement>('[data-unmask]')?.addEventListener('click', () => { const striker = this.striker(member.id); if (striker) this.choose(striker, 'unmask', member.id); }, { signal });
       for (const action of ['attack', 'support', 'gather', 'suppress', 'barrier', 'analyze'] as const) {
         card.querySelector(`[data-action="${action}"]`)?.addEventListener('click', () => {
           const target = (action === 'barrier' || ((member.id === 'bear' || member.id === 'frog') && action === 'support')) ? card.querySelector<HTMLSelectElement>('select')!.value as MemberId : member.id;
@@ -225,6 +225,11 @@ export class BattleView {
     const sounds: Record<Action, Sound> = { attack: ({ chameleon: 'lash', bear: 'maul', vulture: 'talons', frog: 'lash' } as const)[actor], support: actor === 'vulture' || actor === 'frog' ? 'gather' : 'block', suppress: 'open', barrier: 'barrier', analyze: 'key', gather: 'gather', unmask: 'hit' };
     music.effect(sounds[action]);
     this.afterAction();
+  }
+
+  // Who strikes a suspected friend: the first ready hero who isn't them, the hero first, since the cuckoo never wears his shape.
+  private striker(target: MemberId): MemberId | undefined {
+    return this.state.party.find(member => member.id !== target && canAct(this.state, member.id, 'unmask', target))?.id;
   }
 
   // Food and salts go to the ally chosen on the card; salts find the fallen if that ally is standing. Firepots go where attacks go.
@@ -559,9 +564,8 @@ export class BattleView {
         : member.guardingFor ? `Guarding ${MEMBERS[member.guardingFor].name}` : member.focused ? 'Focused'
         : member.acted ? 'Acted' : done ? '' : 'Ready';
       for (const action of ['attack', 'support', 'gather', 'suppress', 'barrier', 'analyze'] as const) card.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)!.disabled = Boolean(this.casting) || !canAct(state, member.id, action, member.id, action === 'attack' ? this.foe() : 0);
-      card.querySelectorAll<HTMLButtonElement>('[data-unmask]').forEach(button => {
-        button.disabled = Boolean(this.casting) || !canAct(state, member.id, 'unmask', button.dataset.unmask as MemberId);
-      });
+      const strike = card.querySelector<HTMLButtonElement>('[data-unmask]');
+      if (strike) strike.disabled = Boolean(this.casting) || !this.striker(member.id);
       card.querySelectorAll<HTMLButtonElement>('[data-supply]').forEach(button => {
         const supply = button.dataset.supply as SupplyId;
         button.textContent = `${SUPPLIES[supply].name} · ${state.supplies[supply]} left`;

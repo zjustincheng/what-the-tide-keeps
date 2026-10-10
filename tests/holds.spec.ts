@@ -119,7 +119,7 @@ test('the cuckoo wears the lord\'s face, then a friend\'s; strike the one whose 
   await go(page, 'hall-of-house', 200, 104, 'Speak to the lord');
   await talk(page, 'You.re not the lord');
   await expect(page.getByRole('heading', { name: 'The lord of the house' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Bear strike Vulture' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Strike Bear' })).toBeEnabled();
   // He slips into the party as the bear: strike at the bear.
   await page.evaluate(async () => {
     const { game } = await import('/src/main.ts');
@@ -128,9 +128,17 @@ test('the cuckoo wears the lord\'s face, then a friend\'s; strike the one whose 
     view.render();
   });
   await expect(page.locator('#enemy-condition')).toHaveText('Gone from his chair. He is among you.');
-  await page.getByRole('button', { name: 'Vulture strike Bear' }).click();
+  await page.getByRole('button', { name: 'Strike Bear' }).click();
   await expect(page.getByRole('log')).toContainText('The cuckoo tumbles out of the shape');
-  await win(page);
+  // The hero struck him, so the vulture finishes it.
+  await page.evaluate(async () => {
+    const { game } = await import('/src/main.ts');
+    const view = game.scene.getScenes(true)[0].overlay;
+    view.state = { ...view.state, stage: 2, enemy: { ...view.state.enemy, health: 1 } };
+    view.render();
+  });
+  await page.getByRole('button', { name: 'Vulture attack', exact: true }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
   expect((await saved(page)).flags).toContain('cuckoo-slain');
   // The rookery opens, and there is a letter for you.
   await start(page, { flags: [...MARSH_DONE, 'cuckoo-slain'] }, 'hold', 'from-climb');

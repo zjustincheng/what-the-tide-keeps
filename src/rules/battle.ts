@@ -551,7 +551,7 @@ function plainIntent(battle: Battle): Move & { tell: string } {
     ? { name: 'Talon hex', type: 'spell', spell: 'Talon hex', tell: 'His talons trace something in the air: Talon hex, a spell. His mana display doesn\'t flicker. Watch it.', damage: 13, window: { perfect: 45, graze: 120 } }
     : { name: 'Rapier', type: 'physical', tell: 'He comes on with the rapier, twice, very correct.', damage: 5, hits: 2, window: { perfect: 55, graze: 140 } };
   if (battle.encounter === 'cuckoo') {
-    if (battle.impostor) return { name: 'Knife in the ranks', type: 'physical', tell: 'He is somewhere among you, wearing a friend. Whoever\'s mana hasn\'t moved is him: strike them from another hero\'s card. Until then, a knife comes from inside the party, and no guard is watching for it.', damage: 11, unblockable: true, undodgeable: true };
+    if (battle.impostor) return { name: 'Knife in the ranks', type: 'physical', tell: 'He is somewhere among you, wearing a friend. Whoever\'s mana hasn\'t moved is him: press Strike on their card. Until then, a knife comes from inside the party, and no guard is watching for it.', damage: 11, unblockable: true, undodgeable: true };
     if (battle.round % (battle.stage === 2 ? 2 : 3) === 1 && battle.round > 1)
       return { name: 'Talon hex', type: 'spell', spell: 'Talon hex', tell: 'He traces the house\'s sign in the air: Talon hex, a spell.', damage: 14, window: { perfect: 45, graze: 120 } };
     return { name: 'Borrowed blade', type: 'physical', tell: 'He fights with the lord\'s sword, the way the lord was taught.', damage: 12, piercing: 3, window: { perfect: 50, graze: 130 } };
