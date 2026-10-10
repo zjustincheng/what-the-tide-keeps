@@ -16,7 +16,9 @@ export class EquipmentView {
   private owned: KeepsakeId[];
   private books: BookId[];
 
-  constructor(private gear: Gear, private carried: Books, found: readonly Found[], private party: readonly MemberId[], private hollow: Hollow, heroImage: string, onChange: (gear: Gear, books: Books) => void, onClose: () => void, private tempered: readonly KeepsakeId[] = []) {
+  constructor(private gear: Gear, private carried: Books, found: readonly Found[], private party: readonly MemberId[], private hollow: Hollow, heroImage: string, onChange: (gear: Gear, books: Books) => void, onClose: () => void, private tempered: readonly KeepsakeId[] = [],
+    // Who waits out fights, once four have joined, and how to send someone else to the bench.
+    private waiting?: MemberId, onBench?: (member: MemberId) => void) {
     this.owned = found.filter((id): id is KeepsakeId => id in KEEPSAKES);
     // Each hero's own grimoire is always theirs to carry; others must be found.
     // Only the grimoires of heroes who have joined, and those found along the way.
@@ -29,10 +31,11 @@ export class EquipmentView {
     this.root.tabIndex = -1;
     this.root.innerHTML = `
       <div class="battle-heading"><p class="eyebrow">THE CONDEMNED</p><h2 id="equipment-title">Equipment</h2>
-      <p class="equipment-intro">A grimoire sets a hero's spell. Each hero also holds ${SLOTS} keepsakes, kept through every death, most with a drawback.</p></div>
+      <p class="equipment-intro">A grimoire sets a hero's spell. Each hero also holds ${SLOTS} keepsakes, kept through every death, most with a drawback.${this.waiting ? ' Three fight at a time; the fourth waits.' : ''}</p></div>
       <div class="party-roster" data-size="${party.length}">${party.map(id => `<section class="member-card" data-member="${id}" aria-label="${MEMBERS[id].name}">
         <div class="fighter"><img alt="" src="${id === 'chameleon' ? heroImage : `${import.meta.env.BASE_URL}assets/${id}.svg`}" /></div>
         <h3>${MEMBERS[id].name}</h3><p class="equipment-stats"></p>
+        ${this.waiting && id !== 'chameleon' ? `<button class="bench-toggle" type="button" data-bench="${id}"></button>` : ''}
         <label class="keepsake-slot">Grimoire<select data-book aria-label="${MEMBERS[id].name} grimoire"></select><small></small></label>
         ${Array.from({ length: SLOTS }, (_, slot) => `<label class="keepsake-slot">Keepsake ${slot + 1}
           <select data-slot="${slot}" aria-label="${MEMBERS[id].name} keepsake ${slot + 1}"></select><small></small></label>`).join('')}
@@ -51,6 +54,12 @@ export class EquipmentView {
       this.root.querySelector<HTMLSelectElement>(`[data-member="${member}"] ${select.hasAttribute('data-book') ? '[data-book]' : `[data-slot="${select.dataset.slot}"]`}`)?.focus();
     }, { signal });
     this.root.querySelector('#equipment-close')!.addEventListener('click', onClose, { signal });
+    // Three fight at a time: sending one hero to wait brings the one who was waiting back.
+    this.root.querySelectorAll<HTMLButtonElement>('[data-bench]').forEach(button => button.addEventListener('click', () => {
+      const member = button.dataset.bench as MemberId;
+      if (member === this.waiting) return;
+      this.waiting = member; onBench?.(member); music.effect('select'); this.render();
+    }, { signal }));
     this.root.addEventListener('keydown', event => {
       if (event.key === 'Escape') { event.preventDefault(); onClose(); return; }
       if (event.key !== 'Tab') return;
@@ -69,6 +78,13 @@ export class EquipmentView {
     for (const id of this.party) {
       const card = this.root.querySelector<HTMLElement>(`[data-member="${id}"]`)!;
       const member = party.find(member => member.id === id)!;
+      const bench = card.querySelector<HTMLButtonElement>('[data-bench]');
+      if (bench) {
+        bench.textContent = id === this.waiting ? 'Waits · the others fight' : 'Fights · send to wait';
+        bench.setAttribute('aria-pressed', String(id === this.waiting));
+        bench.setAttribute('aria-label', `${MEMBERS[id].name} ${id === this.waiting ? 'waits out fights' : 'fights; send to wait'}`);
+      }
+      card.dataset.waiting = String(id === this.waiting);
       card.querySelector('.equipment-stats')!.textContent = `Health ${member.maxHealth} · Mana ${member.maxMana} · Damage ${MEMBERS[id].damage + member.gear.damage}`;
       const book = card.querySelector<HTMLSelectElement>('[data-book]')!;
       const carrying = this.carried[id];

@@ -252,7 +252,7 @@ These are prototype combat encounters in the church, not the final regional plac
 
 ## Companions
 
-As in the story, the chameleon sets out alone; his companions are scattered across the regions and must be found. So far only the **bear** can join. He is chained to the millstone west of the stream, and the miller answers only to a writ. The reeve in Millbrook will sign one once the pests are cleared from his fields: the locust in the wheat and the weevil in the hay yard. He also hands it over, pests or no pests, once the boar is beaten, and he'll sell it for 60 coins. Asking him "About the bear." tells you exactly which pests are left. Show the writ to the miller and the bear joins for good. Breaking the chain at night, the guideline's third way, needs nighttime, which isn't built yet. The vulture, the frog, and the octopus wait in regions still to come. The equipment screen and battles show only the heroes who have joined.
+As in the story, the chameleon sets out alone; his companions are scattered across the regions and must be found. The **bear** is chained to the millstone west of the stream, and the miller answers only to a writ. The reeve in Millbrook will sign one once the pests are cleared from his fields: the locust in the wheat and the weevil in the hay yard. He also hands it over, pests or no pests, once the boar is beaten, and he'll sell it for 60 coins. Asking him "About the bear." tells you exactly which pests are left. Show the writ to the miller and the bear joins for good. The vulture joins in the highlands and the **frog** in the marsh; the octopus waits in a region still to come. The equipment screen and battles show only the heroes who have joined. **Three fight at a time**: once the frog has joined, one companion waits out fights. The newest waits by default; on the equipment screen (Tab), each companion's **Fights / Waits** button sends them to the bench and brings the waiting one back. The hero always fights.
 
 ## The farmland
 
@@ -342,6 +342,19 @@ People you already know have darker things to say if you ask: the priest (once y
 ### Anchors
 
 The vulture's note teaches **anchors**. Once she has joined, every rest at a fire, bed, or cot offers to **write a memory down**. A written memory can't be chosen when the next wipe takes something; after that death it has to be written again. There is one slot. Anchors are saved with the memories in `tide-keeps.memory.v1`.
+
+## The marsh
+
+Once the hyena is dead, the priest sends the party downriver: a sickness in the river towns, and the church's stores spoiling at Wickmere. The **crane at the weir** ferries you down ("Take the ferry downriver"); until then she turns you back.
+
+- **The causeway.** Boardwalks over black water, in **fog**: enemies see you from less far off, and you can't see their mana until you are close. Mosquitoes poison; water scorpions wait under the boards. An old coypu eats only what he catches and hasn't been sick once. Off the main walk, the **reed-bed queen** guards her eggs: her blood cloud poisons through any guard, she drinks what she bites, and she hatches more of her brood.
+- **Wickmere.** A stilt town where the river meets the tide. The magistrate has caged everyone venomous (pay the newt's "fine" to free her); the smokehouse otter notices the church barrels come upriver already resealed; a widow says her husband was sick after supper, not after a cough. The herbalist sells **antivenom**. There is a waystone, a fire, and fishing under the decks.
+- **The ferryman.** Kill the reed-bed queen and he teaches you **Still the water**, an old river word that makes the channel firm enough to walk on.
+- **The far bank.** The church storehouse, roof fallen in. The viper's **apprentice**, a toad who believed her, casts **Souring**. Under his apron is a vial of milked venom and a dropper the size of the holes in every sack. Three crates nobody spoiled are sealed and marked FOR THE LIGHTHOUSE.
+- **The hospice.** The **frog** heals under guard behind a grate. She remembers the party but not the feast, and no longer believes you were framed. Show her the vial and she comes to stop a poisoner: not for you.
+- **The flooded apothecary.** Only with the frog. The **viper**, a healer whose patient died of a fever and who was blamed and drowned for it, talks before she fights. Everyone starts **poisoned** in her shop, and her Souring turns healing into harm. Brought down once, she sheds her skin and the air goes bitter. Beaten, she lies in the water and still talks: the man with no fur was the only one who ever asked what really happened. She leaves the **Viper's fang** (frog: dart hits 3 harder, 3 less health); afterwards the hospice sister gives you her **handbell** (6 more health, shows 2 more mana).
+
+**Poison** bites at the end of every enemy turn (2 health) and counts down. A poisoned blow only poisons if it lands: a perfect dodge keeps it out. Heals draw it out; antivenom draws it out without healing. **Souring** is a spell: for two turns after it lands, every heal (spells, supplies, the frog's dose) burns for as much as it would have mended. Like other spells it is hidden until studied. **The frog** fights with one toxin in two doses: her **dart** poisons the enemy (3 a round for 3 rounds), and her **Dose** mends the ally chosen on her card by 6 and draws out their poison. Her grimoire, the **Hospice litany**, teaches **Bitter tonic** (5 health to everyone, and the poison out of them).
 
 ## The capital
 

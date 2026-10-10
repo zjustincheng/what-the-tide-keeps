@@ -2,7 +2,7 @@
 // is drawn by the caller and passed in, so these rules stay deterministic and testable.
 
 export type FishId = 'minnow' | 'perch' | 'eel' | 'char';
-export type SpotId = 'pond' | 'stream' | 'dewpond' | 'fen' | 'weir' | 'tarn';
+export type SpotId = 'pond' | 'stream' | 'dewpond' | 'fen' | 'weir' | 'tarn' | 'causeway' | 'wickmere';
 export type Catch = Readonly<Record<FishId, number>>;
 export const NO_CATCH: Catch = { minnow: 0, perch: 0, eel: 0, char: 0 };
 
@@ -25,6 +25,9 @@ export const SPOTS: Record<SpotId, { name: string; odds: Record<FishId, number> 
   fen: { name: "The otter's run", odds: { minnow: 0.1, perch: 0.25, eel: 0.65, char: 0 } },
   weir: { name: 'The eel weir', odds: { minnow: 0.15, perch: 0.35, eel: 0.5, char: 0 } },
   tarn: { name: 'The hole in the ice', odds: { minnow: 0.1, perch: 0.3, eel: 0, char: 0.6 } },
+  // Brackish water: eels come up with the tide, and little else will live in it now.
+  causeway: { name: 'The black water', odds: { minnow: 0.2, perch: 0.15, eel: 0.65, char: 0 } },
+  wickmere: { name: 'Under the decks', odds: { minnow: 0.45, perch: 0.3, eel: 0.25, char: 0 } },
 };
 
 // roll is a number in [0, 1).

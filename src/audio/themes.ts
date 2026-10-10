@@ -4,7 +4,7 @@ import type { Encounter } from '../rules/battle';
 
 export type Voice = 'harp' | 'pluck' | 'flute' | 'strings' | 'staccato' | 'organ' | 'bell' | 'celesta' | 'bass' | 'choir' | 'drum' | 'snare';
 export type NoteEvent = Readonly<{ beat: number; voice: Voice; midi: number; beats: number; velocity: number }>;
-export type ThemeId = 'church' | 'fields' | 'town' | 'wilds' | 'hearth' | 'battle' | 'boss' | 'wake' | 'highlands';
+export type ThemeId = 'church' | 'fields' | 'town' | 'wilds' | 'hearth' | 'battle' | 'boss' | 'wake' | 'highlands' | 'marsh';
 export type Theme = Readonly<{ name: string; bpm: number; beatsPerBar: number; bars: number; events: readonly NoteEvent[] }>;
 
 type Quality = 'm' | 'M';
@@ -67,6 +67,12 @@ const HIGHLANDS_MELODY: Line = [
   [74, 2], [72, 1], [70, 1], [69, 3], [66, 1], [67, 2], [62, 2], [67, 4],
 ];
 
+// The marsh: a low choir, celesta drips that never quite land on the beat, and a harp turning between two chords. B Phrygian, close and wet.
+const MARSH_CHORDS: Chord[] = [[35, 'm'], [36, 'M'], [35, 'm'], [33, 'M'], [35, 'm'], [36, 'M'], [31, 'M'], [30, 'M']];
+const MARSH_CHOIR: Line = [[59, 8], [60, 8], [62, 8], [59, 8]];
+const MARSH_DRIPS: Line = [[null, 1.5], [83, 0.5], [null, 3], [78, 0.5], [null, 2.5], [79, 1], [null, 4.5], [83, 0.5], [null, 1], [81, 0.5], [null, 6],
+  [null, 2.5], [78, 0.5], [null, 3], [76, 1], [null, 3.5]];
+
 // Indoors: a music-box lullaby by the hearth. F major.
 const HEARTH_CHORDS: Chord[] = [[41, 'M'], [38, 'm'], [34, 'M'], [36, 'M'], [41, 'M'], [45, 'm'], [34, 'M'], [36, 'M']];
 const HEARTH_MELODY: Line = [[77, 1], [76, 1], [72, 1], [74, 2], [69, 1], [70, 1], [74, 1], [77, 1], [76, 3], [77, 1], [81, 1], [79, 1], [76, 2], [72, 1], [74, 1], [72, 1], [70, 1], [72, 3]];
@@ -125,6 +131,15 @@ export const THEMES: Record<ThemeId, Theme> = {
     ]),
     ...line('flute', HIGHLANDS_MELODY, 0.16),
   ] },
+  marsh: { name: 'The marsh', bpm: 54, beatsPerBar: 4, bars: 8, events: [
+    ...perBar(MARSH_CHORDS, 4, (chord, start) => [
+      { beat: start, voice: 'bass', midi: chord[0], beats: 4, velocity: 0.18 },
+      ...held('strings', chord, start, 4, 0.045, 12),
+      ...arpeggio('harp', chord, start + 0.5, [0, 'third', 7], 1.25, 0.1, 2, 24),
+    ]),
+    ...line('choir', MARSH_CHOIR, 0.09),
+    ...line('celesta', MARSH_DRIPS, 0.1),
+  ] },
   hearth: { name: 'By the hearth', bpm: 70, beatsPerBar: 3, bars: 8, events: [
     ...perBar(HEARTH_CHORDS, 3, (chord, start) => [...held('strings', chord, start, 3, 0.05, 24), { beat: start, voice: 'bass', midi: chord[0] + 12, beats: 3, velocity: 0.12 }]),
     ...line('celesta', HEARTH_MELODY, 0.16),
@@ -160,7 +175,7 @@ export const THEMES: Record<ThemeId, Theme> = {
 export const THEME_IDS = Object.keys(THEMES) as ThemeId[];
 
 // Elites and bosses get the darker battle music.
-const BOSSES: readonly Encounter[] = ['boar', 'warden', 'leech', 'swarm', 'pack', 'drowned', 'vulture', 'pair', 'hyena', 'inquisitor', 'captain'];
+const BOSSES: readonly Encounter[] = ['boar', 'warden', 'leech', 'swarm', 'pack', 'drowned', 'vulture', 'pair', 'hyena', 'inquisitor', 'captain', 'brood', 'apprentice', 'viper'];
 export function battleTheme(encounter: Encounter): ThemeId {
   return BOSSES.includes(encounter) ? 'boss' : 'battle';
 }

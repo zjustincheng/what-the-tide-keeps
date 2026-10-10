@@ -31,6 +31,12 @@ export const SHOPS: Record<ShopId, { title: string; note: string; wares: Ware[] 
     note: 'Church-licensed remedies, priced on a schedule for the branded.',
     wares: [{ supply: 'smelling-salts' }, { supply: 'smoked-fish' }, { supply: 'firepot' }, { gear: 'saints-medal', price: 40 }],
   },
+  // Wickmere's herbalist: antivenom, which everyone buys, for a sickness it doesn't cure.
+  herbalist: {
+    title: 'The herbalist',
+    note: 'Bunches of marsh herbs hang from the ceiling. The antivenom is on the counter, where she can watch it.',
+    wares: [{ supply: 'antivenom' }, { supply: 'trail-cake' }, { supply: 'herb-salve' }, { supply: 'smelling-salts' }],
+  },
   // After dark, behind the tannery: things the church would rather nobody owned.
   'night-market': {
     title: 'The shuttered stall, open',

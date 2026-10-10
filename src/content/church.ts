@@ -7,9 +7,14 @@ export const church: Dialogue = {
     'Easy. Sit up slowly. You were a long time coming back this time.',
     'You asked me to remember something for you, last time. I am sorry. You never told me what it was.',
     'The church has work for you. Grain has stopped reaching the highlands. Take the south door into the farmland and find out why.',
-  ], variants: [{ if: { flag: 'hyena-slain' }, lines: [
+  ], variants: [{ if: { flag: 'viper-slain' }, lines: [
+    'Wickmere writes that the sickness has stopped. A venomous outbreak, properly contained. The church is satisfied.',
+    'Someone also wrote to ask what the lighthouse is. The letter went upstairs, and nobody has come back down with an answer.',
+  ] }, { if: { flag: 'hyena-slain' }, lines: [
     'You came back from the highlands. Most don\'t.',
     'Whatever you found under that abbey, don\'t tell me. Not in here.',
+    'New orders. A sickness in the river towns, and the church\'s stores at Wickmere are spoiling. There is a hospice there. Guard it, and find out what is spoiling.',
+    'The crane at the weir will ferry you downriver. She won\'t like it.',
   ] }, { if: { flag: 'boar-defeated' }, lines: [
     'Easy. Sit up slowly. The carts are moving again. The church is grateful, in its way.',
     'New orders. Bodies are going missing from the old battlefield below the highland fort. The garrison calls whatever takes them grave-eaters. Put them down.',

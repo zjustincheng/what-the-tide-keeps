@@ -3,7 +3,7 @@ import { createBattle, drainedAfter, enemyMana, ENEMIES, MEMBERS, woundsAfter } 
 import type { BattleOptions } from '../rules/battle';
 import type { Encounter } from '../rules/battle';
 import { anchor, forget, held, hollow, MEMORY_IDS, wipe } from '../rules/memory';
-import { apply, conversation, drop, fill, fleeing, holds, replies, rest, roster } from '../rules/world';
+import { apply, conversation, drop, fill, fleeing, holds, lineup, replies, rest, roster } from '../rules/world';
 import type { Condition, Context, Effect, ShopId } from '../rules/world';
 import type { Choice, Conversation } from '../content/dialogue';
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
@@ -59,10 +59,12 @@ const element = <T extends HTMLElement>(id: string) => document.getElementById(i
 // What has been picked, by area and point, since the hero last rested. Resting lets it grow back.
 const PICKED = new Set<string>();
 // How often hiding costs every hero a point of mana, in milliseconds.
+// How near the hero must be to see a signature through fog.
+const FOG_SIGHT = 120;
 const HIDE_DRAIN = 2500;
 // Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
 const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8], warden: [22, 26, 5, 4], leech: [28, 24, 2, 4], hound: [20, 22, 6, 8], pack: [22, 24, 5, 6], wisp: [14, 14, 9, 9], drowned: [20, 26, 6, 4],
-  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4], captain: [22, 24, 5, 6], harrier: [22, 18, 5, 8] };
+  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4], captain: [22, 24, 5, 6], harrier: [22, 18, 5, 8], mosquito: [20, 16, 6, 8], scorpion: [24, 16, 4, 12], brood: [26, 20, 3, 8], apprentice: [22, 22, 5, 8], viper: [26, 20, 3, 10] };
 // Whether the last save succeeded, shared by every area.
 let saved = true;
 // The way out of a conversation, offered whenever the hero comes back to the replies.
@@ -139,7 +141,7 @@ export class AreaScene extends Phaser.Scene {
     this.load.svg(`${this.area.tileset}-tiles`, `${base}assets/${this.area.tileset}-tiles.svg`);
     this.load.tilemapTiledJSON(`${this.area.map}-map`, `${base}maps/${this.area.map}.json`);
     // Companions' art is needed everywhere, for their portraits in the health display.
-    for (const key of [...this.area.enemies.map(enemy => enemy.encounter), ...this.area.assets ?? [], 'bear', 'vulture']) if (!this.textures.exists(key)) this.load.svg(key, `${base}assets/${key}.svg`);
+    for (const key of [...this.area.enemies.map(enemy => enemy.encounter), ...this.area.assets ?? [], 'bear', 'vulture', 'frog']) if (!this.textures.exists(key)) this.load.svg(key, `${base}assets/${key}.svg`);
   }
 
   create() {
@@ -694,7 +696,7 @@ export class AreaScene extends Phaser.Scene {
         saved = saveMemory(wipe(loadMemory())) && saveWorld(drop(loadWorld()));
         this.scene.start('church');
       }
-    }, foe.encounter, { ...this.partyOptions(), ambush: Boolean(foe.ambush && foe.hidden), surprise: this.sneaking, waves: foe.waves });
+    }, foe.encounter, { ...this.partyOptions(true), ambush: Boolean(foe.ambush && foe.hidden), surprise: this.sneaking, waves: foe.waves });
   }
 
   // A shop opens after its keeper has spoken, if there is anything left to sell.
@@ -790,7 +792,8 @@ export class AreaScene extends Phaser.Scene {
     music.effect('open');
     this.overlay = new EquipmentView(loadGear(), settle(loadBooks(), roster(loadWorld())), loadWorld().found, roster(loadWorld()), hollow(loadMemory()), this.textures.getBase64('hero'),
       (gear, books) => { saved = saveGear(gear) && saveBooks(books); },
-      () => { this.overlay?.destroy(); this.overlay = undefined; this.renderMemory(); this.resumeExploration(); }, loadWorld().tempered ?? []);
+      () => { this.overlay?.destroy(); this.overlay = undefined; this.renderMemory(); this.resumeExploration(); }, loadWorld().tempered ?? [],
+      roster(loadWorld()).find(member => !lineup(loadWorld()).includes(member)), member => { saved = saveWorld({ ...loadWorld(), bench: member }) && saved; });
   }
 
   private writeDown(then: () => void) {
@@ -826,9 +829,10 @@ export class AreaScene extends Phaser.Scene {
   }
 
   // The party as it stands: memories, keepsakes, grimoires, companions, supplies, wounds, and spent mana.
-  private partyOptions(): BattleOptions {
+  // Everyone who has joined, or, for a fight, only those who fight: three at most, with one on the bench.
+  private partyOptions(fighting = false): BattleOptions {
     const world = loadWorld();
-    return { hollow: hollow(loadMemory()), gear: loadGear(), books: settle(loadBooks(), roster(world)), roster: roster(world), tempered: world.tempered ?? [], supplies: world.supplies, wounds: world.wounds, drained: world.drained };
+    return { hollow: hollow(loadMemory()), gear: loadGear(), books: settle(loadBooks(), roster(world)), roster: fighting ? lineup(world) : roster(world), tempered: world.tempered ?? [], supplies: world.supplies, wounds: world.wounds, drained: world.drained };
   }
 
   private toggleHud() {
@@ -898,7 +902,7 @@ export class AreaScene extends Phaser.Scene {
         // Talking stops the world; a foe just fled from gives the hero a moment and goes home.
         const resting=this.active || (foe.fledAt!==undefined && this.time.now-foe.fledAt<2500);
         // A hero with hidden mana is only noticed when he is almost on top of them.
-        const sight=chase.sight*(loadWorld().night ? 1.3 : 1);
+        const sight=chase.sight*(loadWorld().night ? 1.3 : 1)*(this.area.fog ? 0.6 : 1);
         const hunting=!resting && toHero<(this.sneaking ? 22 : sight) && fromHome<LEASH;
         if(hunting) this.physics.moveTo(foe.sprite,this.player.x,this.player.y,chase.speed);
         else if(!this.active && fromHome>3) this.physics.moveTo(foe.sprite,foe.home.x,foe.home.y,chase.speed*0.6);
@@ -909,6 +913,11 @@ export class AreaScene extends Phaser.Scene {
       foe.sprite.setOrigin(0.5,0.5+Math.sin(time/320+foe.phase)*0.025);
     }
     for(const person of this.people) if(person.active && Phaser.Math.Distance.Between(this.player.x,this.player.y,person.x,person.y)<80) person.setFlipX(this.player.x<person.x);
+    // In fog, an open signature can't be seen from far off.
+    if(this.area.fog) for(const foe of this.foes) if(!foe.ambush && foe.sprite.active) {
+      const seen=Phaser.Math.Distance.Between(this.player.x,this.player.y,foe.sprite.x,foe.sprite.y)<FOG_SIGHT;
+      foe.signature.setAlpha(seen ? 1 : 0);
+    }
     // Ambushers' signatures flicker out as the hero comes near, and come back once he is clear.
     for(const foe of this.foes) {
       if(!foe.ambush || !foe.sprite.active) continue;

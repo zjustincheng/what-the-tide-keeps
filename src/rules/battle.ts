@@ -1,22 +1,26 @@
 // Pure game rules: no Phaser, DOM, timers, or random state.
 // Rule modules import each other with .ts extensions so Node can run their tests directly.
 import type { Hollow } from './memory';
-import { MEMBER_IDS, mods, NO_MODS } from './gear.ts';
+import { mods, NO_MODS } from './gear.ts';
 import type { Gear, KeepsakeId, Mods } from './gear';
 import { BOOKS, SPELLS, STARTING_BOOKS } from './spells.ts';
 import type { Books, SpellId } from './spells';
 import { NO_SUPPLIES, SUPPLIES } from './economy.ts';
 import type { Supplies, SupplyId } from './economy';
 import type { Drained, Wounds } from './world';
-export type MemberId = 'chameleon' | 'bear' | 'vulture';
+export type MemberId = 'chameleon' | 'bear' | 'vulture' | 'frog';
 export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze' | 'gather';
 export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm' | 'warden' | 'leech' | 'hound' | 'pack' | 'wisp' | 'drowned'
-  | 'raider' | 'ghoul' | 'vulture' | 'pair' | 'hyena' | 'inquisitor' | 'captain' | 'harrier';
+  | 'raider' | 'ghoul' | 'vulture' | 'pair' | 'hyena' | 'inquisitor' | 'captain' | 'harrier'
+  | 'mosquito' | 'scorpion' | 'brood' | 'apprentice' | 'viper';
 export const SPELL = 'Salt lance';
+// The marsh's spell: it does little harm itself, but for a while afterward every heal burns instead.
+export const SOURING = 'Souring';
 // Each caster's spell. Until a spell is studied (analyzed, or survived once) its name is hidden, it can't be dodged,
 // and no barrier stops it. Once studied, it can be seen coming, dodged, and barred.
 export const ENEMY_SPELLS: Partial<Record<Encounter, string>> = {
   acolyte: SPELL, pair: SPELL, warden: 'Judgement', drowned: 'Drowning toll', wisp: 'Marsh-fire', inquisitor: 'Verdict',
+  apprentice: SOURING, viper: SOURING,
 };
 export const STUDIABLE: readonly string[] = [...new Set(Object.values(ENEMY_SPELLS))];
 export type Phase = 'player' | 'enemy' | 'victory' | 'defeat' | 'fled';
@@ -29,9 +33,11 @@ export type Foe = number;
 // window: this blow's dodge timing, tighter for stronger enemies. undodgeable: only a guard or barrier answers it.
 // feed: the hyena feeds on a fallen body instead of striking, unless a barrier covers it.
 // hits: the move lands this many times, each dodged on its own. unblockable: no guard or barrier stops it.
-// spell: for a spell, which one it is.
+// spell: for a spell, which one it is. poison: rounds of poison a blow leaves, if it lands at all.
+// sour: a spell that turns the party's healing to harm for a while once cast.
 // dodge: how this blow is dodged, when it differs from what dodgeKind would choose.
 type Move = { name: string; type: 'physical' | 'spell'; spell?: string; dodge?: DodgeKind; damage: number; piercing?: number; revive?: boolean; drain?: boolean; feed?: boolean; hits?: number; unblockable?: boolean;
+  poison?: number; sour?: true;
   window?: { perfect: number; graze: number }; undodgeable?: boolean };
 export type Member = Fighter & Readonly<{
   id: MemberId;
@@ -48,6 +54,8 @@ export type Member = Fighter & Readonly<{
   cooldown: number;
   // A member who just cast shows a flood of mana until the enemy has moved.
   flaring: boolean;
+  // Rounds of poison left: it bites at the end of every enemy turn.
+  poison: number;
 }>;
 export type Battle = Readonly<{
   round: number;
@@ -71,6 +79,10 @@ export type Battle = Readonly<{
   wave: number; waves: number;
   // Supplies brought into the fight; whatever is left goes back into the pack.
   supplies: Supplies;
+  // Rounds of the frog's poison left in the main enemy.
+  enemyPoison: number;
+  // While soured, every heal burns for as much as it would have mended.
+  soured: number;
   log: readonly string[];
 }>;
 export type Dodge = 'perfect' | 'graze' | 'miss';
@@ -90,6 +102,8 @@ export const MEMBERS = {
   chameleon: { name: 'Chameleon', attack: 'Tail lash', support: 'Guard', damage: 7, agility: 1 },
   bear: { name: 'Bear', attack: 'Maul', support: 'Protect', damage: 5, agility: 0.8 },
   vulture: { name: 'Vulture', attack: 'Talons', support: 'Focus', damage: 9, agility: 1.25 },
+  // One toxin, two doses: a small one mends an ally, a large one poisons the enemy.
+  frog: { name: 'Frog', attack: 'Toxin dart', support: 'Dose', damage: 4, agility: 1.1 },
 } as const;
 // Crop pests hide nothing and only strike physically; the exile veils its mana and casts.
 export const ENEMIES = {
@@ -134,6 +148,17 @@ export const ENEMIES = {
   // The rookery road: hawks who rob the couriers' road from the air.
   harrier: { name: 'Harrier', short: 'harrier', health: 58, mana: 6, veiled: false,
     opening: 'A harrier drops out of the wind with its talons open. It has been living off this road a long time.' },
+  // The marsh: insects that poison and seize, the viper's apprentice, and the viper.
+  mosquito: { name: 'Marsh mosquito', short: 'mosquito', health: 56, mana: 2, veiled: false,
+    opening: 'A mosquito the size of a dog comes out of the fog, whining. Its needle is already wet.' },
+  scorpion: { name: 'Water scorpion', short: 'scorpion', health: 64, mana: 3, veiled: false,
+    opening: 'The black water bulges. A water scorpion pulls itself up onto the boards, forelegs open.' },
+  brood: { name: 'The reed-bed queen', short: 'queen', health: 96, mana: 4, veiled: false,
+    opening: 'The reeds are full of eggs, and the eggs are hatching. Their mother turns her needle toward you.' },
+  apprentice: { name: 'The apprentice', short: 'apprentice', health: 88, mana: 14, veiled: true,
+    opening: 'A toad in an apothecary\'s apron straightens up among the spoiled sacks. "You shouldn\'t be down here. Nobody gets well down here."' },
+  viper: { name: 'The viper', short: 'viper', health: 118, mana: 14, veiled: false,
+    opening: 'The viper uncoils from the counter of the flooded apothecary. "You came in already sick. Everyone does."' },
   inquisitor: { name: 'The inquisitor', short: 'inquisitor', health: 600, mana: 60, veiled: false,
     opening: 'The largest signature you have ever felt. A ram in grey, the royal seal at his collar. "Convict. You are a long way from your church." You cannot win this. Run.' },
 } as const satisfies Record<Encounter, unknown>;
@@ -151,6 +176,8 @@ export const FOLLOWERS: Partial<Record<Encounter, readonly { name: string; healt
   pair: [{ name: 'Brute', health: 38, weapon: 'pick', damage: 8 }],
   // The captain's lieutenant shields him with a crossbow.
   captain: [{ name: 'Lieutenant', health: 34, weapon: 'crossbow', damage: 6 }],
+  // The queen's brood hatches round her.
+  brood: [{ name: 'Wriggler', health: 12, weapon: 'needle', damage: 3 }, { name: 'Wriggler', health: 12, weapon: 'needle', damage: 3 }],
   // The hyena's dead get up again, unless she has eaten them.
   hyena: [{ name: 'Ghoul', health: 24, weapon: 'claws', damage: 5 }, { name: 'Ghoul', health: 24, weapon: 'claws', damage: 5 }],
 };
@@ -205,7 +232,22 @@ export const STAGES: Partial<Record<Encounter, { title: string; line: string; sc
         enemy: { ...battle.enemy, health: Math.min(battle.enemy.maxHealth, battle.enemy.health + eaten * 6) },
       };
     } },
+  viper: { title: 'The viper, shed', line: 'The viper comes out of her own skin, and the air goes bitter.', rise: 0.4, scene: [
+    { who: '', line: 'The viper goes down among the jars, and the water closes over her.' },
+    { who: 'THE VIPER', line: 'I set his bones. I sat up with him three nights. They said I bit him.' },
+    { who: 'THE VIPER', line: 'So I bit them.' },
+    { who: '', line: 'Her skin floats up empty. She comes up out of the water beside it, raw and shining, and every breath in the room tastes of venom.' },
+  ], enter: battle => ({ party: battle.party.map(member => member.health > 0 ? { ...member, poison: member.poison + 3 } : member) }) },
 };
+// Fights that start with the party already poisoned, and for how many rounds.
+export const STARTS_POISONED: Partial<Record<Encounter, number>> = { viper: 4 };
+// What poison does each round: to a hero, and to the enemy from the frog's darts.
+export const POISON = 2;
+export const ENEMY_POISON = 3;
+// How long the frog's dart keeps the enemy poisoned, how much her dose mends, and how long Souring lasts.
+export const DART = 3;
+export const DOSE = 6;
+export const SOUR = 2;
 // How much of its health a boss gets back when it rises.
 export const RISE = 0.5;
 const QUIET = 'The signature flickers out. It is quiet again.';
@@ -235,7 +277,7 @@ function staged(battle: Battle): Battle {
 }
 
 // Followers who give up once their leader falls. Everyone else fights until the last of them is down.
-export const YIELDING: Partial<Record<Encounter, true>> = { boar: true, hyena: true };
+export const YIELDING: Partial<Record<Encounter, true>> = { boar: true, hyena: true, brood: true };
 export const FURY_PER_HIT = 3;
 export const FOLLOWER_BLOW = 2;
 export const COST = { attack: 0, support: 0, suppress: 1, barrier: 5, analyze: 2, gather: 0 } as const;
@@ -261,25 +303,28 @@ export type BattleOptions = Readonly<{
   // tempered: keepsakes the smith has tempered. waves: how many times the enemy comes on before the fight is won.
   tempered?: readonly KeepsakeId[]; waves?: number;
 }>;
+// A fight's party when none is given: the three who fought together first.
+const TRIO: readonly MemberId[] = ['chameleon', 'bear', 'vulture'];
 export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], options: BattleOptions = {}): Battle {
-  const { hollow = UNHOLLOWED, gear, books = STARTING_BOOKS, roster = MEMBER_IDS, supplies = NO_SUPPLIES, wounds = {}, drained = {}, ambush = false, surprise = false, tempered = [], waves = 1 } = options;
+  const { hollow = UNHOLLOWED, gear, books = STARTING_BOOKS, roster = TRIO, supplies = NO_SUPPLIES, wounds = {}, drained = {}, ambush = false, surprise = false, tempered = [], waves = 1 } = options;
   const member = (id: MemberId, base: number, mana: number): Member => {
     const worn = gear ? mods(gear, id, tempered) : NO_MODS;
     const maxHealth = Math.max(1, base + worn.health);
     // Heroes enter hurt if they were hurt before; a hero who fell stays down.
     const health = Math.max(0, maxHealth - (wounds[id] ?? 0));
     return { id, health, maxHealth, mana: Math.max(0, mana - (drained[id] ?? 0)), maxMana: mana, acted: false, guardingFor: null, focused: false, suppressed: false, barrier: false, gear: worn, cooldown: 0, flaring: false,
+      poison: health > 0 ? STARTS_POISONED[encounter] ?? 0 : 0,
       spell: books[id] ? BOOKS[books[id]!].spell : null };
   };
   const size = Math.max(1, Math.min(3, roster.length));
   const scaled = (health: number) => Math.round(health * PARTY_SCALE[size - 1]);
   return {
     round: 1, phase: ambush ? 'enemy' : 'player', encounter, studied: studied.filter(name => STUDIABLE.includes(name)), hollow, enemyRevealed: false,
-    party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10)].filter(member => roster.includes(member.id)),
+    party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10), member('frog', 18, 12)].filter(member => roster.includes(member.id)),
     enemy: { health: scaled(ENEMIES[encounter].health), maxHealth: scaled(ENEMIES[encounter].health), mana: ENEMIES[encounter].mana, maxMana: ENEMIES[encounter].mana },
     followers: (FOLLOWERS[encounter] ?? []).map(({ name, health }) => ({ name, health: scaled(health), maxHealth: scaled(health), mana: 4, maxMana: 4 })),
-    fury: 0, step: 0, snared: surprise && !ambush, stage: 1, wave: 1, waves, supplies,
-    log: [ENEMIES[encounter].opening, ...(ambush ? ['Ambush! It moves before you can.'] : surprise ? ['It never saw you coming. It loses its first move.'] : [])],
+    fury: 0, step: 0, snared: surprise && !ambush, stage: 1, wave: 1, waves, supplies, enemyPoison: 0, soured: 0,
+    log: [ENEMIES[encounter].opening, ...(STARTS_POISONED[encounter] ? ['The air in here is thick with venom. Everyone is poisoned already.'] : []), ...(ambush ? ['Ambush! It moves before you can.'] : surprise ? ['It never saw you coming. It loses its first move.'] : [])],
   };
 }
 
@@ -422,6 +467,30 @@ function plainIntent(battle: Battle): Move & { tell: string } {
         ? { name: 'Frenzy', type: 'physical', tell: `She doesn't stop. Three blows, each one hungrier.${fed}`, damage: 4 + Math.floor(battle.fury / 2), hits: 3, piercing: 2, window: { perfect: 50, graze: 120 } }
         : { name: 'Rend', type: 'physical', tell: `She comes in low.${fed}`, damage: 9 + battle.fury, piercing: 3 + Math.floor(battle.fury / 2), window: { perfect: 50, graze: 120 } };
   }
+  if (battle.encounter === 'mosquito') return battle.round % 2 === 0
+    ? { name: 'Swarm', type: 'physical', tell: 'Its wings blur. It will come at you three times, fast.', damage: 3, hits: 3, window: { perfect: 55, graze: 140 } }
+    : { name: 'Needle', type: 'physical', tell: 'Its needle lowers. Whatever it pierces, it poisons.', damage: 5, poison: 3, window: { perfect: 55, graze: 140 } };
+  if (battle.encounter === 'scorpion') return battle.round % 2 === 0
+    ? { name: 'Seize', type: 'physical', tell: 'Its forelegs open wide. It will seize someone, hard, and a guard won\'t hold all of it.', damage: 12, piercing: 4, window: { perfect: 45, graze: 120 } }
+    : { name: 'Stab', type: 'physical', tell: 'Its beak comes up. A poisoned stab.', damage: 6, poison: 2 };
+  if (battle.encounter === 'brood') {
+    if (battle.round % 3 === 0 && battle.followers.some(follower => follower.health <= 0))
+      return { name: 'Hatch', type: 'physical', tell: 'She shudders over the eggs. More of her brood will hatch.', damage: 0, revive: true };
+    return battle.round % 2 === 0
+      ? { name: 'Blood cloud', type: 'physical', tell: 'She shakes out a cloud of her brood. Three stings, and no guard will stop them.', damage: 3, hits: 3, unblockable: true, poison: 2, window: { perfect: 55, graze: 140 } }
+      : { name: 'Drink', type: 'physical', tell: 'She settles on someone to drink. Whatever she takes, she keeps.', damage: 8, drain: true, window: { perfect: 55, graze: 140 } };
+  }
+  if (battle.encounter === 'apprentice') return battle.round % 2 === 0
+    ? { name: SOURING, type: 'spell', spell: SOURING, sour: true, tell: `${SOURING}: a spell that does little harm, but any healing after it burns instead, for two turns.`, damage: 4, window: { perfect: 50, graze: 130 } }
+    : { name: 'Spit', type: 'physical', tell: 'He hawks. The spit is poison.', damage: 6, poison: 3 };
+  if (battle.encounter === 'viper') {
+    if (battle.round % 3 === 0) return { name: SOURING, type: 'spell', spell: SOURING, sour: true, tell: `She breathes over all of you: ${SOURING}. Any healing after it burns instead, for two turns.`, damage: 6, window: { perfect: 45, graze: 120 } };
+    if (battle.stage === 2 && battle.round % 3 === 2)
+      return { name: 'Venom spray', type: 'physical', tell: 'She rears and sprays. Three mouthfuls, and no guard will stop them. Each one poisons.', damage: 4, hits: 3, unblockable: true, poison: 2, window: { perfect: 50, graze: 130 } };
+    return battle.round % 3 === 1
+      ? { name: 'Fang', type: 'physical', tell: 'She draws her head back. A strike, very fast, and it poisons.', damage: 10, poison: 4, window: { perfect: 40, graze: 110 } }
+      : { name: 'Coil', type: 'physical', tell: 'She throws coils over someone. Two crushing squeezes.', damage: 7, hits: 2 };
+  }
   if (battle.encounter === 'harrier') return battle.round % 2 === 0
     ? { name: 'Stoop', type: 'physical', tell: 'It climbs into the wind and folds. A dive no guard will stop is coming.', damage: 11, unblockable: true, window: { perfect: 45, graze: 120 } }
     : { name: 'Rake', type: 'physical', tell: 'It rakes past, low, twice.', damage: 4, hits: 2 };
@@ -496,7 +565,7 @@ export function canAct(battle: Battle, actor: MemberId, action: Action, target: 
   if (action === 'barrier' && !battle.party.some(ally => ally.id === target)) return false;
   if (action === 'support') {
     if (!battle.party.some(member => member.id === target && member.health > 0)) return false;
-    if (actor !== 'bear' && target !== actor) return false;
+    if (actor !== 'bear' && actor !== 'frog' && target !== actor) return false;
   }
   return true;
 }
@@ -532,10 +601,11 @@ export function useSupply(battle: Battle, actor: MemberId, supply: SupplyId, tar
   if (!canUse(battle, actor, supply, target, foe)) return battle;
   const { name, power, target: kind } = SUPPLIES[supply];
   const hit = kind === 'enemy' ? land(battle, power, foe) : undefined;
+  const cure = Boolean(SUPPLIES[supply].cure);
   const party = battle.party.map(member => ({
     ...member,
     ...(member.id === actor ? { acted: true } : {}),
-    ...(member.id === target && kind === 'ally' ? { health: Math.min(member.maxHealth, member.health + power) } : {}),
+    ...(member.id === target && kind === 'ally' ? { health: mend(member, power, battle.soured), poison: cure ? 0 : member.poison } : {}),
     ...(member.id === target && kind === 'fallen' ? { health: power } : {}),
   }));
   const enemy = hit?.enemy ?? battle.enemy;
@@ -543,7 +613,8 @@ export function useSupply(battle: Battle, actor: MemberId, supply: SupplyId, tar
   const victory = won(after);
   const allActed = party.every(member => member.health <= 0 || member.acted);
   const aimed = foe > 0 ? battle.followers[foe - 1].name.toLowerCase() : ENEMIES[battle.encounter].short;
-  const message = kind === 'ally' ? `${MEMBERS[actor].name} shares the ${name.toLowerCase()}${target !== actor ? ` with ${MEMBERS[target].name}` : ''}.`
+  const burned = kind === 'ally' && power > 0 && battle.soured > 0;
+  const message = kind === 'ally' ? `${MEMBERS[actor].name} shares the ${name.toLowerCase()}${target !== actor ? ` with ${MEMBERS[target].name}` : ''}.${cure ? ' The poison goes out of them.' : ''}${burned ? ' It burns going down: everything is soured.' : ''}`
     : kind === 'fallen' ? `${MEMBERS[actor].name} holds the smelling salts under ${MEMBERS[target].name}'s nose. They get back up.`
     : hit?.blocked ? `The firepot bursts against the candlelight. The warden is untouched while its votives burn.`
     : hit?.shielded ? `The boar throws himself in front of the ${aimed}. The firepot bursts against him instead, and his fury grows.`
@@ -573,7 +644,8 @@ export function cast(battle: Battle, actor: MemberId, success: boolean, foe: Foe
     // Casting spends the mana, starts the cooldown, ends any hiding, and lights the caster up for the enemy, fizzle or not.
     const spent = current.id === actor ? { acted: true, mana: current.mana - spell.cost, cooldown: spell.cooldown, flaring: true, suppressed: false } : {};
     if (!success || current.health <= 0) return { ...current, ...spent };
-    if (spell.kind === 'heal') return { ...current, ...spent, health: Math.min(current.maxHealth, current.health + spell.power) };
+    // Healing draws out poison too, unless Souring has turned it.
+    if (spell.kind === 'heal') return { ...current, ...spent, health: mend(current, spell.power, battle.soured), poison: battle.soured ? current.poison : 0 };
     if (spell.kind === 'ward') return { ...current, ...spent, guardingFor: current.guardingFor ?? current.id };
     return { ...current, ...spent };
   });
@@ -585,7 +657,7 @@ export function cast(battle: Battle, actor: MemberId, success: boolean, foe: Foe
     : hit?.blocked ? `${MEMBERS[actor].name} casts ${spell.name}. It breaks on the candlelight; the warden is untouched while its votives burn.`
     : hit?.shielded ? `The boar throws himself in front of the ${target}. ${spell.name} strikes him instead, and his fury grows.`
     : spell.kind === 'damage' ? `${MEMBERS[actor].name} casts ${spell.name}. It tears into the ${target}.`
-    : spell.kind === 'heal' ? `${MEMBERS[actor].name} casts ${spell.name}. Wounds close across the party.`
+    : spell.kind === 'heal' ? (battle.soured ? `${MEMBERS[actor].name} casts ${spell.name}, and it burns: everything is soured. Wounds open across the party.` : `${MEMBERS[actor].name} casts ${spell.name}. Wounds close across the party.`)
     : spell.kind === 'ward' ? `${MEMBERS[actor].name} casts ${spell.name}. Stone settles over everyone still standing.`
     : `${MEMBERS[actor].name} casts ${spell.name}. Thorns bind the ${ENEMIES[battle.encounter].short} where it stands.`;
   const allActed = party.every(member => member.health <= 0 || member.acted);
@@ -606,15 +678,19 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
   const damage = definition.damage + member.gear.damage + (actor === 'chameleon' ? battle.hollow.damage : 0) + (member.focused ? 3 : 0) + (member.suppressed ? reveal : 0);
   const { enemy, followers, fury, shielded, blocked } = action === 'attack' ? land(battle, damage, foe)
     : { enemy: battle.enemy, followers: battle.followers, fury: battle.fury, shielded: false, blocked: false };
+  // The frog's dart leaves its toxin in the main enemy; her dose mends an ally and draws out their poison.
+  const dart = actor === 'frog' && action === 'attack' && foe === 0 && !blocked && enemy.health > 0;
+  const dose = actor === 'frog' && action === 'support';
   const party = battle.party.map(current => ({
     ...current,
     ...(current.id === actor ? {
       acted: true, mana: action === 'gather' ? Math.min(current.maxMana, current.mana + GATHER) : current.mana - cost(current, action),
       focused: action === 'attack' ? false : (action === 'support' && actor === 'vulture') || current.focused,
       suppressed: action === 'suppress' ? true : action === 'attack' ? false : current.suppressed,
-      guardingFor: action === 'support' && actor !== 'vulture' ? target : current.guardingFor,
+      guardingFor: action === 'support' && (actor === 'chameleon' || actor === 'bear') ? target : current.guardingFor,
     } : {}),
     barrier: (action === 'barrier' && current.id === target) || current.barrier,
+    ...(dose && current.id === target ? { health: mend(current, DOSE, battle.soured), poison: battle.soured ? current.poison : 0 } : {}),
   }));
   const after = { encounter: battle.encounter, enemy, followers };
   const victory = won(after);
@@ -625,12 +701,13 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
     : action === 'analyze' ? `${definition.name} studies the gathering spell. ${ENEMY_SPELLS[battle.encounter]} is written into the grimoire.`
     : blocked ? `${definition.name}'s ${definition.attack.toLowerCase()} breaks on the candlelight. The warden is untouched while its votives burn.`
     : shielded ? `The boar throws himself in front of the ${battle.followers[foe - 1].name.toLowerCase()}. ${definition.name}'s ${definition.attack.toLowerCase()} strikes him instead, and his fury grows.`
-    : action === 'attack' ? `${definition.name}'s ${definition.attack.toLowerCase()} strikes the ${foe > 0 ? battle.followers[foe - 1].name.toLowerCase() : ENEMIES[battle.encounter].short}${member.suppressed ? ' in a burst of revealed mana' : ''}${member.focused ? ' with focused force' : ''}.`
+    : action === 'attack' ? `${definition.name}'s ${definition.attack.toLowerCase()} strikes the ${foe > 0 ? battle.followers[foe - 1].name.toLowerCase() : ENEMIES[battle.encounter].short}${member.suppressed ? ' in a burst of revealed mana' : ''}${member.focused ? ' with focused force' : ''}.${dart ? ' The toxin goes in.' : ''}`
+    : dose ? (battle.soured ? `Frog doses ${target === actor ? 'herself' : MEMBERS[target].name}, and it burns: everything is soured.` : `Frog doses ${target === actor ? 'herself' : MEMBERS[target].name}. A small dose mends.`)
     : actor === 'vulture' ? 'Vulture steadies her aim. Her next attack will strike harder.'
     : actor === 'bear' && target !== actor ? `Bear steps in front of ${MEMBERS[target].name}.`
     : `${definition.name} plants their feet and guards.`;
   return staged({
-    ...battle, party, enemy, followers, fury, studied: action === 'analyze' ? [...battle.studied, ENEMY_SPELLS[battle.encounter]!] : battle.studied, phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
+    ...battle, party, enemy, followers, fury, enemyPoison: dart ? Math.max(battle.enemyPoison, DART) : battle.enemyPoison, studied: action === 'analyze' ? [...battle.studied, ENEMY_SPELLS[battle.encounter]!] : battle.studied, phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
     log: [...battle.log, message, ...fallen(battle, after), ...(victory ? [QUIET] : [])],
   });
 }
@@ -728,7 +805,8 @@ export function strike(battle: Battle, dodge: Dodge = 'miss'): Battle {
   const { move, target, guarded, blocked } = next;
   const avoided = next.dodgeable ? dodge : 'miss';
   const damage = avoided === 'perfect' ? 0 : avoided === 'graze' ? Math.ceil(next.damage / 2) : next.damage;
-  const party = battle.party.map(member => member.id === target.id ? { ...member, health: Math.max(0, member.health - damage) } : member);
+  // A poisoned blow that lands at all leaves its poison.
+  const party = battle.party.map(member => member.id === target.id ? { ...member, health: Math.max(0, member.health - damage), poison: damage > 0 && move.poison ? Math.max(member.poison, move.poison) : member.poison } : member);
   // A draining blow feeds the attacker by whatever it actually took.
   const taken = target.health - party.find(member => member.id === target.id)!.health;
   const enemy = move.drain && taken > 0 ? { ...battle.enemy, health: Math.min(battle.enemy.maxHealth, battle.enemy.health + taken) } : battle.enemy;
@@ -746,25 +824,49 @@ export function strike(battle: Battle, dodge: Dodge = 'miss'): Battle {
 }
 
 function enemyTurnEnds(battle: Battle): Battle {
-  const defeat = battle.party.every(member => member.health === 0);
+  // Poison bites at the end of every enemy turn, on both sides.
+  const poisoned = battle.party.filter(member => member.health > 0 && member.poison > 0);
+  const defeat = battle.party.every(member => member.health === 0 || (member.poison > 0 && member.health <= POISON));
   const party = battle.party.map(member => ({
     ...member, guardingFor: null, barrier: false, acted: false, flaring: false, cooldown: Math.max(0, member.cooldown - 1),
+    health: member.health > 0 && member.poison > 0 ? Math.max(0, member.health - POISON) : member.health,
+    poison: Math.max(0, member.poison - 1),
     mana: !defeat && member.health > 0 ? Math.min(member.maxMana, member.mana + MANA_REGEN) : member.mana,
   }));
+  const venom = battle.enemyPoison > 0 && battle.enemy.health > 0 ? Math.min(ENEMY_POISON, battle.enemy.health - (SURVIVE[battle.encounter] ? 1 : 0)) : 0;
+  const poisonLog = [
+    ...poisoned.map(member => `The poison works in ${MEMBERS[member.id].name}.${party.find(after => after.id === member.id)!.health === 0 ? ' They fall.' : ''}`),
+    ...(venom ? [`The frog's toxin works in the ${ENEMIES[battle.encounter].short}.`] : []),
+  ];
   const cast = !battle.snared && battle.enemy.health > 0 && plainIntent(battle).type === 'spell' ? plainIntent(battle).spell : undefined;
+  const sours = Boolean(cast && plainIntent(battle).sour);
   const spell = Boolean(cast);
   const learned = spell && !battle.studied.includes(cast!);
   // A fight the party only had to survive ends once they have.
   const survived = !defeat && SURVIVE[battle.encounter] !== undefined && battle.round >= SURVIVE[battle.encounter]!;
   if (survived) return { ...battle, party, step: 0, snared: false, phase: 'victory', log: [...battle.log, 'She lands and folds her wings. "Grave thieves run. You didn\'t."'] };
-  return {
+  const enemyHealth = battle.enemy.health - venom;
+  const after: Battle = {
     ...battle, party, step: 0, snared: false,
+    enemyPoison: Math.max(0, battle.enemyPoison - 1),
+    soured: sours && !defeat ? SOUR : Math.max(0, battle.soured - 1),
     studied: learned && !defeat ? [...battle.studied, cast!] : battle.studied,
     enemyRevealed: battle.enemyRevealed || spell,
-    enemy: { ...battle.enemy, mana: Math.min(battle.enemy.maxMana, battle.enemy.mana - (spell ? 5 : 0) + ENEMY_REGEN) },
+    enemy: { ...battle.enemy, health: enemyHealth, mana: Math.min(battle.enemy.maxMana, battle.enemy.mana - (spell ? 5 : 0) + ENEMY_REGEN) },
     phase: defeat ? 'defeat' : 'player', round: defeat ? battle.round : battle.round + 1,
-    log: [...battle.log, ...(battle.snared && battle.enemy.health > 0 ? [`The ${ENEMIES[battle.encounter].short} strains against the thorns and cannot move.`] : []), ...(learned && !defeat ? [`Surviving the spell reveals its structure. ${cast} joins the grimoire.`] : []), ...(defeat ? ['The last of you falls. Then, the familiar smell of salt.'] : [])],
+    log: [...battle.log, ...(battle.snared && battle.enemy.health > 0 ? [`The ${ENEMIES[battle.encounter].short} strains against the thorns and cannot move.`] : []), ...poisonLog,
+      ...(sours && !defeat ? ['Everything tastes bitter. For two turns, healing will burn.'] : []),
+      ...(learned && !defeat ? [`Surviving the spell reveals its structure. ${cast} joins the grimoire.`] : []), ...(defeat ? ['The last of you falls. Then, the familiar smell of salt.'] : [])],
   };
+  // The toxin can finish what the party started.
+  if (defeat || enemyHealth > 0 || battle.enemy.health <= 0) return after;
+  const victory = won(after);
+  return staged({ ...after, phase: victory ? 'victory' : 'player', log: [...after.log, ...fallen(battle, after), ...(victory ? [QUIET] : [])] });
+}
+
+// What a heal does to someone: mends, or, while soured, burns for the same.
+function mend(member: Member, amount: number, soured: number): number {
+  return soured > 0 ? Math.max(0, member.health - amount) : Math.min(member.maxHealth, member.health + amount);
 }
 
 // The whole enemy turn with no dodges attempted.

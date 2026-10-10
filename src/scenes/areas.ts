@@ -11,6 +11,7 @@ import { barrow, downs } from '../content/downs';
 import { fen, weir } from '../content/fen';
 import { feastHall, harbour, square } from '../content/capital';
 import { abbey, barracks, battlefield, drove, fort, keep, ossuary, pass, rookery, tarn } from '../content/highlands';
+import { apothecary, causeway, farBank, hospice, wickmere } from '../content/marsh';
 import type { Encounter } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
@@ -26,6 +27,8 @@ export type Area = {
   place: string;
   // Where the hero may walk; the whole map when omitted. Larger maps scroll with the hero.
   bounds?: [x: number, y: number, width: number, height: number];
+  // Fog: enemies see the hero from less far off, and their mana can't be seen until they are close.
+  fog?: true;
   dialogue: Dialogue;
   // People on the map. One whose hiddenIf condition holds has left.
   // lit: carries a lantern, which shows after dark.
@@ -433,6 +436,9 @@ export const WEIR: Area = {
   forage: { 'forage-1': 'berry', 'forage-2': 'herb' },
   exits: {
     south: { to: 'fen', spawn: 'from-weir', prompt: 'Go back down to the fen' },
+    // The crane ferries the church's convicts downriver once the highlands are settled.
+    downriver: { to: 'causeway', spawn: 'from-weir', prompt: 'Take the ferry downriver', requires: { flag: 'hyena-slain' },
+      barred: { speaker: 'THE CRANE', lines: ['"Downriver\'s shut. There\'s sickness in the river towns. I take nobody down unless the church sends them."', '"And the church hasn\'t sent anyone it wants back."'] } },
     stair: { to: 'tarn', spawn: 'from-weir', prompt: 'Climb the smugglers\' stair', requires: { flag: 'brother-freed' },
       barred: { speaker: 'THE CLIFF', lines: ['Willow roots hang over a crack in the rock. If there is a way up, only the otters know it.'] } },
   },
@@ -559,4 +565,96 @@ export const ROOKERY_ROAD: Area = {
   decorate: scene => snowfall(scene, 576, 768),
 };
 
-export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD];
+// The rivers and marsh: downriver from the weir, where the river meets the tide.
+const MARSH_GROUND: Pick<Area, 'region' | 'tileset' | 'ground' | 'surfaces' | 'music'> = {
+  region: 'THE MARSH', tileset: 'marsh', ground: 'grass', music: 'marsh',
+  surfaces: { 2: 'dirt', 3: 'wood', 8: 'wood', 13: 'wood', 19: 'water', 20: 'wood' },
+};
+// Low fog on the water, drifting.
+function marshFog(scene: Phaser.Scene, width: number, height: number, thick = 14) {
+  for (let i = 0; i < thick; i++) {
+    const mist = scene.add.rectangle(20 + (i * 151) % width, 30 + (i * 97) % height, 150, 22, 0xb8c4c0, 0.1).setDepth(6);
+    scene.tweens.add({ targets: mist, x: mist.x - 50, alpha: 0.04, duration: 7000 + i * 430, yoyo: true, repeat: -1 });
+  }
+}
+
+export const CAUSEWAY: Area = {
+  ...MARSH_GROUND, key: 'causeway', map: 'causeway', place: 'The causeway', dialogue: causeway, fog: true,
+  grade: { saturation: -0.5, brightness: 0.7, vignette: 0.6 }, assets: ['wriggler'],
+  npcs: [{ point: 'fisher', texture: 'coypu' }],
+  enemies: [
+    { point: 'mosquito-1', encounter: 'mosquito' }, { point: 'mosquito-2', encounter: 'mosquito', ambush: true }, { point: 'mosquito-3', encounter: 'mosquito' },
+    { point: 'scorpion-1', encounter: 'scorpion', ambush: true }, { point: 'scorpion-2', encounter: 'scorpion', ambush: true },
+    { point: 'brood', encounter: 'brood', hiddenIf: [{ flag: 'brood-slain' }], defeat: { set: 'brood-slain' } },
+  ],
+  props: [{ point: 'camp-causeway', texture: 'campfire', hiddenIf: [] }],
+  fishing: { 'causeway-spot': 'causeway' },
+  forage: { 'forage-1': 'herb', 'forage-2': 'mushroom' },
+  camps: { 'camp-causeway': { prompt: 'Rest at the fisher\'s platform', cost: 3, lines: ['Somebody\'s old fire on a platform of planks. The fog comes right up to the edge of the light and stops.'] } },
+  exits: {
+    upriver: { to: 'weir', spawn: 'from-causeway', prompt: 'Take the ferry back upriver' },
+    east: { to: 'wickmere', spawn: 'from-causeway', prompt: 'Walk on to Wickmere' },
+  },
+  decorate: scene => marshFog(scene, 768, 576, 18),
+};
+
+export const WICKMERE: Area = {
+  ...MARSH_GROUND, key: 'wickmere', map: 'wickmere', place: 'Wickmere', dialogue: wickmere,
+  grade: { saturation: -0.45, brightness: 0.74, vignette: 0.5 },
+  npcs: [
+    { point: 'magistrate', texture: 'magistrate' }, { point: 'newt', texture: 'newt', hiddenIf: [{ flag: 'newt-freed' }] }, { point: 'ferryman', texture: 'beaver' },
+    { point: 'smoker', texture: 'smoker' }, { point: 'widow', texture: 'widow' }, { point: 'child', texture: 'vole' }, { point: 'mourner', texture: 'water-rat' },
+    { point: 'herbalist', texture: 'herbalist' },
+  ],
+  enemies: [],
+  props: [{ point: 'cage', texture: 'cage', solid: true, hiddenIf: [{ flag: 'newt-freed' }] }, { point: 'camp-wickmere', texture: 'campfire', hiddenIf: [] }],
+  fishing: { 'wickmere-spot': 'wickmere' },
+  camps: { 'camp-wickmere': { prompt: 'Rest by the brazier', cost: 4, lines: ['A brazier on the deck, where the smokehouse workers warm their hands. Nobody sits near you.'] } },
+  exits: {
+    west: { to: 'causeway', spawn: 'from-wickmere', prompt: 'Go back along the causeway' },
+    'hospice-door': { to: 'hospice', spawn: 'spawn', prompt: 'Enter the hospice' },
+    channel: { to: 'far-bank', spawn: 'from-wickmere', prompt: 'Speak the word, and walk across the channel', requires: { flag: 'channel-firm' },
+      barred: { speaker: 'THE CHANNEL', lines: ['Deep, fast water between Wickmere and the far bank. The ferryman\'s boat is tied up, and he isn\'t in it.'] } },
+  },
+  decorate: scene => marshFog(scene, 704, 544, 8),
+};
+
+export const HOSPICE: Area = {
+  ...MARSH_GROUND, key: 'hospice', map: 'hospice', music: 'church', place: 'The hospice', dialogue: hospice, ground: 'wood',
+  grade: { saturation: -0.5, brightness: 0.68, vignette: 0.6 },
+  npcs: [
+    { point: 'sister', texture: 'sister' }, { point: 'frog', texture: 'frog', hiddenIf: [{ flag: 'frog-free' }] },
+    { point: 'patient-1', texture: 'sick-badger' }, { point: 'patient-2', texture: 'sick-hare' },
+  ],
+  enemies: [],
+  exits: { out: { to: 'wickmere', spawn: 'from-hospice', prompt: 'Go back out to the decks' } },
+};
+
+export const FAR_BANK: Area = {
+  ...MARSH_GROUND, key: 'far-bank', map: 'far-bank', place: 'The far bank', dialogue: farBank, fog: true, ground: 'dirt',
+  grade: { saturation: -0.5, brightness: 0.68, vignette: 0.6 },
+  npcs: [],
+  enemies: [
+    { point: 'mosquito-1', encounter: 'mosquito', ambush: true }, { point: 'mosquito-2', encounter: 'mosquito' }, { point: 'scorpion-1', encounter: 'scorpion', ambush: true },
+    { point: 'apprentice', encounter: 'apprentice', hiddenIf: [{ flag: 'apprentice-slain' }], defeat: { set: 'apprentice-slain' } },
+  ],
+  forage: { 'forage-1': 'herb' },
+  exits: {
+    ferry: { to: 'wickmere', spawn: 'from-far-bank', prompt: 'Walk back across the channel' },
+    'apothecary-door': { to: 'apothecary', spawn: 'spawn', prompt: 'Wade into the apothecary', requires: { flag: 'frog-free' },
+      barred: { speaker: 'THE APOTHECARY', lines: ['The door is under water to the knee. Something inside is breathing, slow and patient.', 'You wouldn\'t go in there without someone who knows poison.'] } },
+  },
+  decorate: scene => marshFog(scene, 640, 480, 14),
+};
+
+export const APOTHECARY: Area = {
+  ...MARSH_GROUND, key: 'apothecary', map: 'apothecary', music: 'wilds', place: 'The flooded apothecary', dialogue: apothecary, ground: 'water',
+  grade: { saturation: -0.5, brightness: 0.6, vignette: 0.75 },
+  npcs: [{ point: 'viper', texture: 'viper', hiddenIf: [{ flag: 'viper-challenged' }, { flag: 'viper-slain' }] }],
+  enemies: [{ point: 'viper', encounter: 'viper', hiddenIf: [{ flag: 'viper-slain' }, { not: { flag: 'viper-challenged' } }], defeat: { set: 'viper-slain', find: 'viper-fang' } }],
+  // Beaten, she lies where she fell and will still talk.
+  props: [{ point: 'den', texture: 'viper', hiddenIf: [{ not: { flag: 'viper-slain' } }] }],
+  exits: { out: { to: 'far-bank', spawn: 'from-apothecary', prompt: 'Wade back out' } },
+};
+
+export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY];

@@ -453,6 +453,9 @@ footer span:last-child {
 .member-card p { margin: 5px 0; font-size: 12px; }
 .member-card .mana { color: #c5c997; font: 11px ui-monospace, monospace; }
 .member-status { min-height: 14px; color: #b4ae79; font-style: italic; }
+/* Poison tints the card and its status a sickly green. */
+.member-card[data-poisoned="true"] { box-shadow: inset 0 0 0 1px #6a8a3a; }
+.member-card[data-poisoned="true"] .member-status { color: #9ac25a; }
 .party-fighter { height: 72px; width: 90px; touch-action: none; cursor: grab; }
 .party-fighter img { height: 65px; }
 .party-fighter:hover:not(:disabled) { border-color: #91a375; background-color: #78876020; }
@@ -602,6 +605,11 @@ main:fullscreen .touch-controls { margin: 6px 0 0; }
 /* Smaller parties, before every companion has been found. */
 .party-roster[data-size="1"] { grid-template-columns: minmax(0, 300px); justify-content: center; }
 .party-roster[data-size="2"] { grid-template-columns: repeat(2, minmax(0, 300px)); justify-content: center; }
+.party-roster[data-size="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 700px) { .party-roster[data-size="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.bench-toggle { width: 100%; margin: 4px 0 6px; padding: 4px; background: #22372a; border: 1px solid #5d7253; color: #d7d9c8; font: 11px Georgia, serif; cursor: pointer; }
+.bench-toggle[aria-pressed="true"] { background: #2e2a22; border-color: #8a7a4a; color: #c8b878; }
+.member-card[data-waiting="true"] { opacity: 0.72; }
 
 .shop { justify-content: flex-start; padding: 20px 6%; }
 .purse { margin: 6px 0 0; font: 12px ui-monospace, monospace; color: #e0c98a; }

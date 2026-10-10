@@ -20,5 +20,10 @@ export const BESTIARY: Record<Encounter, string> = {
   hyena: 'The gravedigger of the winter of no bread. Anyone falling feeds her, on either side; a barrier keeps her off a fallen body. Brought down once, she eats her own dead and rises.',
   captain: 'A garrison captain who walked off the walls with his company, and kept the walls. His volleys come three at a time, and he executes the fallen through any guard. Kill the lieutenant or live with the bolts.',
   harrier: 'Hawks who rob the couriers\' road from the air, since the holds stopped sending escorts. Its stoop goes through any guard: dodge it.',
+  mosquito: 'Bred in the reed beds since the river towns stopped burning them. Its needle poisons; a perfect dodge keeps the poison out.',
+  scorpion: 'It waits under the boardwalks with its forelegs open. Its seize drives through a guard; its stab poisons.',
+  brood: 'The mother of the reed-bed mosquitoes. Her blood cloud poisons through any guard, she drinks what she bites, and she hatches more.',
+  apprentice: 'The viper\'s apprentice, a toad who believed her. Casts Souring: once it lands, any healing burns for two turns. Study it, and hold the healing back.',
+  viper: 'A healer whose patients feared her venom. Everyone starts poisoned in her apothecary, and her Souring turns your healing on you. Race the poison; let the frog poison her. Brought down once, she sheds her skin.',
   inquisitor: 'A royal investigator, certain of your guilt. His Verdict cannot be dodged or barred. You cannot win this yet. Run.',
 };

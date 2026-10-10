@@ -47,7 +47,7 @@ test('stone ward guards everyone, still water heals, and a snare costs the enemy
 test('a grimoire is carried by one hero at a time, and only once found', () => {
   assert.equal(carry(STARTING_BOOKS, [], 'bear', 'pond-primer'), STARTING_BOOKS);
   const swapped = carry(STARTING_BOOKS, ['thornwork'], 'bear', 'thornwork');
-  assert.deepEqual(swapped, { chameleon: null, bear: 'thornwork', vulture: 'windward' });
+  assert.deepEqual(swapped, { chameleon: null, bear: 'thornwork', vulture: 'windward', frog: 'hospice-litany' });
   assert.equal(createBattle('locust', [], { books: swapped }).party[0].spell, null);
 });
 

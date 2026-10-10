@@ -13,14 +13,15 @@ import type { WaystoneId } from './waystones';
 import type { Catch } from './fishing';
 
 // Carried items are lost on a wipe and go back to where they were found.
-export type Item = 'bell' | 'letter' | 'note' | 'crate' | 'ring' | 'shrine-stone' | 'raven-letter' | 'sealed-order';
+export type Item = 'bell' | 'letter' | 'note' | 'crate' | 'ring' | 'shrine-stone' | 'raven-letter' | 'sealed-order' | 'venom-vial';
 export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated' | 'pests-field' | 'pests-yard' | 'writ-given' | 'bear-free' | 'vulture-free'
   | 'sheep-woods' | 'sheep-orchard' | 'sheep-yard' | 'sheep-reward' | 'barrel-bought' | 'squid-freed' | 'swarm-slain' | 'bounty-paid'
   | 'warden-slain' | 'leech-slain'
   | 'followers-spared' | 'followers-reported' | 'followers-paid' | 'fishmonger-angry' | 'stall-cowed' | 'stood-count' | 'inn-room' | 'reeve-pardon'
   | 'hounds-fed' | 'pack-slain' | 'ram-paid' | 'barrow-coins' | 'sluice-open' | 'drowned-slain' | 'otter-trusted' | 'otter-reported' | 'otter-paid'
   | 'vulture-met' | 'anchors-known' | 'letter-delivered' | 'bridge-lowered' | 'pair-slain' | 'hyena-slain' | 'ration-ledger' | 'merchant-thanked'
-  | 'captain-slain' | 'lantern' | 'letter-left' | 'order-read' | 'hall-key' | 'crab-freed' | 'old-roads' | 'way-crossroads' | 'way-millbrook' | 'way-downs' | 'way-weir' | 'way-fort' | 'way-square'
+  | 'brood-slain' | 'channel-firm' | 'apprentice-slain' | 'frog-free' | 'viper-challenged' | 'viper-slain' | 'newt-freed' | 'manifest-read'
+  | 'captain-slain' | 'lantern' | 'letter-left' | 'order-read' | 'hall-key' | 'crab-freed' | 'old-roads' | 'way-crossroads' | 'way-millbrook' | 'way-downs' | 'way-weir' | 'way-fort' | 'way-square' | 'way-wickmere'
   | 'brother-freed' | 'warden-bribed' | 'crate-delivered' | 'ring-returned' | 'ladder-down' | 'drove-gate-open' | 'drover-cache'
   | 'burn-order-seen' | 'kid-found' | 'lane-open' | 'boar-challenged' | 'dead-1' | 'dead-2' | 'dead-3' | 'ossuary-key' | 'hyena-challenged';
 // Things worth keeping: keepsakes and grimoires. Once found, they are kept through every death; carried items are not.
@@ -35,15 +36,16 @@ export type Drained = Readonly<Partial<Record<MemberId, number>>>;
 // night: whether it is dark. clock: how far through the day it is, 0 to 1 from dawn (see clock.ts); night follows it.
 // The hero chooses when he sleeps whether to wake at dawn or at nightfall.
 // tempered: keepsakes the fort's smith has tempered; kept for good, like the keepsakes themselves.
-export type World = Readonly<{ night?: boolean; clock?: number; tempered?: readonly KeepsakeId[]; flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number; pantry?: Pantry }>;
-export const ITEMS: readonly Item[] = ['bell', 'letter', 'note', 'crate', 'ring', 'shrine-stone', 'raven-letter', 'sealed-order'];
+// bench: the hero who waits out fights once more than three have joined.
+export type World = Readonly<{ night?: boolean; clock?: number; bench?: MemberId; tempered?: readonly KeepsakeId[]; flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number; pantry?: Pantry }>;
+export const ITEMS: readonly Item[] = ['bell', 'letter', 'note', 'crate', 'ring', 'shrine-stone', 'raven-letter', 'sealed-order', 'venom-vial'];
 export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
   'sheep-woods', 'sheep-orchard', 'sheep-yard', 'sheep-reward', 'barrel-bought', 'squid-freed', 'swarm-slain', 'bounty-paid',
   'warden-slain', 'leech-slain',
   'followers-spared', 'followers-reported', 'followers-paid', 'fishmonger-angry', 'stall-cowed', 'stood-count', 'inn-room', 'reeve-pardon',
   'hounds-fed', 'pack-slain', 'ram-paid', 'barrow-coins', 'sluice-open', 'drowned-slain', 'otter-trusted', 'otter-reported', 'otter-paid',
   'vulture-met', 'anchors-known', 'letter-delivered', 'bridge-lowered', 'pair-slain', 'hyena-slain', 'ration-ledger', 'merchant-thanked',
-  'captain-slain', 'lantern', 'letter-left', 'order-read', 'hall-key', 'crab-freed', 'old-roads', 'way-crossroads', 'way-millbrook', 'way-downs', 'way-weir', 'way-fort', 'way-square',
+  'brood-slain', 'channel-firm', 'apprentice-slain', 'frog-free', 'viper-challenged', 'viper-slain', 'newt-freed', 'manifest-read', 'captain-slain', 'lantern', 'letter-left', 'order-read', 'hall-key', 'crab-freed', 'old-roads', 'way-crossroads', 'way-millbrook', 'way-downs', 'way-weir', 'way-fort', 'way-square', 'way-wickmere',
   'brother-freed', 'warden-bribed', 'crate-delivered', 'ring-returned', 'ladder-down', 'drove-gate-open', 'drover-cache',
   'burn-order-seen', 'kid-found', 'lane-open', 'boar-challenged', 'dead-1', 'dead-2', 'dead-3', 'ossuary-key', 'hyena-challenged'];
 // A favor spell: a small everyday spell a villager trades for help. It opens the hedge on the border road.
@@ -65,7 +67,7 @@ export type Effect = { give?: Item; take?: Item; set?: Flag | readonly Flag[]; l
   camp?: true; cook?: true; dice?: number;
   // travel: go to that waystone.
   travel?: WaystoneId; shop?: ShopId; rest?: true };
-export type ShopId = 'stall' | 'reeve' | 'fishmonger' | 'merchant' | 'fence' | 'apothecary' | 'night-market' | 'smith';
+export type ShopId = 'stall' | 'reeve' | 'fishmonger' | 'merchant' | 'fence' | 'apothecary' | 'night-market' | 'smith' | 'herbalist';
 
 export function createWorld(): World {
   return { flags: [], carried: [], found: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, wounds: {}, drained: {}, deaths: 0, pantry: NO_PANTRY };
@@ -95,7 +97,7 @@ export function apply(context: Context, effect: Effect): Context {
       flags: [...world.flags, ...[effect.set ?? []].flat().filter((flag, i, all) => !world.flags.includes(flag) && all.indexOf(flag) === i)],
       found: effect.find && !world.found.includes(effect.find) ? [...world.found, effect.find] : world.found,
       coins: Math.max(0, world.coins + (effect.earn ?? 0) - (effect.pay ?? 0)),
-      supplies: effect.supply ? { ...world.supplies, [effect.supply]: world.supplies[effect.supply] + 1 } : world.supplies, fish: effect.feed ? feed(world.fish, effect.feed) : world.fish, deaths: world.deaths, pantry: world.pantry, night: world.night, clock: world.clock, tempered: world.tempered, wounds: effect.rest ? {} : world.wounds, drained: effect.rest ? {} : world.drained,
+      supplies: effect.supply ? { ...world.supplies, [effect.supply]: world.supplies[effect.supply] + 1 } : world.supplies, fish: effect.feed ? feed(world.fish, effect.feed) : world.fish, deaths: world.deaths, pantry: world.pantry, night: world.night, clock: world.clock, bench: world.bench, tempered: world.tempered, wounds: effect.rest ? {} : world.wounds, drained: effect.rest ? {} : world.drained,
     },
     studied: effect.learn && !studied.includes(effect.learn) ? [...studied, effect.learn] : studied,
   };
@@ -111,7 +113,17 @@ export function rest(world: World): World {
 // The hero sets out alone. Companions join as they are found and freed, in the order of the story.
 // Only the bear can be freed so far; the vulture waits in the highlands.
 export function roster(world: World): MemberId[] {
-  return ['chameleon', ...(world.flags.includes('bear-free') ? ['bear' as const] : []), ...(world.flags.includes('vulture-free') ? ['vulture' as const] : [])];
+  return ['chameleon', ...(world.flags.includes('bear-free') ? ['bear' as const] : []), ...(world.flags.includes('vulture-free') ? ['vulture' as const] : []),
+    ...(world.flags.includes('frog-free') ? ['frog' as const] : [])];
+}
+
+// Three fight at a time. Once four have joined, the benched hero waits; the hero never does.
+export const FIGHTERS = 3;
+export function lineup(world: World): MemberId[] {
+  const joined = roster(world);
+  if (joined.length <= FIGHTERS) return joined;
+  const bench = world.bench && world.bench !== 'chameleon' && joined.includes(world.bench) ? world.bench : joined[joined.length - 1];
+  return joined.filter(member => member !== bench).slice(0, FIGHTERS);
 }
 
 // Things carried, coins, supplies, fish, and wounds gathered since the last death are lost on a wipe. Flags, like opened shortcuts, persist.

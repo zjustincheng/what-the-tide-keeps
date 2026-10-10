@@ -13,14 +13,15 @@ import type { Effect as Sound } from '../audio/effects';
 const LEAD = 900;
 
 // Who appears in a boss's scene when they speak, by the name the scene gives them.
-const SPEAKER_ART: Record<string, string> = { 'THE BOAR': 'boar', 'THE BADGER': 'badger', 'THE RAT': 'rat', 'THE HYENA': 'hyena' };
+const SPEAKER_ART: Record<string, string> = { 'THE BOAR': 'boar', 'THE BADGER': 'badger', 'THE RAT': 'rat', 'THE HYENA': 'hyena', 'THE VIPER': 'viper' };
 
 // What each hero's support does. A guard stops physical blows; a barrier (under Spellcraft) stops studied spells.
-const SUPPORT_SHORT: Record<MemberId, string> = { chameleon: 'Stops blows', bear: 'Guards an ally', vulture: 'Next hit harder' };
+const SUPPORT_SHORT: Record<MemberId, string> = { chameleon: 'Stops blows', bear: 'Guards an ally', vulture: 'Next hit harder', frog: 'Mends an ally' };
 const SUPPORT_HELP: Record<MemberId, string> = {
   chameleon: 'Guard: stops physical blows aimed at him this turn. It does nothing against spells: a barrier does that.',
   bear: 'Protect: the bear guards the ally chosen on his card against physical blows this turn, himself included. Spells pass through: use a barrier.',
   vulture: 'Focus: her next attack hits 3 harder.',
+  frog: 'Dose: a small dose of her toxin mends the ally chosen on her card by 6 and draws out their poison. While the party is soured, it burns instead. Her dart, a large dose, poisons the enemy.',
 };
 
 export class BattleView {
@@ -65,7 +66,7 @@ export class BattleView {
         return `<section class="member-card" data-member="${member.id}" aria-label="${info.name}">
           <button class="fighter party-fighter" aria-label="${info.name}: tap for ${info.support.toLowerCase()}, drag to attack or support"><img alt="" /></button>
           <h3>${info.name}</h3><div class="health-bar" role="meter" aria-label="${info.name} health" aria-valuemin="0" aria-valuemax="100"><span></span></div><p class="member-condition"></p><p class="mana member-mana"></p><p class="member-status"></p>
-          <label class="protect-label">Ally <select aria-label="${member.id === 'bear' ? 'Bear protection target' : info.name + ' barrier target'}">${this.state.party.map(target => `<option value="${target.id}" ${target.id === member.id ? 'selected' : ''}>${MEMBERS[target.id].name}</option>`).join('')}</select></label>
+          <label class="protect-label">Ally <select aria-label="${member.id === 'bear' ? 'Bear protection target' : member.id === 'frog' ? 'Frog dose target' : info.name + ' barrier target'}">${this.state.party.map(target => `<option value="${target.id}" ${target.id === member.id ? 'selected' : ''}>${MEMBERS[target.id].name}</option>`).join('')}</select></label>
           <div class="member-actions"><button data-action="attack" aria-label="${info.name} attack">${info.attack}<small>Physical</small></button><button data-action="support" aria-label="${info.name} support" title="${SUPPORT_HELP[member.id]}">${info.support}<small>${SUPPORT_SHORT[member.id]}</small></button><button data-action="gather" aria-label="${info.name} gather">Gather<small>+${GATHER} mana</small></button></div>
           ${member.spell ? `<button class="cast-button" data-cast aria-label="${info.name} cast ${SPELLS[member.spell].name}">${SPELLS[member.spell].name}<small>${SPELLS[member.spell].cost} mana · ${SPELLS[member.spell].length} keys</small></button>` : ''}
           <details class="spellcraft"><summary>Spellcraft</summary><button data-action="suppress" aria-label="${info.name} suppress">Suppress · ${cost(member, 'suppress')} mana</button><button data-action="barrier" aria-label="${info.name} barrier" title="A barrier stops spells, but only ones you have studied, for the ally chosen on this card. It does nothing against physical blows: guard against those.">Barrier · 5 mana</button><button data-action="analyze" aria-label="${info.name} analyze">Analyze · 2 mana</button></details>
@@ -88,7 +89,7 @@ export class BattleView {
       const card = this.card(member.id);
       for (const action of ['attack', 'support', 'gather', 'suppress', 'barrier', 'analyze'] as const) {
         card.querySelector(`[data-action="${action}"]`)!.addEventListener('click', () => {
-          const target = (action === 'barrier' || (member.id === 'bear' && action === 'support')) ? card.querySelector<HTMLSelectElement>('select')!.value as MemberId : member.id;
+          const target = (action === 'barrier' || ((member.id === 'bear' || member.id === 'frog') && action === 'support')) ? card.querySelector<HTMLSelectElement>('select')!.value as MemberId : member.id;
           this.choose(member.id, action, target, action === 'attack' ? this.foe() : 0);
         }, { signal });
       }
@@ -219,7 +220,7 @@ export class BattleView {
     this.strikeKind = action === 'attack' ? 'slash' : undefined;
     this.state = act(this.state, actor, action, target, foe);
     // Each hero strikes with their own sound; spellcraft has its own.
-    const sounds: Record<Action, Sound> = { attack: ({ chameleon: 'lash', bear: 'maul', vulture: 'talons' } as const)[actor], support: actor === 'vulture' ? 'gather' : 'block', suppress: 'open', barrier: 'barrier', analyze: 'key', gather: 'gather' };
+    const sounds: Record<Action, Sound> = { attack: ({ chameleon: 'lash', bear: 'maul', vulture: 'talons', frog: 'lash' } as const)[actor], support: actor === 'vulture' || actor === 'frog' ? 'gather' : 'block', suppress: 'open', barrier: 'barrier', analyze: 'key', gather: 'gather' };
     music.effect(sounds[action]);
     this.afterAction();
   }
@@ -521,7 +522,7 @@ export class BattleView {
     this.get('#battle-title').textContent = stage ? `${stage.title}.` : 'Stand together.';
     this.get('.battle-heading .eyebrow').textContent = stage ? 'SECOND STAGE' : 'THE CONDEMNED';
     this.get('#battle-turn').textContent = done ? (state.phase === 'fled' ? 'You run. Half your coins scatter behind you.' : state.phase === 'victory' ? `${SURVIVE[state.encounter] ? 'You lived through it.' : `It falls quiet. You find ${BOUNTY[state.encounter]} coins.`}${state.party.some(member => member.health < member.maxHealth) ? ' Your wounds will linger until you rest at a fire.' : ''}` : 'The party falls.')
-      : `Round ${state.round} · ${state.phase === 'player' ? `${remaining} actions remaining` : 'The enemy moves'}`;
+      : `Round ${state.round} · ${state.phase === 'player' ? `${remaining} actions remaining` : 'The enemy moves'}${state.soured ? ' · Soured: healing burns' : ''}`;
     this.get('#enemy-condition').textContent = condition(state.enemy);
     this.renderHealth(this.get('.enemy-row .health-bar'), state.enemy);
     state.followers.forEach((follower, index) => {
@@ -536,7 +537,7 @@ export class BattleView {
       if (strike.selectedOptions[0]?.disabled) strike.value = Array.from(strike.options).find(option => !option.disabled)?.value ?? '0';
       strike.disabled = state.phase !== 'player';
     }
-    this.get('#enemy-mana').textContent = `Mana ${enemyMana(state)}${ENEMIES[state.encounter].veiled && !state.enemyRevealed ? ' · veiled' : ''}${state.fury ? ` · ${state.encounter === 'hyena' ? 'Fed' : 'Fury'} ${state.fury}` : ''}${warded(state) ? ' · warded by its votives' : ''}`;
+    this.get('#enemy-mana').textContent = `Mana ${enemyMana(state)}${ENEMIES[state.encounter].veiled && !state.enemyRevealed ? ' · veiled' : ''}${state.fury ? ` · ${state.encounter === 'hyena' ? 'Fed' : 'Fury'} ${state.fury}` : ''}${warded(state) ? ' · warded by its votives' : ''}${state.enemyPoison ? ` · poisoned ${state.enemyPoison}` : ''}`;
     const target = enemyTarget(state);
     this.get('#enemy-intent').textContent = done ? '' : state.enemy.health === 0 ? `The ${ENEMIES[state.encounter].short} is down. What stood with it fights on.`
       : state.snared ? 'Snared · thorns hold it. It cannot move this turn.'
@@ -549,7 +550,9 @@ export class BattleView {
       card.querySelector('.member-condition')!.textContent = condition(member);
       this.renderHealth(card.querySelector<HTMLElement>('.health-bar')!, member);
       card.querySelector('.member-mana')!.textContent = `Mana ${member.mana} / ${member.maxMana} · showing ${visibleMana(member)}`;
+      card.dataset.poisoned = String(member.poison > 0 && member.health > 0);
       card.querySelector('.member-status')!.textContent = member.health === 0 ? 'Cannot act'
+        : member.poison ? `Poisoned · ${member.poison} round${member.poison === 1 ? '' : 's'}${member.acted ? ' · acted' : ''}`
         : member.flaring ? 'Flaring · the enemy sees them' : member.barrier ? 'Barrier raised' : member.suppressed ? 'Hidden · attack to reveal'
         : member.guardingFor ? `Guarding ${MEMBERS[member.guardingFor].name}` : member.focused ? 'Focused'
         : member.acted ? 'Acted' : done ? '' : 'Ready';

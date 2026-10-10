@@ -2,8 +2,8 @@
 // These are distinct from the shared grimoire of studied enemy spells.
 import type { MemberId } from './battle';
 
-export type BookId = 'thornwork' | 'riverstone' | 'windward' | 'pond-primer' | 'snare-primer' | 'drowned-psalter' | 'banned-hymnal';
-export type SpellId = 'thorn-volley' | 'stone-ward' | 'gale-quill' | 'still-water' | 'bramble-snare' | 'undertow' | 'hush';
+export type BookId = 'thornwork' | 'riverstone' | 'windward' | 'pond-primer' | 'snare-primer' | 'drowned-psalter' | 'banned-hymnal' | 'hospice-litany';
+export type SpellId = 'thorn-volley' | 'stone-ward' | 'gale-quill' | 'still-water' | 'bramble-snare' | 'undertow' | 'hush' | 'bitter-tonic';
 export type Books = Readonly<Record<MemberId, BookId | null>>;
 
 // Casting means typing a shown sequence of 1–4 within the time limit. One wrong key and the spell fizzles.
@@ -17,6 +17,8 @@ export const SPELLS: Record<SpellId, { name: string; cost: number; length: numbe
   // Hard to cast quickly, and it hits harder than anything a hero starts with.
   // A banned hymn that stops a thing in its tracks: a snare that is quick to cast and quick to settle.
   hush: { name: 'Hush', cost: 4, length: 4, seconds: 2.2, kind: 'snare', power: 0, cooldown: 2, text: 'The main enemy loses its next move. Quick to cast, quick to settle.' },
+  // The frog's own: a little mending for everyone, and the poison drawn out of them.
+  'bitter-tonic': { name: 'Bitter tonic', cost: 4, length: 5, seconds: 3, kind: 'heal', power: 5, cooldown: 2, text: 'Every standing hero recovers 5 health, and the poison comes out of them.' },
   undertow: { name: 'Undertow', cost: 6, length: 7, seconds: 3, kind: 'damage', power: 20, cooldown: 3, text: 'Black water drags at one enemy.' },
 };
 
@@ -28,10 +30,11 @@ export const BOOKS: Record<BookId, { name: string; spell: SpellId }> = {
   'snare-primer': { name: "Hedge-witch's primer", spell: 'bramble-snare' },
   'drowned-psalter': { name: 'Drowned psalter', spell: 'undertow' },
   'banned-hymnal': { name: 'Banned hymnal', spell: 'hush' },
+  'hospice-litany': { name: 'Hospice litany', spell: 'bitter-tonic' },
 };
 export const BOOK_IDS = Object.keys(BOOKS) as BookId[];
 // Each hero starts with their own grimoire; others are found and can be carried by anyone.
-export const STARTING_BOOKS: Books = { chameleon: 'thornwork', bear: 'riverstone', vulture: 'windward' };
+export const STARTING_BOOKS: Books = { chameleon: 'thornwork', bear: 'riverstone', vulture: 'windward', frog: 'hospice-litany' };
 
 // Give a hero a grimoire. A grimoire carried by someone else moves; null leaves the hero without one.
 export function carry(books: Books, owned: readonly BookId[], member: MemberId, id: BookId | null): Books {

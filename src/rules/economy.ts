@@ -7,12 +7,13 @@ import { BOOKS, SPELLS } from './spells.ts';
 import type { BookId } from './spells';
 import { catchValue, NO_CATCH } from './fishing.ts';
 
-export type SupplyId = 'smoked-fish' | 'smelling-salts' | 'firepot' | 'fish-stew' | 'herb-salve' | 'trail-cake';
+export type SupplyId = 'smoked-fish' | 'smelling-salts' | 'firepot' | 'fish-stew' | 'herb-salve' | 'trail-cake' | 'antivenom';
 export type Supplies = Readonly<Record<SupplyId, number>>;
-export const NO_SUPPLIES: Supplies = { 'smoked-fish': 0, 'smelling-salts': 0, firepot: 0, 'fish-stew': 0, 'herb-salve': 0, 'trail-cake': 0 };
+export const NO_SUPPLIES: Supplies = { 'smoked-fish': 0, 'smelling-salts': 0, firepot: 0, 'fish-stew': 0, 'herb-salve': 0, 'trail-cake': 0, antivenom: 0 };
 
 // Supplies are used in battle as a hero's action. Like coins, they are lost on a wipe.
-export const SUPPLIES: Record<SupplyId, { name: string; price: number; target: 'ally' | 'fallen' | 'enemy'; power: number; text: string }> = {
+// cure: it draws the poison out of whoever takes it.
+export const SUPPLIES: Record<SupplyId, { name: string; price: number; target: 'ally' | 'fallen' | 'enemy'; power: number; text: string; cure?: true }> = {
   'smoked-fish': { name: 'Smoked fish', price: 3, target: 'ally', power: 10, text: 'One standing ally recovers 10 health.' },
   'smelling-salts': { name: 'Smelling salts', price: 5, target: 'fallen', power: 8, text: 'A fallen ally gets back up with 8 health.' },
   firepot: { name: 'Firepot', price: 4, target: 'enemy', power: 10, text: 'Thrown at one enemy for 10 damage.' },
@@ -20,11 +21,12 @@ export const SUPPLIES: Record<SupplyId, { name: string; price: number; target: '
   'fish-stew': { name: 'Fish stew', price: 6, target: 'ally', power: 18, text: 'One standing ally recovers 18 health.' },
   'herb-salve': { name: 'Herb salve', price: 8, target: 'fallen', power: 14, text: 'A fallen ally gets back up with 14 health.' },
   'trail-cake': { name: 'Trail cake', price: 2, target: 'ally', power: 7, text: 'One standing ally recovers 7 health.' },
+  antivenom: { name: 'Antivenom', price: 6, target: 'ally', power: 0, cure: true, text: 'Draws the poison out of one standing ally. Heals nothing, so Souring can\'t turn it.' },
 };
 export const SUPPLY_IDS = Object.keys(SUPPLIES) as SupplyId[];
 
 // What a defeated enemy leaves behind.
-export const BOUNTY: Record<Encounter, number> = { locust: 4, weevil: 5, acolyte: 10, boar: 30, swarm: 12, warden: 15, leech: 10, hound: 6, pack: 14, wisp: 5, drowned: 12, raider: 8, ghoul: 5, vulture: 0, pair: 14, hyena: 35, inquisitor: 0, captain: 24, harrier: 9 };
+export const BOUNTY: Record<Encounter, number> = { locust: 4, weevil: 5, acolyte: 10, boar: 30, swarm: 12, warden: 15, leech: 10, hound: 6, pack: 14, wisp: 5, drowned: 12, raider: 8, ghoul: 5, vulture: 0, pair: 14, hyena: 35, inquisitor: 0, captain: 24, harrier: 9, mosquito: 6, scorpion: 9, brood: 16, apprentice: 14, viper: 40 };
 
 // Something for sale: a supply, or a one-time deed that sets a story flag.
 // A shop can also buy: sellCatch trades every fish in the pack for coins.

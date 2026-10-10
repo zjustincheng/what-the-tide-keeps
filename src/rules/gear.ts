@@ -2,7 +2,7 @@
 import type { MemberId } from './battle';
 
 export type KeepsakeId = 'cracked-mirror' | 'crow-feather' | 'covenant-token' | 'yoke-peg' | 'wool-charm' | 'boar-tusk' | 'iron-collar' | 'famine-spoon' | 'weir-hook' | 'frost-ring' | 'tide-shell'
-  | 'garrison-buckler' | 'saints-medal' | 'night-cloak' | 'smuggled-blade' | 'raven-quill';
+  | 'garrison-buckler' | 'saints-medal' | 'night-cloak' | 'smuggled-blade' | 'raven-quill' | 'viper-fang' | 'hospice-bell';
 // What a keepsake changes about its holder in battle.
 // agility: in hundredths of a hero's dodge windows; +15 makes every window 15% wider.
 export type Mods = Readonly<{ health: number; damage: number; reveal: number; suppressCost: number; shown: number; agility: number }>;
@@ -10,7 +10,7 @@ export type Gear = Readonly<Record<MemberId, readonly KeepsakeId[]>>;
 
 export const NO_MODS: Mods = { health: 0, damage: 0, reveal: 0, suppressCost: 0, shown: 0, agility: 0 };
 export const SLOTS = 2;
-export const MEMBER_IDS: readonly MemberId[] = ['chameleon', 'bear', 'vulture'];
+export const MEMBER_IDS: readonly MemberId[] = ['chameleon', 'bear', 'vulture', 'frog'];
 
 // Each keepsake changes how its holder plays, usually with a drawback. Some fit only one hero.
 export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; effect: string; drawback: string; mods: Partial<Mods> }> = {
@@ -36,6 +36,10 @@ export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; ef
     effect: '3 more health, and dodges come easier (+20% timing).', drawback: 'Attacks hit 1 softer.', mods: { health: 3, agility: 20, damage: -1 } },
   'raven-quill': { name: 'Raven\'s quill', holder: 'vulture',
     effect: 'Dodges come much easier (+25% timing), and attacks hit 1 harder.', drawback: '3 less health.', mods: { agility: 25, damage: 1, health: -3 } },
+  // The marsh.
+  'viper-fang': { name: 'Viper\'s fang', holder: 'frog',
+    effect: 'Her dart hits 3 harder.', drawback: '3 less health.', mods: { damage: 3, health: -3 } },
+  'hospice-bell': { name: 'Hospice handbell', effect: '6 more health.', drawback: 'Shows 2 more mana: the sick always know where you are.', mods: { health: 6, shown: 2 } },
   // Sold rather than found.
   'garrison-buckler': { name: 'Garrison buckler',
     effect: '7 more health.', drawback: 'Attacks hit 1 softer, and dodging is harder (-10% timing).', mods: { health: 7, damage: -1, agility: -10 } },
@@ -51,7 +55,7 @@ export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; ef
 export const KEEPSAKE_IDS = Object.keys(KEEPSAKES) as KeepsakeId[];
 
 export function createGear(): Gear {
-  return { chameleon: [], bear: [], vulture: [] };
+  return { chameleon: [], bear: [], vulture: [], frog: [] };
 }
 
 export function canEquip(owned: readonly KeepsakeId[], member: MemberId, id: KeepsakeId): boolean {
@@ -81,7 +85,7 @@ export function keepsakeMods(id: KeepsakeId, tempered = false): Partial<Mods> {
 }
 
 export function mods(gear: Gear, member: MemberId, tempered: readonly KeepsakeId[] = []): Mods {
-  return gear[member].reduce<Mods>((total, id) => {
+  return (gear[member] ?? []).reduce<Mods>((total, id) => {
     const add = keepsakeMods(id, tempered.includes(id));
     return Object.fromEntries(Object.entries(total).map(([key, value]) => [key, value + (add[key as keyof Mods] ?? 0)])) as Mods;
   }, NO_MODS);

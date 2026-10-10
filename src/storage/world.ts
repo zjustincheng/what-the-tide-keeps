@@ -23,7 +23,7 @@ function parse(raw: string | null): World | undefined {
   if (raw === null) return undefined;
   const saved: unknown = JSON.parse(raw);
   if (typeof saved !== 'object' || saved === null) return undefined;
-  const { flags, carried, found = [], coins = 0, supplies = {}, fish = {}, wounds = {}, drained = {}, deaths = 0, pantry = {}, night = false, clock, tempered = [] } = saved as Record<string, unknown>;
+  const { flags, carried, found = [], coins = 0, supplies = {}, fish = {}, wounds = {}, drained = {}, deaths = 0, pantry = {}, night = false, clock, bench, tempered = [] } = saved as Record<string, unknown>;
   if (!Array.isArray(flags) || !Array.isArray(carried) || !Array.isArray(found)) return undefined;
   return {
     flags: FLAGS.filter((flag): flag is Flag => flags.includes(flag)), carried: ITEMS.filter((item): item is Item => carried.includes(item)),
@@ -43,6 +43,7 @@ function parse(raw: string | null): World | undefined {
     // Night follows the clock. Older saves only knew day or night: start them at morning or at nightfall.
     night: timed(clock) ? clock >= NIGHT : night === true,
     clock: timed(clock) ? clock : night === true ? NIGHT : 0.1,
+    bench: MEMBER_IDS.find(id => id === bench && id !== 'chameleon'),
     tempered: Array.isArray(tempered) ? KEEPSAKE_IDS.filter(id => tempered.includes(id)) : [],
     pantry: Object.fromEntries(INGREDIENT_IDS.map(id => {
       const count = (pantry as Record<string, unknown>)?.[id];
