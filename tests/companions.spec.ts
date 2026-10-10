@@ -59,7 +59,7 @@ test("clearing the reeve's fields earns the writ that frees the bear", async ({ 
   await fight(page, 'farmland', 700, 488, 'a', 'Grain weevil');
   await win(page);
   await visit(page, 'town');
-  await talk(page, 'town', 88, 124, 'Speak to the reeve');
+  await talk(page, 'town', 120, 124, 'Speak to the reeve');
   await expect(page.locator('#dialogue-text')).toContainText('The wheat is standing');
   await page.keyboard.press('Escape');
   await visit(page, 'farmland');

@@ -67,7 +67,7 @@ test.describe('from a fresh game', () => {
   test("the bear's fine can be paid instead of earned", async ({ page }) => {
     await start(page, { flags: [], carried: [], found: [], coins: 64 });
     await visit(page, 'town');
-    await talkThrough(page, 'town', 88, 124, 'Speak to the reeve');
+    await talkThrough(page, 'town', 120, 124, 'Speak to the reeve');
     await page.getByRole('button', { name: "Buy The bear's writ" }).click();
     await expect(page.getByRole('dialog', { name: 'The reeve' })).toContainText('You carry 4 coins.');
     await page.getByRole('button', { name: 'Leave' }).click();

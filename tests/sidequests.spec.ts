@@ -92,6 +92,6 @@ test('the swarm-mother waits deep in the woods, and the reeve pays her bounty', 
   await expect(page.getByRole('combobox', { name: 'Attack target' })).not.toHaveValue('0');
   await win(page);
   await visit(page, 'town');
-  await talk(page, 'town', 88, 124, 'Speak to the reeve');
+  await talk(page, 'town', 120, 124, 'Speak to the reeve');
   await expect(page.locator('#purse')).toHaveText('37 coins');
 });

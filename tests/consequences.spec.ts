@@ -68,7 +68,7 @@ test('reporting them puts the badger in the gibbet and pays at the reeve', async
   await expect(page.locator('#dialogue-text')).toContainText('A badger. He doesn\'t look up.');
   await page.keyboard.press('Escape');
   await visit(page, 'town');
-  await place(page, 'town', 88, 124);
+  await place(page, 'town', 120, 124);
   await expect(page.locator('#prompt')).toContainText('Speak to the reeve');
   await page.keyboard.press('e');
   await finish(page);

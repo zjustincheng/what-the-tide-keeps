@@ -91,7 +91,7 @@ test('fighting the boar directly frees the grain and changes the farmland', asyn
   await page.keyboard.down('s'); await page.waitForTimeout(400); await page.keyboard.up('s');
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await visit(page, 'town');
-  await place(page, 'town', 88, 124);
+  await place(page, 'town', 120, 124);
   await expect(page.locator('#prompt')).toContainText('Speak to the reeve');
   await page.keyboard.press('e');
   await expect(page.locator('#dialogue-text')).toContainText('The carts went through at dawn.');

@@ -50,9 +50,19 @@ test('fighters breathe, hop when they act, and flinch when hit', async ({ page }
   await expect(page.getByRole('heading', { name: 'Crop locust' })).toBeVisible({ timeout: 5000 });
   const enemy = page.locator('.enemy-fighter[data-foe="0"]');
   expect(await enemy.locator('img').evaluate(image => getComputedStyle(image).animationName)).toBe('sway');
+  // The flinch, the lunge, and the slash only last a moment: record them as they happen, so a busy machine can't miss them.
+  await page.evaluate(() => {
+    const seen = new Set<string>();
+    (window as unknown as { seen: Set<string> }).seen = seen;
+    new MutationObserver(records => {
+      for (const record of records) {
+        const element = record.target as Element;
+        if (element.classList?.contains('is-hit')) seen.add('hit');
+        if (element.classList?.contains('is-lunging')) seen.add('lunge');
+        for (const added of Array.from(record.addedNodes)) if ((added as Element).classList?.contains('fx-slash')) seen.add('slash');
+      }
+    }).observe(document.querySelector('.battle')!, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
+  });
   await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
-  await expect(enemy).toHaveClass(/is-hit/);
-  await expect(page.locator('.member-card[data-member="chameleon"] .party-fighter')).toHaveClass(/is-lunging/);
-  // The struck enemy shows the slash.
-  await expect(enemy.locator('.fx-slash')).toHaveCount(1);
+  await expect.poll(() => page.evaluate(() => [...(window as unknown as { seen: Set<string> }).seen].sort())).toEqual(['hit', 'lunge', 'slash']);
 });
