@@ -81,7 +81,7 @@ const HIDE_DRAIN = 2500;
 const FALL_WOUND = 3, CRACKS = 450, GIVES = 800, COMES_BACK = 3000;
 // Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
 const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8], warden: [22, 26, 5, 4], leech: [28, 24, 2, 4], hound: [20, 22, 6, 8], pack: [22, 24, 5, 6], wisp: [14, 14, 9, 9], drowned: [20, 26, 6, 4],
-  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4], captain: [22, 24, 5, 6], harrier: [22, 18, 5, 8], mosquito: [20, 16, 6, 8], scorpion: [24, 16, 4, 12], brood: [26, 20, 3, 8], apprentice: [22, 22, 5, 8], viper: [26, 20, 3, 10], hornet: [20, 16, 6, 8], spider: [26, 16, 3, 12], duellist: [20, 22, 6, 8], cuckoo: [22, 22, 5, 8], warder: [26, 18, 3, 12], cricket: [22, 14, 5, 14], flight: [26, 20, 3, 8], champion: [22, 22, 5, 8], shark: [26, 18, 3, 10], barracuda: [24, 12, 4, 12], jelly: [22, 20, 5, 8], eel: [26, 14, 3, 12], cuttlefish: [28, 22, 2, 8], sentinel: [22, 24, 5, 6], keeper: [26, 26, 3, 4] };
+  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4], captain: [22, 24, 5, 6], harrier: [22, 18, 5, 8], mosquito: [20, 16, 6, 8], scorpion: [24, 16, 4, 12], brood: [26, 20, 3, 8], apprentice: [22, 22, 5, 8], viper: [26, 20, 3, 10], hornet: [20, 16, 6, 8], spider: [26, 16, 3, 12], duellist: [20, 22, 6, 8], cuckoo: [22, 22, 5, 8], warder: [26, 18, 3, 12], cricket: [22, 14, 5, 14], flight: [26, 20, 3, 8], champion: [22, 22, 5, 8], shark: [26, 18, 3, 10], barracuda: [24, 12, 4, 12], jelly: [22, 20, 5, 8], eel: [26, 14, 3, 12], cuttlefish: [28, 22, 2, 8], sentinel: [22, 24, 5, 6], keeper: [26, 26, 3, 4], human: [24, 30, 4, 2] };
 // Whether the last save succeeded, shared by every area.
 let saved = true;
 // The way out of a conversation, offered whenever the hero comes back to the replies.
@@ -368,7 +368,8 @@ export class AreaScene extends Phaser.Scene {
   }
 
   private context(): Context {
-    return { world: loadWorld(), lost: loadMemory().lost, studied: loadGrimoire() };
+    const memory = loadMemory();
+    return { world: loadWorld(), lost: memory.lost, remembered: held(memory), studied: loadGrimoire() };
   }
 
   // Every way out is marked with a small arrow just in front of it, pointing the way through: through a door in a wall,
@@ -879,6 +880,7 @@ export class AreaScene extends Phaser.Scene {
     // Raised for a memory instead of coins: the tide chooses which, as it does at a death.
     // A memory found again, written down where he could read it.
     if(then.recall) { saved=saveMemory(recall(loadMemory(), then.recall)) && saved; music.effect('find'); }
+    if(then.recallAll) { saved=saveMemory(MEMORY_IDS.reduce((memory, id) => recall(memory, id), loadMemory())) && saved; music.effect('find'); }
     if(then.ending) this.pendingEnding=then.ending;
     if(then.tithe) {
       const owing=wipe(loadMemory(), 1);
@@ -1035,7 +1037,7 @@ export class AreaScene extends Phaser.Scene {
         saved = saveMemory(wipe(loadMemory(), this.area.region === 'THE OCEAN' ? 2 : 1)) && saveWorld(drop(loadWorld()));
         this.scene.start('church');
       }
-    }, foe.encounter, { ...this.partyOptions(true, LIEUTENANTS.includes(foe.encounter) || foe.encounter === 'keeper'), ambush: Boolean(foe.ambush && foe.hidden), surprise: this.sneaking, waves: foe.waves, company: foe.company });
+    }, foe.encounter, { ...this.partyOptions(true, LIEUTENANTS.includes(foe.encounter) || foe.encounter === 'human'), ambush: Boolean(foe.ambush && foe.hidden), surprise: this.sneaking, waves: foe.waves, company: foe.company });
   }
 
   // Anyone carried off the field: rest won't bring them back. Only the church can.
@@ -1223,7 +1225,8 @@ export class AreaScene extends Phaser.Scene {
   // Everyone who has joined, or, for a fight, only those who fight: three at most, with one on the bench.
   private partyOptions(fighting = false, lieutenant = false): BattleOptions {
     const world = loadWorld();
-    return { hollow: hollow(loadMemory()), gear: loadGear(), books: settle(loadBooks(), roster(world)), roster: this.area.solo ? ['chameleon'] : fighting ? lineup(world, lieutenant) : roster(world), tempered: world.tempered ?? [], supplies: world.supplies, wounds: world.wounds, drained: world.drained };
+    const memory = loadMemory();
+    return { hollow: hollow(memory), lostMemories: memory.lost, gear: loadGear(), books: settle(loadBooks(), roster(world)), roster: this.area.solo ? ['chameleon'] : fighting ? lineup(world, lieutenant) : roster(world), tempered: world.tempered ?? [], supplies: world.supplies, wounds: world.wounds, drained: world.drained };
   }
 
   private toggleHud() {

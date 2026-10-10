@@ -1073,7 +1073,7 @@ const OVERSEER: Escort = { name: 'Works hand', art: 'sentinel', health: 26, weap
 export const LANDING: Area = {
   ...ISLAND_GROUND, key: 'landing', map: 'landing', music: 'sea', place: 'The landing', dialogue: landing,
   grade: { saturation: -0.45, brightness: 0.74, vignette: 0.55 }, npcs: [],
-  enemies: [{ point: 'marine-1', encounter: 'sentinel' }, { point: 'marine-2', encounter: 'sentinel' }, { point: 'marine-3', encounter: 'sentinel', company: [OVERSEER] }],
+  enemies: [],
   exits: {
     out: { to: 'open-water', spawn: 'from-island', prompt: 'Ride the current back north' },
     'tower-door': { to: 'lighthouse', spawn: 'spawn', prompt: 'Go into the lighthouse' },
@@ -1093,13 +1093,13 @@ export const WORKS: Area = {
     { point: 'caged-1', texture: 'newt', hiddenIf: [{ flag: 'cages-opened' }] }, { point: 'caged-2', texture: 'lodger', hiddenIf: [{ flag: 'cages-opened' }] },
     { point: 'caged-3', texture: 'old-mole', hiddenIf: [{ flag: 'cages-opened' }] },
   ],
-  enemies: [{ point: 'foreman', encounter: 'sentinel', company: [OVERSEER, OVERSEER], hiddenIf: [{ flag: 'works-taken' }], defeat: { set: 'works-taken' } }],
+  enemies: [],
   exits: { out: { to: 'landing', spawn: 'from-works', prompt: 'Go back out to the landing' } },
 };
 export const WHITEHOUSE: Area = {
   ...ISLAND_GROUND, key: 'whitehouse', map: 'whitehouse', music: 'crypt', place: 'The white house', dialogue: whitehouse,
   grade: { saturation: -0.7, brightness: 0.86, vignette: 0.55 }, npcs: [],
-  enemies: [{ point: 'ghoul-1', encounter: 'ghoul' }],
+  enemies: [],
   exits: { out: { to: 'landing', spawn: 'from-house', prompt: 'Go back out to the landing' } },
 };
 export const LIGHTHOUSE: Area = {
@@ -1116,14 +1116,11 @@ export const LIGHTHOUSE: Area = {
 };
 export const LAMP: Area = {
   ...ISLAND_GROUND, key: 'lamp', map: 'lamp', music: 'wake', place: 'The lamp room', dialogue: lamp,
-  grade: { saturation: -0.2, brightness: 1, vignette: 0.45 }, assets: ['keeper'],
-  npcs: [
-    { point: 'keeper', texture: 'keeper', hiddenIf: [{ flag: 'keeper-challenged' }, { flag: 'keeper-slain' }] },
-    { point: 'stranger', texture: 'stranger', hiddenIf: [{ flag: 'light-kept' }] },
-  ],
-  enemies: [{ point: 'keeper', encounter: 'keeper', hiddenIf: [{ flag: 'keeper-slain' }, { not: { flag: 'keeper-challenged' } }], defeat: { set: 'keeper-slain' } }],
-  // Where the Keeper falls, he stays.
-  props: [{ point: 'keeper', texture: 'keeper', hiddenIf: [{ not: { flag: 'keeper-slain' } }] }],
+  grade: { saturation: -0.2, brightness: 1, vignette: 0.45 }, assets: [],
+  npcs: [{ point: 'stranger', texture: 'stranger', hiddenIf: [
+    { flag: 'human-seated' }, { all: [{ flag: 'human-challenged' }, { not: { flag: 'human-beaten' } }] },
+  ] }],
+  enemies: [{ point: 'stranger', encounter: 'human', hiddenIf: [{ flag: 'human-beaten' }, { not: { flag: 'human-challenged' } }], defeat: { set: 'human-beaten' } }],
   exits: { down: { to: 'lighthouse', spawn: 'from-lamp', prompt: 'Go back down the stair' } },
 };
 

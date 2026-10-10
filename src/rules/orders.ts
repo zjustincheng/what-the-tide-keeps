@@ -47,15 +47,16 @@ export function orders(world: World): Orders {
       : !has('grave-seen') ? 'Ride the currents out of Wrecktown. The kraken\'s grave is on a sandbar in the far south-east of the open water.'
       : 'The cuttlefish waits on its reef, at the north of the open water. It throws back the last spell you cast.',
   };
-  if (!has('light-out') && !has('light-kept')) return {
+  if (!has('human-seated') && !has('human-spared')) return {
     title: 'The island', given: 'The sea has always known where the island is: south, past the charts, where the light is.',
     next: !has('island-landed') ? 'Ride the current south from the open water, past the charts, to the light.'
       : !has('works-seen') || !has('house-seen') ? 'Find out what the church does on the rock: the works to the west of the landing, the white house to the east.'
-      : !has('keeper-slain') ? 'Climb the lighthouse to the lamp. The Keeper of the Light is there, and the man with no fur.'
-      : 'The man with no fur is waiting by the lens. Decide.',
+      : !has('human-challenged') && !has('human-beaten') ? 'Climb the lighthouse. The human is waiting in the lamp room.'
+      : !has('human-beaten') ? 'Face the human in the lamp room. He casts the memories the tide took.'
+      : 'Speak to the human. The fight is over. What you remember is yours to choose.',
   };
   return {
-    title: 'Afterwards', given: has('light-out') ? 'The light is out. The coast is dark, and hungry, and talking.' : 'The light still turns. The church has pardoned you.',
+    title: 'Afterwards', given: has('human-spared') ? 'You spared the human, and the church has lifted the sentence.' : 'You took the seat beside the human. The reason you came is gone.',
     next: 'Walk where you like.',
   };
 }

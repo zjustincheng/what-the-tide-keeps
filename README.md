@@ -427,9 +427,9 @@ The places:
 
 ## The island
 
-After the cuttlefish, follow the current south to the island. The church's landing, the works, the old laboratory (the white house), and the lighthouse form the final route. Read the works' daybook to uncover what the land's food stores contain, open the cages, then explore the laboratory records to learn how the resurrection basin works and recover the hero's erased name. Climb the lighthouse and face its Keeper before speaking with the human.
+After the cuttlefish, follow the current south to the island. The shore, works, ruined laboratory (the white house), and lighthouse are quiet; the human waits in the lamp room. Read the works' daybook to learn what the church has been rendering into rations, and open the cages. In the laboratory, the records explain the resurrection basin and the hero's erased past. The human is not hostile: he offers the hero a place beside him.
 
-The final conversation offers two outcomes: put out the light with the human, or bring him back to the church. The ending epilogue reflects the party's recovered memories and evidence. The ocean route back north remains open from the island landing.
+The human's invitation becomes a choice only if the hero still remembers the feast, at least one companion, and the door he opened as a guard. Without those memories, he sits beside the human, who holds what he has forgotten. With them, he refuses and the human fights using the party's lost memories as spells. Defeating him gives those memories back; the hero's choice to spare him opens the good ending. The inquisitor brings the evidence that clears the party's name, the resurrections stop, and the old Covenant must make room for the sea. The ocean route back north remains open from the island landing.
 
 ## The capital
 

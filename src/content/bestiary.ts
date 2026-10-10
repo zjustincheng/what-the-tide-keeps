@@ -40,5 +40,6 @@ export const BESTIARY: Record<Encounter, string> = {
   cuttlefish: 'Kin to the kraken, uniting the sea to end the fish trade. It throws back the last spell you cast: a big damage spell comes back at you, a heal heals it, a ward wards it. Feed it the small ones, a snare or a ward, and fight with your hands.',
   sentinel: 'The church\'s marines on the island landing: armoured, with boarding pikes. Every third blow the pike goes partway through a guard.',
   keeper: 'The Keeper of the Light, the church\'s abbot on the island. His Lamplight blinds whoever shows the most mana: they lose their next move. Hide, or study it and bar it. Brought down once, he opens the lens all the way.',
+  human: 'The only human. He has no mana to read; he casts the memories taken from the party. Analyze a spell as it gathers, then use a barrier to return it.',
   inquisitor: 'A royal investigator, certain of your guilt. His Verdict cannot be dodged or barred. You cannot win this yet. Run.',
 };

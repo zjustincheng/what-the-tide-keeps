@@ -21,6 +21,7 @@ export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated' | 'pests-fiel
   | 'hounds-fed' | 'pack-slain' | 'ram-paid' | 'barrow-coins' | 'sluice-open' | 'drowned-slain' | 'otter-trusted' | 'otter-reported' | 'otter-paid'
   | 'vulture-met' | 'anchors-known' | 'letter-delivered' | 'bridge-lowered' | 'pair-slain' | 'hyena-slain' | 'ration-ledger' | 'merchant-thanked'
   | 'island-landed' | 'works-taken' | 'works-seen' | 'cages-opened' | 'name-read' | 'house-seen' | 'keeper-challenged' | 'keeper-slain' | 'light-out' | 'light-kept'
+  | 'human-challenged' | 'human-beaten' | 'human-seated' | 'human-spared'
   | 'orchard-cleared' | 'overseer-slain' | 'quarrymen-freed' | 'collie-told' | 'cistern-asked' | 'cistern-cleared' | 'ratling-home'
   | 'deserted' | 'octopus-met' | 'shark-slain' | 'octopus-free' | 'eel-slain' | 'grave-seen' | 'nets-cut' | 'elder-thanked' | 'cuttlefish-challenged' | 'cuttlefish-slain' | 'ring-1' | 'ring-2' | 'ring-3' | 'ring-champion' | 'shells-won' | 'arm-won' | 'hide-started' | 'hide-1' | 'hide-2' | 'hide-3' | 'hide-found' | 'warder-slain' | 'pens-freed' | 'lord-freed' | 'lord-left' | 'son-freed' | 'flight-slain' | 'cuckoo-slain' | 'cuckoo-challenged' | 'stair-open' | 'lab-remembered' | 'inquisitor-spoke' | 'octopus-letter' | 'duellist-beaten'
   | 'salt-cut' | 'brood-slain' | 'channel-firm' | 'apprentice-slain' | 'frog-free' | 'viper-challenged' | 'viper-slain' | 'newt-freed' | 'manifest-read'
@@ -43,7 +44,7 @@ export type Drained = Readonly<Partial<Record<MemberId, number>>>;
 // fallen: heroes who went down in a fight and stayed down. Rest doesn't raise them; only the church can.
 export type World = Readonly<{ fallen?: readonly MemberId[]; night?: boolean; clock?: number; waiting?: readonly MemberId[]; tempered?: readonly KeepsakeId[]; flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number; pantry?: Pantry }>;
 export const ITEMS: readonly Item[] = ['bell', 'letter', 'note', 'crate', 'ring', 'shrine-stone', 'raven-letter', 'sealed-order', 'venom-vial'];
-export const FLAGS: readonly Flag[] = ['island-landed', 'works-taken', 'works-seen', 'cages-opened', 'name-read', 'house-seen', 'keeper-challenged', 'keeper-slain', 'light-out', 'light-kept', 'orchard-cleared', 'overseer-slain', 'quarrymen-freed', 'collie-told', 'cistern-asked', 'cistern-cleared', 'ratling-home', 'lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
+export const FLAGS: readonly Flag[] = ['island-landed', 'works-taken', 'works-seen', 'cages-opened', 'name-read', 'house-seen', 'keeper-challenged', 'keeper-slain', 'light-out', 'light-kept', 'human-challenged', 'human-beaten', 'human-seated', 'human-spared', 'orchard-cleared', 'overseer-slain', 'quarrymen-freed', 'collie-told', 'cistern-asked', 'cistern-cleared', 'ratling-home', 'lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
   'sheep-woods', 'sheep-orchard', 'sheep-yard', 'sheep-reward', 'barrel-bought', 'squid-freed', 'swarm-slain', 'bounty-paid',
   'warden-slain', 'leech-slain',
   'followers-spared', 'followers-reported', 'followers-paid', 'fishmonger-angry', 'stall-cowed', 'stood-count', 'inn-room', 'reeve-pardon',
@@ -57,8 +58,8 @@ export const FLAGS: readonly Flag[] = ['island-landed', 'works-taken', 'works-se
 export const BRAMBLES = "Bramble's leave";
 
 // What a line of dialogue can depend on.
-export type Context = Readonly<{ world: World; lost: readonly MemoryId[]; studied: readonly string[] }>;
-export type Condition = { forgot: MemoryId } | { has: Item } | { flag: Flag } | { knows: string } | { owns: Found } | { not: Condition } | { all: Condition[] } | { any: Condition[] }
+export type Context = Readonly<{ world: World; lost: readonly MemoryId[]; remembered?: readonly MemoryId[]; studied: readonly string[] }>;
+export type Condition = { forgot: MemoryId } | { remembers: MemoryId } | { has: Item } | { flag: Flag } | { knows: string } | { owns: Found } | { not: Condition } | { all: Condition[] } | { any: Condition[] }
   // coins: carrying at least this many.
   | { coins: number }
   // night: true holds after dark, false in daylight.
@@ -76,7 +77,7 @@ export type Effect = { give?: Item; take?: Item; set?: Flag | readonly Flag[]; l
   // raise: the church brings a fallen hero back. tithe: what it costs instead of coins, a memory, taken by the scene.
   raise?: MemberId; tithe?: true;
   // recall: a lost memory comes back. ending: the story ends, one way or the other, and the epilogue is shown.
-  recall?: MemoryId; ending?: 'dark' | 'kept';
+  recall?: MemoryId; recallAll?: true; ending?: 'good' | 'bad';
   travel?: WaystoneId; shop?: ShopId; rest?: true;
   // church: go back to the priest, for the next orders. bout: fight that bout in the Talon Ring.
   // shells and arm: play the shell game, or arm-wrestle, for that stake.
@@ -98,6 +99,7 @@ export function holds(context: Context, condition: Condition): boolean {
   if ('fallen' in condition) return (context.world.fallen ?? []).includes(condition.fallen);
   if ('fish' in condition) return FISH_IDS.reduce((total, fish) => total + (context.world.fish[fish] ?? 0), 0) >= condition.fish;
   if ('forgot' in condition) return context.lost.includes(condition.forgot);
+  if ('remembers' in condition) return context.remembered?.includes(condition.remembers) ?? !context.lost.includes(condition.remembers);
   if ('has' in condition) return context.world.carried.includes(condition.has);
   if ('flag' in condition) return context.world.flags.includes(condition.flag);
   if ('owns' in condition) return context.world.found.includes(condition.owns);

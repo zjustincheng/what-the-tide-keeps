@@ -1,5 +1,6 @@
 // Pure game rules: no Phaser, DOM, timers, or random state.
 // Rule modules import each other with .ts extensions so Node can run their tests directly.
+import { INITIAL_LOST, PERKS, PERK_BONUS } from './memory.ts';
 import type { Hollow } from './memory';
 import { mods, NO_MODS } from './gear.ts';
 import type { Gear, KeepsakeId, Mods } from './gear';
@@ -8,6 +9,7 @@ import type { Books, SpellId } from './spells';
 import { NO_SUPPLIES, SUPPLIES } from './economy.ts';
 import type { Supplies, SupplyId } from './economy';
 import type { Drained, Wounds } from './world';
+import type { MemoryId } from './memory';
 export type MemberId = 'chameleon' | 'bear' | 'vulture' | 'frog' | 'octopus';
 // unmask: strike an ally, in case they are not who they seem.
 export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze' | 'gather' | 'unmask';
@@ -16,7 +18,7 @@ export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm' | 'wa
   | 'mosquito' | 'scorpion' | 'brood' | 'apprentice' | 'viper'
   | 'hornet' | 'spider' | 'duellist' | 'cuckoo' | 'warder' | 'cricket' | 'flight' | 'champion'
   | 'shark' | 'barracuda' | 'jelly' | 'eel' | 'cuttlefish'
-  | 'sentinel' | 'keeper';
+  | 'sentinel' | 'keeper' | 'human';
 export const SPELL = 'Salt lance';
 // What an enemy is, which decides whose blows it fears. Spells ignore all of it: magic is the equaliser.
 export type Trait = 'armoured' | 'flying' | 'caster' | 'insect' | 'dead';
@@ -27,7 +29,7 @@ export const TRAITS: Record<Encounter, readonly Trait[]> = {
   brood: ['insect', 'flying'], apprentice: ['caster'], viper: ['caster'], hornet: ['insect', 'flying'], spider: ['insect'], duellist: ['caster', 'flying'], cuckoo: ['caster', 'flying'],
   warder: ['armoured'], cricket: ['insect'], flight: ['dead', 'flying'], champion: ['flying'],
   shark: ['armoured'], barracuda: [], jelly: [], eel: ['caster'], cuttlefish: ['caster'],
-  sentinel: ['armoured'], keeper: ['caster', 'flying'],
+  sentinel: ['armoured'], keeper: ['caster', 'flying'], human: [],
 };
 // How each hero's own blow fares against each kind: the bear's maul breaks armour and can't reach what flies;
 // the vulture's talons take things out of the air and skid off plate; the chameleon strikes casters as they gather.
@@ -65,9 +67,10 @@ export const SOURING = 'Souring';
 // and no barrier stops it. Once studied, it can be seen coming, dodged, and barred.
 export const ENEMY_SPELLS: Partial<Record<Encounter, string>> = {
   acolyte: SPELL, pair: SPELL, warden: 'Judgement', drowned: 'Drowning toll', wisp: 'Marsh-fire', inquisitor: 'Verdict',
-  apprentice: SOURING, viper: SOURING, duellist: 'Talon hex', cuckoo: 'Talon hex', keeper: LAMPLIGHT,
+  apprentice: SOURING, viper: SOURING, duellist: 'Talon hex', cuckoo: 'Talon hex', keeper: LAMPLIGHT, human: 'The Feast',
 };
-export const STUDIABLE: readonly string[] = [...new Set(Object.values(ENEMY_SPELLS))];
+const MEMORY_SPELLS = ['The Feast', 'The Trial', 'The Kraken', 'The Bear', 'The Vulture', 'The Frog', 'The Octopus', 'His Training', 'His Home', 'His Name'] as const;
+export const STUDIABLE: readonly string[] = [...new Set([...Object.values(ENEMY_SPELLS), ...MEMORY_SPELLS])];
 export type Phase = 'player' | 'enemy' | 'victory' | 'defeat' | 'fled';
 export type Fighter = Readonly<{ health: number; maxHealth: number; mana: number; maxMana: number }>;
 // A follower the hyena has fed on is gone for good: it cannot be raised again.
@@ -109,6 +112,7 @@ export type Member = Fighter & Readonly<{
 export type Battle = Readonly<{
   round: number;
   encounter: Encounter;
+  lostMemories: readonly MemoryId[];
   studied: readonly string[];
   hollow: Hollow;
   enemyRevealed: boolean;
@@ -249,6 +253,8 @@ export const ENEMIES = {
     opening: 'A marine in the church\'s grey, a boarding pike in one hand and a lantern on his belt. "Nobody lands here who isn\'t carried."' },
   keeper: { name: 'The Keeper of the Light', short: 'keeper', health: 190, mana: 24, veiled: false,
     opening: 'An albatross in the church\'s white, too old to fly, the lens\'s light behind him so that you can hardly look at him. "Convict. You came all this way to see where the fish comes from. Look, then."' },
+  human: { name: 'The human', short: 'human', health: 220, mana: 0, veiled: false,
+    opening: 'He has no mana to read. The knowledge the party taught you has nothing to say about him. He raises a hand, and a spell you lost comes back at you.' },
   inquisitor: { name: 'The inquisitor', short: 'inquisitor', health: 600, mana: 60, veiled: false,
     opening: 'The largest signature you have ever felt. A ram in grey, the royal seal at his collar. "Convict. You are a long way from your church." You cannot win this. Run.' },
 } as const satisfies Record<Encounter, unknown>;
@@ -288,6 +294,22 @@ export const FRENZY = 2;
 export type SceneLine = Readonly<{ who: string; line: string }>;
 // rise: a share of its health the boss gets back, when it differs from RISE.
 export const STAGES: Partial<Record<Encounter, { title: string; line: string; scene: readonly SceneLine[]; rise?: number; enter?: (battle: Battle) => Partial<Battle> }>> = {
+  human: { title: 'The human, with nothing left to lose', line: 'A memory returns. One of his spells goes quiet.', rise: 0.35, scene: [
+    { who: '', line: 'He falls beside the lens. A spell breaks apart in his hand.' },
+    { who: 'THE HUMAN', line: 'I have everything you lost. I thought it would make me whole.' },
+    { who: '', line: 'Something comes back to you. The Hollow strength it left behind goes with it.' },
+  ], enter: battle => {
+    const returned = battle.lostMemories[0];
+    const perk = returned && !INITIAL_LOST.includes(returned) ? PERKS[returned] : undefined;
+    return {
+      lostMemories: battle.lostMemories.slice(1),
+      hollow: returned === 'training' ? { ...battle.hollow, trained: true }
+        : returned === 'kraken' ? { ...battle.hollow, kraken: true }
+          : perk === 'mana' ? { ...battle.hollow, mana: Math.max(0, battle.hollow.mana - PERK_BONUS.mana) }
+            : perk === 'force' ? { ...battle.hollow, damage: Math.max(0, battle.hollow.damage - PERK_BONUS.force) }
+              : battle.hollow,
+    };
+  } },
   keeper: { title: 'The Keeper, with the lens open', line: 'The Keeper opens the lens all the way, and the light comes round every other turn now.', rise: 0.4, scene: [
     { who: '', line: 'The Keeper goes down against the lens, and the light stops turning.' },
     { who: 'THE KEEPER', line: 'Every barrel inland is a mouth that doesn\'t eat its neighbour. Every light on this rock is a war that didn\'t happen. I kept the peace.' },
@@ -427,11 +449,12 @@ export type BattleOptions = Readonly<{
   herald?: string;
   // arena: a bout in the Talon Ring, where losing isn't dying.
   arena?: boolean;
+  lostMemories?: readonly MemoryId[];
 }>;
 // A fight's party when none is given: the three who fought together first.
 const TRIO: readonly MemberId[] = ['chameleon', 'bear', 'vulture'];
 export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], options: BattleOptions = {}): Battle {
-  const { hollow = UNHOLLOWED, gear, books = STARTING_BOOKS, roster = TRIO, supplies = NO_SUPPLIES, wounds = {}, drained = {}, ambush = false, surprise = false, tempered = [], waves = 1, company = [], herald } = options;
+  const { hollow = UNHOLLOWED, gear, books = STARTING_BOOKS, roster = TRIO, supplies = NO_SUPPLIES, wounds = {}, drained = {}, ambush = false, surprise = false, tempered = [], waves = 1, company = [], herald, lostMemories = [] } = options;
   const member = (id: MemberId, base: number, mana: number): Member => {
     const kept = gear ? mods(gear, id, tempered) : NO_MODS;
     const worn = hollow.kraken === false ? { ...kept, agility: kept.agility - NO_KRAKEN } : kept;
@@ -445,7 +468,7 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
   const size = Math.max(1, Math.min(3, roster.length));
   const scaled = (health: number) => Math.round(health * PARTY_SCALE[size - 1]);
   return {
-    round: 1, phase: ambush ? 'enemy' : 'player', encounter, studied: studied.filter(name => STUDIABLE.includes(name)), hollow, enemyRevealed: false,
+    round: 1, phase: ambush ? 'enemy' : 'player', encounter, lostMemories, studied: studied.filter(name => STUDIABLE.includes(name)), hollow, enemyRevealed: false,
     party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10), member('frog', 18, 12), member('octopus', 22, 14)].filter(member => roster.includes(member.id)),
     enemy: { health: scaled(ENEMIES[encounter].health), maxHealth: scaled(ENEMIES[encounter].health), mana: ENEMIES[encounter].mana, maxMana: ENEMIES[encounter].mana },
     followers: [
@@ -525,6 +548,12 @@ export function intent(battle: Battle): Move & { tell: string } {
 }
 
 function plainIntent(battle: Battle): Move & { tell: string } {
+  if (battle.encounter === 'human') {
+    const names: Record<MemoryId, string> = { feast: 'The Feast', trial: 'The Trial', kraken: 'The Kraken', bear: 'The Bear', vulture: 'The Vulture', frog: 'The Frog', octopus: 'The Octopus', training: 'His Training', home: 'His Home', name: 'His Name' };
+    const memories = battle.lostMemories.length ? battle.lostMemories : ['name' as MemoryId];
+    const spell = names[memories[(battle.round - 1) % memories.length]];
+    return { name: spell, type: 'spell', spell, tell: `He has no mana. He raises his hand, and ${spell} comes back from the part of you that lost it.`, damage: 12 + (battle.stage === 2 ? 5 : 0), window: { perfect: 45, graze: 120 } };
+  }
   if (battle.encounter === 'acolyte') {
     const casting = battle.round % 2 === 0;
     return {
@@ -767,7 +796,7 @@ export function canAct(battle: Battle, actor: MemberId, action: Action, target: 
   if (action === 'attack' && !standing(battle, foe)) return false;
   if (action === 'suppress' && member.suppressed) return false;
   if (action === 'gather' && member.mana >= member.maxMana) return false;
-  const casts = ENEMY_SPELLS[battle.encounter];
+  const casts = battle.encounter === 'human' ? plainIntent(battle).spell : ENEMY_SPELLS[battle.encounter];
   if (action === 'analyze' && (!casts || battle.studied.includes(casts))) return false;
   // A barrier can cover a fallen ally too, which keeps the hyena off the body.
   if (action === 'barrier' && !battle.party.some(ally => ally.id === target)) return false;
@@ -922,7 +951,7 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
   const message = action === 'gather' ? `${definition.name} goes still and gathers their mana.`
     : action === 'suppress' ? `${definition.name} conceals their mana.`
     : action === 'barrier' ? `${definition.name} raises a spell barrier around ${MEMBERS[target].name}.`
-    : action === 'analyze' ? `${definition.name} studies the gathering spell. ${ENEMY_SPELLS[battle.encounter]} is written into the grimoire.`
+    : action === 'analyze' ? `${definition.name} studies the gathering spell. ${plainIntent(battle).spell ?? ENEMY_SPELLS[battle.encounter]} is written into the grimoire.`
     : blocked && battle.impostor ? `${definition.name}'s ${definition.attack.toLowerCase()} finds nothing. The lord's chair is empty: he is somewhere among you.`
     : blocked ? `${definition.name}'s ${definition.attack.toLowerCase()} breaks on the candlelight. The warden is untouched while its votives burn.`
     : shielded ? `The boar throws himself in front of the ${battle.followers[foe - 1].name.toLowerCase()}. ${definition.name}'s ${definition.attack.toLowerCase()} strikes him instead, and his fury grows.`
@@ -932,7 +961,7 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
     : actor === 'bear' && target !== actor ? `Bear steps in front of ${MEMBERS[target].name}.`
     : `${definition.name} plants their feet and guards.`;
   return staged({
-    ...battle, party, enemy, followers, fury, enemyPoison: poisons ? Math.max(battle.enemyPoison, DART) : battle.enemyPoison, studied: action === 'analyze' ? [...battle.studied, ENEMY_SPELLS[battle.encounter]!] : battle.studied, phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
+    ...battle, party, enemy, followers, fury, enemyPoison: poisons ? Math.max(battle.enemyPoison, DART) : battle.enemyPoison, studied: action === 'analyze' ? [...battle.studied, plainIntent(battle).spell ?? ENEMY_SPELLS[battle.encounter]!] : battle.studied, phase: victory ? 'victory' : allActed ? 'enemy' : 'player',
     log: [...battle.log, message, ...fallen(battle, after), ...(victory ? [QUIET] : [])],
   });
 }

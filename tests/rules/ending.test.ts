@@ -3,15 +3,19 @@ import assert from 'node:assert/strict';
 import { epilogue } from '../../src/rules/ending.ts';
 import { recall, createMemory } from '../../src/rules/memory.ts';
 
-test('the epilogue tells what the hero did: who was freed, what was opened, whether he has a name', () => {
-  const bare = epilogue({ flags: [] }, 'dark', false);
-  const full = epilogue({ flags: ['bear-free', 'cages-opened', 'elder-thanked', 'inquisitor-spoke'] }, 'dark', true);
-  assert.ok(full.length > bare.length);
-  assert.ok(full.some(line => line.includes('The bear goes back to the mill')));
-  assert.ok(full.some(line => line.includes('seal\'s boat')));
-  assert.ok(full.some(line => line.includes('You tell them')));
-  assert.ok(bare.some(line => line.includes('don\'t have one to give them')));
-  assert.notDeepEqual(epilogue({ flags: [] }, 'kept', false), bare, 'the two endings are different stories');
+test('the good ending restores what the tide took and ends resurrection', () => {
+  const good = epilogue({ flags: ['cages-opened', 'inquisitor-spoke'] }, 'good', true);
+  assert.ok(good.some(line => line.includes('What the tide took comes back')));
+  assert.ok(good.some(line => line.includes('clear your party\'s name')));
+  assert.ok(good.some(line => line.includes('resurrections stop')));
+  assert.ok(good.some(line => line.includes('The cell is empty')));
+});
+
+test('the bad ending leaves the hero seated beside the human', () => {
+  const bad = epilogue({ flags: [] }, 'bad', false);
+  assert.ok(bad.some(line => line.includes('You sit beside him')));
+  assert.ok(bad.some(line => line.includes('reason is gone')));
+  assert.notDeepEqual(epilogue({ flags: [] }, 'good', true), bad, 'the two endings follow different choices');
 });
 
 test('a memory found again is his once more', () => {

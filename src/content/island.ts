@@ -35,13 +35,10 @@ export const works: Dialogue = {
   cages: { speaker: 'THE CAGES', prompt: 'Look at the cages', hiddenIf: [{ flag: 'cages-opened' }], lines: [
     'Cages along the north wall, full. Nobody inside is making any noise. They\'ve learned not to.',
   ], choices: [
-    { text: 'Open the cages.', if: { flag: 'works-taken' }, ends: true, lines: [
-      'The foreman\'s keys are on his belt. They fit every lock, the way keys do here.',
+    { text: 'Open the cages.', ends: true, lines: [
+      'The keys hang on a hook beside the daybook. They fit every lock, the way keys do here.',
       'Nobody comes out at first. Then a newt does, and the others follow her, slowly, down to the jetty.',
     ], then: { set: 'cages-opened' } },
-    { text: 'Open the cages.', if: { not: { flag: 'works-taken' } }, lines: [
-      'The foreman has the keys on his belt. He is watching you, with his men either side of him.',
-    ] },
   ] },
   'caged-1': { speaker: 'A NEWT IN A CAGE', prompt: 'Speak to the newt', hiddenIf: [{ flag: 'cages-opened' }], lines: [
     '"From the river towns. The magistrate said there was work out here, for anyone with venom. Good work, and fed."',
@@ -75,7 +72,7 @@ export const whitehouse: Dialogue = {
     'THE ISLAND PROJECT. SUBJECTS: the last of the old people, the ones with no fur, brought back from the ruins past the charts. PURPOSE: to learn how they kept the peace for so long.',
     'Their answer is copied out underneath, in a clerk\'s hand: they bred what they ate, and called it something else, and nobody asked.',
     'The Covenant was theirs. The church only kept it. One line, near the end: SUBJECT 9 (A CHILD) ESCAPED. GUARD ON DUTY TRANSFERRED.',
-  ], then: { set: 'house-seen' } },
+  ], then: { set: ['house-seen', 'lab-remembered'] } },
   'basin-records': { speaker: 'THE BASIN BOOK', prompt: 'Read the basin book', lines: [
     'How the church raises its convicts. Salt from the works, cut with sea water, in a basin. The dead are laid in it, and they get up.',
     'Each raising costs the raised what the salt cost the ones it was made from: a part of what they were. The book calls it the tithe. It doesn\'t call it anything else.',
@@ -104,7 +101,7 @@ export const lighthouse: Dialogue = {
   ] },
 };
 
-// What can be said to the man with no fur, once the Keeper is down.
+// What can be said to the human in the lamp room.
 const strangerReplies: Choice[] = [
   { text: 'You poured the wine at the feast.', if: { not: { forgot: 'feast' } }, lines: [
     '"I poured it. Salt from the works in every cup, enough that you\'d all sleep while the rest was done. The church did the trial. I only made sure you\'d be there for it."',
@@ -129,44 +126,38 @@ const strangerReplies: Choice[] = [
     'He says it. Gently, as if it might break.',
     'It means nothing to you at all. He sees that, and looks away.',
   ] },
-  { text: 'Put out the light.', ends: true, lines: [
-    'He nods, as if you\'d said something ordinary.',
-    '"Together, then. It\'s heavier than it looks."',
-  ], then: { set: 'light-out', ending: 'dark' } },
-  { text: 'You\'re coming back to the church with me.', ends: true, lines: [
-    'He looks at the irons on the Keeper\'s belt, then at you, for a long time.',
-    '"All right. You let me out once. I suppose that means you can put me back."',
-  ], then: { set: 'light-kept', ending: 'kept' } },
+  { text: 'I remember the feast, and the door. I will not take your seat.', if: { all: [
+    { remembers: 'feast' }, { flag: 'lab-remembered' },
+    { any: [{ remembers: 'bear' }, { remembers: 'vulture' }, { remembers: 'frog' }, { remembers: 'octopus' }] },
+    { not: { flag: 'human-beaten' } },
+  ] }, ends: true, lines: [
+    'You know why you came. You know who stood beside you, and you remember the door.',
+    'He looks at you for a long time. Then he stands.',
+  ], then: { set: 'human-challenged' } },
+  { text: 'Take the seat beside him.', if: { any: [
+    { not: { remembers: 'feast' } }, { not: { flag: 'lab-remembered' } },
+    { all: [{ not: { remembers: 'bear' } }, { not: { remembers: 'vulture' } }, { not: { remembers: 'frog' } }, { not: { remembers: 'octopus' } }] },
+  ] }, ends: true, lines: [
+    'You came a long way. The reason is gone, and the names are gone with it.',
+    'He pours you a cup, as he did at the feast. You sit beside him.',
+  ], then: { set: 'human-seated', ending: 'bad' } },
+  { text: 'Spare him.', if: { flag: 'human-beaten' }, ends: true, lines: [
+    'He is on his knees. You remember the child in the cage, and the door you opened.',
+    'You open it again. He does not look back as he walks out.',
+  ], then: { set: 'human-spared', recallAll: true, ending: 'good' } },
 ];
 
 // The lamp room.
 export const lamp: Dialogue = {
-  keeper: { speaker: 'THE KEEPER OF THE LIGHT', prompt: 'Speak to the Keeper', portrait: 'keeper', hiddenIf: [{ flag: 'keeper-challenged' }, { flag: 'keeper-slain' }], lines: [
-    'An albatross in the church\'s white, too old to fly, standing in the light of the lens so you can hardly look at him.',
-    '"The guard. They said you\'d come. I said you\'d drown first. I owe someone a bottle."',
-  ], choices: [
-    { text: 'What is the light for?', lines: [
-      '"So that every nation on that coast can see it at night, and know the Covenant holds. So the hungry have somewhere to be sent. So nobody has to look at what they eat."',
-    ] },
-    { text: 'You feed them each other.', lines: [
-      '"I feed them. Forty years without a war. Forty years, and no carnivore has touched a citizen. Do you know what it was like before?"',
-      '"No. Of course you don\'t. Nobody does. That\'s what the light is for."',
-    ] },
-    { text: 'Who is he?', lines: [
-      'He doesn\'t look at the man sitting by the lens.',
-      '"Subject nine. He came back on his own. I let him stay. Somebody ought to know what we did, and it can\'t be anyone who\'d tell."',
-    ] },
-    { text: 'It ends here.', ends: true, lines: [
-      '"Everything ends. The light doesn\'t."',
-      'He takes a hook down from the lens frame, and his lamplighters come out of the dark either side of him.',
-    ], then: { set: 'keeper-challenged' } },
-  ] },
-  stranger: { speaker: 'THE MAN WITH NO FUR', prompt: 'Speak to him', portrait: 'stranger', hiddenIf: [{ flag: 'light-out' }, { flag: 'light-kept' }], lines: [
-    'Sitting on the floor with his back to the glass. He doesn\'t look up. "Him first," he says. "Then we can talk."',
-  ], variants: [{ if: { flag: 'keeper-slain' }, lines: [
-    'He gets up. No fur at all: smooth skin, a flat face, small dark eyes. Younger than you thought. He looks at you the way he did through the bars.',
-    '"Hello. You won\'t remember me. That\'s all right. I remember you."',
-  ], choices: strangerReplies }] },
+  stranger: { speaker: 'THE HUMAN', prompt: 'Speak to him', portrait: 'stranger', hiddenIf: [
+    { flag: 'human-seated' }, { all: [{ flag: 'human-challenged' }, { not: { flag: 'human-beaten' } }] },
+  ], lines: [
+    'He sits beside the lens, not touching it. No fur, no scales, no feathers. He looks up as you come in.',
+    '"You opened the door. You won\'t remember me. That\'s all right. I remember you."',
+  ], variants: [{ if: { flag: 'human-beaten' }, lines: [
+    'He is on his knees beside the lens. The light turns over the sea.',
+    '"You could end this now. You came here to decide. What do you remember?"',
+  ], choices: strangerReplies }], choices: strangerReplies },
   lens: { speaker: 'THE LENS', prompt: 'Look at the lens', lines: [
     'Glass rings stacked taller than a house, turning on a bed of mercury, the flame at the heart of it so bright it has no colour.',
   ] },
