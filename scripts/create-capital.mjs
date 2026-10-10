@@ -70,7 +70,7 @@ const at=(x,y)=>[x*16+8,y*16+8];
   // The church's flank on the east side, with its side door.
   fill(furniture,36,4,42,6,T.ROOF);fill(furniture,36,7,42,26,T.WALL);put(furniture,36,10,T.WINDOW);put(furniture,36,20,T.WINDOW);put(furniture,36,15,T.DOOR);put(furniture,36,16,T.DOOR);
   // The hall of the Long Table, across the north side, its great doors shut.
-  fill(furniture,8,1,30,4,T.ROOF);fill(furniture,8,5,30,7,T.WALL);fill(floor,16,8,22,9,T.STEPS);put(furniture,18,7,T.DOOR);put(furniture,19,7,T.DOOR);
+  fill(furniture,8,1,30,4,T.ROOF);fill(furniture,8,5,30,7,T.WALL);fill(floor,17,8,20,9,T.STEPS);put(furniture,18,7,T.DOOR);put(furniture,19,7,T.DOOR);
   for(const x of [10,13,24,27]) put(furniture,x,6,T.WINDOW);
   // The alchemists' wing on the west side, behind a gate sealed with the church's mark.
   fill(furniture,1,6,6,8,T.ROOF);fill(furniture,1,9,6,24,T.WALL);fill(furniture,6,14,6,16,T.GATE);put(furniture,6,11,T.WINDOW);put(furniture,6,20,T.WINDOW);
@@ -78,14 +78,14 @@ const at=(x,y)=>[x*16+8,y*16+8];
   fill(floor,10,11,32,24,T.FLAG);
   fill(furniture,19,15,22,18,T.FOUNTAIN);put(furniture,20,16,T.STATUE);put(furniture,21,16,T.STATUE);
   fill(furniture,12,21,14,21,T.AWNING);fill(furniture,28,12,30,12,T.AWNING);
-  for(const [x,y] of [[10,11],[32,11],[10,24],[32,24],[24,9],[14,9]]) put(furniture,x,y,T.LAMP);
+  for(const [x,y] of [[10,11],[32,11],[10,24],[32,24],[21,9],[16,9]]) put(furniture,x,y,T.LAMP);
   for(const [x,y] of [[16,13],[25,19]]) put(furniture,x,y,T.BENCH);
   // Townhouses along the south side, with the road down to the harbour between them.
   fill(furniture,1,27,17,28,T.ROOF);fill(furniture,1,29,17,30,T.WALL);fill(furniture,24,27,42,28,T.ROOF);fill(furniture,24,29,42,30,T.WALL);
   for(const x of [4,9,14,27,32,38]) put(furniture,x,30,T.WINDOW);
   fill(furniture,19,31,22,31,0);fill(floor,19,25,22,31,T.STEPS);
   write('square',m,[
-    ['east',568,256],['from-church',548,256],['south',328,504],['from-harbour',328,472],['hall-door',312,152],['from-hall',312,168],
+    ['east',568,256],['from-church',548,256],['south',328,504],['from-harbour',328,472],['hall-door',304,136],['from-hall',304,168],
     ['statue',...at(20,19)],['fountain',...at(22,19)],['alchemists-gate',...at(7,15)],
     ['crier',...at(17,17)],['broadsheets',...at(26,22)],['lamplighter',...at(11,12)],['guard-square',...at(33,15)],['apothecary',...at(29,13)],['citizen',...at(13,22)],['waystone',...at(30,22)],['from-waystone',...at(30,23)],
   ]);

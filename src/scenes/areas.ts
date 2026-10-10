@@ -157,7 +157,7 @@ export const FARMLAND: Area = {
     east: { to: 'border-road', spawn: 'from-fields', prompt: 'Take the field track to the border' },
     'mill-door': { to: 'mill-inside', spawn: 'spawn', prompt: 'Enter the mill' },
     downs: { to: 'downs', spawn: 'from-fields', prompt: 'Climb onto the downs' },
-    upstream: { to: 'fen', spawn: 'from-fields', prompt: 'Follow the stream up into the fen' },
+    upstream: { to: 'fen', facing: 'north', spawn: 'from-fields', prompt: 'Follow the stream up into the fen' },
   },
   decorate(scene) {
     // A grey ground fog over the fields.

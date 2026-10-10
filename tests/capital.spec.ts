@@ -40,7 +40,7 @@ test('out of the church into the capital, down to the harbour, and into the hall
   await expect(page.locator('#dialogue-text')).toContainText('The five who killed the kraken');
   await talk(page);
   // The hall is chained until someone gives you the staff key.
-  await go(page, 'square', 312, 168, 'Enter the hall of the Long Table');
+  await go(page, 'square', 304, 152, 'Enter the hall of the Long Table');
   await expect(page.locator('#dialogue-text')).toContainText('CLOSED BY ORDER OF THE REGENCY');
   await talk(page);
   await go(page, 'square', 328, 488, 'Go down to the harbour', 'harbour');
@@ -52,7 +52,7 @@ test('out of the church into the capital, down to the harbour, and into the hall
   expect(world.coins).toBe(7);
   expect(world.found).toContain('tide-shell');
   await go(page, 'harbour', 344, 24, 'Climb the steps to the square', 'square');
-  await go(page, 'square', 312, 168, 'Enter the hall of the Long Table', 'feast-hall');
+  await go(page, 'square', 304, 152, 'Enter the hall of the Long Table', 'feast-hall');
   await go(page, 'feast-hall', 376, 268, 'Speak to the cleaner');
   await talk(page, 'Who was the cupbearer');
   await expect(page.locator('#dialogue')).toBeHidden();

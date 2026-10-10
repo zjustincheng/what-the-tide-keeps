@@ -25,17 +25,22 @@ export function sheet(tiles) {
 }
 export const rows = tiles => Math.ceil(tiles.length / 8);
 
-// Stairs climbing toward the top of the tile: four steps, each a lit tread over a shadowed riser, running the full width
-// so a stair several tiles wide reads as one flight. (side and sideDark are kept for callers; the flight has no walls of its own.)
+// Stairs climbing toward the top of the tile: two deep steps, each a lit stone tread over a shadowed riser, running the full
+// width so a stair several tiles wide reads as one flight. Joints in the treads, staggered from step to step, make them
+// read as laid stone rather than ruled lines. (side and sideDark are kept for callers; the flight has no walls of its own.)
 export function stairs({ tread, riser, lip }) {
   let out = rect(0, 0, 16, 16, riser);
-  for (let step = 0; step < 4; step++) {
-    const y = step * 4;
-    out += rect(0, y, 16, 3, tread) + rect(0, y, 16, 1, lip) + rect(0, y + 3, 16, 1, riser);
-    // The far steps are a little darker: they are further up, out of the light.
-    if (step < 2) out += rect(0, y, 16, 3, '#000000', 0.07 * (2 - step));
-    // Worn hollows where feet go, so the treads aren't ruled lines.
-    out += rect(5 + (step * 3) % 6, y + 1, 4, 1, '#000000', 0.06);
+  for (let step = 0; step < 2; step++) {
+    const y = step * 8;
+    out += rect(0, y, 16, 5, tread) + rect(0, y, 16, 1, lip);
+    // The riser below: dark, darkest right under the tread's edge.
+    out += rect(0, y + 5, 16, 3, riser) + rect(0, y + 5, 16, 1, '#000000', 0.25);
+    // The far step is a little darker: it is further up, out of the light.
+    if (step === 0) out += rect(0, y, 16, 5, '#000000', 0.08);
+    // Joints between the stones of each tread, offset on alternate steps.
+    for (const x of step ? [3, 11] : [7, 15]) out += rect(x, y + 1, 1, 4, '#000000', 0.18);
+    // Wear where feet go.
+    out += rect(5, y + 2, 6, 2, '#ffffff', 0.04);
   }
   return out;
 }
