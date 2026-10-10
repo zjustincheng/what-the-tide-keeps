@@ -876,20 +876,39 @@ button.die[aria-pressed="true"] { border-color: #bc755e; color: #d8a890; }
 #arm-push { display: block; margin: 6px auto; padding: 10px 28px; font: 16px Georgia, serif; }
 
 /* Climbing: the wall side on, holds to climb, columns that glow before something falls down them. */
-.climb-wall { position: relative; margin: 10px auto; overflow: hidden; border: 1px solid #5d7253; background: repeating-linear-gradient(0deg, #4e4c44 0 21px, #44423b 21px 22px), #4e4c44; }
-.climb-wall[data-hazard="icicles"] { background: repeating-linear-gradient(0deg, #8a9ea6 0 21px, #7a8e96 21px 22px), #8a9ea6; }
-.climb-track { position: absolute; inset: 0 0 auto 0; transition: transform 160ms ease-out; }
-.climb-hold { position: absolute; width: 14px; height: 10px; border-radius: 3px; background: #2a2824; box-shadow: inset 0 2px 0 #8a887c; }
-.climb-wall[data-hazard="icicles"] .climb-hold { background: #3a4e58; box-shadow: inset 0 2px 0 #e4eef2; }
+.climb-wall { position: relative; margin: 10px auto; overflow: hidden; border: 1px solid #5d7253; box-shadow: inset 0 0 30px rgba(0,0,0,0.55);
+  background: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.06), transparent 60%), repeating-linear-gradient(0deg, transparent 0 45px, rgba(0,0,0,0.18) 45px 46px), linear-gradient(90deg, #4a4840, #56544a 40%, #4a4840); }
+.climb-wall[data-hazard="icicles"] { border-color: #8aa0a8; background: radial-gradient(ellipse at 40% 10%, rgba(255,255,255,0.2), transparent 60%), repeating-linear-gradient(90deg, transparent 0 23px, rgba(255,255,255,0.06) 23px 25px), linear-gradient(90deg, #7e949c, #96acb4 45%, #7e949c); }
+.climb-track { position: absolute; inset: 0 0 auto 0; transition: transform 220ms ease-out; }
+.climb-crack { position: absolute; width: 1px; background: rgba(0,0,0,0.45); box-shadow: 1px 0 0 rgba(255,255,255,0.08); }
+.climb-moss { position: absolute; height: 4px; border-radius: 3px; background: #4e6a3a; opacity: 0.8; }
+.climb-leaf { position: absolute; width: 7px; height: 5px; border-radius: 6px 0; background: #5e7e42; transform: rotate(30deg); }
+.climb-frost { position: absolute; height: 3px; border-radius: 2px; background: #e4eef2; opacity: 0.5; }
+.climb-streak { position: absolute; width: 2px; height: 24px; background: linear-gradient(#e8f2f6, transparent); opacity: 0.6; }
+.climb-hold { position: absolute; width: 18px; height: 12px; border-radius: 6px 6px 4px 4px; background: radial-gradient(ellipse at 40% 30%, #8a867a, #4a463e 70%); box-shadow: 0 3px 0 #22201c, 0 0 0 1px rgba(0,0,0,0.3); }
+.climb-wall[data-hazard="icicles"] .climb-hold { border-radius: 2px 2px 8px 8px; background: linear-gradient(#e8f2f6 0 3px, #3a4e58 3px); box-shadow: 0 2px 0 #26343a; }
 .climb-top { position: absolute; left: 0; right: 0; background: linear-gradient(#6a7a4a, transparent); opacity: 0.6; }
-.climb-hero { position: absolute; width: 20px; height: 26px; image-rendering: pixelated; transition: left 90ms linear, top 90ms linear; z-index: 2; }
-.climb-warn { position: absolute; top: 0; bottom: 0; background: #e8c870; opacity: 0; transition: opacity 120ms; z-index: 1; pointer-events: none; }
-.climb-warn.on { opacity: 0.22; animation: climb-glow 260ms ease-in-out infinite alternate; }
-@keyframes climb-glow { to { opacity: 0.38; } }
-.climb-stone { position: absolute; top: -20px; width: 16px; height: 16px; border-radius: 4px; background: #6a665c; box-shadow: inset 0 3px 0 #8a867a, 0 2px 0 #1a1816; opacity: 0; z-index: 3; pointer-events: none; }
-.climb-wall[data-hazard="icicles"] .climb-stone { width: 8px; margin-left: 4px; height: 22px; border-radius: 0 0 4px 4px; background: #d8e8ee; box-shadow: inset -2px 0 0 #a8bcc4; }
-.climb-stone.falling { animation: climb-fall 380ms linear forwards; }
-@keyframes climb-fall { from { opacity: 1; transform: translateY(0); } to { opacity: 1; transform: translateY(380px); } }
+.climb-wall[data-hazard="icicles"] .climb-top { background: linear-gradient(#e8eef0, transparent); }
+.climber { position: absolute; width: 32px; height: 40px; z-index: 2; filter: drop-shadow(2px 3px 0 rgba(0,0,0,0.35)); }
+.climber-body { display: block; width: 100%; height: 100%; transform-origin: 50% 100%; }
+.climber svg { width: 100%; height: 100%; image-rendering: pixelated; }
+.climber.summit { animation: climb-summit 700ms ease-in forwards; }
+@keyframes climb-summit { 40% { transform: translateY(-18px); } to { transform: translateY(-46px); opacity: 0; } }
+.climber.falling-off { animation: climb-off 900ms cubic-bezier(.5,0,1,1) forwards; }
+@keyframes climb-off { 15% { transform: translateY(-6px) rotate(-10deg); } to { transform: translateY(260px) rotate(160deg); opacity: 0; } }
+.climb-grit { position: absolute; width: 3px; height: 3px; background: #8a867a; z-index: 3; pointer-events: none; }
+.climb-wall[data-hazard="icicles"] .climb-grit { background: #f0f6f8; }
+.climb-warn { position: absolute; top: 0; bottom: 0; background: linear-gradient(rgba(232,200,112,0.55), rgba(232,200,112,0.08)); opacity: 0; transition: opacity 120ms; z-index: 1; pointer-events: none; }
+.climb-warn.on { opacity: 1; animation: climb-glow 220ms ease-in-out infinite alternate; }
+.climb-warn i { position: absolute; top: 4px; left: 50%; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: #e8c870; opacity: 0; }
+.climb-warn.on i { opacity: 1; animation: climb-drip 650ms ease-in forwards; }
+@keyframes climb-glow { to { opacity: 0.55; } }
+@keyframes climb-drip { from { transform: scale(0.3); } 70% { transform: scale(1) translateY(4px); } to { transform: scale(0.8) translateY(10px); } }
+.climb-wall[data-hazard="icicles"] .climb-warn i { width: 4px; height: 8px; margin-left: -2px; border-radius: 0 0 3px 3px; background: #f0f6f8; }
+.climb-stone { position: absolute; top: -26px; width: 18px; height: 18px; border-radius: 6px 8px 5px 7px; background: radial-gradient(ellipse at 35% 30%, #9a968a, #4a463e 75%); box-shadow: 0 0 0 1px #22201c; opacity: 0; z-index: 3; pointer-events: none; }
+.climb-wall[data-hazard="icicles"] .climb-stone { width: 10px; margin-left: 4px; height: 26px; border-radius: 1px 1px 6px 6px; background: linear-gradient(90deg, #f4fafc, #a8c4ce); box-shadow: 0 0 6px rgba(232,242,246,0.6); }
+.climb-burst { position: absolute; bottom: 4px; width: 8px; height: 8px; border-radius: 50%; background: #8a867a; z-index: 3; pointer-events: none; }
+.climb-burst.ice { background: #e8f2f6; border-radius: 1px; }
 .climb-hits { margin: 4px 0; text-align: center; font: 12px ui-monospace, monospace; color: #c8b878; }
 .climb-pad { display: grid; grid-template-columns: repeat(3, 44px); gap: 4px; justify-content: center; margin: 6px auto; }
 .climb-pad button { height: 38px; padding: 0; font-size: 18px; touch-action: none; }

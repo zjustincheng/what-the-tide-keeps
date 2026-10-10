@@ -18,20 +18,24 @@ function rng(seed: number) {
   return () => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; return ((s >>> 0) % 100000) / 100000; };
 }
 
-// A wall of holds: two or three to a row, and always a hold in the next row up beside or above one you can reach in this row,
-// so there is always a way up, though not always straight.
+// A wall of holds, all of them joined: the route up wanders a column or two to the side now and then, and spurs come off it,
+// some leading nowhere. Every hold touches another, above, below, or beside it, so every hold can be reached and none is
+// across a gap.
 export function makeWall(seed: number, height: number): Wall {
   const next = rng(seed);
   const holds: Hold[] = [];
-  let reach = [Math.floor(COLUMNS / 2)];
+  const has = (col: number, row: number) => holds.some(hold => hold.col === col && hold.row === row);
+  const add = (col: number, row: number) => { if (col >= 0 && col < COLUMNS && !has(col, row)) holds.push({ col, row }); };
+  let col = Math.floor(COLUMNS / 2);
   for (let row = 0; row < height; row++) {
-    const cols = new Set<number>(row === 0 ? [Math.floor(COLUMNS / 2)] : []);
-    // One hold straight above somewhere this row can be reached from.
-    cols.add(reach[Math.floor(next() * reach.length)]);
-    while (cols.size < 2 + Math.floor(next() * 2)) cols.add(Math.floor(next() * COLUMNS));
-    for (const col of cols) holds.push({ col, row });
-    // Left and right reach along a whole row, so every hold in this row can be climbed up from.
-    reach = [...cols];
+    add(col, row);
+    // The route sidesteps along this row before it goes up again.
+    if (row > 0 && row < height - 1 && next() < 0.55) {
+      const way = col === 0 ? 1 : col === COLUMNS - 1 ? -1 : next() < 0.5 ? -1 : 1;
+      for (let step = 0, steps = next() < 0.35 ? 2 : 1; step < steps && col + way >= 0 && col + way < COLUMNS; step++) { col += way; add(col, row); }
+    }
+    // A spur: a hold beside one in this row, which may or may not go anywhere.
+    if (next() < 0.5) { const inRow = holds.filter(hold => hold.row === row); const from = inRow[Math.floor(next() * inRow.length)]; add(from.col + (next() < 0.5 ? -1 : 1), row); }
   }
   return { height, holds };
 }
@@ -44,20 +48,13 @@ export function startClimb(wall: Wall): Climb {
   return { wall, at: { col: Math.floor(COLUMNS / 2), row: 0 }, hits: 0, done: null };
 }
 
-// One move: to the next hold that way. Left and right reach along the row to the nearest hold; up and down reach the hold
-// directly above or below, or failing that one a column to either side.
+// One move: to the hold right next to this one, that way. With no hold there, nothing happens.
 export function move(climb: Climb, way: Way): Climb {
   if (climb.done) return climb;
   const { wall, at } = climb;
-  let to: Hold | undefined;
-  if (way === 'left' || way === 'right') {
-    const step = way === 'left' ? -1 : 1;
-    for (let col = at.col + step; col >= 0 && col < COLUMNS && !to; col += step) if (holdAt(wall, col, at.row)) to = { col, row: at.row };
-  } else {
-    const row = at.row + (way === 'up' ? 1 : -1);
-    to = [at.col, at.col - 1, at.col + 1].filter(col => holdAt(wall, col, row)).map(col => ({ col, row }))[0];
-  }
-  if (!to) return climb;
+  const [dc, dr] = { up: [0, 1], down: [0, -1], left: [-1, 0], right: [1, 0] }[way];
+  const to = { col: at.col + dc, row: at.row + dr };
+  if (!holdAt(wall, to.col, to.row)) return climb;
   return { ...climb, at: to, done: to.row === wall.height - 1 ? 'top' : null };
 }
 
