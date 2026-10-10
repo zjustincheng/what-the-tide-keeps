@@ -430,6 +430,14 @@ The time is saved with the world (`clock`, 0 to 1 from dawn, and `night`, in `ti
 - **The journal (J, or Journal in Settings).** Every answer someone gives when you ask them something is written down, grouped by who said it and where. It's paper, so it survives every death, and it's kept in `tide-keeps.journal.v1`.
 - **Bones.** A dice game you can bet on: 5 coins with the carter in Millbrook's inn, 10 with the old wolf in the fort. Throw three dice, choose which to throw again once, then the house throws. Three of a kind beats a pair beats a plain total (`src/rules/dice.ts`).
 
+
+### Games in every region
+
+- **The Talon Ring** (the mountain holds): a fighting pit through the east wall of the hold's market tier, where ground-dwellers fight for the houses. The shrike ringmaster runs four **bouts in order**: two hornets one after another (15 coins), a crag spider out of a crate (25), the kestrel brothers, two duellists with lying charms (35), and **the champion**, a shrike who hangs the losers on his thorns (60 coins and the **Champion's torc**: hits 3 harder, shows 3 more mana). **Nobody dies in the ring**: lose or **Yield** and the ringmaster calls it; the party walks out hurt (never below 1 health), keeps its coins, and can try again. A jay taking bets says to bring the vulture for the champion.
+- **The shell game** (Wickmere): a mink on the decks hides a pebble under one of three shells and shuffles. Watch it, then click a shell or press 1, 2, or 3. 5 coins, or 15 for faster hands.
+- **Arm-wrestling** (the fort's barracks): a garrison wolf, 10 coins. Press Space (or tap Push) as fast as you can to drive the marker to your side; he pushes back steadily, and surges without warning. After twenty seconds, whoever is ahead wins.
+- **Hide and seek** (Millbrook): a kid by the well needs someone to be it. Three children hide around town, one of them somewhere they aren't allowed to go. Find all three, Pip in particular, for a cake and a few coins.
+
 ## The world, as people tell it
 
 Some people carry the world's history rather than the plot. Each has several things to ask about (`src/content/lore.ts`):

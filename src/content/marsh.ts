@@ -97,6 +97,13 @@ export const wickmere: Dialogue = {
     'Antivenom, mostly. It\'s the only thing anybody buys now. It doesn\'t help with plague, and they buy it anyway.',
     'If you\'re asking me, I don\'t sell it for plague.',
   ], then: { shop: 'herbalist' } },
+  mink: { speaker: 'A MINK WITH THREE SHELLS', prompt: 'Speak to the mink', lines: [
+    'Find the lady, find the pebble, find your fortune. Three shells. Honest shells. Everyone in Wickmere is too sick to play, so you\'ll do.',
+  ], choices: [
+    { text: 'Play for 5 coins.', if: { coins: 5 }, ends: true, lines: ['"Watch the pebble. Watch my hands. Don\'t watch my face; it isn\'t doing anything."'], then: { shells: 5 } },
+    { text: 'Play for 15 coins. (Faster hands.)', if: { coins: 15 }, ends: true, lines: ['"Ah. A sporting convict." Her hands go still, and then they don\'t.'], then: { shells: 15 } },
+    { text: 'Do you cheat?', lines: ['"Never with these. Watch closely and you\'ll win. Nobody watches closely. That\'s how I eat."'] },
+  ] },
   notice: { speaker: 'THE NOTICE BOARD', prompt: 'Read the notice', lines: [
     'BY ORDER OF THE MAGISTRATE, FOR THE SAFETY OF THE TOWN: all venomous persons to present themselves at the cage.',
     'Pinned below it, a church notice: THE HOSPICE IS UNDER THE PROTECTION OF THE COVENANT. Someone has scratched out PROTECTION and written WATCH.',

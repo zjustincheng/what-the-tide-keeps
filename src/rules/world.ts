@@ -20,7 +20,7 @@ export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated' | 'pests-fiel
   | 'followers-spared' | 'followers-reported' | 'followers-paid' | 'fishmonger-angry' | 'stall-cowed' | 'stood-count' | 'inn-room' | 'reeve-pardon'
   | 'hounds-fed' | 'pack-slain' | 'ram-paid' | 'barrow-coins' | 'sluice-open' | 'drowned-slain' | 'otter-trusted' | 'otter-reported' | 'otter-paid'
   | 'vulture-met' | 'anchors-known' | 'letter-delivered' | 'bridge-lowered' | 'pair-slain' | 'hyena-slain' | 'ration-ledger' | 'merchant-thanked'
-  | 'warder-slain' | 'pens-freed' | 'lord-freed' | 'lord-left' | 'son-freed' | 'flight-slain' | 'cuckoo-slain' | 'cuckoo-challenged' | 'stair-open' | 'lab-remembered' | 'inquisitor-spoke' | 'octopus-letter' | 'duellist-beaten'
+  | 'ring-1' | 'ring-2' | 'ring-3' | 'ring-champion' | 'shells-won' | 'arm-won' | 'hide-started' | 'hide-1' | 'hide-2' | 'hide-3' | 'hide-found' | 'warder-slain' | 'pens-freed' | 'lord-freed' | 'lord-left' | 'son-freed' | 'flight-slain' | 'cuckoo-slain' | 'cuckoo-challenged' | 'stair-open' | 'lab-remembered' | 'inquisitor-spoke' | 'octopus-letter' | 'duellist-beaten'
   | 'salt-cut' | 'brood-slain' | 'channel-firm' | 'apprentice-slain' | 'frog-free' | 'viper-challenged' | 'viper-slain' | 'newt-freed' | 'manifest-read'
   | 'captain-slain' | 'lantern' | 'letter-left' | 'order-read' | 'hall-key' | 'crab-freed' | 'old-roads' | 'way-crossroads' | 'way-millbrook' | 'way-downs' | 'way-weir' | 'way-fort' | 'way-square' | 'way-wickmere' | 'way-holds'
   | 'brother-freed' | 'warden-bribed' | 'crate-delivered' | 'ring-returned' | 'ladder-down' | 'drove-gate-open' | 'drover-cache'
@@ -46,7 +46,7 @@ export const FLAGS: readonly Flag[] = ['lamb-thanked', 'hedge-open', 'boar-defea
   'followers-spared', 'followers-reported', 'followers-paid', 'fishmonger-angry', 'stall-cowed', 'stood-count', 'inn-room', 'reeve-pardon',
   'hounds-fed', 'pack-slain', 'ram-paid', 'barrow-coins', 'sluice-open', 'drowned-slain', 'otter-trusted', 'otter-reported', 'otter-paid',
   'vulture-met', 'anchors-known', 'letter-delivered', 'bridge-lowered', 'pair-slain', 'hyena-slain', 'ration-ledger', 'merchant-thanked',
-  'warder-slain', 'pens-freed', 'lord-freed', 'lord-left', 'son-freed', 'flight-slain', 'cuckoo-slain', 'cuckoo-challenged', 'stair-open', 'lab-remembered', 'inquisitor-spoke', 'octopus-letter', 'duellist-beaten',
+  'ring-1', 'ring-2', 'ring-3', 'ring-champion', 'shells-won', 'arm-won', 'hide-started', 'hide-1', 'hide-2', 'hide-3', 'hide-found', 'warder-slain', 'pens-freed', 'lord-freed', 'lord-left', 'son-freed', 'flight-slain', 'cuckoo-slain', 'cuckoo-challenged', 'stair-open', 'lab-remembered', 'inquisitor-spoke', 'octopus-letter', 'duellist-beaten',
   'salt-cut', 'brood-slain', 'channel-firm', 'apprentice-slain', 'frog-free', 'viper-challenged', 'viper-slain', 'newt-freed', 'manifest-read', 'captain-slain', 'lantern', 'letter-left', 'order-read', 'hall-key', 'crab-freed', 'old-roads', 'way-crossroads', 'way-millbrook', 'way-downs', 'way-weir', 'way-fort', 'way-square', 'way-wickmere', 'way-holds',
   'brother-freed', 'warden-bribed', 'crate-delivered', 'ring-returned', 'ladder-down', 'drove-gate-open', 'drover-cache',
   'burn-order-seen', 'kid-found', 'lane-open', 'boar-challenged', 'dead-1', 'dead-2', 'dead-3', 'ossuary-key', 'hyena-challenged'];
@@ -69,8 +69,9 @@ export type Effect = { give?: Item; take?: Item; set?: Flag | readonly Flag[]; l
   camp?: true; cook?: true; dice?: number;
   // travel: go to that waystone.
   travel?: WaystoneId; shop?: ShopId; rest?: true;
-  // church: go back to the priest, for the next orders.
-  church?: true };
+  // church: go back to the priest, for the next orders. bout: fight that bout in the Talon Ring.
+  // shells and arm: play the shell game, or arm-wrestle, for that stake.
+  church?: true; bout?: number; shells?: number; arm?: number };
 export type ShopId = 'stall' | 'reeve' | 'fishmonger' | 'merchant' | 'fence' | 'apothecary' | 'night-market' | 'smith' | 'herbalist' | 'magpie' | 'smuggler';
 
 export function createWorld(): World {

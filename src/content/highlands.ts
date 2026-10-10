@@ -121,6 +121,13 @@ export const barracks: Dialogue = {
   stove: { speaker: 'THE STOVE', prompt: 'Look in the stove', lines: [
     'Cold. Somebody has burned letters in it. On the edge of one: "...ARE ASKED NOT TO DISCUSS THE RATION..."',
   ] },
+  wrestler: { speaker: 'A GARRISON WOLF', prompt: 'Speak to the wolf', lines: [
+    'Arm-wrestling. Ten coins. I\'ve not lost since the ration cut. Nobody up here has the strength any more but me.',
+  ], variants: [{ if: { flag: 'arm-won' }, lines: [
+    'You again. My arm still hurts. Ten coins. Let\'s see if it was luck.',
+  ] }], choices: [
+    { text: 'Wrestle him. (10 coins)', if: { coins: 10 }, ends: true, lines: ['He plants his elbow on the table and opens his paw.'], then: { arm: 10 } },
+  ] },
 };
 
 export const battlefield: Dialogue = {

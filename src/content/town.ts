@@ -115,6 +115,29 @@ export const town: Dialogue = {
   stocks: { speaker: 'THE STOCKS', prompt: 'Examine the stocks', lines: [
     'Stocks in the middle of the market square, where everyone can see. Empty today. The stones under them have not been scrubbed.',
   ] },
+  // The town's children play hide and seek, and will let a convict be the seeker if nobody else will.
+  seeker: { speaker: 'A KID BY THE WELL', prompt: 'Speak to the kid', lines: [
+    'We\'re playing hide and seek and nobody will be it. You can be it. Three of us are hiding. You\'ll never find the last one.',
+  ], variants: [
+    { if: { flag: 'hide-found' }, lines: ['You found everybody. Nobody ever finds Pip. Mum says you\'re dangerous, but I think she means good at hide and seek.'] },
+    { if: { all: [{ flag: 'hide-1' }, { flag: 'hide-2' }, { flag: 'hide-3' }] }, lines: [
+      'You found all three! Even Pip! Nobody ever finds Pip.',
+      'Here. It\'s my cake from the stall. Don\'t tell Mum I talked to you.',
+    ], then: { set: 'hide-found', supply: 'trail-cake', earn: 5 } },
+    { if: { flag: 'hide-started' }, lines: ['Keep looking! They\'re all somewhere in Millbrook. One of them is somewhere we\'re not allowed to go.'] },
+  ], choices: [
+    { text: 'All right. I\'ll be it.', if: { not: { flag: 'hide-started' } }, ends: true, lines: ['"Count to a hundred! Don\'t look!" When you open your eyes, the square is empty.'], then: { set: 'hide-started' } },
+  ] },
+  'hide-1': { speaker: 'BEHIND THE REEVE\'S HALL', prompt: 'Look behind the woodpile', hiddenIf: [{ not: { flag: 'hide-started' } }, { flag: 'hide-1' }], lines: [
+    'A lamb, folded up very small behind the woodpile, with both hooves over her eyes. "If I can\'t see you, you can\'t see me."',
+  ], then: { set: 'hide-1' } },
+  'hide-2': { speaker: 'IN THE CARNIVORE QUARTER', prompt: 'Look under the cart', hiddenIf: [{ not: { flag: 'hide-started' } }, { flag: 'hide-2' }], lines: [
+    'Under a handcart in the carnivore quarter, a calf, very pleased with himself and very frightened.',
+    '"Nobody comes here. That\'s why it\'s the best place." A fox cub is hiding under there with him. Nobody asked her to play.',
+  ], then: { set: 'hide-2' } },
+  'hide-3': { speaker: 'BEHIND THE INN', prompt: 'Look in the rain barrel', hiddenIf: [{ not: { flag: 'hide-started' } }, { flag: 'hide-3' }], lines: [
+    'The lid of the rain barrel is moving. Inside, up to her neck in cold water and grinning: Pip.',
+  ], then: { set: 'hide-3' } },
   // By day, shutters and a chalk mark. After dark, the night market.
   stall: { speaker: 'A SHUTTERED STALL', prompt: 'Examine the stall', hiddenIf: [{ night: true }], lines: [
     'A stall behind the tannery, shuttered. Chalked on the boards: AFTER DARK.',

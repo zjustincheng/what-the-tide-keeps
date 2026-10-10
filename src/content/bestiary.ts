@@ -32,5 +32,6 @@ export const BESTIARY: Record<Encounter, string> = {
   warder: 'A snapping turtle the church pays to keep its pens. His shell turns a blow; the bear\'s maul breaks it. His snap goes through a guard.',
   cricket: 'Pale and long-legged, from the dark under the house. It leaps.',
   flight: 'Couriers who froze on the peak in harness, and still fly. They are dead, so poison does nothing; they fly, so the vulture takes them out of the air. Their whiteout can\'t be guarded.',
+  champion: 'The Talon Ring\'s champion, a shrike who hangs the losers on the thorns outside the gate. His larder drains, his impale goes through a guard. The vulture takes him out of the air.',
   inquisitor: 'A royal investigator, certain of your guilt. His Verdict cannot be dodged or barred. You cannot win this yet. Run.',
 };

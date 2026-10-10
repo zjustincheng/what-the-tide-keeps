@@ -23,6 +23,9 @@ import { forage, INGREDIENTS } from '../rules/cooking';
 import { destinations, waystoneIn, WAYSTONES } from '../rules/waystones';
 import { EquipmentView } from '../ui/EquipmentView';
 import { PartyView } from '../ui/PartyView';
+import { ShellView } from '../ui/ShellView';
+import { ArmView } from '../ui/ArmView';
+import { BOUTS } from '../rules/ring';
 import { ShopView } from '../ui/ShopView';
 import { FishingView } from '../ui/FishingView';
 import { SettingsView } from '../ui/SettingsView';
@@ -67,7 +70,7 @@ const FOG_SIGHT = 120;
 const HIDE_DRAIN = 2500;
 // Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
 const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8], warden: [22, 26, 5, 4], leech: [28, 24, 2, 4], hound: [20, 22, 6, 8], pack: [22, 24, 5, 6], wisp: [14, 14, 9, 9], drowned: [20, 26, 6, 4],
-  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4], captain: [22, 24, 5, 6], harrier: [22, 18, 5, 8], mosquito: [20, 16, 6, 8], scorpion: [24, 16, 4, 12], brood: [26, 20, 3, 8], apprentice: [22, 22, 5, 8], viper: [26, 20, 3, 10], hornet: [20, 16, 6, 8], spider: [26, 16, 3, 12], duellist: [20, 22, 6, 8], cuckoo: [22, 22, 5, 8], warder: [26, 18, 3, 12], cricket: [22, 14, 5, 14], flight: [26, 20, 3, 8] };
+  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4], captain: [22, 24, 5, 6], harrier: [22, 18, 5, 8], mosquito: [20, 16, 6, 8], scorpion: [24, 16, 4, 12], brood: [26, 20, 3, 8], apprentice: [22, 22, 5, 8], viper: [26, 20, 3, 10], hornet: [20, 16, 6, 8], spider: [26, 16, 3, 12], duellist: [20, 22, 6, 8], cuckoo: [22, 22, 5, 8], warder: [26, 18, 3, 12], cricket: [22, 14, 5, 14], flight: [26, 20, 3, 8], champion: [22, 22, 5, 8] };
 // Whether the last save succeeded, shared by every area.
 let saved = true;
 // The way out of a conversation, offered whenever the hero comes back to the replies.
@@ -109,7 +112,7 @@ export class AreaScene extends Phaser.Scene {
   private props: Prop[] = [];
   private people: Phaser.Physics.Arcade.Sprite[] = [];
   private walls!: Phaser.Tilemaps.TilemapLayer;
-  private overlay?: BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView | PartyView;
+  private overlay?: BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView;
   // A shop to open once the current conversation ends.
   private pendingShop?: ShopId;
   // A campfire to rest at once the current conversation ends.
@@ -118,6 +121,10 @@ export class AreaScene extends Phaser.Scene {
   private pendingCook = false;
   private pendingTravel?: keyof typeof WAYSTONES;
   private pendingChurch = false;
+  // A bout in the Talon Ring, or a stake at the shells or the arm-wrestling, to begin once the conversation closes.
+  private pendingBout?: number;
+  private pendingShells?: number;
+  private pendingArm?: number;
   // Guards who throw out anyone they can see, and what a guard said on the way down.
   private sentries: { sprite: Phaser.GameObjects.Sprite; range: number }[] = [];
   private thrownOut?: string[];
@@ -141,7 +148,7 @@ export class AreaScene extends Phaser.Scene {
     this.thrownOut = data?.caught;
     this.sentries = [];
     this.cleanup = new AbortController();
-    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.pendingChurch = false; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
+    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.pendingChurch = false; this.pendingBout = undefined; this.pendingShells = undefined; this.pendingArm = undefined; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
     this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false; this.pendingShop = undefined; this.pendingRest = undefined; this.pendingFight = undefined;
   }
 
@@ -615,6 +622,9 @@ export class AreaScene extends Phaser.Scene {
     if(then.camp) this.pendingRest=this.campPoint;
     if(then.travel) this.pendingTravel=then.travel;
     if(then.church) this.pendingChurch=true;
+    if(then.bout!==undefined) this.pendingBout=then.bout;
+    if(then.shells) this.pendingShells=then.shells;
+    if(then.arm) this.pendingArm=then.arm;
     if(then.dice) this.pendingDice={ stake: then.dice, opponent: (this.active?.speaker ?? 'the house').toLowerCase().replace(/^(a|an|the) /, 'the ') };
     if(then.shop) this.pendingShop=then.shop;
     if(then.find || then.learn || then.give) music.effect('find');
@@ -666,6 +676,12 @@ export class AreaScene extends Phaser.Scene {
       this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.start('church'));
       return;
     }
+    const bout=this.pendingBout;this.pendingBout=undefined;
+    if(bout!==undefined && !this.leaving) { this.time.delayedCall(250, () => this.fightBout(bout)); return; }
+    const shells=this.pendingShells;this.pendingShells=undefined;
+    if(shells) { this.openPanel(()=>new ShellView(shells, coins=>{ const world=loadWorld(); saved=saveWorld({ ...world, coins: Math.max(0, world.coins+coins), flags: coins>0 && !world.flags.includes('shells-won') ? [...world.flags, 'shells-won'] : world.flags }); this.renderMemory(); }, ()=>this.closePanel())); return; }
+    const arm=this.pendingArm;this.pendingArm=undefined;
+    if(arm) { this.openPanel(()=>new ArmView(arm, coins=>{ const world=loadWorld(); saved=saveWorld({ ...world, coins: Math.max(0, world.coins+coins), flags: coins>0 && !world.flags.includes('arm-won') ? [...world.flags, 'arm-won'] : world.flags }); this.renderMemory(); }, ()=>this.closePanel())); return; }
     const road=this.pendingTravel;this.pendingTravel=undefined;
     if(road && !this.leaving) {
       // The old road: a fade to pale light, and out at the other stone.
@@ -748,6 +764,32 @@ export class AreaScene extends Phaser.Scene {
     }, foe.encounter, { ...this.partyOptions(true, LIEUTENANTS.includes(foe.encounter)), ambush: Boolean(foe.ambush && foe.hidden), surprise: this.sneaking, waves: foe.waves });
   }
 
+  // A bout in the Talon Ring. Winning pays the prize; losing or yielding walks the party out hurt, but nobody dies in the ring.
+  private fightBout(index: number) {
+    const bout = BOUTS[index];
+    if(this.overlay || this.leaving || !bout) return;
+    this.player.setVelocity(0);
+    this.held.clear();
+    this.physics.pause();
+    element('prompt').textContent = '';
+    this.setExplorationEnabled(false);
+    music.play(battleTheme(bout.encounter));
+    this.overlay = new BattleView(this.textures.getBase64('hero'), (won, battle) => {
+      this.overlay = undefined;
+      music.play(this.area.music);
+      // Nobody leaves the ring dead: the fallen are carried out with a little life left.
+      const wounds = Object.fromEntries(Object.entries(woundsAfter(battle)).map(([id, wound]) => [id, Math.min(wound, (battle.party.find(member => member.id === id)?.maxHealth ?? 1) - 1)]));
+      const world = loadWorld();
+      saved = saveWorld({ ...world, supplies: battle.supplies, wounds, drained: drainedAfter(battle),
+        ...(won ? { coins: world.coins + bout.prize, flags: [...world.flags, bout.flag], found: bout.find && !world.found.includes(bout.find) ? [...world.found, bout.find] : world.found } : {}) });
+      this.renderMemory();
+      this.resumeExploration();
+      this.say({ speaker: 'THE RINGMASTER', lines: won
+        ? [`"${bout.name}: won!" The stands stamp. He counts ${bout.prize} coins into your hand without looking at you.${bout.find ? ' Then he puts the champion\'s torc round your neck, as if hanging something on a thorn.' : ''}`]
+        : ['"Called!" He waves the attendants in. They drag you out by the feet, and the crowd is already looking at the next thing.'] }, 'shrike');
+    }, bout.encounter, { ...this.partyOptions(true), waves: bout.waves, arena: true });
+  }
+
   // A shop opens after its keeper has spoken, if there is anything left to sell.
   private openShop(shop: ShopId) {
     const world = loadWorld();
@@ -797,7 +839,7 @@ export class AreaScene extends Phaser.Scene {
   }
 
   // A panel over the map: cooking, the journal, or a game of bones.
-  private openPanel(make: () => CookView | JournalView | DiceView | BestiaryView | PartyView) {
+  private openPanel(make: () => CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView) {
     if(this.overlay || this.leaving) return;
     this.player.setVelocity(0);
     this.held.clear();

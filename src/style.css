@@ -857,3 +857,18 @@ button.die[aria-pressed="true"] { border-color: #bc755e; color: #d8a890; }
 .memory-taken h3 { margin: 4px 0 6px; color: #e8d8c8; font: 22px Georgia, serif; }
 .memory-taken p { margin: 0 0 4px; color: #d7d9c8; font: 14px/1.5 Georgia, serif; }
 .memory-taken .perk { color: #c8b878; font-size: 12px; }
+
+/* The shell game. */
+.shell-table { position: relative; width: min(420px, 90%); height: 120px; margin: 10px auto; }
+.shell { position: absolute; top: 30px; width: 33.3%; height: 80px; background: none; border: none; cursor: pointer; transition: left var(--pace, 400ms) ease-in-out, transform 300ms; }
+.shell:disabled { cursor: default; }
+.shell-cup { display: block; width: 72px; height: 56px; margin: 0 auto; background: radial-gradient(circle at 50% 30%, #c8b898, #8a7a5a 70%); border-radius: 50% 50% 12px 12px; border: 2px solid #5a4a34; }
+.shell:focus-visible .shell-cup, .shell:not(:disabled):hover .shell-cup { border-color: #c8b878; }
+.shell.lifted { transform: translateY(-34px); }
+.pebble { position: absolute; top: 92px; width: 12px; height: 10px; border-radius: 50%; background: #d8d8d0; transition: opacity 200ms; }
+/* Arm-wrestling. */
+.arm-bar { position: relative; width: min(440px, 90%); height: 28px; margin: 16px auto; border: 1px solid #5d7253; background: linear-gradient(90deg, #2e4a34 0 50%, #4a2e2e 50% 100%); }
+.arm-mine, .arm-his { position: absolute; top: 6px; font: 11px ui-monospace, monospace; color: #d7d9c8; }
+.arm-mine { left: 8px; } .arm-his { right: 8px; }
+.arm-marker { position: absolute; top: -6px; width: 8px; height: 40px; background: #e8d8a8; box-shadow: 0 0 4px #000; transition: left 90ms linear; }
+#arm-push { display: block; margin: 6px auto; padding: 10px 28px; font: 16px Georgia, serif; }

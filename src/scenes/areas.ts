@@ -12,7 +12,7 @@ import { fen, weir } from '../content/fen';
 import { feastHall, harbour, square } from '../content/capital';
 import { abbey, barracks, battlefield, drove, fort, keep, ossuary, pass, rookery, tarn } from '../content/highlands';
 import { apothecary, causeway, creek, farBank, hospice, pens, wickmere } from '../content/marsh';
-import { archive, cellars, climb, hold, houseHall, summit, upper } from '../content/holds';
+import { archive, cellars, climb, hold, houseHall, ring, summit, upper } from '../content/holds';
 import type { Encounter } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
@@ -172,7 +172,7 @@ export const FARMLAND: Area = {
 export const TOWN: Area = {
   key: 'town', map: 'town', tileset: 'town', music: 'town', region: 'THE FARMLAND', place: 'Millbrook',
   dialogue: { ...town, ...townLore }, enemies: [], ground: 'stone', surfaces: { 3: 'grass', 4: 'dirt' },
-  npcs: [...['reeve', 'innkeeper', 'shopkeeper', 'child', 'fishmonger', 'fox', 'scribe'].map(name => ({ point: name, texture: name })),
+  npcs: [...['reeve', 'innkeeper', 'shopkeeper', 'child', 'fishmonger', 'fox', 'scribe'].map(name => ({ point: name, texture: name })), { point: 'seeker', texture: 'kid' },
     // The night market opens behind the tannery after dark.
     { point: 'night-trader', texture: 'marten', hiddenIf: [{ night: false }], lit: true }],
   props: [{ point: 'stocks', texture: 'stocks', solid: true, hiddenIf: [] }, { point: 'lectern', texture: 'lectern', solid: true, hiddenIf: [] }],
@@ -372,7 +372,7 @@ export const FORT: Area = {
   decorate: scene => snowfall(scene, 768, 576),
 };
 export const BARRACKS: Area = { ...INDOORS, region: 'THE HIGHLANDS', key: 'barracks', map: 'barracks', place: 'The fort · Barracks', dialogue: barracks,
-  npcs: [], exits: { out: { to: 'fort', spawn: 'from-barracks', prompt: 'Go back outside' } } };
+  npcs: [{ point: 'wrestler', texture: 'wrestler' }], exits: { out: { to: 'fort', spawn: 'from-barracks', prompt: 'Go back outside' } } };
 export const BATTLEFIELD: Area = {
   ...HIGHLAND_GROUND, key: 'battlefield', map: 'battlefield', music: 'highlands', place: 'The old battlefield', dialogue: battlefield,
   grade: { saturation: -0.5, brightness: 0.74, vignette: 0.55 }, assets: ['ghoul'],
@@ -616,7 +616,7 @@ export const WICKMERE: Area = {
   npcs: [
     { point: 'magistrate', texture: 'magistrate' }, { point: 'newt', texture: 'newt', hiddenIf: [{ flag: 'newt-freed' }] }, { point: 'ferryman', texture: 'beaver' },
     { point: 'smoker', texture: 'smoker' }, { point: 'widow', texture: 'widow' }, { point: 'child', texture: 'vole' }, { point: 'mourner', texture: 'water-rat' },
-    { point: 'herbalist', texture: 'herbalist' },
+    { point: 'herbalist', texture: 'herbalist' }, { point: 'mink', texture: 'mink' },
   ],
   enemies: [],
   props: [{ point: 'cage', texture: 'cage', solid: true, hiddenIf: [{ flag: 'newt-freed' }] }, { point: 'camp-wickmere', texture: 'campfire', hiddenIf: [] }],
@@ -721,6 +721,7 @@ export const HOLD: Area = {
     south: { to: 'climb', spawn: 'from-hold', prompt: 'Go back down the climb' },
     'great-stair': { to: 'hall-of-house', spawn: 'spawn', prompt: 'Climb the great stair to the lord\'s hall', requires: { flag: 'stair-open' },
       barred: { speaker: 'THE GOSHAWK', lines: ['"The great stair is the house\'s. Ground-dwellers stay on the ground tiers."', 'The gate behind him is shut, and the lever that opens it is somewhere above.'] } },
+    ring: { to: 'ring', spawn: 'from-hold', prompt: 'Go into the Talon Ring' },
     cliff: { to: 'upper', spawn: 'from-hold', prompt: 'Climb the cliff alone', requires: { flag: 'duellist-beaten' },
       barred: { speaker: 'THE HOUSE DUELLIST', lines: ['The duellist stands at the foot of the old climbers\' path. Nobody climbs past him.'] } },
   },
@@ -807,4 +808,14 @@ export const SUMMIT: Area = {
   decorate: scene => { wind(scene, 480, 384); snowfall(scene, 480, 384); },
 };
 
-export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY, CLIMB, HOLD, UPPER, ARCHIVE, HOUSE_HALL, PENS, CREEK, CELLARS, SUMMIT];
+// The Talon Ring, off the hold's market tier.
+export const RING: Area = {
+  ...HOLDS_GROUND, key: 'ring', map: 'ring', place: 'The Talon Ring', dialogue: ring, music: 'boss',
+  grade: { saturation: -0.4, brightness: 0.78, vignette: 0.55 },
+  npcs: [{ point: 'ringmaster', texture: 'shrike' }, { point: 'bettor', texture: 'jay' }],
+  enemies: [],
+  exits: { out: { to: 'hold', spawn: 'from-ring', prompt: 'Go back out to the market tier' } },
+  decorate: scene => wind(scene, 416, 320),
+};
+
+export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY, CLIMB, HOLD, UPPER, ARCHIVE, HOUSE_HALL, PENS, CREEK, CELLARS, SUMMIT, RING];

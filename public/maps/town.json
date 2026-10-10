@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 26,
+  "nextobjectid": 30,
   "layers": [
     {
       "id": 1,
@@ -1767,6 +1767,54 @@
         },
         {
           "id": 16,
+          "name": "seeker",
+          "type": "",
+          "x": 280,
+          "y": 216,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 17,
+          "name": "hide-1",
+          "type": "",
+          "x": 24,
+          "y": 24,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 18,
+          "name": "hide-2",
+          "type": "",
+          "x": 488,
+          "y": 88,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 19,
+          "name": "hide-3",
+          "type": "",
+          "x": 24,
+          "y": 360,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 20,
           "name": "waystone",
           "type": "",
           "x": 296,
@@ -1778,7 +1826,7 @@
           "point": true
         },
         {
-          "id": 17,
+          "id": 21,
           "name": "from-waystone",
           "type": "",
           "x": 296,
@@ -1790,7 +1838,7 @@
           "point": true
         },
         {
-          "id": 18,
+          "id": 22,
           "name": "scribe",
           "type": "",
           "x": 168,
@@ -1802,7 +1850,7 @@
           "point": true
         },
         {
-          "id": 19,
+          "id": 23,
           "name": "lectern",
           "type": "",
           "x": 184,
@@ -1814,7 +1862,7 @@
           "point": true
         },
         {
-          "id": 20,
+          "id": 24,
           "name": "hall-door",
           "type": "",
           "x": 88,
@@ -1826,7 +1874,7 @@
           "point": true
         },
         {
-          "id": 21,
+          "id": 25,
           "name": "from-hall",
           "type": "",
           "x": 72,
@@ -1838,7 +1886,7 @@
           "point": true
         },
         {
-          "id": 22,
+          "id": 26,
           "name": "inn-door",
           "type": "",
           "x": 104,
@@ -1850,7 +1898,7 @@
           "point": true
         },
         {
-          "id": 23,
+          "id": 27,
           "name": "from-inn",
           "type": "",
           "x": 88,
@@ -1862,7 +1910,7 @@
           "point": true
         },
         {
-          "id": 24,
+          "id": 28,
           "name": "tannery-door",
           "type": "",
           "x": 456,
@@ -1874,7 +1922,7 @@
           "point": true
         },
         {
-          "id": 25,
+          "id": 29,
           "name": "from-tannery",
           "type": "",
           "x": 440,

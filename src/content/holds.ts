@@ -1,3 +1,4 @@
+import { BOUTS } from '../rules/ring';
 import type { Dialogue } from './dialogue';
 
 // The mountain holds: the birds' city, ranked by height, where the messenger birds have stopped flying.
@@ -220,5 +221,34 @@ export const summit: Dialogue = {
   ] },
   perches: { speaker: 'THE PERCHES', prompt: 'Look at the perches', lines: [
     'Perches for a flight of twelve, worn smooth. Seven names are cut in the wood. Five are scratched out, carefully, by someone who knew them.',
+  ] },
+};
+
+// The Talon Ring: bouts for the houses' amusement, one after another, until the champion.
+export const ring: Dialogue = {
+  ringmaster: { speaker: 'THE RINGMASTER', prompt: 'Speak to the shrike', portrait: 'shrike', lines: [
+    'Ground-dwellers! The houses love a ground-dweller. They bleed so honestly.',
+    'Bouts in order, prize in hand, nobody dies in my ring. I call it before that. The crowd prefers it that way: it means you come back.',
+  ], variants: [{ if: { flag: 'ring-champion' }, lines: [
+    'The champion\'s torc on a ground-dweller. The houses are furious. Business has never been better.',
+  ] }], choices: BOUTS.map((bout, index) => ({
+    text: `${bout.name}. (${bout.prize} coins${bout.find ? ', and the torc' : ''})`,
+    if: index === 0 ? { not: { flag: bout.flag } } : { all: [{ flag: BOUTS[index - 1].flag }, { not: { flag: bout.flag } }] },
+    ends: true, lines: [bout.text, '"In you go."'], then: { bout: index },
+  })) },
+  board: { speaker: 'THE BOUT BOARD', prompt: 'Read the board', lines: [
+    'Chalked up in order: HORNETS, TWO AT A TIME. SOMETHING FROM THE CRACKS. THE KESTREL BROTHERS. THE CHAMPION.',
+    'Beside it, a longer list, wiped half clean: the names of ground-dwellers who fought here. Most have a little thorn drawn next to them.',
+  ] },
+  crowd: { speaker: 'THE STANDS', prompt: 'Look up at the stands', lines: [
+    'Falcons and hawks in the high seats, sparrows standing at the back. The house seats have cushions. The sparrows have each other\'s shoulders.',
+  ] },
+  thorns: { speaker: 'THE THORNS', prompt: 'Look at the thorns', lines: [
+    'A blackthorn hedge grown up the wall by the gate, and on the thorns, the shrike\'s larder: shrews, beetles, a lizard\'s tail.',
+    'He doesn\'t eat any of it. He just likes to keep it.',
+  ] },
+  bettor: { speaker: 'A JAY TAKING BETS', prompt: 'Speak to the jay', lines: [
+    'I take bets on ground-dwellers. Mostly against. Nothing personal.',
+    'Bring the vulture for the champion: he fights from the air, and her talons are the only thing in the holds that\'ll reach him.',
   ] },
 };

@@ -14,7 +14,7 @@ export type Action = 'attack' | 'support' | 'suppress' | 'barrier' | 'analyze' |
 export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm' | 'warden' | 'leech' | 'hound' | 'pack' | 'wisp' | 'drowned'
   | 'raider' | 'ghoul' | 'vulture' | 'pair' | 'hyena' | 'inquisitor' | 'captain' | 'harrier'
   | 'mosquito' | 'scorpion' | 'brood' | 'apprentice' | 'viper'
-  | 'hornet' | 'spider' | 'duellist' | 'cuckoo' | 'warder' | 'cricket' | 'flight';
+  | 'hornet' | 'spider' | 'duellist' | 'cuckoo' | 'warder' | 'cricket' | 'flight' | 'champion';
 export const SPELL = 'Salt lance';
 // What an enemy is, which decides whose blows it fears. Spells ignore all of it: magic is the equaliser.
 export type Trait = 'armoured' | 'flying' | 'caster' | 'insect' | 'dead';
@@ -23,7 +23,7 @@ export const TRAITS: Record<Encounter, readonly Trait[]> = {
   leech: [], hound: [], pack: [], wisp: ['flying', 'dead'], drowned: ['dead'], raider: [], ghoul: ['dead'], vulture: ['flying'], pair: ['caster'],
   hyena: [], inquisitor: ['caster'], captain: ['armoured'], harrier: ['flying'], mosquito: ['insect', 'flying'], scorpion: ['insect', 'armoured'],
   brood: ['insect', 'flying'], apprentice: ['caster'], viper: ['caster'], hornet: ['insect', 'flying'], spider: ['insect'], duellist: ['caster', 'flying'], cuckoo: ['caster', 'flying'],
-  warder: ['armoured'], cricket: ['insect'], flight: ['dead', 'flying'],
+  warder: ['armoured'], cricket: ['insect'], flight: ['dead', 'flying'], champion: ['flying'],
 };
 // How each hero's own blow fares against each kind: the bear's maul breaks armour and can't reach what flies;
 // the vulture's talons take things out of the air and skid off plate; the chameleon strikes casters as they gather.
@@ -206,6 +206,9 @@ export const ENEMIES = {
     opening: 'Something pale and long-legged unfolds from the dark of the cellar, and chirrs.' },
   flight: { name: 'The lost flight', short: 'lost flight', health: 96, mana: 10, veiled: false,
     opening: 'The couriers who froze on the peak lift out of the snow, still in their harness, and come at you in formation.' },
+  // The Talon Ring's champion.
+  champion: { name: 'The ring\'s champion', short: 'shrike', health: 176, mana: 8, veiled: false,
+    opening: 'The shrike steps into the sand, and the stands go quiet in a way that means they have seen this before. Outside the gate, on the thorns, are the ones who lost.' },
   inquisitor: { name: 'The inquisitor', short: 'inquisitor', health: 600, mana: 60, veiled: false,
     opening: 'The largest signature you have ever felt. A ram in grey, the royal seal at his collar. "Convict. You are a long way from your church." You cannot win this. Run.' },
 } as const satisfies Record<Encounter, unknown>;
@@ -362,6 +365,8 @@ export type BattleOptions = Readonly<{
   ambush?: boolean; surprise?: boolean;
   // tempered: keepsakes the smith has tempered. waves: how many times the enemy comes on before the fight is won.
   tempered?: readonly KeepsakeId[]; waves?: number;
+  // arena: a bout in the Talon Ring, where losing isn't dying.
+  arena?: boolean;
 }>;
 // A fight's party when none is given: the three who fought together first.
 const TRIO: readonly MemberId[] = ['chameleon', 'bear', 'vulture'];
@@ -568,6 +573,12 @@ function plainIntent(battle: Battle): Move & { tell: string } {
     if (battle.round % (battle.stage === 2 ? 2 : 3) === 1 && battle.round > 1)
       return { name: 'Talon hex', type: 'spell', spell: 'Talon hex', tell: 'He traces the house\'s sign in the air: Talon hex, a spell.', damage: 14, window: { perfect: 45, graze: 120 } };
     return { name: 'Borrowed blade', type: 'physical', tell: 'He fights with the lord\'s sword, the way the lord was taught.', damage: 12, piercing: 3, window: { perfect: 50, graze: 130 } };
+  }
+  if (battle.encounter === 'champion') {
+    if (battle.round % 3 === 0) return { name: 'Larder', type: 'physical', tell: 'He picks someone out to hang on his thorns. He will take what he needs from them, fast.', damage: 15, drain: true, window: { perfect: 50, graze: 120 } };
+    return battle.round % 3 === 2
+      ? { name: 'Impale', type: 'physical', tell: 'His beak drops like a hook. It goes through a guard.', damage: 17, piercing: 8, window: { perfect: 40, graze: 110 } }
+      : { name: 'Hook and tear', type: 'physical', tell: 'He comes in three times, hooking.', damage: 6, hits: 3, window: { perfect: 55, graze: 140 } };
   }
   if (battle.encounter === 'warder') return battle.round % 3 === 0
     ? { name: 'Snap', type: 'physical', tell: 'He draws his head back into the shell, then the jaws come out like a trap. Most of it will go through a guard.', damage: 15, piercing: 6, window: { perfect: 40, graze: 110 } }

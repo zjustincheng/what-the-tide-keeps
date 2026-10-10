@@ -40,8 +40,12 @@ export class BattleView {
   // The stage the screen last showed, so a boss's rising scene plays when it changes during the fight.
   private shownStage: 1 | 2 = 1;
 
+  // A bout in the Talon Ring: losing walks you out of the ring, not back to the cot.
+  private arena: boolean;
+
   constructor(heroImage: string, onFinish: (won: boolean, state: Battle) => void, encounter: Encounter = 'locust', options: BattleOptions = {}) {
     this.onFinish = onFinish;
+    this.arena = Boolean(options.arena);
     this.state = createBattle(encounter, loadGrimoire(), options);
     const enemyName = ENEMIES[encounter].name;
     this.root = document.createElement('section');
@@ -84,6 +88,8 @@ export class BattleView {
       this.card(member.id).querySelector<HTMLImageElement>('img')!.src = member.id === 'chameleon' ? heroImage
         : `${import.meta.env.BASE_URL}assets/${member.id}.svg`;
     }
+    // In the ring, running is yielding, and costs nothing but the bout.
+    if (this.arena) { const yieldButton = this.get<HTMLButtonElement>('#flee'); yieldButton.textContent = 'Yield'; yieldButton.title = 'Walk out of the ring. The bout is lost; nothing else is.'; }
     document.querySelector('.game-frame')!.append(this.root);
     const signal = this.cleanup.signal;
     for (const member of this.state.party) {
@@ -528,7 +534,7 @@ export class BattleView {
     this.root.dataset.stage = String(state.stage);
     this.get('#battle-title').textContent = stage ? `${stage.title}.` : 'Stand together.';
     this.get('.battle-heading .eyebrow').textContent = stage ? 'SECOND STAGE' : 'THE CONDEMNED';
-    this.get('#battle-turn').textContent = done ? (state.phase === 'fled' ? 'You run. Half your coins scatter behind you.' : state.phase === 'victory' ? `${SURVIVE[state.encounter] ? 'You lived through it.' : `It falls quiet. You find ${BOUNTY[state.encounter]} coins.`}${state.party.some(member => member.health < member.maxHealth) ? ' Your wounds will linger until you rest at a fire.' : ''}` : 'The party falls.')
+    this.get('#battle-turn').textContent = done ? (this.arena && state.phase !== 'victory' ? 'The ringmaster calls it. The crowd boos, and then forgets you.' : state.phase === 'fled' ? 'You run. Half your coins scatter behind you.' : state.phase === 'victory' ? `${SURVIVE[state.encounter] ? 'You lived through it.' : this.arena ? 'The crowd roars. The ringmaster has your prize.' : `It falls quiet. You find ${BOUNTY[state.encounter]} coins.`}${state.party.some(member => member.health < member.maxHealth) ? ' Your wounds will linger until you rest at a fire.' : ''}` : 'The party falls.')
       : `Round ${state.round} · ${state.phase === 'player' ? `${remaining} actions remaining` : 'The enemy moves'}${state.soured ? ' · Soured: healing burns' : ''}`;
     this.get('#enemy-condition').textContent = state.impostor ? 'Gone from his chair. He is among you.' : condition(state.enemy);
     this.renderHealth(this.get('.enemy-row .health-bar'), state.enemy);
@@ -596,7 +602,7 @@ export class BattleView {
     this.get('.battle-help').hidden = done;
     const finish = this.get<HTMLButtonElement>('#battle-finish');
     finish.hidden = !done;
-    finish.textContent = state.phase === 'victory' ? 'Continue' : state.phase === 'fled' ? 'Get away' : 'Wake at the cot';
+    finish.textContent = state.phase === 'victory' ? 'Continue' : this.arena ? 'Leave the ring' : state.phase === 'fled' ? 'Get away' : 'Wake at the cot';
     const run = this.get<HTMLButtonElement>('#flee');
     run.hidden = done;
     run.disabled = Boolean(this.casting) || !canFlee(state);

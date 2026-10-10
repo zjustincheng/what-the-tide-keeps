@@ -101,7 +101,7 @@ const at=(x,y)=>[x*16+8,y*16+8];
   for(const y of [8,10,12,14]){r.put(r.furniture,8,y,BED);r.put(r.furniture,23,y,BED);}
   r.put(r.furniture,14,11,TABLE);r.put(r.furniture,15,11,TABLE);r.put(r.floor,13,11,STOOL);r.put(r.floor,16,11,STOOL);
   r.put(r.furniture,11,7,CABINET);r.put(r.furniture,12,7,CABINET);r.put(r.furniture,19,7,BARREL);
-  write('barracks',r,[['spawn',...at(r.door,15)],['out',...at(r.door,17)],['bunk',...at(22,14)],['roll',...at(12,8)],['stove',...at(15,7)]]);
+  write('barracks',r,[['spawn',...at(r.door,15)],['out',...at(r.door,17)],['bunk',...at(22,14)],['roll',...at(12,8)],['stove',...at(15,7)],['wrestler',...at(17,11)]]);
 }
 // The hall of the Long Table, where the feast was held: the long table down the middle, the rulers' table across the top,
 // five seats for the heroes at the far end, the cupbearer's sideboard by the door, and the kraken hung from the rafters.

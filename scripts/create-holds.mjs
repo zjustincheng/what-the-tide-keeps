@@ -100,11 +100,13 @@ function write(name,{W,H,floor,furniture},points){
   fill(furniture,20,33,23,33,0);fill(floor,20,33,23,33,STAIR);
   // The cliff face on the west of the middle tier, which only a climber would try.
   put(floor,1,18,LEDGE);
+  // East, through the wall, the Talon Ring.
+  fill(furniture,43,22,43,23,0);fill(floor,43,22,43,23,STAIR);
   write('hold',m,[
     ['south',352,536],['from-climb',352,504],['great-stair',...at(21,15)],['from-hall',...at(21,16)],['cliff',...at(1,19)],['from-upper',...at(2,19)],
     ['duellist',...at(4,20)],['goshawk',...at(24,16)],['magpie',...at(14,20)],['pigeon',...at(6,21)],['wren',...at(30,23)],['sparrow',...at(12,29)],
     ['rookery',...at(37,21)],['courier',...at(35,22)],['letters',...at(39,21)],['statue',...at(19,22)],
-    ['waystone',...at(26,21)],['from-waystone',...at(26,22)],['camp-hold',...at(33,31)],['lodging',...at(29,30)],
+    ['waystone',...at(26,21)],['from-waystone',...at(26,22)],['camp-hold',...at(33,31)],['lodging',...at(29,30)],['ring',696,368],['from-ring',...at(41,22)],
   ]);
 }
 
@@ -188,5 +190,23 @@ function write(name,{W,H,floor,furniture},points){
   for(const [x,y] of [[8,4],[15,4],[11,7]]) put(furniture,x,y,PERCH);
   write('summit',m,[
     ['down',8,328],['from-climb',...at(2,20)],['hermit',...at(21,8)],['eyrie',...at(22,8)],['flight',...at(13,6)],['perches',...at(15,5)],['oldest',...at(19,8)],
+  ]);
+}
+
+// The Talon Ring: a fighting pit cut into the cliff, ringed with stands, where ground-dwellers fight for the houses.
+{
+  const m=grid(26,20,SNOW);const {floor,furniture,put,fill,frame}=m;
+  frame(TWALL);
+  // The stands all round, banners above the house seats.
+  fill(furniture,1,1,24,2,PERCH);fill(furniture,1,1,2,18,PERCH);fill(furniture,23,1,24,18,PERCH);
+  for(const x of [5,10,15,20]) put(furniture,x,0,BANNER);
+  // The pit: a ring of pillars, the sand inside.
+  for(const [x,y] of [[6,5],[19,5],[6,14],[19,14],[12,4],[13,4]]) put(furniture,x,y,PILLAR);
+  fill(floor,7,6,18,13,LEDGE);
+  // In from the hold on the west, under the stands.
+  fill(furniture,0,15,2,16,0);fill(floor,0,15,2,16,STAIR);
+  put(furniture,4,16,BRAZIER);put(furniture,21,16,BRAZIER);
+  write('ring',m,[
+    ['out',8,248],['from-hold',...at(3,15)],['ringmaster',...at(12,16)],['board',...at(9,16)],['crowd',...at(16,4)],['thorns',...at(4,12)],['bettor',...at(18,16)],
   ]);
 }

@@ -26,7 +26,7 @@ export const SUPPLIES: Record<SupplyId, { name: string; price: number; target: '
 export const SUPPLY_IDS = Object.keys(SUPPLIES) as SupplyId[];
 
 // What a defeated enemy leaves behind.
-export const BOUNTY: Record<Encounter, number> = { locust: 4, weevil: 5, acolyte: 10, boar: 30, swarm: 12, warden: 15, leech: 10, hound: 6, pack: 14, wisp: 5, drowned: 12, raider: 8, ghoul: 5, vulture: 0, pair: 14, hyena: 35, inquisitor: 0, captain: 24, harrier: 9, mosquito: 6, scorpion: 9, brood: 16, apprentice: 14, viper: 40, hornet: 8, spider: 14, duellist: 18, cuckoo: 45, warder: 22, cricket: 6, flight: 24 };
+export const BOUNTY: Record<Encounter, number> = { locust: 4, weevil: 5, acolyte: 10, boar: 30, swarm: 12, warden: 15, leech: 10, hound: 6, pack: 14, wisp: 5, drowned: 12, raider: 8, ghoul: 5, vulture: 0, pair: 14, hyena: 35, inquisitor: 0, captain: 24, harrier: 9, mosquito: 6, scorpion: 9, brood: 16, apprentice: 14, viper: 40, hornet: 8, spider: 14, duellist: 18, cuckoo: 45, warder: 22, cricket: 6, flight: 24, champion: 0 };
 
 // Something for sale: a supply, or a one-time deed that sets a story flag.
 // A shop can also buy: sellCatch trades every fish in the pack for coins.

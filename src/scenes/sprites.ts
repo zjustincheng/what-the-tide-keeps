@@ -57,6 +57,10 @@ const VILLAGERS: Record<string, Villager> = {
   swift: { fur: 0x2a2a30, muzzle: 0xe8e8e4, cloth: 0x3a3a44, trim: 0xa89060, ears: 'none' },
   falcon: { fur: 0x5a5e66, muzzle: 0xe0b040, cloth: 0x6a2a2a, trim: 0xc8a848, ears: 'none' },
   owl: { fur: 0x8a7458, muzzle: 0xe8d8b0, cloth: 0x4a3a2a, trim: 0xc8b878, ears: 'pointed' },
+  // The games.
+  shrike: { fur: 0x8a8e94, muzzle: 0x1a1a1e, cloth: 0x6a2a2a, trim: 0xd8d0b8, ears: 'none' },
+  jay: { fur: 0xb8a088, muzzle: 0x3a5a8a, cloth: 0x4a4038, trim: 0x2a4a7a, ears: 'none' },
+  wrestler: { fur: 0x6a6a64, muzzle: 0xc8c4b8, cloth: 0x5a4a3a, trim: 0x8a3a30, ears: 'pointed' },
   // Off the main roads.
   adder: { fur: 0x5a5034, muzzle: 0x2a2620, cloth: 0x6a5a3a, trim: 0x3a3424, ears: 'none' },
   'smuggler-seal': { fur: 0x4a4e52, muzzle: 0x6a6e70, cloth: 0x2a2a24, trim: 0xc8a848, ears: 'none' },

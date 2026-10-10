@@ -120,7 +120,7 @@ function write(name,{W,H,floor,furniture},points){
     ['magistrate',...at(24,14)],['cage',...at(26,14)],['newt',...at(26,14)],['ferryman',...at(36,18)],
     ['smoker',...at(16,26)],['herbalist',...at(12,9)],['widow',...at(29,8)],['child',...at(10,29)],['mourner',...at(30,28)],
     ['waystone',...at(18,17)],['from-waystone',...at(18,18)],['camp-wickmere',...at(9,19)],['wickmere-spot',...at(21,23)],
-    ['notice',...at(20,13)],['barrels',...at(33,22)],['south',176,536],['from-harbour',176,500],
+    ['notice',...at(20,13)],['barrels',...at(33,22)],['south',176,536],['from-harbour',176,500],['mink',...at(14,15)],
   ]);
 }
 
