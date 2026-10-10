@@ -1,4 +1,6 @@
 import type { Choice, Dialogue } from './dialogue';
+import type { MemberId } from '../rules/battle';
+import { RAISE_PRICE } from '../rules/world.ts';
 
 // Narrative content stays separate from rendering and input.
 // People talk about what is in front of them; the world's history comes out sideways, if at all.
@@ -51,6 +53,9 @@ export const church: Dialogue = {
   ] }] },
 };
 
+// Who can fall, and what the priest calls them.
+const FALLEN: readonly [MemberId, asked: string, told: string][] = [['chameleon', 'me', 'you'], ...(['bear', 'vulture', 'frog', 'octopus'] as const).map((id): [MemberId, string, string] => [id, `the ${id}`, `the ${id}`])];
+
 // The priest can be answered; what the hero has forgotten, he cannot say.
 const priestReplies: Choice[] = [
   { text: 'How many times have I died?', lines: ['{Deaths}, by the ledger.'] },
@@ -70,6 +75,20 @@ const priestReplies: Choice[] = [
     'The church in the capital. Someone there underlines names. I don\'t know why some and not others.',
     'Yours is underlined twice.',
   ] },
+  // The fallen: rest won't raise them. He will, for coins, or, from someone who can't pay, for a memory.
+  ...FALLEN.flatMap(([member, asked, told]): Choice[] => {
+    const breathes = told === 'you' ? 'You breathe in like someone surfacing.' : `${told[0].toUpperCase()}${told.slice(1)} breathes in like someone surfacing.`;
+    return [
+      { text: `Raise ${asked}. (${RAISE_PRICE} coins)`, if: { all: [{ fallen: member }, { coins: RAISE_PRICE }] }, ends: true, lines: [
+        `He counts the coins twice and puts them in the box under the ledger. Then he kneels over ${told}, with salt water and a prayer you don\'t know, for a long time.`,
+        `${breathes} "Don\'t make me do that again," the priest says. "It costs more than coins, even when it\'s coins."`,
+      ], then: { pay: RAISE_PRICE, raise: member } },
+      { text: `Raise ${asked}. (No coins: he will take something else)`, if: { all: [{ fallen: member }, { not: { coins: RAISE_PRICE } }] }, ends: true, lines: [
+        `"The church raises its own for the tithe. You haven\'t got the tithe." He looks at you${told === 'you' ? '' : `, not at ${told}`}. "You have something else. The tide always takes it in the end. I\'ll only take it early."`,
+        breathes,
+      ], then: { raise: member, tithe: true } },
+    ];
+  }),
   { text: 'I should go.', ends: true, lines: ['Go on, then. Try to come back on your feet.'] },
 ];
 church.priest.choices = priestReplies;

@@ -39,7 +39,8 @@ export type Drained = Readonly<Partial<Record<MemberId, number>>>;
 // The hero chooses when he sleeps whether to wake at dawn or at nightfall.
 // tempered: keepsakes the fort's smith has tempered; kept for good, like the keepsakes themselves.
 // waiting: companions the player has sent to wait out fights.
-export type World = Readonly<{ night?: boolean; clock?: number; waiting?: readonly MemberId[]; tempered?: readonly KeepsakeId[]; flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number; pantry?: Pantry }>;
+// fallen: heroes who went down in a fight and stayed down. Rest doesn't raise them; only the church can.
+export type World = Readonly<{ fallen?: readonly MemberId[]; night?: boolean; clock?: number; waiting?: readonly MemberId[]; tempered?: readonly KeepsakeId[]; flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number; pantry?: Pantry }>;
 export const ITEMS: readonly Item[] = ['bell', 'letter', 'note', 'crate', 'ring', 'shrine-stone', 'raven-letter', 'sealed-order', 'venom-vial'];
 export const FLAGS: readonly Flag[] = ['orchard-cleared', 'overseer-slain', 'quarrymen-freed', 'collie-told', 'cistern-asked', 'cistern-cleared', 'ratling-home', 'lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
   'sheep-woods', 'sheep-orchard', 'sheep-yard', 'sheep-reward', 'barrel-bought', 'squid-freed', 'swarm-slain', 'bounty-paid',
@@ -62,13 +63,17 @@ export type Condition = { forgot: MemoryId } | { has: Item } | { flag: Flag } | 
   // night: true holds after dark, false in daylight.
   | { night: boolean }
   // fish: carrying at least this many fish, of any kind.
-  | { fish: number };
+  | { fish: number }
+  // fallen: that hero is down, waiting for the church.
+  | { fallen: MemberId };
 // shop names a shop to open once the conversation ends.
 // pay spends coins; supply hands over one of a supply.
 export type Effect = { give?: Item; take?: Item; set?: Flag | readonly Flag[]; learn?: string; find?: Found; earn?: number; pay?: number; feed?: number; supply?: SupplyId;
   // Handled by the scene, not the story: camp sleeps at the fire, cook opens the cooking, dice starts a game of bones for that stake.
   camp?: true; cook?: true; dice?: number;
   // travel: go to that waystone.
+  // raise: the church brings a fallen hero back. tithe: what it costs instead of coins, a memory, taken by the scene.
+  raise?: MemberId; tithe?: true;
   travel?: WaystoneId; shop?: ShopId; rest?: true;
   // church: go back to the priest, for the next orders. bout: fight that bout in the Talon Ring.
   // shells and arm: play the shell game, or arm-wrestle, for that stake.
@@ -87,6 +92,7 @@ export function holds(context: Context, condition: Condition): boolean {
   if ('any' in condition) return condition.any.some(each => holds(context, each));
   if ('coins' in condition) return context.world.coins >= condition.coins;
   if ('night' in condition) return Boolean(context.world.night) === condition.night;
+  if ('fallen' in condition) return (context.world.fallen ?? []).includes(condition.fallen);
   if ('fish' in condition) return FISH_IDS.reduce((total, fish) => total + (context.world.fish[fish] ?? 0), 0) >= condition.fish;
   if ('forgot' in condition) return context.lost.includes(condition.forgot);
   if ('has' in condition) return context.world.carried.includes(condition.has);
@@ -105,7 +111,7 @@ export function apply(context: Context, effect: Effect): Context {
       flags: [...world.flags, ...[effect.set ?? []].flat().filter((flag, i, all) => !world.flags.includes(flag) && all.indexOf(flag) === i)],
       found: effect.find && !world.found.includes(effect.find) ? [...world.found, effect.find] : world.found,
       coins: Math.max(0, world.coins + (effect.earn ?? 0) - (effect.pay ?? 0)),
-      supplies: effect.supply ? { ...world.supplies, [effect.supply]: world.supplies[effect.supply] + 1 } : world.supplies, fish: effect.feed ? feed(world.fish, effect.feed) : world.fish, deaths: world.deaths, pantry: world.pantry, night: world.night, clock: world.clock, waiting: world.waiting, tempered: world.tempered, wounds: effect.rest ? {} : world.wounds, drained: effect.rest ? {} : world.drained,
+      supplies: effect.supply ? { ...world.supplies, [effect.supply]: world.supplies[effect.supply] + 1 } : world.supplies, fish: effect.feed ? feed(world.fish, effect.feed) : world.fish, deaths: world.deaths, pantry: world.pantry, night: world.night, clock: world.clock, waiting: world.waiting, tempered: world.tempered, fallen: effect.raise ? (world.fallen ?? []).filter(member => member !== effect.raise) : world.fallen, wounds: effect.rest ? {} : world.wounds, drained: effect.rest ? {} : world.drained,
     },
     studied: effect.learn && !studied.includes(effect.learn) ? [...studied, effect.learn] : studied,
   };
@@ -130,17 +136,19 @@ export function roster(world: World): MemberId[] {
 export const FIGHTERS = 3;
 export function lineup(world: World, lieutenant = false): MemberId[] {
   const waiting = world.waiting ?? [];
-  const joined = roster(world);
+  // The fallen don't fight, whoever they are.
+  const fallen = world.fallen ?? [];
+  const joined = roster(world).filter(member => !fallen.includes(member));
   const chosen = joined.filter(member => !waiting.includes(member)).slice(0, FIGHTERS);
   const fighting = chosen.length ? chosen : ['chameleon' as const];
-  if (!lieutenant || fighting.includes('chameleon')) return fighting;
+  if (!lieutenant || fighting.includes('chameleon') || fallen.includes('chameleon')) return fighting;
   return ['chameleon', ...fighting.slice(0, FIGHTERS - 1)];
 }
 
 // Send someone to wait, or bring them back to fight. Bringing a fourth back sends the newest fighter to wait in their place.
 // The last one fighting can't be sent to wait.
 export function toggleWaiting(world: World, member: MemberId): World {
-  if (!roster(world).includes(member)) return world;
+  if (!roster(world).includes(member) || (world.fallen ?? []).includes(member)) return world;
   const waiting = world.waiting ?? [];
   if (!lineup(world).includes(member)) {
     const back = { ...world, waiting: waiting.filter(other => other !== member) };
@@ -152,11 +160,19 @@ export function toggleWaiting(world: World, member: MemberId): World {
   return { ...world, waiting: [...waiting, member] };
 }
 
+// Heroes still down when a fight ends stay down: rest closes wounds, but it doesn't raise the fallen.
+export function fell(world: World, downed: readonly MemberId[]): World {
+  const fallen = [...new Set([...(world.fallen ?? []), ...downed])];
+  return fallen.length ? { ...world, fallen } : world;
+}
+// What the church asks to raise one of the fallen: coins, or, from those who can't pay, a memory.
+export const RAISE_PRICE = 40;
+
 // Things carried, coins, supplies, fish, and wounds gathered since the last death are lost on a wipe. Flags, like opened shortcuts, persist.
 export function drop(world: World): World {
   // The church sends the party back out whole, and adds a line to the ledger.
   // The church wakes him at dawn.
-  return { ...world, carried: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, pantry: NO_PANTRY, wounds: {}, drained: {}, deaths: world.deaths + 1, night: false, clock: 0 };
+  return { ...world, carried: [], coins: 0, supplies: NO_SUPPLIES, fish: NO_CATCH, pantry: NO_PANTRY, wounds: {}, drained: {}, fallen: [], deaths: world.deaths + 1, night: false, clock: 0 };
 }
 
 // Running from a fight drops half the coins carried, rounded in the enemy's favour.

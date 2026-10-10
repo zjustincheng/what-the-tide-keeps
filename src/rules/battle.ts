@@ -467,6 +467,11 @@ export function flee(battle: Battle): Battle {
   };
 }
 
+// Who is still down when a fight ends.
+export function downed(battle: Pick<Battle, 'party'>): MemberId[] {
+  return battle.party.filter(member => member.health <= 0).map(member => member.id);
+}
+
 // What each hero carries away from a won fight.
 export function woundsAfter(battle: Battle): Wounds {
   return Object.fromEntries(battle.party.filter(member => member.health < member.maxHealth).map(member => [member.id, member.maxHealth - member.health]));

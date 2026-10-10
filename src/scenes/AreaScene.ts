@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
-import { createBattle, drainedAfter, enemyMana, ENEMIES, LIEUTENANTS, MEMBERS, woundsAfter } from '../rules/battle';
-import type { BattleOptions } from '../rules/battle';
+import { createBattle, downed, drainedAfter, enemyMana, ENEMIES, LIEUTENANTS, MEMBERS, woundsAfter } from '../rules/battle';
+import type { Battle, BattleOptions } from '../rules/battle';
 import type { Encounter, Escort } from '../rules/battle';
 import { anchor, forgetAll, held, hollow, MEMORY_IDS, remind, tideTakesAll, wipe } from '../rules/memory';
 import type { Companion } from '../rules/memory';
-import { apply, conversation, drop, fill, fleeing, holds, lineup, replies, rest, roster } from '../rules/world';
+import { apply, conversation, drop, fell, fill, fleeing, holds, lineup, replies, rest, roster } from '../rules/world';
 import type { Condition, Context, Effect, ShopId } from '../rules/world';
 import type { Choice, Conversation } from '../content/dialogue';
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
@@ -32,6 +32,7 @@ import { SettingsView } from '../ui/SettingsView';
 import { addCatch, SPOTS } from '../rules/fishing';
 import type { SpotId } from '../rules/fishing';
 import { SHOPS } from '../content/shops';
+import { memories } from '../content/memories';
 import { BOUNTY } from '../rules/economy';
 import { loadGear, saveGear } from '../storage/gear';
 import { loadBooks, saveBooks } from '../storage/books';
@@ -117,6 +118,8 @@ export class AreaScene extends Phaser.Scene {
   private pendingShop?: ShopId;
   // A campfire to rest at once the current conversation ends.
   private pendingRest?: string;
+  // What the church took, in memories, to raise one of the fallen: said once the conversation closes.
+  private pendingTithe?: string[];
   private pendingFight?: Foe;
   private pendingCook = false;
   private pendingTravel?: keyof typeof WAYSTONES;
@@ -151,7 +154,7 @@ export class AreaScene extends Phaser.Scene {
     this.thrownOut = data?.caught;
     this.sentries = [];
     this.cleanup = new AbortController();
-    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.pendingChurch = false; this.exitMarkers = []; this.pendingBout = undefined; this.pendingSail = undefined; this.pendingShells = undefined; this.pendingArm = undefined; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
+    this.held = new Set(); this.foes = []; this.props = []; this.people = []; this.forage = []; this.pendingTravel = undefined; this.pendingChurch = false; this.exitMarkers = []; this.pendingBout = undefined; this.pendingTithe = undefined; this.pendingSail = undefined; this.pendingShells = undefined; this.pendingArm = undefined; this.sneaking = false; this.pendingCook = false; this.pendingDice = undefined; this.asked = new Set(); this.talked = new Set();
     this.nearby = undefined; this.active = undefined; this.overlay = undefined; this.leaving = false; this.pendingShop = undefined; this.pendingRest = undefined; this.pendingFight = undefined;
   }
 
@@ -716,6 +719,12 @@ export class AreaScene extends Phaser.Scene {
     if(then.find || then.learn || then.give) music.effect('find');
     if(then.earn || then.pay) music.effect('coins');
     if(then.rest) music.effect('rest');
+    // Raised for a memory instead of coins: the tide chooses which, as it does at a death.
+    if(then.tithe) {
+      const owing=wipe(loadMemory(), 1);
+      const taken=tideTakesAll(owing, loadWorld().deaths + 101 * ((loadWorld().fallen ?? []).length + 1));
+      if(taken.length) { saved=saveMemory(forgetAll(owing, taken)) && saved; this.pendingTithe=taken.map(id=>memories[id].name); }
+    }
     const before=roster(loadWorld());
     const next=apply(this.context(), then);
     saved=saveWorld(next.world)&&saveGrimoire(next.studied);
@@ -770,6 +779,11 @@ export class AreaScene extends Phaser.Scene {
       this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.start(sail==='out' ? 'outlaw-port' : 'creek',{ spawn: sail==='out' ? 'from-creek' : 'from-causeway' }));
       return;
     }
+    const tithe=this.pendingTithe;this.pendingTithe=undefined;
+    if(tithe && !this.leaving) { this.time.delayedCall(250, () => this.say({ speaker: 'THE PRIEST', lines: [
+      'He doesn\'t ask for coins. He puts his hand on your head instead, and holds it there until something goes.',
+      `You don\'t remember what it was. The ledger does: ${tithe.join(', ')}.`,
+    ] }, 'priest')); return; }
     const bout=this.pendingBout;this.pendingBout=undefined;
     if(bout!==undefined && !this.leaving) { this.time.delayedCall(250, () => this.fightBout(bout)); return; }
     const shells=this.pendingShells;this.pendingShells=undefined;
@@ -790,6 +804,7 @@ export class AreaScene extends Phaser.Scene {
     if(camp && !this.leaving) {
       PICKED.clear();
       music.effect('rest'); const cost=this.area.camps?.[camp]?.cost ?? 0; saved=saveWorld(rest({ ...loadWorld(), coins: Math.max(0, loadWorld().coins-cost), }));
+      const fallen=loadWorld().fallen ?? []; if(fallen.length) this.time.delayedCall(1200, () => this.notice(`${fallen.map(id=>MEMBERS[id].name).join(' and ')} ${fallen.length>1?'do':'does'} not wake. Rest won't raise the fallen: only the church can.`, 5000));
       const sleep=()=>{ this.leaving=true; this.cameras.main.fadeOut(400,16,27,24); this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.restart({spawn:camp})); };
       // Once the vulture has shown how, a memory can be written down before sleeping.
       if(loadWorld().flags.includes('anchors-known')) this.writeDown(sleep); else sleep();
@@ -825,8 +840,9 @@ export class AreaScene extends Phaser.Scene {
         foe.signature.setVisible(false);
         music.play(this.area.music);
         // The spoils, and whatever supplies were not used up.
-        saved = saveWorld({ ...loadWorld(), coins: loadWorld().coins + BOUNTY[foe.encounter], supplies: battle.supplies, wounds: woundsAfter(battle), drained: drainedAfter(battle) });
+        saved = saveWorld(fell({ ...loadWorld(), coins: loadWorld().coins + BOUNTY[foe.encounter], supplies: battle.supplies, wounds: woundsAfter(battle), drained: drainedAfter(battle) }, downed(battle)));
         this.renderMemory();
+        this.mourn(battle);
         if(foe.defeat) {
           const next=apply(this.context(), foe.defeat);
           saved=saveWorld(next.world);
@@ -844,7 +860,8 @@ export class AreaScene extends Phaser.Scene {
       } else if(battle.phase === 'fled') {
         // A getaway: half the coins dropped, the parting blow's wound kept, and some distance put between them.
         music.play(this.area.music);
-        saved = saveWorld({ ...fleeing(loadWorld()), supplies: battle.supplies, wounds: woundsAfter(battle), drained: drainedAfter(battle) });
+        saved = saveWorld(fell({ ...fleeing(loadWorld()), supplies: battle.supplies, wounds: woundsAfter(battle), drained: drainedAfter(battle) }, downed(battle)));
+        this.mourn(battle);
         const away = new Phaser.Math.Vector2(this.player.x - foe.sprite.x, this.player.y - foe.sprite.y).normalize().scale(36);
         this.player.setPosition(this.player.x + (away.x || 0), this.player.y + (away.y || 36));
         foe.fledAt = this.time.now;
@@ -857,6 +874,12 @@ export class AreaScene extends Phaser.Scene {
         this.scene.start('church');
       }
     }, foe.encounter, { ...this.partyOptions(true, LIEUTENANTS.includes(foe.encounter)), ambush: Boolean(foe.ambush && foe.hidden), surprise: this.sneaking, waves: foe.waves, company: foe.company });
+  }
+
+  // Anyone carried off the field: rest won't bring them back. Only the church can.
+  private mourn(battle: Battle) {
+    const down = downed(battle);
+    if (down.length) this.notice(`${down.map(id => MEMBERS[id].name).join(' and ')} ${down.length > 1 ? 'are' : 'is'} down, and won't get up by a fire. Carry them to the church.`, 5000);
   }
 
   // A run in the Talon Ring: every bout, one straight after another. Each win pays its prize and sends the next one in at once,
@@ -963,11 +986,11 @@ export class AreaScene extends Phaser.Scene {
 
   // A short message over the map, in the same place as the hiding badge.
   private noticeTimer?: ReturnType<typeof setTimeout>;
-  private notice(text: string) {
+  private notice(text: string, ms = 1800) {
     const badge = element('sneaking');
     badge.textContent = text; badge.hidden = false;
     clearTimeout(this.noticeTimer);
-    this.noticeTimer = setTimeout(() => { badge.textContent = 'MANA HIDDEN'; badge.hidden = !this.sneaking; }, 1800);
+    this.noticeTimer = setTimeout(() => { badge.textContent = 'MANA HIDDEN'; badge.hidden = !this.sneaking; }, ms);
   }
 
   private toggleSneak() {

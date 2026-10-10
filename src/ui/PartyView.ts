@@ -64,9 +64,14 @@ export class PartyView {
       const card = this.root.querySelector<HTMLElement>(`[data-member="${member.id}"]`)!;
       const fights = fighting.includes(member.id);
       card.dataset.waiting = String(!fights);
-      card.querySelector('.equipment-stats')!.textContent = `Health ${member.health} / ${member.maxHealth} · Mana ${member.mana} / ${member.maxMana}`;
+      const fallen = (this.world.fallen ?? []).includes(member.id);
+      card.dataset.fallen = String(fallen);
+      card.querySelector('.equipment-stats')!.textContent = fallen ? 'Fallen · rest won\'t raise them; only the church can'
+        : `Health ${member.health} / ${member.maxHealth} · Mana ${member.mana} / ${member.maxMana}`;
       const toggle = card.querySelector<HTMLButtonElement>('[data-toggle]');
       if (!toggle) continue;
+      toggle.disabled = fallen;
+      if (fallen) { toggle.textContent = 'Fallen · can\'t fight'; toggle.setAttribute('aria-pressed', 'false'); toggle.setAttribute('aria-label', `${MEMBERS[member.id].name} has fallen`); continue; }
       toggle.textContent = fights ? 'Fights · send to wait' : 'Waits · bring to fight';
       toggle.setAttribute('aria-pressed', String(fights));
       toggle.setAttribute('aria-label', `${MEMBERS[member.id].name} ${fights ? 'fights' : 'waits'}`);
