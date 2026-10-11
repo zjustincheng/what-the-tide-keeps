@@ -35,6 +35,12 @@ import type { Ground } from '../rules/leap';
 import { ShopView } from '../ui/ShopView';
 import { FishingView } from '../ui/FishingView';
 import { SettingsView } from '../ui/SettingsView';
+import { CinematicView } from '../ui/CinematicView';
+import { MemoriesView } from '../ui/MemoriesView';
+import { STORIES, STORY_FLAGS, BOSS_STORIES, resurrectionStory } from '../presentation/stories';
+import type { Story, StoryId } from '../presentation/stories';
+import { seenStories, rememberStory } from '../storage/presentation';
+import { atmosphere } from '../presentation/atmosphere';
 import { addCatch, SPOTS } from '../rules/fishing';
 import type { SpotId } from '../rules/fishing';
 import { SHOPS } from '../content/shops';
@@ -123,7 +129,8 @@ export class AreaScene extends Phaser.Scene {
   private props: Prop[] = [];
   private people: Phaser.Physics.Arcade.Sprite[] = [];
   private walls!: Phaser.Tilemaps.TilemapLayer;
-  private overlay?: BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView;
+  private pendingStories: StoryId[] = [];
+  private overlay?: CinematicView | MemoriesView | BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView;
   // A shop to open once the current conversation ends.
   private pendingShop?: ShopId;
   // A campfire to rest at once the current conversation ends.
@@ -170,6 +177,7 @@ export class AreaScene extends Phaser.Scene {
 
   init(data: { spawn?: string; caught?: string[] }) {
     // Scene instances are reused, so every visit starts from a clean slate.
+    this.pendingStories = [];
     this.arrival = data?.spawn ?? 'spawn';
     this.thrownOut = data?.caught;
     this.sentries = [];
@@ -260,6 +268,7 @@ export class AreaScene extends Phaser.Scene {
     }
     this.refreshProps(true);
     this.area.decorate?.(this);
+    atmosphere(this, this.area);
     this.grade();
     this.keys = this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT', false) as typeof this.keys;
     this.bindControls();
@@ -281,7 +290,10 @@ export class AreaScene extends Phaser.Scene {
     // A wipe that was not yet paid for, such as one interrupted by a reload, is still owed.
     if (loadMemory().pending) this.wake();
     else if (this.thrownOut) { const lines = this.thrownOut; this.thrownOut = undefined; this.time.delayedCall(450, () => this.say({ speaker: 'THROWN OUT', lines }, undefined)); }
+    else if (this.area.key === 'lamp' && !seenStories().includes('human') && !loadWorld().flags.some(flag => ['human-seated', 'human-beaten', 'human-spared', 'human-challenged'].includes(flag))) this.showStory(STORIES.human);
+    else if (this.area.key === 'church' && !loadWorld().flags.length && !loadWorld().deaths && !seenStories().includes('waking')) this.showStory(STORIES.waking);
     this.events.once('shutdown', () => {
+      this.leaving = true; this.pendingStories = [];
       // Leaving an area keeps the time it is.
       if (!loadMemory().pending) saved = saveWorld(loadWorld());
       this.pendingShop = undefined; this.pendingRest = undefined;
@@ -889,6 +901,11 @@ export class AreaScene extends Phaser.Scene {
     }
     const before=roster(loadWorld());
     const next=apply(this.context(), then);
+    for (const flag of next.world.flags) {
+      const story = STORY_FLAGS[flag];
+      if (story === 'transfer' && next.world.flags.includes('house-seen')) continue;
+      if (story && !loadWorld().flags.includes(flag) && !seenStories().includes(story) && !this.pendingStories.includes(story)) this.pendingStories.push(story);
+    }
     saved=saveWorld(next.world)&&saveGrimoire(next.studied);
     this.refreshFoes(undefined, true);
     // A companion who has just joined takes their own grimoire back.
@@ -920,6 +937,10 @@ export class AreaScene extends Phaser.Scene {
     // Focus left on the hidden Continue button would strand the keyboard, so it returns to the map.
     if(element('dialogue').contains(document.activeElement)) element('game').focus({preventScroll:true});
     this.active=undefined;this.options=[];this.portraitKey=undefined;this.menu=undefined;this.returning=false;element('dialogue').hidden=true;element('choices').hidden=true;element('continue').hidden=false;
+    if (this.pendingStories.length && !this.leaving) {
+      this.showStory(STORIES[this.pendingStories.shift()!], () => this.closeDialogue());
+      return;
+    }
     const fight=this.pendingFight;this.pendingFight=undefined;
     if(fight && !this.leaving) { this.time.delayedCall(250, () => this.beginBattle(fight)); }
     const shop=this.pendingShop;this.pendingShop=undefined;
@@ -987,9 +1008,14 @@ export class AreaScene extends Phaser.Scene {
     if(this.input.keyboard) this.input.keyboard.enabled = enabled;
   }
 
-  private beginBattle(foe: Foe) {
+  private beginBattle(foe: Foe, introduced = false) {
     // A foe just fled from gives the party a moment to get clear.
     if(this.overlay || this.active || this.leaving || !foe.sprite.active || (foe.fledAt !== undefined && this.time.now - foe.fledAt < 2500)) return;
+    const introduction = BOSS_STORIES[foe.encounter];
+    if (!introduced && introduction && !seenStories().includes(introduction)) {
+      this.showStory(STORIES[introduction], () => this.beginBattle(foe, true));
+      return;
+    }
     this.player.setVelocity(0);
     this.held.clear();
     this.input.keyboard?.resetKeys();
@@ -1109,6 +1135,7 @@ export class AreaScene extends Phaser.Scene {
   private openSettings() {
     if(this.overlay || this.leaving) return;
     this.closeDialogue();
+    if (this.overlay || this.leaving) return;
     this.player.setVelocity(0);
     this.held.clear();
     this.physics.pause();
@@ -1118,6 +1145,12 @@ export class AreaScene extends Phaser.Scene {
     music.effect('open');
     this.overlay = new SettingsView({
       close,
+      memories: () => {
+        close();
+        const ids = new Set(seenStories());
+        for (const flag of loadWorld().flags) { const id = STORY_FLAGS[flag]; if (id) ids.add(id); }
+        this.openPanel(() => new MemoriesView([...ids], () => this.closePanel()));
+      },
       equipment: () => { close(); this.openEquipment(); },
       party: () => { close(); this.openParty(); },
       journal: () => { close(); this.openPanel(()=>new JournalView(loadJournal(), ()=>this.closePanel(), orders(loadWorld()), leads(loadWorld()))); },
@@ -1128,7 +1161,7 @@ export class AreaScene extends Phaser.Scene {
   }
 
   // A panel over the map: cooking, the journal, or a game of bones.
-  private openPanel(make: () => CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView) {
+  private openPanel(make: () => MemoriesView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView) {
     if(this.overlay || this.leaving) return;
     this.player.setVelocity(0);
     this.held.clear();
@@ -1201,6 +1234,17 @@ export class AreaScene extends Phaser.Scene {
     });
   }
 
+  private showStory(story: Story, after?: () => void) {
+    if (this.overlay || this.leaving) return;
+    this.player.setVelocity(0); this.held.clear(); this.input.keyboard?.resetKeys();
+    this.physics.pause(); this.setExplorationEnabled(false);
+    this.overlay = new CinematicView(story, () => {
+      this.overlay?.destroy(); this.overlay = undefined;
+      if (story.id in STORIES) rememberStory(story.id as StoryId);
+      this.resumeExploration(); after?.();
+    });
+  }
+
   private wake() {
     this.player.setVelocity(0);
     this.physics.pause();
@@ -1210,14 +1254,17 @@ export class AreaScene extends Phaser.Scene {
     // The tide chooses: the same memory however often the game is reloaded, until he stands.
     const taken = tideTakesAll(loadMemory(), loadWorld().deaths);
     if (!taken.length) { saved = saveMemory({ ...loadMemory(), pending: false }); this.resumeExploration(); return; }
-    this.overlay = new ResurrectionView(loadMemory(), taken, () => {
-      this.overlay?.destroy();
-      this.overlay = undefined;
-      saved = saveMemory(forgetAll(loadMemory(), taken));
-      this.renderMemory();
-      this.cameras.main.fadeIn(900, 16, 27, 24);
-      music.play(this.area.music);
-      this.resumeExploration();
+    this.showStory(resurrectionStory(taken.map(id => memories[id].name)), () => {
+      this.physics.pause(); this.setExplorationEnabled(false);
+      this.overlay = new ResurrectionView(loadMemory(), taken, () => {
+        this.overlay?.destroy();
+        this.overlay = undefined;
+        saved = saveMemory(forgetAll(loadMemory(), taken));
+        this.renderMemory();
+        this.cameras.main.fadeIn(900, 16, 27, 24);
+        music.play(this.area.music);
+        this.resumeExploration();
+      });
     });
   }
 

@@ -27,7 +27,7 @@ export class SettingsView {
   private root: HTMLElement;
   private cleanup = new AbortController();
 
-  constructor(actions: { equipment: () => void; party: () => void; journal: () => void; bestiary: () => void; restart: () => void; close: () => void }) {
+  constructor(actions: { memories: () => void; equipment: () => void; party: () => void; journal: () => void; bestiary: () => void; restart: () => void; close: () => void }) {
     this.root = document.createElement('section');
     this.root.className = 'battle settings';
     this.root.setAttribute('role', 'dialog');
@@ -48,6 +48,7 @@ export class SettingsView {
         <button type="button" data-action="equipment">Equipment</button>
         <button type="button" data-action="party">Who fights</button>
         <button type="button" data-action="journal">Journal</button>
+        <button type="button" data-action="memories">Revisit memories</button>
         <button type="button" data-action="bestiary">Bestiary</button>
         <button type="button" data-action="restart">Return to the cot ↺</button>
         <button type="button" data-action="start-over">Start over…</button>
@@ -70,7 +71,7 @@ export class SettingsView {
         this.root.querySelector<HTMLElement>(ask ? '[data-action="keep"]' : '[data-action="start-over"]')!.focus();
       }
       else if (action === 'erase') { if (eraseProgress()) location.reload(); }
-      else if (action === 'equipment' || action === 'party' || action === 'journal' || action === 'bestiary' || action === 'restart' || action === 'close') actions[action]();
+      else if (action === 'memories' || action === 'equipment' || action === 'party' || action === 'journal' || action === 'bestiary' || action === 'restart' || action === 'close') actions[action]();
     }, { signal });
     this.root.querySelector<HTMLInputElement>('[aria-label="Music volume"]')!.addEventListener('input', event => music.setVolume(Number((event.target as HTMLInputElement).value) / 100), { signal });
     this.root.querySelector<HTMLInputElement>('[aria-label="Sound effects volume"]')!.addEventListener('input', event => music.setEffectsVolume(Number((event.target as HTMLInputElement).value) / 100), { signal });

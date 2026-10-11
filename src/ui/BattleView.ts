@@ -8,12 +8,14 @@ import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
 import { music } from '../audio/music';
 import { beaten, sighted } from '../storage/bestiary';
 import type { Effect as Sound } from '../audio/effects';
+import { combatEffect } from '../presentation/combat';
+import { tableau } from '../presentation/tableau';
 
 // How long the dodge ring takes to close on its target, in milliseconds.
 const LEAD = 900;
 
 // Who appears in a boss's scene when they speak, by the name the scene gives them.
-const SPEAKER_ART: Record<string, string> = { 'THE BOAR': 'boar', 'THE BADGER': 'badger', 'THE RAT': 'rat', 'THE HYENA': 'hyena', 'THE VIPER': 'viper', 'THE CUCKOO': 'cuckoo', 'THE CUTTLEFISH': 'cuttlefish' };
+const SPEAKER_ART: Record<string, string> = { 'THE BOAR': 'boar', 'THE BADGER': 'badger', 'THE RAT': 'rat', 'THE HYENA': 'hyena', 'THE VIPER': 'viper', 'THE CUCKOO': 'cuckoo', 'THE CUTTLEFISH': 'cuttlefish', 'THE HUMAN': 'human' };
 
 // What each hero's support does. A guard stops physical blows; a barrier (under Spellcraft) stops studied spells.
 const SUPPORT_SHORT: Record<MemberId, string> = { chameleon: 'Stops blows', bear: 'Guards an ally', vulture: 'Next hit harder', frog: 'Mends an ally', octopus: 'Throws a spell back' };
@@ -31,6 +33,7 @@ export class BattleView {
   private root: HTMLElement;
   private timer?: ReturnType<typeof setTimeout>;
   private cleanup = new AbortController();
+  private sceneCleanup?: () => void;
   private previousFocus = document.activeElement as HTMLElement | null;
   private onFinish: (won: boolean, state: Battle) => void;
   // Set while a dodge prompt is open: when the blow lands, and how to answer it.
@@ -51,12 +54,18 @@ export class BattleView {
     const enemyName = ENEMIES[encounter].name;
     this.root = document.createElement('section');
     this.root.className = 'battle party-battle';
+    const glow = ['human', 'cuttlefish', 'shark', 'eel', 'barracuda', 'jelly'].includes(encounter) ? '#39758a88'
+      : ['viper', 'apprentice', 'mosquito', 'scorpion', 'brood'].includes(encounter) ? '#73794477'
+      : ['hyena', 'ghoul', 'wisp', 'drowned'].includes(encounter) ? '#65557b88'
+      : ['boar', 'hound', 'locust', 'weevil'].includes(encounter) ? '#93734f66' : '#577e8070';
+    this.root.style.setProperty('--battle-glow', glow);
     this.root.setAttribute('role', 'dialog');
     this.root.setAttribute('aria-modal', 'true');
     this.root.setAttribute('aria-labelledby', 'battle-title');
     this.root.innerHTML = `
       <div class="battle-heading"><p class="eyebrow">THE CONDEMNED</p><h2 id="battle-title">Stand together.</h2><p id="battle-turn"></p><button id="flee" class="flee" type="button" title="Drop half your coins and take a parting blow">Run</button></div>
       <div class="enemy-row">
+        <div class="arena-backdrop" aria-hidden="true">${tableau(['human', 'keeper'].includes(encounter) ? 'lighthouse' : ['cuttlefish', 'shark', 'eel', 'barracuda', 'jelly'].includes(encounter) ? 'sea' : ['hyena', 'ghoul', 'raider'].includes(encounter) ? 'battlefield' : encounter === 'cuckoo' ? 'feast' : ['viper', 'apprentice'].includes(encounter) ? 'cell' : 'mill')}</div>
         <div class="fighter enemy-fighter" data-foe="0"><img src="${import.meta.env.BASE_URL}assets/${encounter}.svg" alt="${enemyName}" /></div>
         <div><h3>${enemyName}</h3>${TRAITS[encounter].length ? `<p class="enemy-traits" title="The bear's maul breaks armour and can't reach flyers; the vulture's talons take flyers and skid off armour; the chameleon strikes casters hardest; the frog's poison is double in insects and nothing in the dead. Spells ignore all of it.">${TRAITS[encounter].map(trait => trait[0].toUpperCase() + trait.slice(1)).join(' · ')}</p>` : ''}<div class="health-bar" role="meter" aria-label="${enemyName} health" aria-valuemin="0" aria-valuemax="100"><span></span></div><p id="enemy-condition"></p><p class="mana" id="enemy-mana"></p></div>
         ${this.state.followers.map((follower, index) => `<div class="follower" data-foe="${index + 1}">
@@ -83,7 +92,7 @@ export class BattleView {
       <div class="spell-bar" hidden><p class="spell-name"></p><div class="spell-keys" aria-live="polite"></div><div class="spell-timer"><span></span></div>
         <div class="spell-pad">${[1, 2, 3, 4].map(key => `<button type="button" data-key="${key}">${key}</button>`).join('')}</div></div>
       <div class="dodge-bar" hidden><p class="dodge-call" aria-live="assertive"></p><button id="dodge" type="button">Dodge <small>Space or tap · as the ring closes</small></button></div>
-      <p class="battle-help">Each living companion acts once. Spellcraft uses that action too.<br />Guard physical blows. Analyze spells before blocking them. Attack while hidden to reveal.<br />Mana returns slowly: 1 a round, or Gather to draw back more. Spent mana stays spent until you rest.<br />A spell needs time to settle before it can be cast again, and casting floods the caster's mana into view.<br />When a blow comes, press Space as the ring closes to dodge. Unknown spells cannot be dodged.</p>
+      <details class="battle-help"><summary>Battle controls</summary><p>Each living companion acts once. Spellcraft uses that action too.<br />Guard physical blows. Analyze spells before blocking them. Attack while hidden to reveal.<br />Mana returns slowly: 1 a round, or Gather to draw back more. Spent mana stays spent until you rest.<br />A spell needs time to settle before it can be cast again, and casting floods the caster's mana into view.<br />When a blow comes, press Space as the ring closes to dodge. Unknown spells cannot be dodged.</p></details>
       <button id="battle-finish" hidden></button>`;
     for (const member of this.state.party) {
       this.card(member.id).querySelector<HTMLImageElement>('img')!.src = member.id === 'chameleon' ? heroImage
@@ -337,6 +346,7 @@ export class BattleView {
     const kind = dodgeKind(next.move);
     const quick = agility(next.target);
     const card = this.card(next.target.id);
+    card.dataset.targeted = 'true';
     const ring = document.createElement('div');
     ring.className = 'dodge-ring'; ring.style.setProperty('--lead', `${LEAD}ms`);
     const impact = performance.now() + LEAD;
@@ -375,6 +385,8 @@ export class BattleView {
       impact, kind,
       answer: (dodge, early = false) => {
         clearTimeout(this.timer); cancelAnimationFrame(sweep); this.prompt = undefined;
+        card.dataset.targeted = 'false';
+        if (dodge === 'perfect') combatEffect(card.querySelector('.fighter'), 'dodge', 'EVADED');
         delete this.root.dataset.impact;
         button.disabled = true; this.root.focus({ preventScroll: true });
         // Leave the result up briefly, unless the next blow has already opened a new prompt.
@@ -443,7 +455,7 @@ export class BattleView {
   private animateChanges() {
     const state = this.state;
     const now = new Map<string, number>([
-      ...state.party.flatMap(member => [[`hp:${member.id}`, member.health], [`act:${member.id}`, Number(member.acted)]] as [string, number][]),
+      ...state.party.flatMap(member => [[`hp:${member.id}`, member.health], [`act:${member.id}`, Number(member.acted)], [`mp:${member.id}`, member.mana], [`ward:${member.id}`, Number(member.barrier)]] as [string, number][]),
       ['hp:0', state.enemy.health], ...state.followers.map((follower, index) => [`hp:${index + 1}`, follower.health] as [string, number]),
       ['stage', state.stage],
     ]);
@@ -459,9 +471,13 @@ export class BattleView {
       const fighter = kind === 'hp' && /^\d+$/.test(who) ? this.root.querySelector(`[data-foe="${who}"] .fighter, .fighter[data-foe="${who}"]`) : this.root.querySelector(`.member-card[data-member="${who}"] .party-fighter`);
       if (kind === 'hp' && value < before) {
         play(fighter, 'is-hit');
+        combatEffect(fighter, this.strikeKind === 'burst' ? 'spell' : 'hit', value === 0 ? 'FALLEN' : undefined);
         // An enemy struck by the party shows what struck it.
         if (/^\d+$/.test(who) && this.strikeKind) this.mark(fighter, this.strikeKind);
       }
+      if (kind === 'hp' && value > before) combatEffect(fighter, 'heal', 'MENDED');
+      if (kind === 'mp' && value > before && state.phase === 'player') combatEffect(fighter, 'mana');
+      if (kind === 'ward' && value > before) combatEffect(fighter, 'ward', 'WARDED');
       if (kind === 'act' && value > before) play(fighter, this.strikeKind === 'slash' ? 'is-lunging' : this.strikeKind === 'burst' ? 'is-casting' : 'is-acting');
       // A boss turning to its second stage roars.
     }
@@ -475,14 +491,18 @@ export class BattleView {
     scene.className = 'cutscene';
     scene.setAttribute('role', 'dialog');
     scene.setAttribute('aria-label', stage.title);
-    scene.innerHTML = `<img src="${import.meta.env.BASE_URL}assets/${this.state.encounter}.svg" alt="" /><p class="cutscene-speaker"></p><p class="cutscene-line" aria-live="polite"></p><button type="button" class="cutscene-next">Continue <span>↵</span></button>`;
+    scene.setAttribute('aria-modal', 'true');
+    scene.innerHTML = `<button type="button" class="cutscene-skip">Skip scene</button><p class="eyebrow">THE TIDE TURNS</p><img src="${import.meta.env.BASE_URL}assets/${this.state.encounter}.svg" alt="" /><p class="cutscene-speaker"></p><p class="cutscene-line" aria-live="polite"></p><button type="button" class="cutscene-next">Continue <span>↵</span></button>`;
     this.root.append(scene);
+    const backdrop = Array.from(this.root.children).filter(child => child !== scene) as HTMLElement[];
+    backdrop.forEach(element => { element.inert = true; });
     this.root.classList.add('in-cutscene');
     const block = this.casting;
     this.casting = () => {};
     let index = 0;
     // Lines type out; Continue finishes a line that is still typing before it moves on.
     let typing: ReturnType<typeof setInterval> | undefined;
+    this.sceneCleanup = () => clearInterval(typing);
     const text = scene.querySelector<HTMLElement>('.cutscene-line')!;
     const portrait = scene.querySelector<HTMLImageElement>('img')!;
     const show = () => {
@@ -494,6 +514,7 @@ export class BattleView {
       text.textContent = ''; text.dataset.full = line;
       let shown = 0;
       clearInterval(typing);
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) { text.textContent = line; typing = undefined; return; }
       typing = setInterval(() => {
         shown++; text.textContent = line.slice(0, shown);
         if (shown % 3 === 0 && who) music.effect('blip', -6);
@@ -501,21 +522,32 @@ export class BattleView {
       }, 24);
       if (who) { scene.classList.remove('jolt'); void scene.offsetWidth; scene.classList.add('jolt'); }
     };
-    const next = () => {
-      if (typing) { clearInterval(typing); typing = undefined; text.textContent = text.dataset.full ?? ''; return; }
-      index++;
-      if (index < stage.scene.length) { show(); return; }
-      clearInterval(typing);
-      scene.remove();
-      this.root.classList.remove('in-cutscene');
-      this.casting = block;
-      // It stands back up: a roar, and the boss swells as it rises.
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true; clearInterval(typing); this.sceneCleanup = undefined;
+      scene.remove(); backdrop.forEach(element => { element.inert = false; });
+      this.root.classList.remove('in-cutscene'); this.casting = block;
       music.effect('roar');
       const fighter = this.root.querySelector('.fighter[data-foe="0"]');
       fighter?.classList.add('is-turning');
       setTimeout(() => fighter?.classList.remove('is-turning'), 600);
       then();
     };
+    const next = () => {
+      if (typing) { clearInterval(typing); typing = undefined; text.textContent = text.dataset.full ?? ''; return; }
+      if (++index < stage.scene.length) show(); else finish();
+    };
+    scene.querySelector('.cutscene-skip')!.addEventListener('click', finish, { signal: this.cleanup.signal });
+    scene.addEventListener('keydown', event => {
+      if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); finish(); }
+      if (event.key === 'Tab') {
+        event.preventDefault(); event.stopPropagation();
+        const controls = Array.from(scene.querySelectorAll<HTMLButtonElement>('button'));
+        const index = controls.indexOf(document.activeElement as HTMLButtonElement);
+        controls[(index + (event.shiftKey ? -1 : 1) + controls.length) % controls.length].focus();
+      }
+    }, { signal: this.cleanup.signal });
     const button = scene.querySelector<HTMLButtonElement>('.cutscene-next')!;
     button.addEventListener('click', next, { signal: this.cleanup.signal });
     show();
@@ -560,6 +592,8 @@ export class BattleView {
     for (const member of state.party) {
       const card = this.card(member.id);
       card.dataset.acted = String(member.acted);
+      card.dataset.barrier = String(member.barrier);
+      card.dataset.suppressed = String(member.suppressed);
       card.dataset.downed = String(member.health === 0);
       card.querySelector('.member-condition')!.textContent = condition(member);
       this.renderHealth(card.querySelector<HTMLElement>('.health-bar')!, member);
@@ -612,6 +646,7 @@ export class BattleView {
   }
 
   destroy() {
+    this.sceneCleanup?.();
     clearTimeout(this.timer); clearTimeout(this.patience); this.cleanup.abort(); this.root.remove();
     if (this.previousFocus?.isConnected) this.previousFocus.focus({ preventScroll: true });
   }

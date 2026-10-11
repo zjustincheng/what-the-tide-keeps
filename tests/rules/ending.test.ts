@@ -14,7 +14,7 @@ test('the good ending restores what the tide took and ends resurrection', () => 
 test('the bad ending leaves the hero seated beside the human', () => {
   const bad = epilogue({ flags: [] }, 'bad', false);
   assert.ok(bad.some(line => line.includes('You sit beside him')));
-  assert.ok(bad.some(line => line.includes('reason is gone')));
+  assert.ok(bad.some(line => line.includes('as if it happened to someone else')));
   assert.notDeepEqual(epilogue({ flags: [] }, 'good', true), bad, 'the two endings follow different choices');
 });
 

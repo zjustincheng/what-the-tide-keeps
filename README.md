@@ -223,6 +223,14 @@ A companion's own grimoire can't be lent to anyone before they join, and a compa
 
 Every caster has its own spell: the exile and the deserter hexer cast Salt lance, the warden Judgement, the drowned the Drowning toll, the marsh lights Marsh-fire, and the inquisitor Verdict. Until a spell is studied, by analyzing it (Spellcraft, 2 mana) or by surviving it once, its name shows as ???, it can't be dodged, and no barrier stops it. Studied spells are kept in the grimoire for good.
 
+## Story presentation
+
+The opening, companion reunions, archive fragment, island laboratory, kraken’s grave, and human encounter now have illustrated scenes. Each lieutenant has an entrance scene, and resurrection has a short memory-loss sequence. **Continue** reveals the current sentence first, then advances; **Escape** or **Skip scene** returns control immediately. Scenes pause exploration and never select a story choice for the player.
+
+**Settings → Revisit memories** replays unlocked scenes without changing progress. Existing saves can replay memories associated with their completed story flags; the opening is always available. Viewed scenes are remembered in `tide-keeps.scenes.v1`, cleared by **Start over…**. Scene data lives in `src/presentation/stories.ts`, with layered SVG sets, camera drift, and sound cues. New motion effects respect the system’s reduced-motion preference.
+
+Regions have arrival titles, drifting motes, and coastal mist. Battle arenas use illustrated backgrounds, hit sparks, healing and mana effects, persistent barrier shells, and an incoming-target highlight. The enemy stays visible while scrolling through actions. Battle instructions can be expanded when needed. New synthesized sounds include bells, glass, chains, surf, heartbeats, and memory cues, using the existing effects volume control.
+
 ## Animation in battle
 
 Heroes lunge at the enemy when they attack and glow when they cast; the struck enemy shows a slash, a spell's burst, or a firepot's flash, and flinches. Enemies lunge as their blows land. A boss's rising scene types out line by line, shows each speaker as themselves, and jolts on spoken lines.

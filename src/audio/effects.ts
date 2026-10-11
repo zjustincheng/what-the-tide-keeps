@@ -5,6 +5,7 @@ export type Effect =
   | 'blip' | 'select' | 'open' | 'door' | 'find' | 'coins' | 'rest' | `step-${Surface}`
   | 'cast-line' | 'plop' | 'splash' | 'catch'
   | 'lash' | 'maul' | 'talons' | 'hit' | 'block' | 'barrier' | 'dodge' | 'graze'
+  | 'memory' | 'glass' | 'toll' | 'heartbeat' | 'chain' | 'wind' | 'surf' | 'submerge' | 'page'
   | 'key' | 'spell' | 'fizzle' | 'heal' | 'gather' | 'victory' | 'defeat' | 'roar';
 
 // pitch shifts tonal effects by semitones, so each speaker's voice blips at their own pitch.
@@ -52,6 +53,15 @@ export function playEffect(context: BaseAudioContext, out: AudioNode, noise: Aud
   };
 
   const effects: Record<Effect, () => void> = {
+    memory: () => { [0, 7, 14, 19].forEach((step, i) => ping(220 * 2 ** (step / 12), i * 0.17, 2.2, 0.055, 2.01)); hiss('bandpass', 300, 1900, 0, 1.4, 0.06); },
+    glass: () => { ping(1450, 0, 1.4, 0.09, 2.7); ping(1920, 0.08, 1.1, 0.04, 2.2); },
+    toll: () => { ping(110, 0, 3.2, 0.13, 2.76); tone('sine', 55, 55, 0, 2.8, 0.1); },
+    heartbeat: () => { [0, 0.22, 1.1, 1.32].forEach(at => tone('sine', 72, 36, at, 0.22, 0.14)); },
+    chain: () => { [0, 0.08, 0.19, 0.34].forEach((at, i) => { ping(480 + i * 170, at, 0.3, 0.065, 1.41); hiss('highpass', 2400, 800, at, 0.12, 0.04); }); },
+    wind: () => hiss('bandpass', 400, 950, 0, 2.4, 0.07, 0.5),
+    surf: () => { hiss('lowpass', 1200, 180, 0, 2.8, 0.1); hiss('bandpass', 650, 250, 0.35, 2.4, 0.06); },
+    submerge: () => { tone('sine', 120, 32, 0, 2.4, 0.1); hiss('lowpass', 2000, 60, 0, 2.3, 0.09); },
+    page: () => hiss('bandpass', 2200, 700, 0, 0.16, 0.045),
     // A soft voice blip, one per few letters as someone speaks.
     blip: () => tone('square', 220, 200, 0, 0.05, 0.09, 1400),
     select: () => tone('sine', 880, 660, 0, 0.07, 0.12),

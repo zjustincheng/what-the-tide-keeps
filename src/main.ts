@@ -4,6 +4,7 @@ import { AREAS } from './scenes/areas';
 import { bindFullscreen } from './ui/fullscreen';
 import { music } from './audio/music';
 import './style.css';
+import './presentation/presentation.css';
 
 export const game = new Phaser.Game({
   type: Phaser.AUTO,
