@@ -15,6 +15,7 @@ import type { Catch } from './fishing';
 // Carried items are lost on a wipe and go back to where they were found.
 export type Item = 'bell' | 'letter' | 'note' | 'crate' | 'ring' | 'shrine-stone' | 'raven-letter' | 'sealed-order' | 'venom-vial';
 export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated' | 'pests-field' | 'pests-yard' | 'writ-given' | 'bear-free' | 'vulture-free'
+  | 'bear-mill-returned' | 'bear-mill-record' | 'bear-miller-witnessed' | 'bear-reeve-accountable' | 'bear-mill-left' | 'bear-quest-complete'
   | 'sheep-woods' | 'sheep-orchard' | 'sheep-yard' | 'sheep-reward' | 'barrel-bought' | 'squid-freed' | 'swarm-slain' | 'bounty-paid'
   | 'warden-slain' | 'leech-slain'
   | 'followers-spared' | 'followers-reported' | 'followers-paid' | 'fishmonger-angry' | 'stall-cowed' | 'stood-count' | 'inn-room' | 'reeve-pardon'
@@ -44,7 +45,7 @@ export type Drained = Readonly<Partial<Record<MemberId, number>>>;
 // fallen: heroes who went down in a fight and stayed down. Rest doesn't raise them; only the church can.
 export type World = Readonly<{ fallen?: readonly MemberId[]; night?: boolean; clock?: number; waiting?: readonly MemberId[]; tempered?: readonly KeepsakeId[]; flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number; pantry?: Pantry }>;
 export const ITEMS: readonly Item[] = ['bell', 'letter', 'note', 'crate', 'ring', 'shrine-stone', 'raven-letter', 'sealed-order', 'venom-vial'];
-export const FLAGS: readonly Flag[] = ['island-landed', 'works-taken', 'works-seen', 'cages-opened', 'name-read', 'house-seen', 'keeper-challenged', 'keeper-slain', 'light-out', 'light-kept', 'human-challenged', 'human-beaten', 'human-seated', 'human-spared', 'orchard-cleared', 'overseer-slain', 'quarrymen-freed', 'collie-told', 'cistern-asked', 'cistern-cleared', 'ratling-home', 'lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
+export const FLAGS: readonly Flag[] = ['bear-mill-returned','bear-mill-record','bear-miller-witnessed','bear-reeve-accountable','bear-mill-left','bear-quest-complete', 'island-landed', 'works-taken', 'works-seen', 'cages-opened', 'name-read', 'house-seen', 'keeper-challenged', 'keeper-slain', 'light-out', 'light-kept', 'human-challenged', 'human-beaten', 'human-seated', 'human-spared', 'orchard-cleared', 'overseer-slain', 'quarrymen-freed', 'collie-told', 'cistern-asked', 'cistern-cleared', 'ratling-home', 'lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
   'sheep-woods', 'sheep-orchard', 'sheep-yard', 'sheep-reward', 'barrel-bought', 'squid-freed', 'swarm-slain', 'bounty-paid',
   'warden-slain', 'leech-slain',
   'followers-spared', 'followers-reported', 'followers-paid', 'fishmonger-angry', 'stall-cowed', 'stood-count', 'inn-room', 'reeve-pardon',
@@ -72,7 +73,7 @@ export type Condition = { forgot: MemoryId } | { remembers: MemoryId } | { has: 
 // pay spends coins; supply hands over one of a supply.
 export type Effect = { give?: Item; take?: Item; set?: Flag | readonly Flag[]; learn?: string; find?: Found; earn?: number; pay?: number; feed?: number; supply?: SupplyId;
   // Handled by the scene, not the story: camp sleeps at the fire, cook opens the cooking, dice starts a game of bones for that stake.
-  camp?: true; cook?: true; dice?: number;
+  keepMemory?: MemoryId; camp?: true; campTalk?: 'bear' | 'vulture' | 'frog' | 'hero' | 'octopus'; cook?: true; dice?: number;
   // travel: go to that waystone.
   // raise: the church brings a fallen hero back. tithe: what it costs instead of coins, a memory, taken by the scene.
   raise?: MemberId; tithe?: true;

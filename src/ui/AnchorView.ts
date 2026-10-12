@@ -11,6 +11,7 @@ export class AnchorView {
   constructor(memory: Memory, companions: readonly { id: Companion; name: string }[], onDone: (anchor: MemoryId | null, reminder: { by: Companion; id: MemoryId } | null) => void) {
     const written = memory.anchors ?? [];
     const reminded = memory.reminded ?? [];
+    const bound=memory.keepsakeMemories ?? [];
     // Who can remind him of what: each companion he still remembers, for each thing he has lost.
     const offers = companions.flatMap(({ id: by, name }) => memory.lost.filter(id => canRemind(memory, by, id)).map(id => ({ by, name, id })));
     this.root = document.createElement('section');
@@ -23,8 +24,8 @@ export class AnchorView {
       <div class="battle-heading"><p class="eyebrow">BY THE FIRE</p><h2 id="anchor-title">Write something down.</h2>
       <p class="resurrection-intro">Each time you die, the tide takes one memory, and you don't choose which. It can't take what is written down. You have room for ${ANCHOR_SLOTS === 1 ? 'one' : ANCHOR_SLOTS}; after a death it has to be written again.</p></div>
       <fieldset class="memory-choices"><legend>Memories you still hold</legend>${held(memory).map(id => `
-        <label class="memory-choice"><input type="radio" name="anchor" value="${id}" ${written.includes(id) ? 'checked' : ''} />
-          <span><strong>${memories[id].name}${reminded.includes(id) ? ' · reminded' : ''}</strong>${written.includes(id) ? '<small class="perk">Written down</small>' : ''}<small>Losing it: ${memories[id].cost}${reminded.includes(id) ? ' Write it down and it stays yours after the next death; otherwise the tide takes it back.' : ''}</small></span></label>`).join('')}
+        <label class="memory-choice"><input type="radio" name="anchor" value="${id}" ${bound.includes(id)?'disabled':''} ${written.includes(id) ? 'checked' : ''} />
+          <span><strong>${memories[id].name}${reminded.includes(id) ? ' · reminded' : ''}</strong>${bound.includes(id)?'<small class="perk">Held permanently by a keepsake · no anchor slot needed</small>':written.includes(id) ? '<small class="perk">Written down</small>' : ''}<small>${bound.includes(id)?'The tide cannot take this memory. Equipping the keepsake is not required.':`Losing it: ${memories[id].cost}`}${reminded.includes(id) ? ' Write it down and it stays yours after the next death; otherwise the tide takes it back.' : ''}</small></span></label>`).join('')}
       </fieldset>
       ${offers.length ? `<fieldset class="memory-choices reminders"><legend>Ask a friend to remind you</legend>${offers.map(({ by, name, id }) => `
         <label class="memory-choice"><input type="radio" name="remind" value="${by}:${id}" />
@@ -52,7 +53,7 @@ export class AnchorView {
       const index = controls.indexOf(document.activeElement as HTMLInputElement);
       controls[(index + (event.shiftKey ? -1 : 1) + controls.length) % controls.length]?.focus();
     }, { signal });
-    (chosen() ?? this.root.querySelector<HTMLInputElement>('input[name="anchor"]') ?? this.root).focus({ preventScroll: true });
+    (chosen() ?? this.root.querySelector<HTMLInputElement>('input[name="anchor"]:not(:disabled)') ?? this.root).focus({ preventScroll: true });
   }
 
   destroy() {

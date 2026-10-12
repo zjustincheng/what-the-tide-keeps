@@ -1,8 +1,6 @@
 import Phaser from 'phaser';
 import type { Area } from '../scenes/areas';
 
-let lastRegion = '';
-
 export function atmosphere(scene: Phaser.Scene, area: Area) {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const sea = area.region === 'THE OCEAN' || area.region === 'THE ISLAND';
@@ -23,13 +21,4 @@ export function atmosphere(scene: Phaser.Scene, area: Area) {
       }
     }
   }
-  if (lastRegion === area.region) return;
-  lastRegion = area.region;
-  const title = scene.add.text(256, 49, area.region, { fontFamily: 'Georgia, serif', fontSize: '16px', color: '#ecddbb', letterSpacing: 3, shadow: { color: '#061213', blur: 6, fill: true } }).setOrigin(0.5);
-  const place = scene.add.text(256, 70, area.place, { fontFamily: 'Georgia, serif', fontSize: '10px', color: '#b6c8c1' }).setOrigin(0.5);
-  const rule = scene.add.rectangle(256, 88, 92, 1, 0xd6b874, 0.5);
-  const panel = scene.add.container(0, 0, [title, place, rule]).setScrollFactor(0).setDepth(900);
-  if (reduced) { scene.time.delayedCall(3500, () => panel.destroy()); return; }
-  panel.setAlpha(0);
-  scene.tweens.add({ targets: panel, alpha: 1, duration: 900, hold: 2200, yoyo: true, onComplete: () => panel.destroy() });
 }

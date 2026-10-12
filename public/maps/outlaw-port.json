@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 16,
+  "nextobjectid": 18,
   "layers": [
     {
       "id": 1,
@@ -2623,6 +2623,30 @@
           "type": "",
           "x": 280,
           "y": 312,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 16,
+          "name": "returned-crab",
+          "type": "",
+          "x": 344,
+          "y": 344,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 17,
+          "name": "moorings",
+          "type": "",
+          "x": 480,
+          "y": 328,
           "width": 0,
           "height": 0,
           "rotation": 0,

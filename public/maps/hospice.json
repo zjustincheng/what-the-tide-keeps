@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 10,
+  "nextobjectid": 11,
   "layers": [
     {
       "id": 1,
@@ -766,6 +766,18 @@
           "name": "ward-book",
           "type": "",
           "x": 72,
+          "y": 168,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 10,
+          "name": "meal-tray",
+          "type": "",
+          "x": 120,
           "y": 168,
           "width": 0,
           "height": 0,

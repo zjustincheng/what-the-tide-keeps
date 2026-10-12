@@ -4,13 +4,13 @@ import type { MemberId } from './battle';
 export type KeepsakeId = 'cracked-mirror' | 'crow-feather' | 'covenant-token' | 'yoke-peg' | 'wool-charm' | 'boar-tusk' | 'iron-collar' | 'famine-spoon' | 'weir-hook' | 'frost-ring' | 'tide-shell'
   | 'garrison-buckler' | 'saints-medal' | 'night-cloak' | 'smuggled-blade' | 'raven-quill' | 'viper-fang' | 'hospice-bell' | 'liars-charm' | 'adders-coil' | 'house-signet' | 'courier-bell' | 'wren-feather' | 'champions-torc' | 'elder-pearl' | 'kraken-tooth' | 'sea-glass'
   | 'grafting-knife' | 'cutters-wedge' | 'shepherds-horn' | 'tin-cup' | 'brand-iron' | 'drowned-bell'
-  | 'climbers-chalk' | 'falconers-hood' | 'reed-charm' | 'watch-flint' | 'ice-pick';
+  | 'broken-link' | 'climbers-chalk' | 'falconers-hood' | 'reed-charm' | 'watch-flint' | 'ice-pick';
 // What a keepsake changes about its holder in battle.
 // agility: in hundredths of a hero's dodge windows; +15 makes every window 15% wider.
-export type Mods = Readonly<{ health: number; damage: number; reveal: number; suppressCost: number; shown: number; agility: number }>;
+export type Mods = Readonly<{ health: number; damage: number; reveal: number; suppressCost: number; shown: number; agility: number; guardAll: number }>;
 export type Gear = Readonly<Record<MemberId, readonly KeepsakeId[]>>;
 
-export const NO_MODS: Mods = { health: 0, damage: 0, reveal: 0, suppressCost: 0, shown: 0, agility: 0 };
+export const NO_MODS: Mods = { health: 0, damage: 0, reveal: 0, suppressCost: 0, shown: 0, agility: 0, guardAll: 0 };
 export const SLOTS = 2;
 export const MEMBER_IDS: readonly MemberId[] = ['chameleon', 'bear', 'vulture', 'frog', 'octopus'];
 
@@ -22,6 +22,7 @@ export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; ef
     effect: 'Every attack hits 3 harder.', drawback: '4 less health.', mods: { damage: 3, health: -4 } },
   'covenant-token': { name: 'Covenant token',
     effect: '6 more health.', drawback: 'Shows 2 more mana, so enemies watch the holder.', mods: { health: 6, shown: 2 } },
+  'broken-link': {name:'Broken mill-chain link',holder:'bear',effect:'Protect guards both allies as well as himself. Permanently holds the hero’s memory of the bear, even when unequipped.',drawback:'Protect costs 3 mana and uses his action.',mods:{guardAll:1}},
   'yoke-peg': { name: 'Yoke peg', holder: 'bear',
     effect: '8 more health.', drawback: 'Attacks hit 2 softer.', mods: { health: 8, damage: -2 } },
   'wool-charm': { name: 'Wool charm',
@@ -100,7 +101,7 @@ export function equip(gear: Gear, owned: readonly KeepsakeId[], member: MemberId
 }
 
 // Which way is better for each modifier: more health is good, more mana shown is not.
-const GOOD: Record<keyof Mods, 1 | -1> = { health: 1, damage: 1, reveal: 1, agility: 1, shown: -1, suppressCost: -1 };
+const GOOD: Record<keyof Mods, 1 | -1> = { health: 1, damage: 1, reveal: 1, agility: 1, shown: -1, suppressCost: -1, guardAll: 1 };
 
 // A tempered keepsake's benefits grow by half (rounded up); its drawbacks stay as they were.
 export function keepsakeMods(id: KeepsakeId, tempered = false): Partial<Mods> {

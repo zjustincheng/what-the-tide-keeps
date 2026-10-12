@@ -18,7 +18,7 @@ export type Encounter = 'locust' | 'acolyte' | 'weevil' | 'boar' | 'swarm' | 'wa
   | 'mosquito' | 'scorpion' | 'brood' | 'apprentice' | 'viper'
   | 'hornet' | 'spider' | 'duellist' | 'cuckoo' | 'warder' | 'cricket' | 'flight' | 'champion'
   | 'shark' | 'barracuda' | 'jelly' | 'eel' | 'cuttlefish'
-  | 'sentinel' | 'keeper' | 'human';
+  | 'sentinel' | 'keeper' | 'human' | 'kraken';
 export const SPELL = 'Salt lance';
 // What an enemy is, which decides whose blows it fears. Spells ignore all of it: magic is the equaliser.
 export type Trait = 'armoured' | 'flying' | 'caster' | 'insect' | 'dead';
@@ -29,7 +29,7 @@ export const TRAITS: Record<Encounter, readonly Trait[]> = {
   brood: ['insect', 'flying'], apprentice: ['caster'], viper: ['caster'], hornet: ['insect', 'flying'], spider: ['insect'], duellist: ['caster', 'flying'], cuckoo: ['caster', 'flying'],
   warder: ['armoured'], cricket: ['insect'], flight: ['dead', 'flying'], champion: ['flying'],
   shark: ['armoured'], barracuda: [], jelly: [], eel: ['caster'], cuttlefish: ['caster'],
-  sentinel: ['armoured'], keeper: ['caster', 'flying'], human: [],
+  sentinel: ['armoured'], keeper: ['caster', 'flying'], human: [], kraken: ['armoured'],
 };
 // How each hero's own blow fares against each kind: the bear's maul breaks armour and can't reach what flies;
 // the vulture's talons take things out of the air and skid off plate; the chameleon strikes casters as they gather.
@@ -113,6 +113,8 @@ export type Battle = Readonly<{
   round: number;
   encounter: Encounter;
   lostMemories: readonly MemoryId[];
+  recoveredMemories: readonly MemoryId[];
+  humanMemoryCount: number;
   studied: readonly string[];
   hollow: Hollow;
   enemyRevealed: boolean;
@@ -166,6 +168,8 @@ export const MEMBERS = {
 } as const;
 // Crop pests hide nothing and only strike physically; the exile veils its mana and casts.
 export const ENEMIES = {
+  kraken: { name: 'The Kraken', short: 'kraken', health: 112, mana: 12, veiled: false,
+    opening: 'The harbour wall gives way. A kraken rises through the spray, and the five heroes stand between it and the city.' },
   locust: { name: 'Crop locust', short: 'locust', health: 46, mana: 2, veiled: false,
     opening: 'A crop locust, fat on stolen grain, turns to face you.' },
   acolyte: { name: 'Hooded exile', short: 'exile', health: 56, mana: 12, veiled: true,
@@ -296,57 +300,69 @@ export type SceneLine = Readonly<{ who: string; line: string }>;
 export const STAGES: Partial<Record<Encounter, { title: string; line: string; scene: readonly SceneLine[]; rise?: number; enter?: (battle: Battle) => Partial<Battle> }>> = {
   human: { title: 'The human, with nothing left to lose', line: 'A memory returns. One of his spells goes quiet.', rise: 0.35, scene: [
     { who: '', line: 'He falls beside the lens. A spell breaks apart in his hand.' },
+    { who: '', line: 'The room is suddenly quiet. You can hear him breathing without having to read a single spark of mana.' },
     { who: 'THE HUMAN', line: 'I have everything you lost. I thought it would make me whole.' },
+    { who: '', line: 'He reaches for the spell again. His hand closes on nothing. Then another voice, one you thought you had forgotten, speaks from his mouth.' },
     { who: '', line: 'Something comes back to you. The Hollow strength it left behind goes with it.' },
-  ], enter: battle => {
-    const returned = battle.lostMemories[0];
-    const perk = returned && !INITIAL_LOST.includes(returned) ? PERKS[returned] : undefined;
-    return {
-      lostMemories: battle.lostMemories.slice(1),
-      hollow: returned === 'training' ? { ...battle.hollow, trained: true }
-        : returned === 'kraken' ? { ...battle.hollow, kraken: true }
-          : perk === 'mana' ? { ...battle.hollow, mana: Math.max(0, battle.hollow.mana - PERK_BONUS.mana) }
-            : perk === 'force' ? { ...battle.hollow, damage: Math.max(0, battle.hollow.damage - PERK_BONUS.force) }
-              : battle.hollow,
-    };
-  } },
+  ], enter: battle => reclaimHumanMemory(battle) },
   keeper: { title: 'The Keeper, with the lens open', line: 'The Keeper opens the lens all the way, and the light comes round every other turn now.', rise: 0.4, scene: [
     { who: '', line: 'The Keeper goes down against the lens, and the light stops turning.' },
+    { who: '', line: 'The beam rests on the wall. Without its movement, the lamp room feels smaller, and the sea below sounds much closer.' },
     { who: 'THE KEEPER', line: 'Every barrel inland is a mouth that doesn\'t eat its neighbour. Every light on this rock is a war that didn\'t happen. I kept the peace.' },
     { who: 'THE KEEPER', line: 'You were a guard here once. You know what the peace is made of. You ate it at the feast.' },
+    { who: '', line: 'He grips the shutter wheel with both hands. The metal gives a little. None of you move until you hear the first bolt break.' },
     { who: '', line: 'He reaches up and throws the shutters off the lens, and stands up inside the light.' },
   ], enter: battle => ({ followers: battle.followers.map(follower => ({ ...follower, health: follower.maxHealth })) }) },
   boar: { title: 'The boar, cornered', line: 'The boar gets back up out of the ash. He will charge every round now.', scene: [
     { who: '', line: 'The boar goes down on his knees in the ash of his own house.' },
+    { who: '', line: 'Ash settles around him. His followers wait for the next blow, but he lifts a hand to keep them back.' },
     { who: 'THE BADGER', line: 'Stay down! It\'s done. Stay down!' },
     { who: 'THE BOAR', line: 'I stayed down last time.' },
+    { who: '', line: 'He looks at the doorway, then at each of you. His breathing steadies. The boards beneath his hands begin to split.' },
     { who: '', line: 'He gets up. Smoke is rising off his bristles.' },
   ], enter: battle => ({ fury: battle.fury + 4 }) },
   warden: { title: 'The warden, unbound', line: 'The warden stands back up inside the votives\' light.', rise: 0.3, scene: [
     { who: '', line: 'The warden folds over its censer and is still.' },
+    { who: '', line: 'The chains stop swinging. The last judgement hangs unfinished in the cold air.' },
     { who: '', line: 'Then the censer cracks open. Whatever is inside it is still burning.' },
+    { who: '', line: 'A thin line of light appears inside the split metal. It grows brighter while the warden remains perfectly still.' },
     { who: '', line: 'Both votives flare up at once, and the warden rises inside their light. It no longer waits between judgements.' },
   ], enter: battle => ({ followers: battle.followers.map(follower => ({ ...follower, health: follower.maxHealth })) }) },
   leech: { title: 'The mire leech, shedding', line: 'The leech crawls out of its own skin, hungrier.', scene: [
     { who: '', line: 'The leech goes slack in the silt.' },
+    { who: '', line: 'The water stops pulling toward it. You take one careful step forward, and something underneath the skin answers.' },
     { who: '', line: 'Its skin splits down the middle, and something crawls out of it: raw, wet, and hungrier than before.' },
+    { who: '', line: 'A fresh mouth opens where the old one closed. The shallow water begins to move against the current.' },
+    { who: '', line: 'The current pulls the empty skin away. The new thing coils around the stones, searching for the next warm body.' },
   ] },
   swarm: { title: 'The swarm-mother, airborne', line: 'The swarm-mother takes to the air, and her brood rises with her.', scene: [
     { who: '', line: 'The swarm-mother drops out of the branches. Her brood screams.' },
+    { who: '', line: 'One fallen nymph scrapes a leg against the bark. The sound travels from branch to branch.' },
+    { who: '', line: 'For a moment the forest goes quiet. The fallen husk twitches beneath the leaves.' },
+    { who: '', line: 'The new wings are folded tight against her back. They open slowly, until the canopy can no longer hide their span.' },
     { who: '', line: 'The husk on the ground splits. She tears free of it and takes the air, and every fallen nymph rises with her.' },
   ], enter: battle => ({ followers: battle.followers.map(follower => ({ ...follower, health: follower.maxHealth })) }) },
   pack: { title: 'The pack leader, howling', line: 'The pack leader howls, and his pack gets up with him.', scene: [
     { who: '', line: 'The leader goes down, and the pack stops where it stands.' },
+    { who: '', line: 'The hounds look from him to you. No one charges. Their silence holds longer than the howl ever did.' },
+    { who: '', line: 'He draws a breath. One hound lifts its head; then another.' },
+    { who: '', line: 'He sets one paw down, then the other. Around you, the pack takes a step inward. The way back is closing.' },
     { who: '', line: 'Then he throws back his head and howls, and the fallen hounds get up with him. Every rush will come with the whole pack.' },
   ], enter: battle => ({ followers: battle.followers.map(follower => ({ ...follower, health: follower.maxHealth })) }) },
   drowned: { title: 'The drowned, the bell freed', line: 'The drowned rises with the bell in its arms.', scene: [
     { who: '', line: 'It sinks back into the chapel water. The bell rope goes slack.' },
+    { who: '', line: 'Ripples touch the chapel walls and return. Nothing breaks the surface.' },
+    { who: '', line: 'The water settles. Somewhere below, the bell gives one muffled note.' },
+    { who: '', line: 'The bell rises before its bearer. Water spills from its mouth, and the note inside it grows clear enough to hurt.' },
     { who: '', line: 'Then the rope snaps, and it comes up out of the water with the bell itself in its arms.' },
   ] },
   hyena: { title: 'The hyena, not laughing', line: 'The hyena gets up, and eats her own dead to do it.', rise: 0.4, scene: [
     { who: '', line: 'The hyena falls among her bones, laughing.' },
+    { who: '', line: 'A loose bone knocks against the floor and settles. Her followers turn toward her. Nobody comes to help.' },
     { who: '', line: 'Then she stops laughing.' },
     { who: 'THE HYENA', line: 'You still don\'t understand. I don\'t stay dead. Nobody down here does.' },
+    { who: '', line: 'She looks over the bodies around her. For a breath, there is only grief in her face.' },
+    { who: '', line: 'She looks at the nearest fallen body. One hand presses against her own wound; the other reaches out. You understand what she intends a breath before she does it.' },
     { who: '', line: 'She turns on her own dead and eats them where they stand.' },
   ], enter: battle => {
       const eaten = battle.followers.filter(follower => follower.health > 0 && !follower.eaten).length;
@@ -358,20 +374,26 @@ export const STAGES: Partial<Record<Encounter, { title: string; line: string; sc
     } },
   cuckoo: { title: 'The cuckoo, in no one\'s shape', line: 'The cuckoo gets up wearing no one\'s face at all, and moves faster for it.', rise: 0.4, scene: [
     { who: '', line: 'The cuckoo goes down among the house\'s banners.' },
+    { who: '', line: 'The face he borrowed slips away. Beneath it is someone smaller than the lord whose voice he wore.' },
     { who: 'THE CUCKOO', line: 'They fed me from their own beaks. I had a room at the top of the house. Then someone looked at my eggs.' },
     { who: 'THE CUCKOO', line: 'He remembers you. He told me you opened a door, once. He said you\'d understand.' },
+    { who: '', line: 'For a moment, all three of you show the same mana. Then one signature holds still while the others rise. He watches to see which of you notices.' },
     { who: '', line: 'He gets up, and for a moment he is every one of you, and then he is no one.' },
   ], enter: () => ({ impostor: null }) },
   cuttlefish: { title: 'The cuttlefish, in its own colours', line: 'The cuttlefish comes up off the reef in no colour at all, and throws your spells back every time now.', rise: 0.4, scene: [
     { who: '', line: 'The cuttlefish sinks onto the reef, its colours going grey.' },
+    { who: '', line: 'The water goes clear around it. For the first time you can see the pale reef beneath its body.' },
     { who: 'THE CUTTLEFISH', line: 'The kraken came up after the nets took a whole reef in one night. Every shell, every child. It came up to make it stop.' },
     { who: 'THE CUTTLEFISH', line: 'You killed it for that. Then you went to a feast. Do you remember what you ate?' },
+    { who: '', line: 'A familiar pattern returns beneath its skin. Then a second. The shapes overlap until the whole reef shines with your own magic.' },
     { who: '', line: 'Its skin floods with every spell you have ever cast, all at once, and it rises.' },
   ] },
   viper: { title: 'The viper, shed', line: 'The viper comes out of her own skin, and the air goes bitter.', rise: 0.4, scene: [
     { who: '', line: 'The viper goes down among the jars, and the water closes over her.' },
+    { who: '', line: 'Bubbles break against the shelves. You wait for her to surface, watching the bottles instead of the water.' },
     { who: 'THE VIPER', line: 'I set his bones. I sat up with him three nights. They said I bit him.' },
     { who: 'THE VIPER', line: 'So I bit them.' },
+    { who: '', line: 'An empty skin catches against the counter. Behind it, something moves under the floorboards. The bitter taste reaches you before she does.' },
     { who: '', line: 'Her skin floats up empty. She comes up out of the water beside it, raw and shining, and every breath in the room tastes of venom.' },
   ], enter: battle => ({ party: battle.party.map(member => member.health > 0 ? { ...member, poison: member.poison + 3 } : member) }) },
 };
@@ -388,6 +410,35 @@ export const SOUR = 2;
 export const RISE = 0.5;
 const QUIET = 'The signature flickers out. It is quiet again.';
 
+export const MEMORY_NAMES:Record<MemoryId,string>={feast:'The Feast',trial:'The Trial',kraken:'The Kraken',bear:'The Bear',vulture:'The Vulture',frog:'The Frog',octopus:'The Octopus',training:'His Training',home:'His Home',name:'His Name'};
+
+function reclaimHumanMemory(battle:Battle):Battle {
+  const id=battle.lostMemories[0];
+  if(!id)return battle;
+  const perk=INITIAL_LOST.includes(id)?undefined:PERKS[id];
+  const hollow={...battle.hollow,
+    mana:Math.max(0,battle.hollow.mana-(perk==='mana'?PERK_BONUS.mana:0)),
+    damage:Math.max(0,battle.hollow.damage-(perk==='force'?PERK_BONUS.force:0)),
+    trained:battle.hollow.trained || id==='training',kraken:battle.hollow.kraken || id==='kraken'};
+  const party=battle.party.map(member=>{
+    const maxMana=member.id==='chameleon'?Math.max(1,member.maxMana-(battle.hollow.mana-hollow.mana)):member.maxMana;
+    return {...member,maxMana,mana:Math.min(member.mana,maxMana),
+      gear:id==='kraken'&&!battle.hollow.kraken?{...member.gear,agility:member.gear.agility+NO_KRAKEN}:member.gear};
+  });
+  return {...battle,hollow,party,lostMemories:battle.lostMemories.slice(1),recoveredMemories:[...battle.recoveredMemories,id],
+    log:[...battle.log,`${MEMORY_NAMES[id]} returns to you. He can no longer cast it.${perk==='mana'?' The Hollow mana falls away.':perk==='force'?' The Hollow force falls away.':''}`]};
+}
+
+function reclaimAtThreshold(battle:Battle):Battle {
+  const total=battle.humanMemoryCount;
+  if(!total)return battle;
+  const risen=Math.round(battle.enemy.maxHealth*(STAGES.human!.rise ?? RISE));
+  const share=Math.max(0,Math.min(1,1-battle.enemy.health/risen));
+  const goal=battle.enemy.health<=0?total:Math.min(total,1+Math.floor(share*(total-1)));
+  while(battle.recoveredMemories.length<goal)battle=reclaimHumanMemory(battle);
+  return battle;
+}
+
 // After any blow the party lands, a boss brought down for the first time rises into its second stage instead of falling.
 function staged(battle: Battle): Battle {
   // A fight in waves: when one falls, the next comes on.
@@ -400,6 +451,7 @@ function staged(battle: Battle): Battle {
       log: [...battle.log.filter(line => line !== QUIET), `Another ${ENEMIES[battle.encounter].short} comes on. (${battle.wave + 1} of ${battle.waves})`],
     };
   }
+  if(battle.encounter==='human' && battle.stage===2) return reclaimAtThreshold(battle);
   const stage = STAGES[battle.encounter];
   if (!stage || battle.stage === 2 || battle.enemy.health > 0) return battle;
   const allActed = battle.party.every(member => member.health <= 0 || member.acted);
@@ -468,7 +520,7 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
   const size = Math.max(1, Math.min(3, roster.length));
   const scaled = (health: number) => Math.round(health * PARTY_SCALE[size - 1]);
   return {
-    round: 1, phase: ambush ? 'enemy' : 'player', encounter, lostMemories, studied: studied.filter(name => STUDIABLE.includes(name)), hollow, enemyRevealed: false,
+    round: 1, phase: ambush ? 'enemy' : 'player', encounter, lostMemories: [...new Set(lostMemories)], recoveredMemories: [], humanMemoryCount: new Set(lostMemories).size, studied: studied.filter(name => STUDIABLE.includes(name)), hollow, enemyRevealed: false,
     party: [member('chameleon', 20, 10 + hollow.mana), member('bear', 30, 12), member('vulture', 16, 10), member('frog', 18, 12), member('octopus', 22, 14)].filter(member => roster.includes(member.id)),
     enemy: { health: scaled(ENEMIES[encounter].health), maxHealth: scaled(ENEMIES[encounter].health), mana: ENEMIES[encounter].mana, maxMana: ENEMIES[encounter].mana },
     followers: [
@@ -531,7 +583,7 @@ export function visibleMana(member: Member): number {
 
 // What an action costs this member, after keepsakes.
 export function cost(member: Member, action: Action): number {
-  return COST[action] + (action === 'suppress' ? member.gear.suppressCost : 0);
+  return COST[action] + (action==='support' && member.id==='bear' && member.gear.guardAll>0?3:0) + (action === 'suppress' ? member.gear.suppressCost : 0);
 }
 
 export function enemyMana(battle: Battle): number {
@@ -548,11 +600,13 @@ export function intent(battle: Battle): Move & { tell: string } {
 }
 
 function plainIntent(battle: Battle): Move & { tell: string } {
+  if (battle.encounter === 'kraken') return battle.round % 2 === 0
+    ? { name: 'Undertow', type: 'physical', tell: 'The water draws back beneath your feet. An undertow is about to drag one hero under.', damage: 8, window: { perfect: 55, graze: 140 } }
+    : { name: 'Arm sweep', type: 'physical', tell: 'A huge arm draws back over the harbour. It is coming down on one hero; dodge as it lands.', damage: 6, window: { perfect: 65, graze: 160 } };
   if (battle.encounter === 'human') {
-    const names: Record<MemoryId, string> = { feast: 'The Feast', trial: 'The Trial', kraken: 'The Kraken', bear: 'The Bear', vulture: 'The Vulture', frog: 'The Frog', octopus: 'The Octopus', training: 'His Training', home: 'His Home', name: 'His Name' };
-    const memories = battle.lostMemories.length ? battle.lostMemories : ['name' as MemoryId];
-    const spell = names[memories[(battle.round - 1) % memories.length]];
-    return { name: spell, type: 'spell', spell, tell: `He has no mana. He raises his hand, and ${spell} comes back from the part of you that lost it.`, damage: 12 + (battle.stage === 2 ? 5 : 0), window: { perfect: 45, graze: 120 } };
+    if(!battle.lostMemories.length) return {name:'An empty hand',type:'physical',tell:'He reaches for another stolen memory. Nothing answers. His empty hand strikes out; a guard can stop it.',damage:4,window:{perfect:65,graze:160}};
+    const spell=MEMORY_NAMES[battle.lostMemories[(battle.round-1)%battle.lostMemories.length]];
+    return {name:spell,type:'spell',spell,tell:`He has no mana. ${spell} speaks through him. As memories return, these borrowed spells fall silent.`,damage:10+Math.min(5,battle.lostMemories.length),window:{perfect:45,graze:120}};
   }
   if (battle.encounter === 'acolyte') {
     const casting = battle.round % 2 === 0;
@@ -958,6 +1012,7 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
     : action === 'attack' ? `${definition.name}'s ${definition.attack.toLowerCase()} strikes the ${foe > 0 ? battle.followers[foe - 1].name.toLowerCase() : ENEMIES[battle.encounter].short}${member.suppressed ? ' in a burst of revealed mana' : ''}${member.focused ? ' with focused force' : ''}.${fit > 1 ? ' It lands hard.' : fit < 1 ? ' It barely tells.' : ''}${dart ? (venom(battle.encounter) === 0 ? ' The toxin does nothing to the dead.' : ' The toxin goes in.') : ''}`
     : dose ? (battle.soured ? `Frog doses ${target === actor ? 'herself' : MEMBERS[target].name}, and it burns: everything is soured.` : `Frog doses ${target === actor ? 'herself' : MEMBERS[target].name}. A small dose mends.`)
     : actor === 'vulture' ? 'Vulture steadies her aim. Her next attack will strike harder.'
+    : actor === 'bear' && member.gear.guardAll>0 ? 'Bear braces beside the broken link. His guard covers the whole party.'
     : actor === 'bear' && target !== actor ? `Bear steps in front of ${MEMBERS[target].name}.`
     : `${definition.name} plants their feet and guards.`;
   return staged({
@@ -991,7 +1046,7 @@ export function hesitate(battle: Battle): Battle {
   const target = enemyTarget(battle);
   if (!target) return battle;
   const base = Math.max(3, Math.ceil(intent(battle).damage * 0.6));
-  const guarded = target.guardingFor === target.id || battle.party.some(member => member.id === 'bear' && member.health > 0 && member.guardingFor === target.id);
+  const guarded = target.guardingFor === target.id || battle.party.some(member => member.id === 'bear' && member.health > 0 && member.guardingFor !== null && (member.guardingFor === target.id || member.gear.guardAll>0));
   const damage = guarded ? 0 : base;
   const party = battle.party.map(member => member.id === target.id ? { ...member, health: Math.max(0, member.health - damage) } : member);
   const defeat = party.every(member => member.health === 0);
@@ -1024,7 +1079,7 @@ export function nextStrike(battle: Battle) {
   const target = enemyTarget(battle);
   if (!move || !target) return undefined;
   const protector = battle.party.find(member => member.health > 0 && member.id === 'bear' && member.guardingFor !== null
-    && (member.guardingFor === target.id || member.id === target.id));
+    && (member.gear.guardAll>0 || member.guardingFor === target.id || member.id === target.id));
   const guarded = move.unblockable ? undefined : move.type === 'physical' ? protector || (target.guardingFor === target.id ? target : undefined) : undefined;
   const blocked = !move.unblockable && move.type === 'spell' && battle.studied.includes(move.spell ?? '') && target.barrier;
   // A guard stops an ordinary blow; piercing strength still lands.
@@ -1130,7 +1185,7 @@ function enemyTurnEnds(battle: Battle): Battle {
     soured: sours && !defeat ? SOUR : Math.max(0, battle.soured - 1),
     studied: learned && !defeat ? [...battle.studied, cast!] : battle.studied,
     enemyRevealed: battle.enemyRevealed || spell,
-    enemy: { ...battle.enemy, health: enemyHealth, mana: Math.min(battle.enemy.maxMana, battle.enemy.mana - (spell ? 5 : 0) + ENEMY_REGEN) },
+    enemy: { ...battle.enemy, health: enemyHealth, mana: Math.max(0, Math.min(battle.enemy.maxMana, battle.enemy.mana - (spell ? 5 : 0) + ENEMY_REGEN)) },
     phase: defeat ? 'defeat' : 'player', round: defeat ? battle.round : battle.round + 1,
     log: [...battle.log, ...(battle.snared && battle.enemy.health > 0 ? [`The ${ENEMIES[battle.encounter].short} strains against the thorns and cannot move.`] : []), ...poisonLog,
       ...(sours && !defeat ? ['Everything tastes bitter. For two turns, healing will burn.'] : []),

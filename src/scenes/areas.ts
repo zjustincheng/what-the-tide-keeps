@@ -6,6 +6,11 @@ import { churchLore, downsLore, fieldsLore, fortLore, innLore, townLore, weirLor
 import { border } from '../content/border';
 import { fields } from '../content/fields';
 import { town } from '../content/town';
+import { millbrookStreet } from '../content/millbrook';
+import { fortStreet } from '../content/fortLife';
+import { marshStreet, hospiceLife } from '../content/marshLife';
+import { portLife } from '../content/oceanLife';
+import {bearReturn,withBearReplies,withBearLedger} from '../content/bearQuest';
 import { hall, inn, millInside, tannery } from '../content/interiors';
 import { barrow, downs } from '../content/downs';
 import { fen, weir } from '../content/fen';
@@ -121,9 +126,9 @@ const GUARDED: Partial<Record<string, Flag>> = { 'shrine-cache': 'warden-slain',
 
 export const FARMLAND: Area = {
   key: 'farmland', map: 'farmland', tileset: 'fields', music: 'fields', region: 'THE FARMLAND', place: 'The fields',
-  dialogue: { ...fields, ...fieldsLore }, assets: ['bear', 'nymph', 'votive'],
+  dialogue: { ...withBearReplies(fields,'miller'), ...fieldsLore, ...bearReturn }, assets: ['bear', 'nymph', 'votive'],
   ground: 'grass', surfaces: { 3: 'dirt', 16: 'wood', 17: 'water', 27: 'leaves' },
-  npcs: [{ point: 'bear', texture: 'bear', hiddenIf: [{ flag: 'bear-free' }] }, { point: 'miller', texture: 'miller' }, { point: 'heron', texture: 'heron' }, { point: 'shepherd', texture: 'shepherd' },
+  npcs: [{point:'bear-return',texture:'bear',hiddenIf:[{not:{flag:'bear-free'}},{not:{flag:'boar-defeated'}},{fallen:'bear'}]}, { point: 'bear', texture: 'bear', hiddenIf: [{ flag: 'bear-free' }] }, { point: 'miller', texture: 'miller' }, { point: 'heron', texture: 'heron' }, { point: 'shepherd', texture: 'shepherd' },
     { point: 'pilgrim', texture: 'pilgrim', hiddenIf: [{ flag: 'warden-slain' }] }, { point: 'pilgrim-shrine', texture: 'pilgrim', hiddenIf: [{ not: { flag: 'warden-slain' } }] },
     { point: 'carter', texture: 'carter' }, { point: 'beekeeper', texture: 'beekeeper' }],
   enemies: [
@@ -184,14 +189,15 @@ export const FARMLAND: Area = {
 
 export const TOWN: Area = {
   key: 'town', map: 'town', tileset: 'town', music: 'town', region: 'THE FARMLAND', place: 'Millbrook',
-  dialogue: { ...town, ...townLore }, enemies: [], ground: 'stone', surfaces: { 3: 'grass', 4: 'dirt', 23: 'grass', 24: 'grass' },
+  dialogue: { ...withBearReplies(town,'reeve'), ...townLore, ...millbrookStreet }, enemies: [], ground: 'stone', surfaces: { 3: 'grass', 4: 'dirt', 23: 'grass', 24: 'grass' },
   npcs: [...['reeve', 'innkeeper', 'shopkeeper', 'child', 'fishmonger', 'fox', 'scribe'].map(name => ({ point: name, texture: name })), { point: 'seeker', texture: 'kid' },
     // Hide and seek: once the game is on, the hiders can be spotted, if you look. Found, they run home.
     { point: 'hide-1', texture: 'child', peek: true, hiddenIf: [{ not: { flag: 'hide-started' } }, { flag: 'hide-1' }] },
     { point: 'hide-2', texture: 'cub', peek: true, hiddenIf: [{ not: { flag: 'hide-started' } }, { flag: 'hide-2' }] },
     { point: 'hide-3', texture: 'kid', peek: true, hiddenIf: [{ not: { flag: 'hide-started' } }, { flag: 'hide-3' }] },
     // The night market opens behind the tannery after dark.
-    { point: 'night-trader', texture: 'marten', hiddenIf: [{ night: false }], lit: true }],
+    { point: 'night-trader', texture: 'marten', hiddenIf: [{ night: false }], lit: true },
+    { point: 'grain-driver', texture: 'carter' }, { point: 'ration-queue', texture: 'fox' }, { point: 'quarter-watch', texture: 'guard' }],
   props: [{ point: 'stocks', texture: 'stocks', solid: true, hiddenIf: [] }, { point: 'lectern', texture: 'lectern', solid: true, hiddenIf: [] }],
   exits: {
     north: { to: 'farmland', spawn: 'from-town', prompt: 'Return to the fields' },
@@ -267,7 +273,7 @@ export const HALL: Area = { ...INDOORS, key: 'hall', map: 'hall', place: "Millbr
   npcs: [{ point: 'clerk', texture: 'clerk' }], exits: { out: { to: 'town', spawn: 'from-hall', prompt: 'Go back outside' } } };
 export const TANNERY: Area = { ...INDOORS, key: 'tannery', map: 'tannery', place: 'Millbrook · The tannery', dialogue: tannery,
   npcs: [{ point: 'tanner', texture: 'tanner' }], exits: { out: { to: 'town', spawn: 'from-tannery', prompt: 'Go back outside' } } };
-export const MILL: Area = { ...INDOORS, key: 'mill-inside', map: 'mill-inside', place: 'The mill', dialogue: millInside,
+export const MILL: Area = { ...INDOORS, key: 'mill-inside', map: 'mill-inside', place: 'The mill', dialogue: withBearLedger(millInside),
   npcs: [], exits: { out: { to: 'farmland', spawn: 'from-mill', prompt: 'Go back outside' } } };
 
 // The downs, east of the fields: the ram's lambs, the hounds who take them, and the barrow where the hounds den.
@@ -362,8 +368,7 @@ export const PASS: Area = {
   npcs: [],
   enemies: [
     { point: 'raider-1', encounter: 'raider', ambush: true }, { point: 'raider-2', encounter: 'raider', ambush: true }, { point: 'raider-3', encounter: 'raider', ambush: true, company: [RAIDER] },
-    // After the hyena, something far larger is on the road. It cannot be beaten yet.
-    { point: 'inquisitor', encounter: 'inquisitor', hiddenIf: [{ not: { flag: 'hyena-slain' } }] },
+    // After the hyena, the Inquisitor hunts across maps instead of standing here.
   ],
   props: [{ point: 'courier', texture: 'courier', hiddenIf: [] }, { point: 'camp-pass', texture: 'campfire', hiddenIf: [] }],
   forage: { 'forage-1': 'herb' },
@@ -379,11 +384,12 @@ export const PASS: Area = {
   decorate: scene => snowfall(scene, 640, 1024),
 };
 export const FORT: Area = {
-  key: 'fort', map: 'fort', tileset: 'fort', music: 'garrison', region: 'THE HIGHLANDS', place: 'The fort town', dialogue: { ...fort, ...fortLore },
+  key: 'fort', map: 'fort', tileset: 'fort', music: 'garrison', region: 'THE HIGHLANDS', place: 'The fort town', dialogue: { ...fort, ...fortLore, ...fortStreet },
   ground: 'dirt', surfaces: { 2: 'stone', 5: 'stone', 20: 'grass', 22: 'water' }, grade: COLD, enemies: [],
   npcs: [...['sergeant', 'quartermaster', 'lynx', 'veteran', 'merchant', 'fence', 'chaplain', 'raven', 'teacher'].map(name => ({ point: name, texture: name })),
     // The schoolmistress's two pupils, sitting for a lesson in the square.
-    { point: 'cub-1', texture: 'cub' }, { point: 'cub-2', texture: 'cub' }, { point: 'smith', texture: 'smith' }],
+    { point: 'cub-1', texture: 'cub' }, { point: 'cub-2', texture: 'cub' }, { point: 'smith', texture: 'smith' },
+    { point:'grain-hauler',texture:'carter' }, { point:'merchant-watch',texture:'sergeant' }],
   props: [{ point: 'camp-fort', texture: 'campfire', hiddenIf: [] }, { point: 'altar', texture: 'altar', solid: true, hiddenIf: [] }],
   camps: { 'camp-fort': { prompt: 'Rest by the garrison fire', cost: 4, lines: ['The garrison lets you sit at their fire for a few coins. Nobody asks about the brand.'] } },
   exits: {
@@ -639,12 +645,13 @@ export const CAUSEWAY: Area = {
 };
 
 export const WICKMERE: Area = {
-  ...MARSH_GROUND, key: 'wickmere', map: 'wickmere', place: 'Wickmere', dialogue: wickmere,
+  ...MARSH_GROUND, key: 'wickmere', map: 'wickmere', place: 'Wickmere', dialogue: {...wickmere,...marshStreet},
   grade: { saturation: -0.45, brightness: 0.74, vignette: 0.5 },
   npcs: [
     { point: 'magistrate', texture: 'magistrate' }, { point: 'newt', texture: 'newt', hiddenIf: [{ flag: 'newt-freed' }] }, { point: 'ferryman', texture: 'beaver' },
     { point: 'smoker', texture: 'smoker' }, { point: 'widow', texture: 'widow' }, { point: 'child', texture: 'vole' }, { point: 'mourner', texture: 'water-rat' },
     { point: 'herbalist', texture: 'herbalist' }, { point: 'mink', texture: 'mink' },
+    { point:'treatment-queue',texture:'water-rat' },{ point:'barrel-inspector',texture:'coypu' },
   ],
   enemies: [],
   props: [{ point: 'cage', texture: 'cage', solid: true, hiddenIf: [{ flag: 'newt-freed' }] }, { point: 'camp-wickmere', texture: 'campfire', hiddenIf: [] }],
@@ -663,7 +670,7 @@ export const WICKMERE: Area = {
 };
 
 export const HOSPICE: Area = {
-  ...MARSH_GROUND, key: 'hospice', map: 'hospice', music: 'church', place: 'The hospice', dialogue: hospice, ground: 'wood',
+  ...MARSH_GROUND, key: 'hospice', map: 'hospice', music: 'church', place: 'The hospice', dialogue: {...hospice,...hospiceLife}, ground: 'wood',
   grade: { saturation: -0.5, brightness: 0.68, vignette: 0.6 },
   npcs: [
     { point: 'sister', texture: 'sister' }, { point: 'frog', texture: 'frog', hiddenIf: [{ flag: 'frog-free' }] },
@@ -856,11 +863,12 @@ const SEA_GROUND: Pick<Area, 'region' | 'tileset' | 'ground' | 'surfaces' | 'mus
 };
 
 export const OUTLAW_PORT: Area = {
-  ...SEA_GROUND, key: 'outlaw-port', map: 'outlaw-port', place: 'Wrecktown', dialogue: port, ground: 'wood', music: 'shanty',
+  ...SEA_GROUND, key: 'outlaw-port', map: 'outlaw-port', place: 'Wrecktown', dialogue: {...port,...portLife}, ground: 'wood', music: 'shanty',
   grade: { saturation: -0.4, brightness: 0.76, vignette: 0.5 }, assets: ['octopus'],
   npcs: [
     { point: 'portmaster', texture: 'gull' }, { point: 'stranger', texture: 'hooded', hiddenIf: [{ flag: 'octopus-free' }] }, { point: 'chandler', texture: 'chandler' },
     { point: 'fisher', texture: 'smuggler-seal' }, { point: 'pirate', texture: 'pirate' }, { point: 'child', texture: 'pup' },
+    { point: 'returned-crab', texture: 'crab', hiddenIf: [{ not: { flag: 'crab-freed' } }] },
   ],
   enemies: [{ point: 'shark', encounter: 'shark', hiddenIf: [{ flag: 'shark-slain' }, { not: { flag: 'octopus-met' } }], defeat: { set: 'shark-slain' } }],
   props: [{ point: 'camp-port', texture: 'campfire', hiddenIf: [] }],
@@ -1118,7 +1126,7 @@ export const LAMP: Area = {
   ...ISLAND_GROUND, key: 'lamp', map: 'lamp', music: 'wake', place: 'The lamp room', dialogue: lamp,
   grade: { saturation: -0.2, brightness: 1, vignette: 0.45 }, assets: [],
   npcs: [{ point: 'stranger', texture: 'stranger', hiddenIf: [
-    { flag: 'human-seated' }, { all: [{ flag: 'human-challenged' }, { not: { flag: 'human-beaten' } }] },
+    { flag: 'human-seated' }, { flag: 'human-spared' }, { all: [{ flag: 'human-challenged' }, { not: { flag: 'human-beaten' } }] },
   ] }],
   enemies: [{ point: 'stranger', encounter: 'human', hiddenIf: [{ flag: 'human-beaten' }, { not: { flag: 'human-challenged' } }], defeat: { set: 'human-beaten' } }],
   exits: { down: { to: 'lighthouse', spawn: 'from-lamp', prompt: 'Go back down the stair' } },

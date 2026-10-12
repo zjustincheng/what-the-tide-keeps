@@ -1,11 +1,13 @@
 // Original music for the game, written as data: which instrument plays which note on which beat.
 // No Web Audio here, so the compositions can be checked without a browser. The sound itself is in music.ts.
 import type { Encounter } from '../rules/battle';
+import { BOSS_MUSIC, BOSS_THEMES } from './bossThemes.ts';
+import type { BossThemeId } from './bossThemes.ts';
 
-export type Voice = 'harp' | 'pluck' | 'flute' | 'strings' | 'staccato' | 'organ' | 'bell' | 'celesta' | 'bass' | 'choir' | 'drum' | 'snare';
+export type Voice = 'harp' | 'pluck' | 'flute' | 'brass' | 'strings' | 'staccato' | 'organ' | 'bell' | 'celesta' | 'bass' | 'choir' | 'drum' | 'snare';
 export type NoteEvent = Readonly<{ beat: number; voice: Voice; midi: number; beats: number; velocity: number }>;
-export type ThemeId = 'church' | 'fields' | 'town' | 'wilds' | 'hearth' | 'battle' | 'boss' | 'wake' | 'highlands' | 'marsh'
-  | 'capital' | 'garrison' | 'holds' | 'downs' | 'crypt' | 'shanty' | 'sea' | 'deep' | 'arena';
+export type ThemeId = 'church' | 'fields' | 'town' | 'wilds' | 'hearth' | 'battle' | 'boss' | 'kraken' | 'wake' | 'highlands' | 'marsh'
+  | 'capital' | 'garrison' | 'holds' | 'downs' | 'crypt' | 'shanty' | 'sea' | 'deep' | 'arena' | BossThemeId;
 export type Theme = Readonly<{ name: string; bpm: number; beatsPerBar: number; bars: number; events: readonly NoteEvent[] }>;
 
 type Quality = 'm' | 'M';
@@ -128,6 +130,7 @@ const WAKE_CHORDS: readonly (readonly number[])[] = [[60, 64, 66, 71], [62, 66, 
 const WAKE_BELLS: Line = [[79, 2], [null, 2], [78, 2], [null, 2], [76, 4], [74, 4]];
 
 export const THEMES: Record<ThemeId, Theme> = {
+  ...BOSS_THEMES,
   fields: { name: 'The fields', bpm: 84, beatsPerBar: 3, bars: 16, events: [
     ...perBar(FIELDS_CHORDS, 3, (chord, start) => [
       ...arpeggio('harp', chord, start, [0, 7, 12, 'third', 12, 7], 0.5, 0.22, 1.5),
@@ -270,6 +273,21 @@ export const THEMES: Record<ThemeId, Theme> = {
     ]),
     ...line('choir', BOSS_CHOIR, 0.12),
   ] },
+  kraken: { name: 'The Kraken', bpm: 118, beatsPerBar: 4, bars: 8, events: [
+    ...perBar([[35, 'm'], [35, 'm'], [31, 'M'], [33, 'M'], [35, 'm'], [30, 'M'], [31, 'M'], [30, 'M']], 4, (chord, start) => [
+      ...[0, 1, 2, 3].map(offset => ({ beat: start + offset, voice: 'bass' as const, midi: chord[0], beats: 0.85, velocity: 0.24 })),
+      ...[0, 2].map(offset => ({ beat: start + offset, voice: 'drum' as const, midi: 36, beats: 0.7, velocity: 0.5 })),
+      ...[1, 3].map(offset => ({ beat: start + offset, voice: 'snare' as const, midi: 60, beats: 0.35, velocity: 0.24 })),
+      ...held('strings', chord, start, 4, 0.09, 12),
+      ...arpeggio('staccato', chord, start, [0, 7, 'third', 7], 1, .09, .45, 12),
+    ]),
+    ...line('brass', [
+      [71, 1], [74, .5], [78, .5], [76, 2], [74, 1], [73, 1], [71, 2],
+      [67, 1], [71, 1], [74, 2], [69, 1], [73, .5], [76, .5], [78, 2],
+      [83, 1], [81, 1], [78, 1], [76, 1], [78, 1], [76, 1], [73, 1], [70, 1],
+      [74, 1], [71, 1], [69, 1], [67, 1], [66, 1], [70, 1], [73, 1], [71, 1],
+    ], .18),
+  ] },
   wake: { name: 'Waking', bpm: 48, beatsPerBar: 4, bars: 4, events: [
     ...WAKE_CHORDS.flatMap((notes, bar) => [
       ...notes.map(midi => ({ beat: bar * 4, voice: 'choir' as const, midi, beats: 4, velocity: 0.07 })),
@@ -281,9 +299,9 @@ export const THEMES: Record<ThemeId, Theme> = {
 export const THEME_IDS = Object.keys(THEMES) as ThemeId[];
 
 // Elites and bosses get the darker battle music.
-const BOSSES: readonly Encounter[] = ['boar', 'warden', 'leech', 'swarm', 'pack', 'drowned', 'vulture', 'pair', 'hyena', 'inquisitor', 'captain', 'brood', 'apprentice', 'viper', 'duellist', 'cuckoo', 'keeper', 'human'];
 export function battleTheme(encounter: Encounter): ThemeId {
-  return BOSSES.includes(encounter) ? 'boss' : 'battle';
+  if (encounter === 'kraken') return 'kraken';
+  return BOSS_MUSIC[encounter] ?? 'battle';
 }
 
 export const loopBeats = (theme: Theme) => theme.bars * theme.beatsPerBar;

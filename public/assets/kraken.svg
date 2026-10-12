@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+  <defs>
+    <linearGradient id="mantle" x2=".2" y2="1"><stop stop-color="#78948c"/><stop offset=".45" stop-color="#385b5c"/><stop offset="1" stop-color="#172f39"/></linearGradient>
+    <linearGradient id="arm" x2="0" y2="1"><stop stop-color="#507879"/><stop offset=".55" stop-color="#294d55"/><stop offset="1" stop-color="#172f3a"/></linearGradient>
+    <radialGradient id="eye"><stop stop-color="#fff3be"/><stop offset=".45" stop-color="#e9aa62"/><stop offset="1" stop-color="#9b483c"/></radialGradient>
+  </defs>
+  <!-- Coiled arms frame the head so its silhouette stays readable at battle size. -->
+  <g fill="none" stroke="#102731" stroke-width="19" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M56 102C39 115 25 137 7 133c-12-3-9-19 4-23 15-5 30 7 34 17"/>
+    <path d="M63 110c-5 20-15 39-30 43-13 4-19-10-9-19 10-9 25-3 35 3"/>
+    <path d="M79 111c4 19 2 39-11 46-12 7-22-5-14-16 7-10 22-8 31-3"/>
+    <path d="M97 108c14 14 26 31 39 27 13-4 10-20-3-23-13-3-23 10-28 20"/>
+    <path d="M104 96c22 4 43 1 49-12 5-12-9-20-19-11-9 8-4 23 3 32"/>
+    <path d="M54 88C34 75 20 57 26 44c6-12 21-7 22 6 2 13-12 21-24 23"/>
+    <path d="M106 79c15-17 24-36 15-47-8-10-22-2-20 11 1 13 17 18 29 17"/>
+  </g>
+  <g fill="none" stroke="url(#arm)" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M56 102C39 115 25 137 7 133c-12-3-9-19 4-23 15-5 30 7 34 17"/>
+    <path d="M63 110c-5 20-15 39-30 43-13 4-19-10-9-19 10-9 25-3 35 3"/>
+    <path d="M79 111c4 19 2 39-11 46-12 7-22-5-14-16 7-10 22-8 31-3"/>
+    <path d="M97 108c14 14 26 31 39 27 13-4 10-20-3-23-13-3-23 10-28 20"/>
+    <path d="M104 96c22 4 43 1 49-12 5-12-9-20-19-11-9 8-4 23 3 32"/>
+    <path d="M54 88C34 75 20 57 26 44c6-12 21-7 22 6 2 13-12 21-24 23"/>
+    <path d="M106 79c15-17 24-36 15-47-8-10-22-2-20 11 1 13 17 18 29 17"/>
+  </g>
+  <!-- Old scars and the broad, watchful mantle. -->
+  <path d="M49 70C40 47 52 23 76 15c22-8 46 3 50 25 3 17-4 34-16 46l-7 20H56l-4-18z" fill="#102731"/>
+  <path d="M52 69C44 48 56 27 77 20c20-7 39 3 43 21 3 15-4 31-14 41l-5 17H60l-4-14z" fill="url(#mantle)" stroke="#91aaa0" stroke-width="2.5"/>
+  <path d="M71 28q16 8 32 0M63 40q27 10 51 0M59 54q27 8 57 1" fill="none" stroke="#a9b9a5" stroke-opacity=".38" stroke-width="2"/>
+  <path d="M74 67q10 5 20 0" fill="none" stroke="#173038" stroke-width="3"/>
+  <ellipse cx="71" cy="62" rx="6" ry="8" fill="url(#eye)"/><ellipse cx="99" cy="62" rx="6" ry="8" fill="url(#eye)"/>
+  <path d="M71 57v10m28-10v10" stroke="#18282c" stroke-width="2.5"/>
+  <!-- Suckers along the curling arms catch the light. -->
+  <g fill="#c1b58d" opacity=".86">
+    <circle cx="15" cy="118" r="2"/><circle cx="27" cy="119" r="2"/><circle cx="36" cy="127" r="2"/>
+    <circle cx="35" cy="140" r="2"/><circle cx="45" cy="146" r="2"/><circle cx="62" cy="144" r="2"/>
+    <circle cx="74" cy="143" r="2"/><circle cx="86" cy="144" r="2"/><circle cx="128" cy="125" r="2"/>
+    <circle cx="139" cy="123" r="2"/><circle cx="146" cy="111" r="2"/><circle cx="142" cy="86" r="2"/>
+    <circle cx="149" cy="78" r="2"/><circle cx="145" cy="66" r="2"/><circle cx="32" cy="52" r="2"/><circle cx="34" cy="40" r="2"/>
+  </g>
+</svg>

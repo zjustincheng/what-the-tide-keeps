@@ -65,6 +65,7 @@ export const town: Dialogue = {
     'Yours is three times that.',
   ], then: { shop: 'stall' }, variants: [{ if: { flag: 'boar-defeated' }, lines: [
     'Carts are moving again. Twice the board price, then.',
+    'He rubs the extra chalk mark off the board. "The little bread stall is open. Fresh, if you go now."',
   ], then: { shop: 'stall' } }, { if: { flag: 'stall-cowed' }, lines: [
     'Twice the board price, like we said. Leave the bear outside.',
   ], then: { shop: 'stall' } }] },
@@ -114,7 +115,11 @@ export const town: Dialogue = {
   ] }] },
   stocks: { speaker: 'THE STOCKS', prompt: 'Examine the stocks', lines: [
     'Stocks in the middle of the market square, where everyone can see. Empty today. The stones under them have not been scrubbed.',
-  ] },
+  ], variants: [{ if: { flag: 'boar-defeated' }, lines: [
+    'The stocks are still here. Somebody has washed the stones beneath them.',
+    'A sack of flour rests against the frame. For a moment it looks like any other piece of furniture in a working town.',
+    'The lock has not been removed.',
+  ] }] },
   // The town's children play hide and seek, and will let a convict be the seeker if nobody else will.
   seeker: { speaker: 'A KID BY THE WELL', prompt: 'Speak to the kid', lines: [
     'We\'re playing hide and seek and nobody will be it. You can be it. Three of us are hiding. You\'ll never find the last one.',

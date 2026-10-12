@@ -42,4 +42,5 @@ export const BESTIARY: Record<Encounter, string> = {
   keeper: 'The Keeper of the Light, the church\'s abbot on the island. His Lamplight blinds whoever shows the most mana: they lose their next move. Hide, or study it and bar it. Brought down once, he opens the lens all the way.',
   human: 'The only human. He has no mana to read; he casts the memories taken from the party. Analyze a spell as it gathers, then use a barrier to return it.',
   inquisitor: 'A royal investigator, certain of your guilt. His Verdict cannot be dodged or barred. You cannot win this yet. Run.',
+  kraken: 'The great kraken that rose against the fishing fleets. Watch its tells, dodge its arms, and use the five heroes together.',
 };

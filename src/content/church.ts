@@ -9,7 +9,11 @@ export const church: Dialogue = {
     'Easy. Sit up slowly. You were a long time coming back this time.',
     'You asked me to remember something for you, last time. I am sorry. You never told me what it was.',
     'The church has work for you. Grain has stopped reaching the highlands. Take the south door into the farmland and find out why.',
-  ], variants: [{ if: { flag: 'light-out' }, lines: [
+  ], variants: [{ if: { flag: 'human-spared' }, lines: [
+    'No orders today. Or tomorrow. Your name is in the ledger, but the sentence beside it is struck through.',
+    'I kept bringing you back. I thought that meant I was saving you. I should have asked what it cost, and where it went.',
+    'The basin is empty. If you stay, it is because you want to. There is still a clean bed here.',
+  ] }, { if: { flag: 'light-out' }, lines: [
     'The basin is going down. A finger a week. I don\'t know what fills it, and I find I don\'t want to.',
     'I can raise you a few more times. Then I can\'t. Be careful out there. Be careful the way everyone else has to be.',
   ] }, { if: { flag: 'light-kept' }, lines: [
@@ -48,7 +52,10 @@ export const church: Dialogue = {
   ledger: { speaker: 'THE RESURRECTION LEDGER', lines: [
     'Five names, five sentences. Beside yours, a column of dates runs off the bottom of the page.',
     'The last date is today. The ink is still wet.',
-  ], variants: [{ if: { forgot: 'trial' }, lines: [
+  ], variants: [{ if: { flag: 'human-spared' }, lines: [
+    'Five names. Beside each, in new ink: CLEARED. SENTENCE LIFTED.',
+    'The old dates remain. Nobody gets to pretend those years did not happen.',
+  ] }, { if: { forgot: 'trial' }, lines: [
     'Five names, five sentences. Beside yours, a single word you do not want to read.',
     'The seal at the foot of the page matches the brand on your wrist. You do not know what you did to earn either.',
   ] }] },
@@ -98,4 +105,7 @@ const priestReplies: Choice[] = [
   { text: 'I should go.', ends: true, lines: ['Go on, then. Try to come back on your feet.'] },
 ];
 church.priest.choices = priestReplies;
-for (const variant of church.priest.variants!) variant.choices = priestReplies;
+for (const variant of church.priest.variants!) variant.choices = 'flag' in variant.if && variant.if.flag==='human-spared' ? [
+  {text:'Tend my wounds.',lines:['He brings fresh water and clean bandages. There is no basin and no tithe.'],then:{rest:true}},
+  {text:'I should go.',ends:true,lines:['Go where you choose. You can come back without being carried.']},
+] : priestReplies;

@@ -49,6 +49,20 @@ class Music {
     if (this.context) this.start(id);
   }
 
+  // Stop just the score, keeping sound effects and the audio engine available.
+  pause() {
+    this.current = undefined;
+    if (this.track && this.context) {
+      const old = this.track;
+      const now = this.context.currentTime;
+      old.gain.gain.cancelScheduledValues(now);
+      old.gain.gain.setValueAtTime(old.gain.gain.value, now);
+      old.gain.gain.linearRampToValueAtTime(0, now + 0.15);
+      setTimeout(() => old.gain.disconnect(), 5000);
+    }
+    this.track = undefined;
+  }
+
   setVolume(volume: number) {
     this.volume = Math.max(0, Math.min(1, volume));
     this.apply(); saveSettings({ music: this.volume });
@@ -100,14 +114,14 @@ class Music {
     this.effectsBus = context.createGain();
     this.effectsBus.connect(master);
     this.room = context.createConvolver();
-    const length = Math.floor(context.sampleRate * 3.2);
+    const length = Math.floor(context.sampleRate * 1.5);
     const impulse = context.createBuffer(2, length, context.sampleRate);
     for (let channel = 0; channel < 2; channel++) {
       const data = impulse.getChannelData(channel);
       for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / length) ** 2.6;
     }
     this.room.buffer = impulse;
-    const wet = context.createGain(); wet.gain.value = 0.42;
+    const wet = context.createGain(); wet.gain.value = 0.18;
     this.room.connect(wet).connect(this.output);
     // Effects get a little of the hall too, so they sit in the same space as the music.
     const send = context.createGain(); send.gain.value = 0.25;
@@ -194,31 +208,33 @@ class Music {
     const sources: AudioScheduledSourceNode[] = [];
     let end = time + length;
     const voices: Record<Voice, () => void> = {
-      harp: () => { end = decay(length + 1.4); const tone = filter('lowpass', 2800); sources.push(oscillator('triangle', pitch, 0, tone), oscillator('sine', pitch * 2, 0, tone, 0.25)); },
+      harp: () => { end = decay(Math.min(1.2, length + .3)); const tone = filter('lowpass', 2400); sources.push(oscillator('triangle', pitch, 0, tone), oscillator('sine', pitch * 2, 0, tone, 0.18)); },
       pluck: () => {
-        end = decay(0.7);
+        end = decay(Math.min(.45, length + .1));
         const tone = filter('lowpass', 3200);
         tone.frequency.setValueAtTime(3200, time); tone.frequency.exponentialRampToValueAtTime(420, time + 0.3);
-        sources.push(oscillator('sawtooth', pitch, 0, tone, 0.6));
+        sources.push(oscillator('triangle', pitch, 0, tone, .8), oscillator('sine', pitch * 2, 0, tone, .12));
       },
       flute: () => {
         end = envelope(0.08, 0.85, 0.3);
         const osc = oscillator('sine', pitch);
         sources.push(osc, oscillator('triangle', pitch * 2, 0, amp, 0.08), vibrato(osc, pitch * 0.005, 0.3));
       },
-      strings: () => { end = envelope(0.55, 1, 0.9); const tone = filter('lowpass', 1500); sources.push(oscillator('sawtooth', pitch, -7, tone, 0.5), oscillator('sawtooth', pitch, 7, tone, 0.5)); },
+      brass: () => { end = envelope(.035, .75, .18); const tone = filter('lowpass', 1900); sources.push(oscillator('triangle', pitch, 0, tone, .8), oscillator('square', pitch, 0, tone, .16), oscillator('sine', pitch * 2, 0, tone, .12)); },
+      strings: () => { end = envelope(0.09, .85, 0.25); const tone = filter('lowpass', 1200); sources.push(oscillator('triangle', pitch, -3, tone, .6), oscillator('sawtooth', pitch, 3, tone, .2)); },
       staccato: () => { end = envelope(0.015, 0.7, 0.12); const tone = filter('lowpass', 2200); sources.push(oscillator('sawtooth', pitch, -5, tone, 0.5), oscillator('sawtooth', pitch, 5, tone, 0.5)); },
       organ: () => { end = envelope(0.2, 1, 0.5); sources.push(oscillator('sine', pitch), oscillator('sine', pitch * 2, 0, amp, 0.45), oscillator('sine', pitch * 3, 0, amp, 0.2)); },
-      bell: () => this.fm(amp, pitch, 3.5, time, decay(3), sources),
-      celesta: () => this.fm(amp, pitch, 4, time, decay(1.4), sources),
+      bell: () => { end = decay(Math.min(1.6, length + .4)); this.fm(amp, pitch, 2, time, end, sources); },
+      celesta: () => { end = decay(Math.min(.9, length + .2)); this.fm(amp, pitch, 3, time, end, sources); },
       bass: () => { end = envelope(0.01, 0.9, 0.25); const tone = filter('lowpass', 650); sources.push(oscillator('triangle', pitch, 0, tone), oscillator('sine', pitch / 2, 0, tone, 0.5)); },
       choir: () => {
-        end = envelope(0.8, 1, 1.4);
+        end = envelope(0.18, .8, .45);
         // Two vowel formants give the saws an 'ah'.
         const low = filter('bandpass', 800, 3), high = filter('bandpass', 1150, 4);
         for (const detune of [-9, 9]) {
-          const osc = oscillator('sawtooth', pitch, detune, low, 0.6);
-          osc.connect(high);
+          const osc = oscillator('triangle', pitch, detune, low, .3);
+          const vowel = context.createGain(); vowel.gain.value = .15;
+          osc.connect(vowel).connect(high);
           sources.push(osc, vibrato(osc, pitch * 0.004, 0.5));
         }
       },
@@ -241,7 +257,7 @@ class Music {
     const carrier = context.createOscillator(); carrier.frequency.value = pitch;
     const modulator = context.createOscillator(); modulator.frequency.value = pitch * ratio;
     const index = context.createGain();
-    index.gain.setValueAtTime(pitch * 2.2, time); index.gain.exponentialRampToValueAtTime(pitch * 0.05, time + 0.9);
+    index.gain.setValueAtTime(pitch * .6, time); index.gain.exponentialRampToValueAtTime(pitch * .015, time + .4);
     modulator.connect(index).connect(carrier.frequency);
     carrier.connect(amp);
     sources.push(carrier, modulator);
@@ -251,7 +267,8 @@ class Music {
   private burst(into: AudioNode) {
     const source = this.context!.createBufferSource();
     source.buffer = this.noise!;
-    source.connect(into);
+    const level = this.context!.createGain(); level.gain.value = .2;
+    source.connect(level).connect(into);
     return source;
   }
 

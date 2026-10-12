@@ -23,7 +23,7 @@ export class BestiaryView {
       <div class="journal-entries">${met.map(id => {
         const entry = bestiary[id]!;
         const spell = ENEMY_SPELLS[id];
-        return `<details><summary><img src="${import.meta.env.BASE_URL}assets/${id}.svg" alt="" /> ${ENEMIES[id].name} <small>${entry.defeated ? `beaten ${entry.defeated}×` : 'not yet beaten'}</small></summary>
+        return `<details><summary><img src="${import.meta.env.BASE_URL}assets/${id}.${id === 'kraken' ? 'png' : 'svg'}" alt="" /> ${ENEMIES[id].name} <small>${entry.defeated ? `beaten ${entry.defeated}×` : 'not yet beaten'}</small></summary>
           <p>${BESTIARY[id]}</p>
           ${TRAITS[id].length ? `<p class="enemy-traits">${TRAITS[id].join(' · ')}</p>` : ''}
           <h3>SEEN TO</h3><p>${entry.moves.length ? entry.moves.join(' · ') : 'Nothing you could name yet.'}</p>

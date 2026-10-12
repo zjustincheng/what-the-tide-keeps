@@ -18,19 +18,19 @@ export const landing: Dialogue = {
 // The works.
 export const works: Dialogue = {
   ledger: { speaker: 'THE WORKS\' DAYBOOK', prompt: 'Read the daybook', lines: [
-    'Every boat is a line. FROM THE PENS. FROM THE LANES. FROM THE QUARRY. FROM THE HOSPICE. Then two columns: SALTED, SHIPPED AS FISH. RENDERED, OIL TO THE LIGHT.',
-    'Nothing in either column is fish.',
-    'At the foot of the page, in a different hand, old and careful: THE COVENANT HOLDS. NO CARNIVORE HAS EATEN A CITIZEN IN FORTY YEARS. THEY HAVE EATEN NOTHING ELSE.',
+    'Every boat is a line: food from the fleet, lamp oil, seized books, prisoners transferred from the land. The old laboratory used this landing. The later officials kept using it after they sealed the project.',
+    'Two manifests share a date. One lists rations for the capital. The other lists people caught in the same nets. The sea has never had a column marked CITIZEN.',
+    'A note orders the laboratory shipments omitted from the public accounts. Below it are the same church signatures that approved your transfer.',
   ], then: { set: 'works-seen' } },
   vats: { speaker: 'THE VATS', prompt: 'Look in the vats', lines: [
-    'Salt, packed down hard over what\'s under it. A paddle stands in one vat, worn smooth by hands.',
+    'Old vats for curing the fleet’s catch. The lids are shut. Nobody is working here now.',
   ] },
   barrels: { speaker: 'THE BARRELS', prompt: 'Look at the barrels', lines: [
     'Stamped SMOKED FISH, WICKMERE, ready for the boat. The same stamp as every barrel you have bought since the farmland.',
-    'The barrels you healed with. The barrels the party lived on.',
+    'The rations you healed with came from a sea whose people the Covenant never counted. Beside the barrels is another manifest, this one with names.',
   ] },
   hooks: { speaker: 'THE HOOK RAIL', prompt: 'Look at the hooks', lines: [
-    'A rail along the ceiling, with hooks on runners, and a drain under every hook. Someone has hung a coat on the last one, to dry.',
+    'A rail for unloading crates. Most hooks hang empty. A prisoner’s coat is folded over the last one.',
   ] },
   cages: { speaker: 'THE CAGES', prompt: 'Look at the cages', hiddenIf: [{ flag: 'cages-opened' }], lines: [
     'Cages along the north wall, full. Nobody inside is making any noise. They\'ve learned not to.',
@@ -69,14 +69,14 @@ export const whitehouse: Dialogue = {
     ] },
   ] },
   records: { speaker: 'THE PROJECT\'S RECORDS', prompt: 'Read the records', lines: [
-    'THE ISLAND PROJECT. SUBJECTS: the last of the old people, the ones with no fur, brought back from the ruins past the charts. PURPOSE: to learn how they kept the peace for so long.',
-    'Their answer is copied out underneath, in a clerk\'s hand: they bred what they ate, and called it something else, and nobody asked.',
-    'The Covenant was theirs. The church only kept it. One line, near the end: SUBJECT 9 (A CHILD) ESCAPED. GUARD ON DUTY TRANSFERRED.',
+    'THE ISLAND PROJECT. PURPOSE: a sovereign who is neither predator nor prey. The scholars took the human from myth and made him flesh. Beside the first successful birth: SUBJECT 9.',
+    'The next pages record lessons, restraints, and failed tests. They made him to rule, then called him a failure and put him in a cage. Nobody recorded what he wanted.',
+    'The last entry: SUBJECT 9 ESCAPED. GUARD ON DUTY TRANSFERRED. MEMORY OF POSTING REMOVED. Years later, a different hand records that the alchemists were found dead. The project was sealed, not confessed.',
   ], then: { set: ['house-seen', 'lab-remembered'] } },
   'basin-records': { speaker: 'THE BASIN BOOK', prompt: 'Read the basin book', lines: [
-    'How the church raises its convicts. Salt from the works, cut with sea water, in a basin. The dead are laid in it, and they get up.',
-    'Each raising costs the raised what the salt cost the ones it was made from: a part of what they were. The book calls it the tithe. It doesn\'t call it anything else.',
-    'Every time you woke on the cot, the tide took something. Now you know whose.',
+    'The basin and the human were built with the same alchemy. He was made empty: a vessel filled with memories taken from others. The resurrection diagrams end at that same vessel.',
+    'Every raising takes a memory from the convict and sends it to SUBJECT 9. The priest at the basin was given a prayer, not this diagram. The signatures authorizing it are the same ones on your transfer order.',
+    'Every time you woke on the cot, something of you woke here. The human has been living with every life the church took out of your head.',
   ] },
   cage: { speaker: 'THE CAGE BY THE DOOR', prompt: 'Look at the cage', lines: [
     'A small cage, its door hanging open on one hinge. Scratched inside it, at a child\'s height, a long row of marks, and then no more.',
@@ -84,14 +84,14 @@ export const whitehouse: Dialogue = {
     'A small cage, its door hanging open on one hinge. You remember the weight of the keys. You remember that he didn\'t cry.',
   ] }] },
   tables: { speaker: 'THE TABLES', prompt: 'Look at the tables', lines: [
-    'Steel tables with a gutter round the edge, and a drain under each one. Clean. Somebody still cleans them.',
+    'Steel tables with restraints bolted to their edges. Dust fills the joints. A child’s height was marked against one leg.',
   ] },
 };
 
 // The lighthouse.
 export const lighthouse: Dialogue = {
   tanks: { speaker: 'THE OIL TANKS', prompt: 'Look at the tanks', lines: [
-    'Iron tanks of lamp oil, stencilled RENDERED. The light has burned this for forty years. It burns bright.',
+    'Old tanks of fish oil, delivered with the laboratory supplies. The gauge is nearly empty. Someone has kept this lamp burning long after the project ended.',
   ] },
   'crates-in': { speaker: 'THE CRATES', prompt: 'Look at the crates', lines: [
     'The crates from Wickmere, opened. Oil, in stoppered jars, packed in straw. They slosh.',
@@ -105,22 +105,22 @@ export const lighthouse: Dialogue = {
 const strangerReplies: Choice[] = [
   { text: 'You poured the wine at the feast.', if: { not: { forgot: 'feast' } }, lines: [
     '"I poured it. Salt from the works in every cup, enough that you\'d all sleep while the rest was done. The church did the trial. I only made sure you\'d be there for it."',
-    '"I wanted you branded. Branded, they send you everywhere. I needed you to see everywhere."',
+    '“I wanted the heroes removed. I wanted every nation blaming another. And I wanted you alive long enough to watch what followed.”',
   ] },
   { text: 'Why me?', lines: [
     '"You opened the door. You were the only one who ever did. Then they took it out of your head and sent you to guard a feast."',
-    '"I thought, if anyone could stand here and decide, it should be the one who let me out. I didn\'t think you\'d remember me. I hoped you\'d remember the door."',
+    '“You gave me one good memory. The basin filled me with everything they took from you. I wanted you to see the world end. I still kept that door.”',
   ] },
   { text: 'You made the lieutenants.', lines: [
     '"I didn\'t make anyone. Everyone the church broke, I sat down with and asked what happened. Then I told them what the fish was."',
-    '"After that, they did what they did. Some of it I\'d have stopped. I didn\'t try."',
+    '“I gave each of them a thread to pull. Grain, hunger, the stores, the messages, the fish. They thought we would make a place for them. I wanted nothing left.”',
   ] },
   { text: 'What happens if the light goes out?', lines: [
     '"Every nation on that coast looks at it and thinks: the peace holds. Put it out and they\'ll look at each other instead. They\'ll be hungry. They\'ll have to ask each other for food. Maybe they\'ll ask the sea."',
-    '"Or they\'ll eat each other. I don\'t know. Nobody\'s ever been allowed to find out."',
+    '“They trusted a light instead of each other. I killed the rulers. I took away their heroes. With the fish gone, hunger would finish what I began.”',
   ] },
   { text: 'And me?', lines: [
-    '"No works, no salt. No salt, no basin. Sooner or later you die and you stay dead. I\'m sorry. It\'s the only thing I had to give you that they didn\'t: an end."',
+    '“They called your sentence mercy. Every time you died, they poured more of you into me. End the basin, and neither of us has to keep being what they made.”',
   ] },
   { text: 'Do you know my name?', if: { all: [{ forgot: 'name' }, { not: { flag: 'name-read' } }] }, lines: [
     'He says it. Gently, as if it might break.',
@@ -143,20 +143,20 @@ const strangerReplies: Choice[] = [
   ], then: { set: 'human-seated', ending: 'bad' } },
   { text: 'Spare him.', if: { flag: 'human-beaten' }, ends: true, lines: [
     'He is on his knees. You remember the child in the cage, and the door you opened.',
-    'You open it again. He does not look back as he walks out.',
-  ], then: { set: 'human-spared', recallAll: true, ending: 'good' } },
+    'You set the key beside him. “Tell them what you did. Then we end the basin.” For the first time, he has no borrowed memory left to hide behind.',
+  ], then: { set: ['human-spared','cages-opened'], recallAll: true, ending: 'good' } },
 ];
 
 // The lamp room.
 export const lamp: Dialogue = {
   stranger: { speaker: 'THE HUMAN', prompt: 'Speak to him', portrait: 'stranger', hiddenIf: [
-    { flag: 'human-seated' }, { all: [{ flag: 'human-challenged' }, { not: { flag: 'human-beaten' } }] },
+    { flag: 'human-seated' }, { flag: 'human-spared' }, { all: [{ flag: 'human-challenged' }, { not: { flag: 'human-beaten' } }] },
   ], lines: [
     'He sits beside the lens, not touching it. No fur, no scales, no feathers. He looks up as you come in.',
     '"You opened the door. You won\'t remember me. That\'s all right. I remember you."',
   ], variants: [{ if: { flag: 'human-beaten' }, lines: [
     'He is on his knees beside the lens. The light turns over the sea.',
-    '"You could end this now. You came here to decide. What do you remember?"',
+    '“It is quiet. All those voices, and now—quiet.” He looks at you. “What will you do with me?”',
   ], choices: strangerReplies }], choices: strangerReplies },
   lens: { speaker: 'THE LENS', prompt: 'Look at the lens', lines: [
     'Glass rings stacked taller than a house, turning on a bed of mercury, the flame at the heart of it so bright it has no colour.',

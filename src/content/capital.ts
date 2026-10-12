@@ -20,7 +20,10 @@ export const square: Dialogue = {
   crier: { speaker: 'THE CRIER', prompt: 'Speak to the crier', lines: [
     'Hear the regency council! Bread prices fixed until the harvest. The fish ration is under review. The five condemned serve the church until their sentences are spent!',
     'He sees your brand and keeps reading, louder.',
-  ], choices: [
+  ], variants:[{if:{flag:'human-spared'},lines:[
+    'By the seals of the nations: the five heroes are cleared of the feast murders. Their sentences are lifted. The island records are open to public examination.',
+    'This time, he stops when he sees you. Then he reads your name carefully, and does not call you convict.',
+  ]}], choices: [
     { text: 'Who sits on the regency council?', lines: [
       'One regent for each nation, chosen by whoever was holding the seal when the news came.',
       'Six, if you count the church\'s observer. Everybody counts him.',

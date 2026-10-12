@@ -1,4 +1,9 @@
-import type { Dialogue } from './dialogue';
+import type { Choice, Dialogue } from './dialogue';
+
+const LYNX_STORIES: Choice[] = [{ text: 'What do they eat when there\'s none?', lines: [
+  'I tell them stories about fish. Big ones. They fall asleep before the end.',
+  'The little one has stopped asking for the end.',
+] }];
 
 // The highlands: the pass, the fort town, the battlefield below it, and the abbey over the ossuary. Names are placeholders.
 export const pass: Dialogue = {
@@ -30,6 +35,7 @@ export const fort: Dialogue = {
     'The vulture works the dead down there. Penal unit, like you. She won\'t remember you, and she won\'t like you.',
   ], variants: [{ if: { flag: 'hyena-slain' }, lines: [
     'The dead are staying where they\'re put. I don\'t know what you did under that abbey. I don\'t want to.',
+    'The burial patrol came home before dark. I have stopped posting a second watch for it.',
   ] }], choices: [
     { text: 'Why does nobody stare at me here?', lines: [
       'You\'re a reptile with a brand. Half my garrison has a brand.',
@@ -51,7 +57,13 @@ export const fort: Dialogue = {
     'He reads it twice. "Ration cut by a third. Effective two months ago. Before anyone up here so much as threw a stone."',
     '"They cut it first. Then they called us dangerous for being hungry."',
     'He pays you for the courier\'s trouble, which is to say yours. You receive 15 coins.',
-  ], then: { take: 'letter', earn: 15, set: 'letter-delivered' } }, { if: { flag: 'letter-delivered' }, lines: [
+  ], then: { take: 'letter', earn: 15, set: 'letter-delivered' } }, { if: { flag: 'cuttlefish-slain' }, lines: [
+    'No cart. No message. The families are still waiting.',
+    'I have sent the soldiers to carry grain for the merchant ovens. I know that is not enough for them.',
+  ] }, { if: { flag: 'hyena-slain' }, lines: [
+    'The line is orderly today. The ration is still cut.',
+    'I have sent the church another account. The dead stay buried now; the living still need to eat.',
+  ] }, { if: { flag: 'letter-delivered' }, lines: [
     'I\'ve written to the church about that letter. They haven\'t written back.',
   ] }], choices: [
     { text: 'Why is there less fish?', lines: ['Ask the church. It\'s their fish. Everything we eat comes up that road with their seal on it.'] },
@@ -64,12 +76,10 @@ export const fort: Dialogue = {
   lynx: { speaker: 'A LYNX IN THE LINE', prompt: 'Speak to the lynx', lines: [
     'Don\'t push in. I\'ve been here since before it was light.',
     'My cubs eat first. I eat if there\'s anything left. Mostly there isn\'t.',
-  ], choices: [
-    { text: 'What do they eat when there\'s none?', lines: [
-      'I tell them stories about fish. Big ones. They fall asleep before the end.',
-      'The little one has stopped asking for the end.',
-    ] },
-  ] },
+  ], choices: LYNX_STORIES, variants: [{ if: { flag: 'hyena-slain' }, lines: [
+    'Nobody pushed my cubs out of the line today. The old wolf let them go ahead.',
+    'The portion is the same. I will take one good thing without calling it everything.',
+  ], choices: LYNX_STORIES }] },
   veteran: { speaker: 'AN OLD WOLF', prompt: 'Speak to the old wolf', lines: [
     'Going down to the battlefield? I was on it, before the Covenant. The wrong side, they say now.',
     'The vulture down there\'s been clearing it since spring. Talks to the dead. Writes things on her arm so she knows who she is in the morning.',
@@ -88,7 +98,10 @@ export const fort: Dialogue = {
   ], then: { shop: 'merchant' }, variants: [{ if: { all: [{ flag: 'hyena-slain' }, { not: { flag: 'merchant-thanked' } }] }, lines: [
     'They say the graves are quiet. They say it was you.',
     'We had a cousin buried down there. Here. For the trouble. You receive 10 coins.',
-  ], then: { earn: 10, set: 'merchant-thanked' } }] },
+  ], then: { earn: 10, set: 'merchant-thanked' } }, { if: { flag: 'hyena-slain' }, lines: [
+    'You can stand closer. I do not want to shout through the bars.',
+    'We lit a candle for our cousin. It stayed lit all night.',
+  ], then: { shop: 'merchant' } }] },
   fence: { speaker: 'A WEASEL IN THE ALLEY', prompt: 'Speak to the weasel', lines: [
     'The market\'s a night thing, mostly. For you I\'m open.',
     'Salts, firepots, smoked fish. Meat, for those who ask properly. You don\'t look like you\'re asking.',

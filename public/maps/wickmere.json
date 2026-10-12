@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 27,
+  "nextobjectid": 31,
   "layers": [
     {
       "id": 1,
@@ -3347,6 +3347,54 @@
           "type": "",
           "x": 256,
           "y": 40,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 27,
+          "name": "treatment-queue",
+          "type": "",
+          "x": 488,
+          "y": 184,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 28,
+          "name": "barrel-inspector",
+          "type": "",
+          "x": 480,
+          "y": 328,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 29,
+          "name": "washed-cloths",
+          "type": "",
+          "x": 464,
+          "y": 288,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 30,
+          "name": "deck-marker",
+          "type": "",
+          "x": 264,
+          "y": 72,
           "width": 0,
           "height": 0,
           "rotation": 0,

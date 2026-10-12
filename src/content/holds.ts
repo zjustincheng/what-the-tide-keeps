@@ -34,7 +34,10 @@ export const hold: Dialogue = {
   ] },
   magpie: { speaker: 'A MAGPIE', prompt: 'Speak to the magpie', lines: [
     'Everything I sell came up the mountain in somebody\'s bag, before the rookery shut. Now nothing comes up, so everything\'s dearer.',
-  ], choices: [
+  ], variants: [{ if: { flag: 'cuckoo-slain' }, lines: [
+    'The first flight brought needles, salt, and three letters for the porters. Small things. You notice them when they stop arriving.',
+    'The house still wants its share. An open rookery does not make me rich overnight.',
+  ], choices: [{ text: 'Show me what you have.', ends: true, lines: [], then: { shop: 'magpie' } }] }], choices: [
     { text: 'Show me what you have.', ends: true, lines: [], then: { shop: 'magpie' } },
   ] },
   pigeon: { speaker: 'A PIGEON', prompt: 'Speak to the pigeon', lines: [
@@ -56,7 +59,10 @@ export const hold: Dialogue = {
   sparrow: { speaker: 'A SPARROW PORTER', prompt: 'Speak to the sparrow', lines: [
     'Ground tier. Porters, cooks, and anyone the house doesn\'t want to look at. You\'ll fit in.',
     'When the old lord\'s son was a chick, he used to come down here to play. Funny chick. Bigger than all of us by the end of the first spring.',
-  ] },
+  ], variants: [{ if: { flag: 'cuckoo-slain' }, lines: [
+    'We carried the letter sacks down ourselves. Nobody upstairs thought to tell us which ones mattered, so we are sending all of them.',
+    'They still call this the ground tier. But my sister will hear from me before the week is out.',
+  ] }] },
   statue: { speaker: 'A STATUE', prompt: 'Look at the statue', lines: [
     'The house\'s founder, carved in the act of feeding a chick from her own beak. The plaque says: WE RAISE OUR OWN.',
   ] },

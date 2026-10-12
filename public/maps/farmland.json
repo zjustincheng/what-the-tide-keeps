@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 67,
+  "nextobjectid": 68,
   "layers": [
     {
       "id": 1,
@@ -6979,6 +6979,18 @@
           "type": "",
           "x": 200,
           "y": 668,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 67,
+          "name": "bear-return",
+          "type": "",
+          "x": 104,
+          "y": 232,
           "width": 0,
           "height": 0,
           "rotation": 0,

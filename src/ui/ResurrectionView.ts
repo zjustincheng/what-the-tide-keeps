@@ -26,6 +26,7 @@ export class ResurrectionView {
       </section>`).join('')}
       ${written.length ? `<p class="memories-lost">Written down, so the tide left it · ${written.map(id => memories[id].name).join(' · ')}</p>` : '<p class="memories-lost">Nothing was written down. Write down what you can\'t lose, at a fire, before the next time.</p>'}
       ${reminded.length ? `<p class="memories-lost">Reminded, and gone again · ${reminded.filter(id => !written.includes(id)).map(id => memories[id].name).join(' · ') || 'nothing'}${reminded.some(id => written.includes(id)) ? ` · kept for good, because you wrote it down: ${reminded.filter(id => written.includes(id)).map(id => memories[id].name).join(' · ')}` : ''}</p>` : ''}
+      ${memory.keepsakeMemories?.length?`<p class="memories-lost">Held permanently by a keepsake · ${memory.keepsakeMemories.map(id=>memories[id].name).join(' · ')}</p>`:''}
       <p class="memories-lost">Already gone · ${memory.lost.filter(id => !reminded.includes(id)).map(id => memories[id].name).join(' · ')}</p>
       <button id="stand" type="button">Stand up</button>`;
     document.querySelector('.game-frame')!.append(this.root);

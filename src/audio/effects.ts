@@ -5,7 +5,7 @@ export type Effect =
   | 'blip' | 'select' | 'open' | 'door' | 'find' | 'coins' | 'rest' | `step-${Surface}`
   | 'cast-line' | 'plop' | 'splash' | 'catch'
   | 'lash' | 'maul' | 'talons' | 'hit' | 'block' | 'barrier' | 'dodge' | 'graze'
-  | 'memory' | 'glass' | 'toll' | 'heartbeat' | 'chain' | 'wind' | 'surf' | 'submerge' | 'page'
+  | 'memory' | 'glass' | 'toll' | 'heartbeat' | 'chain' | 'hammer' | 'wind' | 'surf' | 'submerge' | 'page'
   | 'key' | 'spell' | 'fizzle' | 'heal' | 'gather' | 'victory' | 'defeat' | 'roar';
 
 // pitch shifts tonal effects by semitones, so each speaker's voice blips at their own pitch.
@@ -58,6 +58,7 @@ export function playEffect(context: BaseAudioContext, out: AudioNode, noise: Aud
     toll: () => { ping(110, 0, 3.2, 0.13, 2.76); tone('sine', 55, 55, 0, 2.8, 0.1); },
     heartbeat: () => { [0, 0.22, 1.1, 1.32].forEach(at => tone('sine', 72, 36, at, 0.22, 0.14)); },
     chain: () => { [0, 0.08, 0.19, 0.34].forEach((at, i) => { ping(480 + i * 170, at, 0.3, 0.065, 1.41); hiss('highpass', 2400, 800, at, 0.12, 0.04); }); },
+    hammer: () => { tone('sine', 185, 62, 0, .18, .24); tone('triangle', 720, 220, 0, .075, .11, 1800); hiss('bandpass', 2100, 480, 0, .085, .18, .7); },
     wind: () => hiss('bandpass', 400, 950, 0, 2.4, 0.07, 0.5),
     surf: () => { hiss('lowpass', 1200, 180, 0, 2.8, 0.1); hiss('bandpass', 650, 250, 0.35, 2.4, 0.06); },
     submerge: () => { tone('sine', 120, 32, 0, 2.4, 0.1); hiss('lowpass', 2000, 60, 0, 2.3, 0.09); },
