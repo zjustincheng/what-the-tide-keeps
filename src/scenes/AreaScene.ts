@@ -25,6 +25,7 @@ import type { ArmView } from '../ui/ArmView';
 import type { ClimbView } from '../ui/ClimbView';
 import type { EndingView } from '../ui/EndingView';
 import type { KeepsakeView } from '../ui/KeepsakeView';
+import type { SoundtrackView } from '../ui/SoundtrackView';
 import type { ShopView } from '../ui/ShopView';
 import type { FishingView } from '../ui/FishingView';
 import type { SettingsView } from '../ui/SettingsView';
@@ -62,8 +63,8 @@ import { beginBattle, beginKrakenTutorial } from './area/battles';
 import { openBestiary, openEquipment, openFishing, openJournal, openParty, openSettings, wake } from './area/panels';
 
 type Prop = { sprite: Phaser.Physics.Arcade.Sprite; hiddenIf: Condition[]; shadow?: Phaser.GameObjects.Ellipse; transition?: Phaser.Tweens.Tween };
-type Overlay = CinematicView | MemoriesView | BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView | KeepsakeView;
-type Panel = MemoriesView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView | KeepsakeView;
+type Overlay = CinematicView | MemoriesView | BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView | KeepsakeView | SoundtrackView;
+type Panel = MemoriesView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView | KeepsakeView | SoundtrackView;
 
 // Creatures that breathe on the map even though they are only props.
 const BREATHING = new Set(['sheep', 'badger', 'rat', 'hyena']);

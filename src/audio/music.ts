@@ -3,14 +3,15 @@
 import { frequency, loopBeats, THEMES } from './themes';
 import type { NoteEvent, ThemeId, Voice } from './themes';
 import { playEffect } from './effects';
+import { feel } from './feel';
 import type { Effect } from './effects';
 import { loadSettings, saveSettings } from '../storage/settings';
 
 const LOOKAHEAD = 0.5; // seconds of music queued ahead of the clock
 const FADE = 1.6; // seconds to crossfade between themes
 
-// A playing theme: its notes in time order, where the current loop began, and the next note to queue.
-type Track = { id: ThemeId; gain: GainNode; order: readonly NoteEvent[]; loopStart: number; index: number };
+// A playing theme: its notes in time order, where the current loop began, the next note to queue, and how many times it has looped.
+type Track = { id: ThemeId; gain: GainNode; order: readonly NoteEvent[]; loopStart: number; index: number; pass: number };
 
 class Music {
   private context?: BaseAudioContext;
@@ -147,7 +148,7 @@ class Music {
     gain.gain.linearRampToValueAtTime(1, now + FADE);
     gain.connect(this.output!);
     gain.connect(this.room!);
-    this.track = { id, gain, order: [...THEMES[id].events].sort((a, b) => a.beat - b.beat), loopStart: now + 0.1, index: 0 };
+    this.track = { id, gain, order: [...THEMES[id].events].sort((a, b) => a.beat - b.beat), loopStart: now + 0.1, index: 0, pass: 0 };
     this.schedule();
   }
 
@@ -162,8 +163,9 @@ class Music {
       const event = track.order[track.index];
       const time = track.loopStart + event.beat * beat;
       if (time > horizon) break;
-      this.note(track.gain, event, time, event.beats * beat);
-      if (++track.index === track.order.length) { track.index = 0; track.loopStart += loopBeats(theme) * beat; }
+      const { shift, velocity } = feel(event, theme.beatsPerBar, track.index + track.pass * 10007);
+      this.note(track.gain, { ...event, velocity }, Math.max(this.context.currentTime, time + shift), event.beats * beat);
+      if (++track.index === track.order.length) { track.index = 0; track.pass++; track.loopStart += loopBeats(theme) * beat; }
     }
   }
 

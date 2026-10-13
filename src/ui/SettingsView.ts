@@ -27,7 +27,7 @@ export class SettingsView {
   private root: HTMLElement;
   private cleanup = new AbortController();
 
-  constructor(actions: { memories: () => void; equipment: () => void; party: () => void; journal: () => void; bestiary: () => void; restart: () => void; close: () => void }) {
+  constructor(actions: { memories: () => void; equipment: () => void; party: () => void; journal: () => void; bestiary: () => void; restart: () => void; close: () => void; soundtracks?: () => void }) {
     this.root = document.createElement('section');
     this.root.className = 'battle settings';
     this.root.setAttribute('role', 'dialog');
@@ -50,6 +50,7 @@ export class SettingsView {
         <button type="button" data-action="journal">Journal</button>
         <button type="button" data-action="memories">Revisit memories</button>
         <button type="button" data-action="bestiary">Bestiary</button>
+        ${actions.soundtracks ? '<button type="button" data-action="soundtracks">Soundtracks</button>' : ''}
         <button type="button" data-action="restart">Return to the cot ↺</button>
         <button type="button" data-action="start-over">Start over…</button>
         <button type="button" data-action="close">Close</button>
@@ -71,6 +72,7 @@ export class SettingsView {
         this.root.querySelector<HTMLElement>(ask ? '[data-action="keep"]' : '[data-action="start-over"]')!.focus();
       }
       else if (action === 'erase') { if (eraseProgress()) location.reload(); }
+      else if (action === 'soundtracks') actions.soundtracks?.();
       else if (action === 'memories' || action === 'equipment' || action === 'party' || action === 'journal' || action === 'bestiary' || action === 'restart' || action === 'close') actions[action]();
     }, { signal });
     this.root.querySelector<HTMLInputElement>('[aria-label="Music volume"]')!.addEventListener('input', event => music.setVolume(Number((event.target as HTMLInputElement).value) / 100), { signal });

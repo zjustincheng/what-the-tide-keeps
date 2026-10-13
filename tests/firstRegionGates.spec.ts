@@ -2,6 +2,9 @@ import { test, expect, type Page } from '@playwright/test';
 import type { AreaScene } from '../src/scenes/AreaScene';
 declare global { interface Window { gateRun: typeof import('../src/main'); } }
 test.use({ storageState: { cookies: [], origins: [] } });
+// Each check boots the game twice and walks four areas; the first in a worker also waits for the dev server to compile
+// the game from cold, which alone takes about half a minute.
+test.describe.configure({ timeout: 90_000 });
 async function ready(page: Page, key: string) {
   await page.waitForFunction(key => Boolean((window.gateRun.game?.scene.getScene(key) as AreaScene | undefined)?.sys.isActive() && (window.gateRun.game?.scene.getScene(key) as AreaScene | undefined)?.player?.active), key);
 }

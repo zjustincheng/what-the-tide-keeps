@@ -72,7 +72,11 @@ People speak with a portrait in its own box above the text and their name on a t
 
 ## Music
 
-The score is original and synthesised live in the browser with Web Audio, with no sound files: harp, plucked strings, flute, string pads, organ, bells, celesta, choir, bass, and drums, in a generated reverb hall. It aims for the spirit of the Frieren and Made in Abyss soundtracks (wistful folk-orchestral warmth, and something vast and uneasy underneath) without borrowing from them. Each place has its own theme, and themes crossfade as you move:
+The score is original and synthesised live in the browser with Web Audio, with no sound files: harp, plucked strings, flute, string pads, organ, bells, celesta, choir, bass, and drums, in a generated reverb hall. It aims for the spirit of the Frieren and Made in Abyss soundtracks (wistful folk-orchestral warmth, and something vast and uneasy underneath) without borrowing from them. Each place has its own theme, and themes crossfade as you move.
+
+A place's theme is a short suite rather than one phrase on repeat: its first melody, a second section that moves somewhere else (often to the relative major, with another instrument taking the tune), and a stretch where the tune rests and only the ground of it plays, so most loop after a minute or more. Chords are voice-led, moving by the smallest steps instead of jumping between root positions (`src/audio/voicing.ts`), and the playing has a human feel: every note lands a few milliseconds early or late and a little louder or softer, differently on every pass, with the first beat of a bar leaning slightly (`src/audio/feel.ts`).
+
+**Soundtracks**, on the title screen and in Settings, plays any theme on its own: every place, battle, and boss, with a search. It isn't offered while the inquisitor is hunting you, since it would silence the warning.
 
 | Where | Theme |
 | --- | --- |
@@ -586,7 +590,7 @@ The placeholder tilesets are drawn in code by the `scripts/create-*.mjs` scripts
   - `sprites.ts`: the hero and townsfolk, drawn in code.
 - `src/ui/`: the HTML screens over the map: battle, equipment, party, journal, bestiary, memories, settings, shop, fishing, cooking, climbing, the games, the wake screen, and the ending.
 - `src/presentation/`: illustrated story scenes (`stories.ts`, `bossScenes.ts`, `tableau.ts`), battle effects and pacing, scenery, and how town life is staged.
-- `src/audio/`: `themes.ts` and `bossThemes.ts` (the compositions, as notes on beats), `music.ts` (the synthesised instruments, reverb, and crossfades), and `effects.ts` (sound effects).
+- `src/audio/`: `themes.ts` and `bossThemes.ts` (the compositions, as notes on beats), `voicing.ts` (voice leading) and `feel.ts` (human timing), `music.ts` (the synthesised instruments, reverb, and crossfades), and `effects.ts` (sound effects). `src/ui/SoundtrackView.ts` is the soundtrack player.
 - `src/storage/`: versioned local-storage saves, one file per kind (`tide-keeps.*.v1`), and `progress.ts` for starting over.
 - `public/maps/`: Tiled JSON maps, one per area, with named points for people, things, and exits. `public/assets/` holds the tilesets and art.
 - `scripts/create-*.mjs`: regenerate each region's maps and tileset (shared helpers in `tile-kit.mjs`). Running one replaces manual edits to its maps, so run `add-secrets.mjs` after it.

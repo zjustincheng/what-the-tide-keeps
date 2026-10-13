@@ -1,5 +1,6 @@
 import type { Encounter } from '../rules/battle';
 import type { NoteEvent, Theme, Voice } from './themes';
+import { smooth } from './voicing.ts';
 
 type Groove = 'march' | 'hunt' | 'waltz' | 'venom' | 'clock' | 'tide' | 'heart' | 'gallop' | 'flight' | 'skitter' | 'lurk' | 'submerged' | 'beacon';
 type Chord = readonly [number, 'm' | 'M'];
@@ -90,11 +91,14 @@ const SCORES = {
 function compose(score: Score): Theme {
   const events: NoteEvent[] = [];
   const note = (beat: number, voice: Voice, midi: number, beats: number, velocity: number) => events.push({ beat, voice, midi, beats, velocity });
+  // The bed's chords move by the smallest steps, rather than jumping between root positions.
+  const voiced = smooth(score.chords.map(([offset, quality]) => [score.tonic + offset, quality] as const));
   for (let bar = 0; bar < 16; bar++) {
     const start = bar * score.meter;
     const [offset, quality] = score.chords[bar % 8];
     const root = score.tonic + offset;
     const chord = [root + 12, root + 12 + (quality === 'm' ? 3 : 4), root + 19];
+    const bed = voiced[bar % 8];
     const lift = bar >= 8;
     const energy = score.waking ? .5 + bar / 30 : lift ? 1 : .82;
     const bass = (at: number, pitch: number, length: number, strength = .24) => note(start + at, 'bass', pitch, length, strength * energy);
@@ -155,14 +159,14 @@ function compose(score: Score): Theme {
         break;
     }
     if (['strings', 'organ', 'choir'].includes(score.bed)) {
-      chord.forEach(midi => note(start, score.bed, midi, score.meter - .15, (score.bed === 'choir' ? .032 : .045) * energy));
+      bed.forEach(midi => note(start, score.bed, midi, score.meter - .15, (score.bed === 'choir' ? .032 : .045) * energy));
     } else {
       const spacing = score.groove === 'gallop' ? .5 : score.groove === 'tide' ? .75 : score.groove === 'clock' ? .5 : score.groove === 'venom' ? .5 : 1;
       const steps = score.groove === 'clock' ? [2, 1, 0, 1] : score.groove === 'venom' ? [0, 2, 1, 2] : [0, 1, 2, 1];
       for (let i = 0; i * spacing < score.meter; i++) {
         // Offbeat accompaniment in the marsh; leave space for its flute.
         const at = i * spacing + (score.groove === 'venom' ? .25 : 0);
-        if (at + .2 <= score.meter) note(start + at, score.bed, chord[steps[i % steps.length]], Math.min(.28, spacing * .7, score.meter - at), .075 * energy);
+        if (at + .2 <= score.meter) note(start + at, score.bed, bed[steps[i % steps.length]], Math.min(.28, spacing * .7, score.meter - at), .075 * energy);
       }
     }
     let beat = start;

@@ -3,6 +3,9 @@ import { AreaScene } from './scenes/AreaScene';
 import { AREAS } from './scenes/areas';
 import { bindFullscreen } from './ui/fullscreen';
 import { music } from './audio/music';
+import { SoundtrackView } from './ui/SoundtrackView';
+import { hunting } from './rules/pursuit';
+import { loadPursuit } from './storage/pursuit';
 import './style.css';
 import './presentation/presentation.css';
 
@@ -43,6 +46,26 @@ const titleKey = (event: KeyboardEvent) => {
   }
 };
 document.addEventListener('keydown', titleKey);
+
+// The soundtrack player, from the title screen. Not while the Inquisitor is on the hero's trail: it would silence the hunt.
+if (!hunting(loadPursuit())) {
+  const listen = document.createElement('button');
+  listen.id = 'title-soundtracks';
+  listen.type = 'button';
+  listen.textContent = 'Soundtracks';
+  play.after(listen);
+  let player: SoundtrackView | undefined;
+  listen.addEventListener('click', () => {
+    if (player || starting) return;
+    music.unlock();
+    document.removeEventListener('keydown', titleKey);
+    player = new SoundtrackView(() => {
+      player?.destroy(); player = undefined;
+      document.addEventListener('keydown', titleKey);
+      listen.focus();
+    }, document.body);
+  });
+}
 
 bindFullscreen();
 // Sound starts with the player's first key or click, as browsers require. M mutes the music.

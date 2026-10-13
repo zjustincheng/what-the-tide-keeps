@@ -27,6 +27,9 @@ import { PartyView } from '../../ui/PartyView';
 import { MemoriesView } from '../../ui/MemoriesView';
 import { JournalView } from '../../ui/JournalView';
 import { BestiaryView } from '../../ui/BestiaryView';
+import { SoundtrackView } from '../../ui/SoundtrackView';
+import { hunting } from '../../rules/pursuit';
+import { loadPursuit } from '../../storage/pursuit';
 import { AnchorView } from '../../ui/AnchorView';
 import { ResurrectionView } from '../../ui/ResurrectionView';
 import { music } from '../../audio/music';
@@ -90,6 +93,8 @@ export function openSettings(scene: AreaScene) {
     party: () => { close(); openParty(scene); },
     journal: () => { close(); openJournal(scene); },
     bestiary: () => { close(); openBestiary(scene); },
+    // Not during a hunt: the player stops the music, and the hunt's theme is the warning.
+    soundtracks: hunting(loadPursuit()) ? undefined : () => { close(); scene.openPanel(() => new SoundtrackView(() => scene.closePanel())); },
     // Returning to the cot always restarts the church, which also resets its encounters.
     restart: () => { close(); scene.scene.start('church'); },
   });

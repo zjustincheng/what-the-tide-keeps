@@ -298,3 +298,5 @@ main[hidden] { display: none; }
   .fighter.is-winding img { transform: none; transition: none; }
   .party-battle.boss-impact .enemy-row, .phase-returning .enemy-row { animation: none; }
 }
+#title-soundtracks { display: block; margin: 14px auto 0; padding: 8px 22px; border: 1px solid #c7ba8655; background: none; color: #c9c2a4; font: 13px Georgia, serif; letter-spacing: .1em; cursor: pointer; }
+#title-soundtracks:hover, #title-soundtracks:focus-visible { color: #f0e9ce; border-color: #c7ba86; outline: 2px solid #e4d6a3; outline-offset: 4px; }

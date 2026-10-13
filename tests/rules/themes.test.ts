@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { battleTheme, frequency, loopBeats, THEME_IDS, THEMES } from '../../src/audio/themes.ts';
+import { smooth } from '../../src/audio/voicing.ts';
+import { feel } from '../../src/audio/feel.ts';
 
 test('every theme fits its loop, in a playable range', () => {
   for (const id of THEME_IDS) {
@@ -14,12 +16,49 @@ test('every theme fits its loop, in a playable range', () => {
   }
 });
 
-test('melodies end exactly where their loop does', () => {
-  const lastEnd = (id: keyof typeof THEMES, voice: string) => Math.max(...THEMES[id].events.filter(event => event.voice === voice).map(event => event.beat + event.beats));
-  assert.equal(lastEnd('fields', 'flute'), loopBeats(THEMES.fields) - 3, 'the fields melody rests for its last bar');
-  assert.equal(lastEnd('town', 'flute'), loopBeats(THEMES.town));
-  assert.equal(lastEnd('hearth', 'celesta'), loopBeats(THEMES.hearth));
-  assert.equal(lastEnd('battle', 'strings'), loopBeats(THEMES.battle));
+test('nothing sounds past the end of its loop, so every theme loops without a seam', () => {
+  for (const id of THEME_IDS) {
+    for (const event of THEMES[id].events) assert.ok(event.beat + event.beats <= loopBeats(THEMES[id]) + 1e-9, `${id}: a note at beat ${event.beat} runs past the loop`);
+  }
+});
+
+test('places and ordinary fights have room to breathe: long loops, and a stretch where the tune rests', () => {
+  const seconds = (id: keyof typeof THEMES) => loopBeats(THEMES[id]) * 60 / THEMES[id].bpm;
+  for (const id of ['fields', 'church', 'town', 'wilds', 'highlands', 'marsh', 'capital', 'garrison', 'holds', 'downs', 'crypt', 'shanty', 'sea', 'deep', 'hearth', 'arena', 'battle'] as const) {
+    assert.ok(seconds(id) >= 40, `${id} loops after only ${seconds(id).toFixed(0)} seconds`);
+  }
+  // The longest silence in each tune is at least a bar.
+  for (const [id, voice] of [['fields', 'flute'], ['town', 'flute'], ['church', 'bell'], ['capital', 'bell'], ['garrison', 'flute'], ['holds', 'flute'], ['downs', 'flute']] as const) {
+    const theme = THEMES[id];
+    const notes = theme.events.filter(event => event.voice === voice).sort((a, b) => a.beat - b.beat);
+    const gaps = notes.map((event, index) => (notes[index + 1]?.beat ?? loopBeats(theme) + notes[0].beat) - (event.beat + event.beats));
+    assert.ok(Math.max(...gaps) >= theme.beatsPerBar, `${id}: the ${voice} never rests for a whole bar`);
+  }
+});
+
+test('chords are voice-led: the same notes as the chord, moving by the smallest steps', () => {
+  const progression = [[38, 'm'], [36, 'M'], [34, 'M'], [33, 'm'], [41, 'M'], [43, 'M']] as const;
+  const voiced = smooth(progression, 24);
+  progression.forEach(([root, quality], index) => {
+    const classes = new Set([root, root + (quality === 'm' ? 3 : 4), root + 7].map(midi => midi % 12));
+    assert.deepEqual(new Set(voiced[index].map(midi => midi % 12)), classes, `chord ${index + 1} keeps its notes`);
+  });
+  const motion = (chords: readonly (readonly number[])[]) => chords.slice(1).reduce((sum, chord, index) => sum + chord.reduce((moved, midi, voice) => moved + Math.abs(midi - chords[index][voice]), 0), 0);
+  const blocks = progression.map(([root, quality]) => [root + 24, root + 24 + (quality === 'm' ? 3 : 4), root + 31]);
+  assert.ok(motion(voiced) < motion(blocks) / 2, `voice-led ${motion(voiced)} against ${motion(blocks)} in root position`);
+});
+
+test('the playing has a human feel: a little early or late, a little louder or softer, never the same twice', () => {
+  const note = { beat: 1, voice: 'flute', midi: 72, beats: 1, velocity: 0.2 } as const;
+  const passes = Array.from({ length: 50 }, (_, pass) => feel(note, 4, 3 + pass * 10007));
+  for (const { shift, velocity } of passes) {
+    assert.ok(Math.abs(shift) <= 0.01, `shifted ${shift}s`);
+    assert.ok(velocity > 0.18 && velocity < 0.22, `velocity ${velocity}`);
+  }
+  assert.ok(new Set(passes.map(({ shift }) => shift.toFixed(4))).size > 40, 'each pass lands a little differently');
+  assert.deepEqual(feel(note, 4, 3), feel(note, 4, 3), 'the same note on the same pass always plays the same way');
+  const drum = feel({ ...note, voice: 'drum' }, 4, 5);
+  assert.ok(Math.abs(drum.shift) <= 0.003, 'drums stay tight');
 });
 
 test('elites and bosses get their own battle scores', () => {
