@@ -70,6 +70,7 @@ const LEAP_ONLY: Record<string, readonly string[]> = {
   'gorge.json': ['harrier-1', 'satchel', 'courier', 'carving', 'forage-1'],
   'spires.json': ['nest', 'letters', 'spider-1', 'forage-1'],
   'rows.json': ['register', 'counting', 'wisp-1', 'rows-spot', 'window'],
+  'spars.json': ['lookout', 'nest', 'nameboard'],
   'falls.json': ['hollow', 'tally', 'harrier-1', 'climb-3', 'top-3'],
 };
 test('leaping opens only the places meant for it, and reaches every one of them', async () => {

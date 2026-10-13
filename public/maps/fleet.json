@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 11,
+  "nextobjectid": 13,
   "layers": [
     {
       "id": 1,
@@ -2156,7 +2156,7 @@
         0,
         0,
         0,
-        22,
+        0,
         22,
         0,
         10,
@@ -2196,7 +2196,7 @@
         0,
         0,
         0,
-        22,
+        0,
         22,
         0,
         0,
@@ -2315,6 +2315,30 @@
         },
         {
           "id": 3,
+          "name": "spars",
+          "type": "",
+          "x": 632,
+          "y": 392,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 4,
+          "name": "from-spars",
+          "type": "",
+          "x": 600,
+          "y": 392,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 5,
           "name": "hermit",
           "type": "",
           "x": 168,
@@ -2326,7 +2350,7 @@
           "point": true
         },
         {
-          "id": 4,
+          "id": 6,
           "name": "manifest",
           "type": "",
           "x": 392,
@@ -2338,7 +2362,7 @@
           "point": true
         },
         {
-          "id": 5,
+          "id": 7,
           "name": "hold",
           "type": "",
           "x": 504,
@@ -2350,7 +2374,7 @@
           "point": true
         },
         {
-          "id": 6,
+          "id": 8,
           "name": "bell",
           "type": "",
           "x": 360,
@@ -2362,7 +2386,7 @@
           "point": true
         },
         {
-          "id": 7,
+          "id": 9,
           "name": "bones",
           "type": "",
           "x": 440,
@@ -2374,7 +2398,7 @@
           "point": true
         },
         {
-          "id": 8,
+          "id": 10,
           "name": "barracuda-1",
           "type": "",
           "x": 264,
@@ -2386,7 +2410,7 @@
           "point": true
         },
         {
-          "id": 9,
+          "id": 11,
           "name": "barracuda-2",
           "type": "",
           "x": 488,
@@ -2398,7 +2422,7 @@
           "point": true
         },
         {
-          "id": 10,
+          "id": 12,
           "name": "jelly-1",
           "type": "",
           "x": 168,
@@ -2581,6 +2605,31 @@
           "properties": [
             {
               "name": "collides",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 27,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            },
+            {
+              "name": "gap",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 28,
+          "properties": [
+            {
+              "name": "crumble",
               "type": "bool",
               "value": true
             }

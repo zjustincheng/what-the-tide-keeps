@@ -22,7 +22,7 @@ import { apothecary, causeway, creek, farBank, hospice, pens, wickmere } from '.
 import { archive, cellars, climb, hold, houseHall, ring, summit, upper } from '../content/holds';
 import { krakenGrave, openWater, port, reef, seaPens } from '../content/ocean';
 import { landing, lamp, lighthouse, whitehouse, works } from '../content/island';
-import { cistern, falls, fleet, gorge, lanes, orchard, peat, quarry, rows, shieling, spires, watchtower } from '../content/outskirts';
+import { cistern, falls, fleet, gorge, lanes, orchard, peat, quarry, rows, shieling, spars, spires, watchtower } from '../content/outskirts';
 import type { Encounter, Escort } from '../rules/battle';
 import type { Condition, Effect, Flag } from '../rules/world';
 import type { SpotId } from '../rules/fishing';
@@ -1026,7 +1026,16 @@ export const FLEET: Area = {
   grade: { saturation: -0.45, brightness: 0.72, vignette: 0.6 },
   npcs: [{ point: 'hermit', texture: 'hermit' }],
   enemies: [{ point: 'barracuda-1', encounter: 'barracuda', ambush: true }, { point: 'barracuda-2', encounter: 'barracuda' }, { point: 'jelly-1', encounter: 'jelly' }],
-  exits: { out: { to: 'open-water', spawn: 'from-fleet', prompt: 'Ride the current back west' } },
+  exits: { out: { to: 'open-water', spawn: 'from-fleet', prompt: 'Ride the current back west' }, spars: { to: 'spars', spawn: 'from-fleet', prompt: 'Go out to the spars', facing: 'east' } },
+};
+
+// The spars of the fourth boat, east of the fleet: decks to leap between over deep water, and loose spars that go under.
+export const SPARS: Area = {
+  ...SEA_GROUND, key: 'spars', map: 'spars', music: 'deep', place: 'The spars', dialogue: spars,
+  surfaces: { ...SEA_GROUND.surfaces, 29: 'wood' },
+  grade: { saturation: -0.45, brightness: 0.72, vignette: 0.6 },
+  npcs: [], enemies: [],
+  exits: { west: { to: 'fleet', spawn: 'from-spars', prompt: 'Go back to the wrecks' } },
 };
 
 // Places you leap to: gaps you can clear, and footing that won't hold for long (Shift, or Leap on a touch screen).
@@ -1137,6 +1146,6 @@ export const LAMP: Area = {
   exits: { down: { to: 'lighthouse', spawn: 'from-lamp', prompt: 'Go back down the stair' } },
 };
 
-export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY, CLIMB, HOLD, UPPER, ARCHIVE, HOUSE_HALL, PENS, CREEK, CELLARS, SUMMIT, RING, OUTLAW_PORT, OPEN_WATER, SEA_PENS, KRAKEN_GRAVE, REEF, ORCHARD, QUARRY, SHIELING, LANES, CISTERN, PEAT, FLEET, GORGE, SPIRES, ROWS, WATCHTOWER, FALLS, LANDING, WORKS, WHITEHOUSE, LIGHTHOUSE, LAMP];
+export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY, CLIMB, HOLD, UPPER, ARCHIVE, HOUSE_HALL, PENS, CREEK, CELLARS, SUMMIT, RING, OUTLAW_PORT, OPEN_WATER, SEA_PENS, KRAKEN_GRAVE, REEF, ORCHARD, QUARRY, SHIELING, LANES, CISTERN, PEAT, FLEET, SPARS, GORGE, SPIRES, ROWS, WATCHTOWER, FALLS, LANDING, WORKS, WHITEHOUSE, LIGHTHOUSE, LAMP];
 // The rooms behind false walls, and what was left in them.
 for (const area of AREAS) if (HOLLOWS[area.key]) { area.hollows = HOLLOWS[area.key]; area.dialogue = { ...area.dialogue, ...SECRETS[area.key] }; }

@@ -2,7 +2,7 @@
 // the open water beyond it; the land's fishing pens; the kraken's grave; and the cuttlefish's reef.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
-import { rect, rows, scatter, sheet, vary } from './tile-kit.mjs';
+import { crumble, gap, rect, rows, scatter, sheet, tileProps, vary } from './tile-kit.mjs';
 const SEA = '#16303a';
 const tiles = [
   rect(0,0,16,16,'#1e3c48')+rect(2,4,6,1,'#2c5260')+rect(9,10,5,1,'#2c5260')+rect(5,13,3,1,'#284a56'),          // 0 swell, walkable on the currents
@@ -38,6 +38,9 @@ tiles.push(
   scatter(tiles[0], 32, [['#24485a',4,1],['#2e5a3a',1,2],['#2c5260',2,1]], 5),
   scatter(tiles[2], 33, [['#d8d0c0',1,1],['#e8c8b8',2,1],['#8a7a5a',1,1],['#5a6a4a',2,1]], 7),
 );
+// Open sea between two wrecks, narrow enough to leap; and a spar floating loose, which goes under if it is stood on too long.
+const SEAGAP = tiles.length + 1, SPAR = tiles.length + 2;
+tiles.push(gap({ lip: '#5a4632', wall: '#2a2018', dark: '#0c1c24' }), crumble({ top: '#6a5638', crack: '#3a2c20', under: '#0c1c24' }));
 writeFileSync('public/assets/sea-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${sheet(tiles)}</svg>\n`);
 // Collides lists 0-based tile ids.
 const solid=[4,5,6,7,8,9,10,11,12,13,14,15,19,20,21,22];
@@ -57,7 +60,7 @@ function write(name,{W,H,floor,furniture},points){
   const map={compressionlevel:-1,width:W,height:H,infinite:false,orientation:'orthogonal',renderorder:'right-down',tilewidth:16,tileheight:16,tiledversion:'1.11.2',version:'1.10',type:'map',nextlayerid:4,nextobjectid:points.length+1,
     layers:[layer('Floor',floor,1),layer('Furniture',furniture,2),{id:3,name:'Points',type:'objectgroup',x:0,y:0,opacity:1,visible:true,draworder:'topdown',objects:points.map(([pname,x,y],i)=>({id:i+1,name:pname,type:'',x,y,width:0,height:0,rotation:0,visible:true,point:true}))}],
     tilesets:[{firstgid:1,name:'sea',image:'../assets/sea-tiles.svg',imagewidth:128,imageheight:rows(tiles)*16,margin:0,spacing:0,tilewidth:16,tileheight:16,columns:8,tilecount:rows(tiles)*8,
-      tiles:solid.map(id=>({id,properties:[{name:'collides',type:'bool',value:true}]}))}]};
+      tiles:tileProps(solid,[SEAGAP-1],[SPAR-1])}]};
   writeFileSync(`public/maps/${name}.json`,JSON.stringify(map,null,2)+'\n');
 }
 
@@ -173,9 +176,38 @@ function write(name,{W,H,floor,furniture},points){
   for(const [x,y] of [[16,4],[17,5],[4,12],[17,22],[36,4],[37,22],[25,24],[15,15]]) put(furniture,x,y,KELP);
   for(const [x,y] of [[30,2],[2,24],[36,12]]) fill(furniture,x,y,x+1,y+1,ROCK);
   fill(floor,22,22,32,26,SAND);put(floor,26,24,BONES);put(floor,29,23,BONES);
+  // East, out past the wrecks, the spars of a fourth boat still show above the water.
+  fill(furniture,39,24,39,25,0);
   write('fleet',m,[
-    ['out',8,224],['from-sea',...at(2,13)],
+    ['out',8,224],['from-sea',...at(2,13)],['spars',...at(39,24)],['from-spars',...at(37,24)],
     ['hermit',...at(10,5)],['manifest',...at(24,11)],['hold',...at(31,17)],['bell',...at(22,16)],['bones',...at(27,24)],
     ['barracuda-1',...at(16,13)],['barracuda-2',...at(30,21)],['jelly-1',...at(10,21)],
+  ]);
+}
+
+// The spars, east of the drowned fleet: a fourth church boat went down further out than the others, and what is left of it
+// stands out of deep water. Decks and upturned hulls to land on, open sea to leap, a run of loose spars that won't hold anyone
+// who stops, a lone masthead, and at the last, the crow's nest, where the lookout stayed.
+{
+  const m=grid(44,24,SWELL);const {floor,furniture,put,fill}=m;
+  fill(furniture,0,0,43,23,DEEP);
+  const deck=(x0,y0,x1,y1,ground=DECK)=>{fill(furniture,x0,y0,x1,y1,0);fill(floor,x0,y0,x1,y1,ground);};
+  // The way in from the fleet, onto the first hull.
+  deck(0,11,0,12,SWELL);deck(1,8,7,15);
+  // A gap, the second hull; a wider gap, the third.
+  fill(furniture,8,9,8,14,SEAGAP);deck(9,7,13,16);
+  fill(furniture,14,8,15,12,SEAGAP);deck(16,5,20,12);
+  // Loose spars out to the fourth: keep moving, and they hold.
+  for(let x=21;x<=25;x++){fill(furniture,x,9,x,9,0);put(floor,x,9,SPAR);}
+  deck(26,4,31,12);
+  // A gap, the masthead alone, a wider gap, and the crow's nest.
+  fill(furniture,32,6,32,10,SEAGAP);deck(33,8,33,8);fill(furniture,34,6,35,10,SEAGAP);deck(36,3,42,10);
+  put(furniture,39,3,MAST);put(furniture,42,3,RIGGING);put(furniture,36,10,BARREL);
+  // Below the second hull, across a gap, the stern with the boat's name on it.
+  fill(furniture,10,17,12,18,SEAGAP);deck(9,19,14,22);put(furniture,9,22,CRATES);
+  for(const [x,y] of [[2,9],[6,14],[19,5],[28,11]]) put(furniture,x,y,CRATES);
+  write('spars',m,[
+    ['west',...at(0,12)],['from-fleet',...at(2,12)],
+    ['lookout',...at(39,6)],['nest',...at(41,8)],['nameboard',...at(11,21)],
   ]);
 }

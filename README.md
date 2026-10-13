@@ -469,11 +469,12 @@ Seven places nobody is sent to, one or two in every region (`src/content/outskir
 
 ### Places you leap to
 
-Three places reached only by leaping, Hollow Knight style: gaps, single pillars to land on, and bridges of loose ground to cross without stopping.
+Four places reached only by leaping, Hollow Knight style: gaps, single pillars to land on, and bridges of loose ground to cross without stopping.
 
 - **The gorge**, east off the high pass. Islands of rock over the drop; a crack, a wider crack, a ledge of loose stone, and a lone pillar to the last ledge, where a marten courier died taking the short way to the holds. Her satchel holds **climber's chalk** (+15% dodge timing, 2 less health) and a letter that never reached the house. A shelf below has a carving from before the Covenant.
 - **The old spires**, west off the climb. The tops of the old rookery towers standing out of the drop; slate bridges that slide away underfoot, two lone pillars, and at the far tower the oldest nest in the holds, with the **falconer's hood** (vulture: +20% dodge timing, shows 1 less mana, hits 1 softer). Undelivered post on the couriers' perch.
 - **The sunken rows**, up the old alley north of Wickmere. The first town, drowned when the church cut the river a new course; rooftops over deep water, rotten boards, and the belfry with the parish register, which shows who owned the ground before the flood, and a **reed charm** (frog: 4 more health, +10% dodge timing, shows 1 more mana).
+- **The spars**, east of the drowned fleet. A fourth church boat, the *Charity*, went down further out than the others, and her decks and hulls stand out of deep water: open sea to leap, a run of loose spars that go under anyone who stops, a lone masthead, and the crow's nest, where her lookout lashed himself to the mast and watched the light the whole way down. His **lookout's glass** (chameleon: +10% dodge timing, reveal hits 2 harder, shows 2 more mana). The hermit crab at the fleet knows there were four.
 
 ### Places you climb to
 

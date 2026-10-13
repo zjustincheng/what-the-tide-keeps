@@ -129,3 +129,31 @@ test('the downs\' watchtower can only be climbed once the pack has gone', async 
   await page.keyboard.press('e');
   await expect(page.locator('#dialogue-text')).toContainText('Nobody climbs with the pack at their back');
 });
+
+test('out past the drowned fleet, the spars lead to the crow\'s nest and the lookout\'s glass', async ({ page }) => {
+  await page.goto('/?practice');
+  await expect.poll(() => at(page, 'church')).not.toBeNull();
+  await page.evaluate(async () => { const { game } = await import('/src/main.ts'); game.scene.getScene('church').scene.start('fleet', { spawn: 'from-spars' }); });
+  await expect.poll(() => at(page, 'fleet')).not.toBeNull();
+  await page.locator('#game').focus();
+  await page.evaluate(async () => {
+    const { game } = await import('/src/main.ts');
+    const scene = game.scene.getScene('fleet');
+    const exit = scene.points.find((point: { name: string }) => point.name === 'spars');
+    scene.player.setPosition(exit.x - 12, exit.y);
+  });
+  await expect(page.locator('#prompt')).toContainText('Go out to the spars');
+  await page.keyboard.press('e');
+  await expect.poll(() => at(page, 'spars')).not.toBeNull();
+  // The crow's nest, at the far end.
+  await page.evaluate(async () => {
+    const { game } = await import('/src/main.ts');
+    const scene = game.scene.getScene('spars');
+    const nest = scene.points.find((point: { name: string }) => point.name === 'lookout');
+    scene.player.setPosition(nest.x, nest.y + 8);
+  });
+  await expect(page.locator('#prompt')).toContainText('crow\'s nest');
+  await page.keyboard.press('e');
+  await expect(page.locator('#dialogue-text')).toContainText('lashed to the mast');
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('tide-keeps.world.v1')!).found)).toContain('lookouts-glass');
+});

@@ -4,7 +4,7 @@ import type { MemberId } from './battle';
 export type KeepsakeId = 'cracked-mirror' | 'crow-feather' | 'covenant-token' | 'yoke-peg' | 'wool-charm' | 'boar-tusk' | 'iron-collar' | 'famine-spoon' | 'weir-hook' | 'frost-ring' | 'tide-shell'
   | 'garrison-buckler' | 'saints-medal' | 'night-cloak' | 'smuggled-blade' | 'raven-quill' | 'viper-fang' | 'hospice-bell' | 'liars-charm' | 'adders-coil' | 'house-signet' | 'courier-bell' | 'wren-feather' | 'champions-torc' | 'elder-pearl' | 'kraken-tooth' | 'sea-glass'
   | 'grafting-knife' | 'cutters-wedge' | 'shepherds-horn' | 'tin-cup' | 'brand-iron' | 'drowned-bell'
-  | 'broken-link' | 'climbers-chalk' | 'falconers-hood' | 'reed-charm' | 'watch-flint' | 'ice-pick';
+  | 'broken-link' | 'climbers-chalk' | 'falconers-hood' | 'reed-charm' | 'watch-flint' | 'ice-pick' | 'lookouts-glass';
 // What a keepsake changes about its holder in battle.
 // agility: in hundredths of a hero's dodge windows; +15 makes every window 15% wider.
 export type Mods = Readonly<{ health: number; damage: number; reveal: number; suppressCost: number; shown: number; agility: number; guardAll: number }>;
@@ -64,6 +64,7 @@ export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; ef
   // Found only by leaping for them.
   'climbers-chalk': { name: 'Climber\'s chalk', effect: 'Dodges come much easier (+15% timing).', drawback: '2 less health.', mods: { agility: 15, health: -2 } },
   'falconers-hood': { name: 'The falconer\'s hood', holder: 'vulture', effect: 'Dodges come much easier (+20% timing), and shows 1 less mana.', drawback: 'Hits 1 softer.', mods: { agility: 20, shown: -1, damage: -1 } },
+  'lookouts-glass': { name: 'The lookout\'s glass', holder: 'chameleon', effect: 'Sees a blow coming: dodges come easier (+10% timing), and revealing from hiding hits 2 harder.', drawback: 'Shows 2 more mana.', mods: { agility: 10, reveal: 2, shown: 2 } },
   'reed-charm': { name: 'Reed charm', holder: 'frog', effect: '4 more health, and dodges come easier (+10% timing).', drawback: 'Shows 1 more mana.', mods: { health: 4, agility: 10, shown: 1 } },
   'watch-flint': { name: 'The watch\'s flint', effect: 'Hits 2 harder.', drawback: 'Dodging is a little harder (-5% timing).', mods: { damage: 2, agility: -5 } },
   'ice-pick': { name: 'A courier\'s ice pick', holder: 'bear', effect: 'Hits 2 harder, and 3 more health.', drawback: 'Shows 1 more mana.', mods: { damage: 2, health: 3, shown: 1 } },

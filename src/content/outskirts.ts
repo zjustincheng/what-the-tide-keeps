@@ -265,6 +265,10 @@ export const fleet: Dialogue = {
     'Bones in the sand, the swell moving them a little, back and forth, back and forth, like something being rocked.',
   ] },
 };
+fleet.hermit.choices!.push({ text: 'Were there only three?', lines: [
+  '"Four went out. The fourth went down further east, in the deep. You can see her spars from here at low water."',
+  '"Her lookout went up the mast when she started going, and stayed. Nobody\'s been out to him. You\'d have to jump it."',
+] });
 
 // Places you leap to. Nobody has been here in a long time, because getting here takes a leap.
 
@@ -280,6 +284,22 @@ export const gorge: Dialogue = {
   ] },
   carving: { speaker: 'A CARVING', prompt: 'Read the carving', lines: [
     'Cut into the rock low down, the way children cut things: a deer\'s name and a wolf\'s name, side by side, and a date from before the Covenant. Under it, in the same hand: WE CAME THE SHORT WAY. DON\'T TELL.',
+  ] },
+};
+
+// The spars east of the drowned fleet: what stands out of the water of the fourth boat.
+export const spars: Dialogue = {
+  lookout: { speaker: 'THE CROW\'S NEST', prompt: 'Look in the crow\'s nest', hiddenIf: [{ owns: 'lookouts-glass' }], lines: [
+    'A marine in church grey, lashed to the mast by his own belt so he wouldn\'t fall. The sea took him anyway, slowly, from the feet up.',
+    'His glass is still in his hand, pointed east, at the light. He watched it the whole way down.',
+    'Found: the lookout\'s glass.',
+  ], then: { find: 'lookouts-glass' } },
+  nest: { speaker: 'THE LOG', prompt: 'Read the log', lines: [
+    'Pencil on the inside of the nest\'s boards, where the rain doesn\'t reach. FOUR BOATS OUT. THREE OPENED THEIR SEACOCKS AT THE SIGNAL.',
+    'OURS WAS SLOW. I SAW THE LIGHT TURN TOWARD US AND THEN AWAY, LIKE IT HAD SEEN ENOUGH.',
+  ] },
+  nameboard: { speaker: 'THE STERN', prompt: 'Read the stern', lines: [
+    'Her name, in gilt gone green: THE CHARITY. Under it, smaller, the port she sailed from, and the church\'s mark.',
   ] },
 };
 
