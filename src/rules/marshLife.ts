@@ -21,13 +21,13 @@ export function frogAtCamp(context: Context): Conversation | undefined {
   if (trusted) return { speaker: 'THE FROG', lines: [
     'She washes the last stain from her medicine spoon. This time, she lets you hold the basin.',
     '“They blamed a healer because they were frightened of her hands. I heard them do it. I helped them believe it.”',
-    '“I still cannot remember the feast.” She looks at your brand. “But I can no longer call forgetting it proof against you.”',
+    '“I still cannot remember the feast.” She looks at your brand. “But I can’t hold that against you any more.”',
     'When she puts her case away, she leaves the empty place beside her for you.',
   ] };
   return { speaker: 'THE FROG', lines: [
     'She counts the doses in her case before she looks up. “I am here for the people in those beds.”',
     'You offer to hold the basin. She puts it on the ground between you instead.',
     '“Do not ask me to tell you who you were. Help me find what is in their food.”',
-    'She checks your bandage anyway. Duty can look like kindness before it becomes trust.',
+    'She checks your bandage anyway.',
   ] };
 }

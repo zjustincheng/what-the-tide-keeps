@@ -34,7 +34,7 @@ export function bearAtCamp(context: Context): Conversation | undefined {
     'He sets the bowl down. “Tomorrow, I want to hear him read it.”',
   ] };
   if (context.world.flags.includes('bear-mill-returned')) return { speaker: 'THE BEAR', lines: [
-    'He sits with his boots toward the mill road. “I thought I would be glad to see the stone again without the chain.”',
+    'He sits with his feet toward the mill road. “I thought I would be glad to see the stone again without the chain.”',
     '“I could not quite make myself go through the door.” He leaves the thought there a while.',
     '“The book is inside. We can look when the fire goes down.”',
   ] };

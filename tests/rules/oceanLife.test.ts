@@ -30,7 +30,7 @@ test('the octopus reflects on the reunion, grave, truce, and forgetting without 
   assert.match(octopusAtCamp(context(['octopus-free', 'grave-seen']))!.lines.join(' '), /saving your kingdom/);
   assert.match(octopusAtCamp(context(['octopus-free', 'grave-seen', 'cuttlefish-slain']))!.lines.join(' '), /truce is a beginning/);
   const unfamiliar = octopusAtCamp(context(['octopus-free', 'cuttlefish-slain'], ['octopus']))!;
-  assert.match(unfamiliar.lines.join(' '), /does not ask you to recognize/); assert.equal(unfamiliar.then, undefined);
+  assert.match(unfamiliar.lines.join(' '), /beside the hammock, and stays/); assert.equal(unfamiliar.then, undefined);
 });
 test('empty pens have no captive and aftermath dialogue preserves existing routes and rewards', () => {
   assert.match(conversation(seaPens, 'caught', context(['nets-cut'])).lines.join(' '), /Nothing looks back/);

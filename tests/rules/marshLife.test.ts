@@ -26,7 +26,7 @@ test('the Frog joins for the sick and only starts trusting the party after the V
   const joined = context(['frog-free']);
   assert.equal(frogAtCamp({ ...joined, world: { ...joined.world, fallen: ['frog'] } }), undefined);
   assert.match(frogAtCamp(joined)!.lines.join(' '), /here for the people/);
-  assert.match(frogAtCamp(context(['frog-free', 'viper-slain']))!.lines.join(' '), /no longer.*proof against/);
+  assert.match(frogAtCamp(context(['frog-free', 'viper-slain']))!.lines.join(' '), /can’t hold that against you/);
   assert.match(frogAtCamp(context(['frog-free'], ['frog']))!.lines.join(' '), /stop the poison/);
   assert.match(frogAtCamp(context(['frog-free', 'viper-slain'], ['frog']))!.lines.join(' '), /do not have to know my name/);
 });

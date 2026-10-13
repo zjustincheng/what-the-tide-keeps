@@ -15,13 +15,13 @@ export function vultureAtCamp(context: Context): Conversation | undefined {
     'She notices you watching her hands. “You used to know what I was going to do before I did it.”',
     'You cannot remember what she means. She stops reaching for the kettle.',
     '“I have a note that says to trust you. You can borrow it, until you have something of your own.”',
-    'She lays the paper between you, keeping it clear of the sparks. Neither of you asks the other to pretend.',
+    'She lays the paper between you, keeping it clear of the sparks.',
   ] };
   if (context.world.flags.includes('hyena-slain')) return { speaker: 'THE VULTURE', lines: [
     'She cleans the dirt from beneath one claw, then starts again. There is none left.',
     '“They sent me to bury the dead. They sent you to kill someone for trying to keep the living alive.”',
     'The note is open on her knee. “I do not remember the feast. I remember what we saw under the abbey.”',
-    'She moves her bedroll closer to the fire. Tonight, that is enough to stay beside you.',
+    'She moves her bedroll closer to the fire, and to you.',
   ] };
   return { speaker: 'THE VULTURE', lines: [
     'She copies the same line onto a clean scrap: TRUST THE CHAMELEON.',

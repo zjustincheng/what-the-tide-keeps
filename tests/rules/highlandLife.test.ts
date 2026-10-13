@@ -39,5 +39,5 @@ test('camp moments require the living companion and vary with trust, memory and 
   assert.equal(vultureAtCamp({ ...joined, world: { ...joined.world, fallen: ['vulture'] } }), undefined);
   assert.match(vultureAtCamp(joined)!.lines.join(' '), /copies the same line/);
   assert.match(vultureAtCamp(context(['vulture-free', 'hyena-slain']))!.lines.join(' '), /under the abbey/);
-  assert.match(vultureAtCamp(context(['vulture-free'], ['vulture']))!.lines.join(' '), /Neither of you.*pretend/);
+  assert.match(vultureAtCamp(context(['vulture-free'], ['vulture']))!.lines.join(' '), /borrow it, until you have something of your own/);
 });

@@ -100,12 +100,11 @@ export function withBearLedger(dialogue: Dialogue): Dialogue {
     { if: { flag: 'bear-reeve-accountable' }, lines: [
       ...original.lines,
       'The replacement request is crossed out. The reeve’s new order is copied below it: NO CHAINED LABOUR AT THIS MILL.',
-      'Where the book said CONVICT, it now gives the bear’s name. The old work dates remain. A correction is not an erasure.',
+      'Where the book said CONVICT, it now gives the bear’s name. The old work dates remain.',
     ] },
     { if: { flag: 'bear-mill-left' }, lines: [
       ...original.lines,
-      'The bear’s column ends on the day he left. The totals do not say who he was, or what it cost him to turn the stone.',
-      'You remember those things. The book is no longer the only place that holds his story.',
+      'The bear’s column ends on the day he left.',
     ] },
     { if: { all: [unresolved, { flag: 'bear-mill-returned' }] }, lines: [
       'A strip of grey cloth marks a page near the back. The bear recognizes it before you do. “He cut that off my sleeve.”',

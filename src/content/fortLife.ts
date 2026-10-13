@@ -7,14 +7,14 @@ export const fortStreet: Dialogue = {
   ], variants: [
     { if: { flag: 'cuttlefish-slain' }, lines: ['The barrels are empty. The church seal is still nailed to the table.', 'The quartermaster has turned the weighing scales toward the wall. Nobody has left the line.'] },
     { if: { all: [{ flag: 'frog-free' }, { not: { flag: 'viper-slain' } }] }, lines: ['The lid is off a rejected barrel. The brine smells sweet, and wrong.', 'A strip of hospice cloth is tied to it: DO NOT ISSUE. The good barrel beside it is almost empty.'] },
-    { if: { flag: 'hyena-slain' }, lines: ['The knife is washed. The portions are laid out in neat rows. There are no more than before.', 'A child carries one to an old wolf without being pushed aside. Order has returned before food.'] },
+    { if: { flag: 'hyena-slain' }, lines: ['The knife is washed. The portions are laid out in neat rows. There are no more than before.', 'A child carries one to an old wolf without being pushed aside.'] },
   ] },
   'mourning-wall': { speaker: 'THE WALL OF NAMES', prompt: 'Read the names on the wall', lines: [
     'Names cut into dark stone. Beside some, a charcoal mark: MISSING FROM THE FIELD.',
     'Someone has left an unlit candle beneath each mark. The families will not light them until the dead stay buried.',
   ], variants: [
     { if: { all: [{ flag: 'hyena-slain' }, { not: { remembers: 'vulture' } }] }, lines: ['The charcoal has been washed away. Small candles burn beneath the names.', 'There should be a voice beside you, reading a name you cannot pronounce. You wait for it. You do not know whose it was.'] },
-    { if: { flag: 'hyena-slain' }, lines: ['The charcoal has been washed away. Small candles burn beneath the names.', 'Two dates have been corrected in the vulture’s uneven handwriting. Her work is here, even when she cannot remember doing it.'] },
+    { if: { flag: 'hyena-slain' }, lines: ['The charcoal has been washed away. Small candles burn beneath the names.', 'Two dates have been corrected in the vulture’s uneven handwriting.'] },
   ] },
   'grain-hauler': { speaker: 'A CARTER AT THE FORT', portrait: 'carter', prompt: 'Speak to the grain hauler', lines: [
     '“I took this wagon down empty. Brought it back empty. They turned us around before the farmland.”',

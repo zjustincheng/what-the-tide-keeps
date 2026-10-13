@@ -19,11 +19,10 @@ export function octopusAtCamp(context: Context): Conversation | undefined {
     'It knots your hammock rope with three arms and keeps the fourth against the rail. “This one comes loose in a swell.”',
     'You watch its hands for a memory that does not come. It notices, and stops explaining as if you already know.',
     '“I remember enough for both of us tonight. You can ask me again tomorrow.”',
-    'It sits on the deck beside the hammock. It does not ask you to recognize it before it stays.',
+    'It sits on the deck beside the hammock, and stays.',
   ] };
   if (flags.includes('cuttlefish-slain')) return { speaker: 'THE OCTOPUS', lines: [
     'Its colours change slowly in the lantern light. “A truce is a beginning. Nobody has agreed what comes after it.”',
-    '“The land cannot keep buying peace with people it refuses to count. The sea cannot live on revenge.”',
     'It lays the old chart flat between you. Beyond its edge, it places a small shell. “The island is there.”',
     '“I will take you. After that, I want to come back and help make something that lasts.”',
   ] };

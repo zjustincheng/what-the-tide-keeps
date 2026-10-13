@@ -12,6 +12,6 @@ export const portLife: Dialogue = {
     'Several shipping routes have been crossed out. Beneath them: NO CARGO FOR THE LAND. The names of the crews are signed below, in different hands.',
   ], variants: [{ if: { flag: 'cuttlefish-slain' }, lines: [
     'The old prohibition remains. A second sheet has been nailed beside it: PASSAGE BY AGREEMENT. NO LIVE CARGO.',
-    'Someone is collecting the crews’ signatures again. A truce needs more hands than a threat.',
+    'Someone is collecting the crews’ signatures again.',
   ] }] },
 };
