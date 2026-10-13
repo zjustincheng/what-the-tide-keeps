@@ -126,5 +126,5 @@ test('brought down the first time, the boar gets back up after a scene, as his s
   await expect(page.locator('#battle-title')).toHaveText('The boar, cornered.');
   await expect(page.locator('.battle-heading .eyebrow')).toHaveText('SECOND STAGE');
   await expect(page.getByRole('meter', { name: 'The boar health' })).not.toHaveAttribute('aria-valuenow', '0');
-  await expect(page.locator('#enemy-intent')).toContainText('A charge is coming');
+  await expect(page.locator('#enemy-intent')).toContainText('When the charge comes');
 });

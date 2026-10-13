@@ -3,7 +3,7 @@ import { BOAR_PHASE_SHOTS } from '../presentation/bossScenes';
 import { strikeFeedback } from '../presentation/battleFeedback';
 import type { BattleFeedback } from '../presentation/battleFeedback';
 import { actionPreview } from '../presentation/battleActions';
-import { act, agility, canAct, canCast, canFlee, canUse, cast, condition, cost, createBattle, DODGE, dodgeKind, ENEMIES, enemyMana, enemyTarget, flee, GATHER, grade, hesitate, intent, matchup, MEMORY_NAMES, MEMBERS, nextStrike, PATIENCE, SPELL, STAGES, strike, SURVIVE, TRAITS, useSupply, venom, visibleMana, warded } from '../rules/battle';
+import { act, agility, FEINT_AT, LEAD, timing, canAct, canCast, canFlee, canUse, cast, condition, cost, createBattle, DODGE, dodgeKind, ENEMIES, enemyMana, enemyTarget, flee, GATHER, grade, hesitate, intent, matchup, MEMORY_NAMES, MEMBERS, nextStrike, PATIENCE, SPELL, STAGES, strike, SURVIVE, TRAITS, useSupply, venom, visibleMana, warded } from '../rules/battle';
 import type { Action, Battle, BattleOptions, Dodge, DodgeKind, Fighter, Foe, MemberId, Encounter } from '../rules/battle';
 import { checkSequence, SPELLS } from '../rules/spells';
 import { BOUNTY, SUPPLIES, SUPPLY_IDS } from '../rules/economy';
@@ -24,9 +24,6 @@ const PHASE_SETS: Partial<Record<Encounter, Tableau>> = {
   cuttlefish: 'sea', human: 'laboratory', warden: 'church',
   leech: 'sea', drowned: 'church', swarm: 'farmhouse', pack: 'battlefield',
 };
-
-// How long the dodge ring takes to close on its target, in milliseconds.
-const LEAD = 900;
 
 // Who appears in a boss's scene when they speak, by the name the scene gives them.
 const SPEAKER_ART: Record<string, string> = { 'THE BOAR': 'boar', 'THE BADGER': 'badger', 'THE RAT': 'rat', 'THE HYENA': 'hyena', 'THE VIPER': 'viper', 'THE CUCKOO': 'cuckoo', 'THE CUTTLEFISH': 'cuttlefish', 'THE HUMAN': 'human' };
@@ -491,14 +488,27 @@ export class BattleView {
     const card = this.card(next.target.id);
     card.dataset.targeted = 'true';
     const ring = document.createElement('div');
-    ring.className = 'dodge-ring'; ring.style.setProperty('--lead', `${LEAD}ms`);
-    const impact = performance.now() + LEAD;
+    // Most rings close at the usual pace; some bosses come quicker or slower, and some stop part-way and hold, to catch a press on the usual beat.
+    const { lead, feint, impact: delay } = timing(next.move);
+    ring.className = 'dodge-ring'; ring.style.setProperty('--lead', `${lead}ms`);
+    if (feint) {
+      ring.dataset.feint = 'true';
+      const at = lead * FEINT_AT / delay, held = (lead * FEINT_AT + feint) / delay;
+      ring.animate([
+        { transform: 'scale(3)', opacity: .25, offset: 0 },
+        { transform: 'scale(1.8)', opacity: .7, offset: at },
+        { transform: 'scale(2.05)', opacity: .85, offset: at + (held - at) * .3 },
+        { transform: 'scale(1.9)', opacity: .85, offset: held },
+        { transform: 'scale(1)', opacity: 1, offset: 1 },
+      ], { duration: delay, easing: 'linear', fill: 'forwards', pseudoElement: '::after' });
+    }
+    const impact = performance.now() + delay;
     const bar = this.get('.dodge-bar'), button = this.get<HTMLButtonElement>('#dodge');
     const shown = ++this.prompts;
     bar.dataset.kind = kind;
     const call = `${next.move.name} → ${MEMBERS[next.target.id].name}.`;
     const pieces: HTMLElement[] = [ring];
-    let hint = 'Space or tap · as the ring closes';
+    let hint = feint ? 'Space or tap · it stops before it closes' : 'Space or tap · as the ring closes';
     if (kind === 'ring') { bar.insertBefore(ring, button); this.root.dataset.impact = String(impact); }
     let keys: number[] = [];
     let sequence: HTMLElement | undefined;
@@ -550,6 +560,7 @@ export class BattleView {
         // Leave the result up briefly, unless the next blow has already opened a new prompt.
         this.later(() => { if (this.prompts === shown) bar.hidden = true; }, 700);
         ring.dataset.result = dodge;
+        ring.getAnimations({ subtree: true }).forEach(animation => animation.cancel());
         this.get('.dodge-call').textContent = reason ?? (dodge === 'perfect' ? 'Dodged!' : dodge === 'graze' ? 'Grazed · partial dodge.' : early ? 'Too soon · hit.' : 'Too slow · hit.');
         this.promptCleanup?.(); this.promptCleanup = undefined;
         land(dodge, reason);
@@ -572,7 +583,7 @@ export class BattleView {
       },
     };
     // No answer at all means the blow lands in full.
-    const wait = kind === 'keys' ? allowed : kind === 'bar' ? 2400 : LEAD + DODGE.graze + 1;
+    const wait = kind === 'keys' ? allowed : kind === 'bar' ? 2400 : delay + DODGE.graze + 1;
     this.timer = this.later(() => this.prompt?.answer('miss', false, 'Time ran out · hit.'), wait);
   }
 
@@ -583,7 +594,9 @@ export class BattleView {
     const error = performance.now() - this.prompt.impact;
     // Pressing far too early commits the dodge too soon; it cannot be retried.
     const next = nextStrike(this.state)!;
-    this.prompt.answer(grade(error, next.move, agility(next.target)), error < 0);
+    const dodge = grade(error, next.move, agility(next.target));
+    // Pressed while a feint held the ring: taken in by it.
+    this.prompt.answer(dodge, error < 0, dodge === 'miss' && error < 0 && next.move.feint ? 'Taken in by the feint · hit.' : undefined);
   }
 
   // A short cue when the fight ends, once.

@@ -86,9 +86,12 @@ export type Foe = number;
 // spell: for a spell, which one it is. poison: rounds of poison a blow leaves, if it lands at all.
 // sour: a spell that turns the party's healing to harm for a while once cast.
 // dodge: how this blow is dodged, when it differs from what dodgeKind would choose.
+// lead: how long the dodge ring takes to close, when it isn't the usual LEAD: a jab comes quicker, a telegraphed charge slower.
+// feint: the ring stops part-way and holds this long before it closes, to catch anyone pressing on the usual beat.
+// tempo: for a blow that lands several times, each hit's own lead, so a combo can't be dodged on one rhythm.
 type Move = { name: string; type: 'physical' | 'spell'; spell?: string; dodge?: DodgeKind; damage: number; piercing?: number; revive?: boolean; drain?: boolean; feed?: boolean; hits?: number; unblockable?: boolean;
   poison?: number; sour?: true; mirror?: SpellId;
-  window?: { perfect: number; graze: number }; undodgeable?: boolean };
+  window?: { perfect: number; graze: number }; undodgeable?: boolean; lead?: number; feint?: number; tempo?: readonly number[] };
 export type Member = Fighter & Readonly<{
   id: MemberId;
   acted: boolean;
@@ -578,9 +581,9 @@ function plainIntent(battle: Battle): Move & { tell: string } {
   if (battle.encounter === 'boar') {
     const fury = battle.fury ? ` His fury burns · ${battle.fury} will drive through any guard.` : '';
     if (battle.stage === 2 && battle.round % 3 === 0)
-      return { name: 'Trample', type: 'physical', tell: `He drops his head and comes through everything. No guard will stop it.${fury}`, damage: 8 + battle.fury, unblockable: true, window: { perfect: 45, graze: 120 } };
+      return { name: 'Trample', type: 'physical', tell: `He drops his head, pulls up short in the ash, and then comes through everything. Wait for the second start. No guard will stop it.${fury}`, damage: 8 + battle.fury, unblockable: true, window: { perfect: 45, graze: 120 }, feint: 500 };
     return battle.round % 2 === 0 || battle.stage === 2
-      ? { name: 'Tusk charge', type: 'physical', tell: `He lowers his tusks and paws the ash. A charge is coming, fast.${fury}`, damage: 10 + battle.fury, piercing: battle.fury, window: { perfect: 45, graze: 120 } }
+      ? { name: 'Tusk charge', type: 'physical', tell: `He lowers his tusks and paws the ash, a long time. When the charge comes, it comes all at once.${fury}`, damage: 10 + battle.fury, piercing: battle.fury, window: { perfect: 45, graze: 120 }, lead: 1300 }
       : { name: 'Shoulder blow', type: 'physical', tell: `He squares his shoulders.${fury}`, damage: 4 + battle.fury, piercing: battle.fury };
   }
   if (battle.encounter === 'warden') {
@@ -641,8 +644,8 @@ function plainIntent(battle: Battle): Move & { tell: string } {
     return battle.round % (battle.stage === 2 ? 2 : 3) === 0
       ? { name: battle.stage === 2 ? 'Lunge' : 'Laughing lunge', type: 'physical', tell: `She starts to laugh. She will lunge, very fast, and most of it will go through a guard.${fed}`, damage: 14 + battle.fury, piercing: 7 + Math.floor(battle.fury / 2), window: { perfect: 35, graze: 95 } }
       : battle.stage === 2
-        ? { name: 'Frenzy', type: 'physical', tell: `She doesn't stop. Three blows, each one hungrier.${fed}`, damage: 4 + Math.floor(battle.fury / 2), hits: 3, piercing: 2, window: { perfect: 50, graze: 120 } }
-        : { name: 'Rend', type: 'physical', tell: `She comes in low.${fed}`, damage: 9 + battle.fury, piercing: 3 + Math.floor(battle.fury / 2), window: { perfect: 50, graze: 120 } };
+        ? { name: 'Frenzy', type: 'physical', tell: `She doesn't stop. Three bites, and she doesn't keep time: one, then one fast, then she waits.${fed}`, damage: 4 + Math.floor(battle.fury / 2), hits: 3, piercing: 2, window: { perfect: 50, graze: 120 }, tempo: [900, 500, 1250] }
+        : { name: 'Rend', type: 'physical', tell: `She comes in low, and checks, laughing, before she commits.${fed}`, damage: 9 + battle.fury, piercing: 3 + Math.floor(battle.fury / 2), window: { perfect: 50, graze: 120 }, feint: 400 };
   }
   if (battle.encounter === 'mosquito') return battle.round % 2 === 0
     ? { name: 'Swarm', type: 'physical', tell: 'Its wings blur. It will come at you three times, fast.', damage: 3, hits: 3, window: { perfect: 55, graze: 140 } }
@@ -665,7 +668,7 @@ function plainIntent(battle: Battle): Move & { tell: string } {
     if (battle.stage === 2 && battle.round % 3 === 2)
       return { name: 'Venom spray', type: 'physical', tell: 'She rears and sprays. Three mouthfuls, and no guard will stop them. Each one poisons.', damage: 4, hits: 3, unblockable: true, poison: 2, window: { perfect: 50, graze: 130 } };
     return battle.round % 3 === 1
-      ? { name: 'Fang', type: 'physical', tell: 'She draws her head back. A strike, very fast, and it poisons.', damage: 10, poison: 4, window: { perfect: 40, graze: 110 } }
+      ? { name: 'Fang', type: 'physical', tell: 'She draws her head back. A strike, faster than anything else in here, and it poisons.', damage: 10, poison: 4, window: { perfect: 40, graze: 110 }, lead: 550 }
       : { name: 'Coil', type: 'physical', tell: 'She throws coils over someone. Two crushing squeezes.', damage: 7, hits: 2 };
   }
   if (battle.encounter === 'hornet') return battle.round % 2 === 0
@@ -676,12 +679,12 @@ function plainIntent(battle: Battle): Move & { tell: string } {
     : { name: 'Fangs', type: 'physical', tell: 'It drops on someone, fangs first.', damage: 10, poison: 2, window: { perfect: 50, graze: 130 } };
   if (battle.encounter === 'duellist') return battle.round % 2 === 0
     ? { name: 'Talon hex', type: 'spell', spell: 'Talon hex', tell: 'His talons trace something in the air: Talon hex, a spell. His mana display doesn\'t flicker. Watch it.', damage: 13, window: { perfect: 45, graze: 120 } }
-    : { name: 'Rapier', type: 'physical', tell: 'He comes on with the rapier, twice, very correct.', damage: 5, hits: 2, window: { perfect: 55, graze: 140 } };
+    : { name: 'Rapier', type: 'physical', tell: 'He comes on with the rapier, twice, very correct: a measured thrust, and a quick one after it.', damage: 5, hits: 2, window: { perfect: 55, graze: 140 }, tempo: [900, 450] };
   if (battle.encounter === 'cuckoo') {
     if (battle.impostor) return { name: 'Knife in the ranks', type: 'physical', tell: 'He is somewhere among you, wearing a friend. Whoever\'s mana hasn\'t moved is him: press Strike on their card. Until then, a knife comes from inside the party, and no guard is watching for it.', damage: 11, unblockable: true, undodgeable: true };
     if (battle.round % (battle.stage === 2 ? 2 : 3) === 1 && battle.round > 1)
       return { name: 'Talon hex', type: 'spell', spell: 'Talon hex', tell: 'He traces the house\'s sign in the air: Talon hex, a spell.', damage: 14, window: { perfect: 45, graze: 120 } };
-    return { name: 'Borrowed blade', type: 'physical', tell: 'He fights with the lord\'s sword, the way the lord was taught.', damage: 12, piercing: 3, window: { perfect: 50, graze: 130 } };
+    return { name: 'Borrowed blade', type: 'physical', tell: 'He fights with the lord\'s sword, the way the lord was taught: a feint first, then the cut.', damage: 12, piercing: 3, window: { perfect: 50, graze: 130 }, feint: 450 };
   }
   if (battle.encounter === 'shark') return battle.round % 2 === 0
     ? { name: 'Frenzy bite', type: 'physical', tell: 'It rolls its eyes back. A bite is coming that a guard won\'t stop all of.', damage: 13, piercing: 5, window: { perfect: 45, graze: 120 } }
@@ -709,8 +712,8 @@ function plainIntent(battle: Battle): Move & { tell: string } {
         tell: `Its skin turns to your ${spell.name}, the last thing you cast. It will throw it back ${what}. You can\'t dodge your own spell coming the wrong way.` };
     }
     return battle.round % 3 === 0
-      ? { name: 'Ink', type: 'physical', tell: 'It clouds the water with ink, and strikes out of it, twice.', damage: 7, hits: 2, window: { perfect: 45, graze: 120 } }
-      : { name: 'Arms', type: 'physical', tell: 'Its arms come over the reef for someone, and a guard won\'t hold all of them.', damage: 12, piercing: 4, window: { perfect: 55, graze: 140 } };
+      ? { name: 'Ink', type: 'physical', tell: 'It clouds the water with ink, and strikes out of it, twice: slowly, and then not.', damage: 7, hits: 2, window: { perfect: 45, graze: 120 }, tempo: [1200, 500] }
+      : { name: 'Arms', type: 'physical', tell: 'Its arms come over the reef for someone, slowly, and a guard won\'t hold all of them.', damage: 12, piercing: 4, window: { perfect: 55, graze: 140 }, lead: 1300 };
   }
   if (battle.encounter === 'champion') {
     if (battle.round % 3 === 0) return { name: 'Larder', type: 'physical', tell: 'He picks someone out to hang on his thorns. He will take what he needs from them, fast.', damage: 15, drain: true, window: { perfect: 50, graze: 120 } };
@@ -970,6 +973,16 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
 
 // Dodging is timed by the player, never rolled. Times are milliseconds from the moment the blow lands.
 export const DODGE = { perfect: 75, heavyPerfect: 50, graze: 170 } as const;
+// How long the dodge ring usually takes to close on its target, in milliseconds.
+export const LEAD = 900;
+// Where a feinting ring stops, as a share of its close, before it holds.
+export const FEINT_AT = 0.6;
+
+// When a blow lands after its ring appears, and how long a feint holds it back: the ring closes for lead, plus feint.
+export function timing(move: Pick<Move, 'lead' | 'feint'>): { lead: number; feint: number; impact: number } {
+  const lead = move.lead ?? LEAD, feint = move.feint ?? 0;
+  return { lead, feint, impact: lead + feint };
+}
 
 // Early or late by errorMs; heavy, telegraphed blows leave a narrower perfect window.
 // A move may set its own window: stronger enemies leave less room.
@@ -1012,7 +1025,7 @@ function kindOf(battle: Pick<Battle, 'encounter'>, follower: Follower): { weapon
 function enemyMoves(battle: Battle): Move[] {
   // A fallen leader takes no more turns; its followers do.
   const main = battle.snared || battle.enemy.health <= 0 ? [] : [intent(battle)];
-  return [...main.flatMap(move => Array.from({ length: move.hits ?? 1 }, (_, i) => move.hits ? { ...move, name: `${move.name} (${i + 1} of ${move.hits})` } : move)), ...battle.followers.filter(follower => follower.health > 0)
+  return [...main.flatMap(move => Array.from({ length: move.hits ?? 1 }, (_, i) => move.hits ? { ...move, name: `${move.name} (${i + 1} of ${move.hits})`, lead: move.tempo?.[i] ?? move.lead } : move)), ...battle.followers.filter(follower => follower.health > 0)
     .map(follower => {
       const kind = kindOf(battle, follower);
       return { name: `${follower.name.toLowerCase()}'s ${kind.weapon}`, type: 'physical' as const, damage: kind.damage ?? FOLLOWER_BLOW };

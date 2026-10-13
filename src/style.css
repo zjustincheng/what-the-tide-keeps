@@ -581,6 +581,8 @@ footer span:last-child {
 .dodge-ring::before { border: 2px solid #d2bd8a; box-shadow: 0 0 10px #d2bd8a66; }
 .dodge-ring::after { border: 2px solid #f6ead0; animation: dodge-close var(--lead, 900ms) linear forwards; }
 .dodge-ring[data-result]::after { animation: none; opacity: 0; }
+/* A feint's ring is driven from the script: it stops part-way, shivers, and holds before it closes. */
+.dodge-ring[data-feint]::after { animation: none; transform: scale(3); opacity: .25; border-style: dashed; }
 .dodge-ring[data-result="perfect"]::before { border-color: #9bad72; box-shadow: 0 0 14px #9bad72; }
 .dodge-ring[data-result="graze"]::before { border-color: #c1a05f; }
 .dodge-ring[data-result="miss"]::before { border-color: #bc755e; }

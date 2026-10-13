@@ -82,3 +82,37 @@ test('guarded blows skip the prompt', async ({ page }) => {
   await expect(page.getByRole('log')).toContainText('Bear turns aside');
   await expect(page.locator('.dodge-ring')).toHaveCount(0);
 });
+
+// The cuckoo's borrowed blade: its ring stops part-way and holds, so a press on the usual beat is taken in by the feint.
+async function faceTheCuckoo(page: Page) {
+  await enterLocust(page);
+  await page.evaluate(async () => {
+    const { game } = await import('/src/main.ts');
+    const { createBattle } = await import('/src/rules/battle.ts');
+    const view = game.scene.getScene('church').overlay;
+    view.state = createBattle('cuckoo', [], { roster: ['chameleon', 'bear', 'vulture'] });
+    view.render();
+  });
+  await attackAll(page);
+  await expect(page.locator('.dodge-ring[data-feint]')).toHaveCount(1);
+  await expect(page.locator('.dodge-call')).toContainText('Borrowed blade');
+}
+
+test('a feint holds the ring: pressing on the usual beat is taken in, waiting for the close dodges', async ({ page }) => {
+  await faceTheCuckoo(page);
+  const saw = await recordDodgeCalls(page);
+  const feint = await page.evaluate(async () => {
+    const { createBattle, intent, timing } = await import('/src/rules/battle.ts');
+    return timing(intent({ ...createBattle('cuckoo'), round: 1 })).feint;
+  });
+  // Where an ordinary ring would have closed.
+  await pressAt(page, -feint);
+  await saw('Taken in by the feint · hit.');
+});
+
+test('waiting out the feint dodges the cut', async ({ page }) => {
+  await faceTheCuckoo(page);
+  const saw = await recordDodgeCalls(page);
+  await pressAt(page, 0);
+  await saw('Dodged!');
+});
