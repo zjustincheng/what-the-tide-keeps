@@ -179,14 +179,14 @@ export const ENEMIES = {
   // Guardians of keepsakes worth having.
   warden: { name: 'Shrine warden', short: 'warden', health: 70, mana: 14, veiled: false,
     opening: 'The warden turns from the shrine. Two votive candles flare up at its sides. Blows will slide off it while they burn.' },
-  leech: { name: 'Mire leech', short: 'leech', health: 116, mana: 3, veiled: false,
+  leech: { name: 'Mire leech', short: 'leech', health: 84, mana: 3, veiled: false,
     opening: 'The ford heaves. Something long and black comes up out of the silt.' },
   swarm: { name: 'Swarm-mother', short: 'swarm-mother', health: 84, mana: 4, veiled: false,
     opening: 'Something the size of a cart unfolds in the dark between the trees. Her brood drops from the branches around her.' },
   // The downs: hounds gone hungry since the Covenant closed the commons to them.
   hound: { name: 'Starved hound', short: 'hound', health: 52, mana: 2, veiled: false,
     opening: 'A hound comes out of the gorse with its ribs showing. It does not bark.' },
-  pack: { name: 'Pack leader', short: 'pack leader', health: 100, mana: 4, veiled: false,
+  pack: { name: 'Pack leader', short: 'pack leader', health: 72, mana: 4, veiled: false,
     opening: 'The leader steps out of the broken tower. Two of his pack come round behind you.' },
   // The fen, over the drowned hamlet.
   wisp: { name: 'Marsh light', short: 'light', health: 34, mana: 8, veiled: false,
@@ -250,7 +250,7 @@ export const ENEMIES = {
     opening: 'An eel with a skin like a mirror slides out of the wreck. It has been watching you fight. It opens its mouth, and your own spell comes out of it.' },
   cuttlefish: { name: 'The cuttlefish', short: 'cuttlefish', health: 112, mana: 30, veiled: false,
     opening: 'The cuttlefish rises over the reef in shifting colours, and the colours are your own spells, written on its skin. "You came down here with the land\'s magic. Let me show you what it looks like from below."' },
-  human: { name: 'The human', short: 'human', health: 220, mana: 0, veiled: false,
+  human: { name: 'The human', short: 'human', health: 140, mana: 0, veiled: false,
     opening: 'He has no mana to read. The knowledge the party taught you has nothing to say about him. He raises a hand, and a spell you lost comes back at you.' },
   inquisitor: { name: 'The inquisitor', short: 'inquisitor', health: 600, mana: 60, veiled: false,
     opening: 'The largest signature you have ever felt. A ram in grey, the royal seal at his collar. "Convict. You are a long way from your church." You cannot win this. Run.' },
@@ -564,7 +564,7 @@ function plainIntent(battle: Battle): Move & { tell: string } {
   if (battle.encounter === 'human') {
     if (!battle.lostMemories.length) return { name: 'An empty hand', type: 'physical', tell: 'He reaches for another stolen memory. Nothing answers. His empty hand strikes out; a guard can stop it.', damage: 4, window: { perfect: 65, graze: 160 } };
     const spell = MEMORY_NAMES[battle.lostMemories[(battle.round - 1) % battle.lostMemories.length]];
-    return { name: spell, type: 'spell', spell, tell: `He has no mana. ${spell} speaks through him. As memories return, these borrowed spells fall silent.`, damage: 10 + Math.min(5, battle.lostMemories.length), window: { perfect: 45, graze: 120 } };
+    return { name: spell, type: 'spell', spell, tell: `He has no mana. ${spell} speaks through him. As memories return, these borrowed spells fall silent.`, damage: 6 + Math.min(4, battle.lostMemories.length), window: { perfect: 45, graze: 120 } };
   }
   if (battle.encounter === 'acolyte') {
     const casting = battle.round % 2 === 0;
@@ -1087,11 +1087,14 @@ export function strike(battle: Battle, dodge: Dodge = 'miss'): Battle {
   const enemy = move.drain && taken > 0 ? { ...battle.enemy, health: Math.min(battle.enemy.maxHealth, battle.enemy.health + taken) } : battle.enemy;
   const downed = party.find(member => member.id === target.id)!.health === 0;
   const name = MEMBERS[target.id].name;
+  // A blow's name in a sentence: "the mandible strike", but a memory he casts already carries its own, "the feast", "his training".
+  const blow = /^(the|his) /i.test(move.name) ? move.name.toLowerCase() : `the ${move.name.toLowerCase()}`;
+  const Blow = blow[0].toUpperCase() + blow.slice(1);
   const message = blocked ? `${name}'s barrier stops ${move.spell}.`
-    : avoided === 'perfect' ? `${name} slips aside. The ${move.name.toLowerCase()} finds only air.`
-    : guarded ? `${MEMBERS[guarded.id].name} turns aside the ${move.name.toLowerCase()}${guarded.id !== target.id ? ` aimed at ${name}` : ''}.${damage ? ` His fury drives through anyway${avoided === 'graze' ? ', though only just' : ''}${downed ? `, and ${name} falls` : ''}.` : ''}`
-    : avoided === 'graze' ? `${name} half twists away. The ${move.name.toLowerCase()} only grazes them.${downed ? ' They fall.' : ''}`
-    : `The ${move.name.toLowerCase()} catches ${name}.${downed ? ' They fall.' : ''}`;
+    : avoided === 'perfect' ? `${name} slips aside. ${Blow} finds only air.`
+    : guarded ? `${MEMBERS[guarded.id].name} turns aside ${blow}${guarded.id !== target.id ? ` aimed at ${name}` : ''}.${damage ? ` His fury drives through anyway${avoided === 'graze' ? ', though only just' : ''}${downed ? `, and ${name} falls` : ''}.` : ''}`
+    : avoided === 'graze' ? `${name} half twists away. ${Blow} only grazes them.${downed ? ' They fall.' : ''}`
+    : `${Blow} catches ${name}.${downed ? ' They fall.' : ''}`;
   const frenzy = battle.encounter === 'hyena' && downed ? FRENZY : 0;
   const after = { ...battle, party, enemy, fury: battle.fury + frenzy, step: battle.step + 1, log: [...battle.log, message, ...(enemy.health > battle.enemy.health ? [`The ${ENEMIES[battle.encounter].short} swells with what it took.`] : []), ...(frenzy ? ['The hyena laughs. Someone falling only makes her stronger.'] : [])] };
   const done = party.every(member => member.health === 0) || !enemyMoves(battle)[battle.step + 1];

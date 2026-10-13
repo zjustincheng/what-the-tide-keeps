@@ -48,7 +48,13 @@ export const border: Dialogue = {
     { text: 'The reeve signed the burn order.', if: { flag: 'burn-order-seen' }, lines: [
       'I know whose hand it was. I watched him sign it, by torchlight, on the back of a cart.',
     ] },
-    { text: 'I know he didn\'t do it. Let me speak to him.', if: { all: [{ flag: 'kid-found' }, { flag: 'burn-order-seen' }, { not: { flag: 'lane-open' } }] }, ends: true, lines: [
+    // Alone, the hero wouldn't get a word out: she waits until someone can stand in front of her brother.
+    { text: 'I know he didn\'t do it. Let me speak to him.', if: { all: [{ flag: 'kid-found' }, { flag: 'burn-order-seen' }, { not: { flag: 'bear-free' } }, { not: { flag: 'lane-open' } }] }, lines: [
+      'She looks past you, down the road, for whoever else is coming. Nobody is.',
+      '"Alone? He doesn\'t stop to listen any more. He\'d have you in the ash before you finished."',
+      '"Bring someone who can stand in front of him. Then I\'ll move the beams."',
+    ] },
+    { text: 'I know he didn\'t do it. Let me speak to him.', if: { all: [{ flag: 'kid-found' }, { flag: 'burn-order-seen' }, { flag: 'bear-free' }, { not: { flag: 'lane-open' } }] }, ends: true, lines: [
       'She studies you for a long time.',
       '"He won\'t stop. Not for you, not for me. But he\'ll hear it said, once, before."',
       'She drags the beams aside.',

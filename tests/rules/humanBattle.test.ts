@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { act, createBattle, intent, enemyMana, resolveEnemy } from '../../src/rules/battle.ts';
+import { act, createBattle, intent, enemyMana, resolveEnemy, strike } from '../../src/rules/battle.ts';
 import type { Battle } from '../../src/rules/battle';
 import { hollow } from '../../src/rules/memory.ts';
 import type { MemoryId } from '../../src/rules/memory';
@@ -49,4 +49,12 @@ test('crossing several thresholds in one hit returns all those memories without 
   const held = hitAt(nearEnd, nearEnd.enemy.health + 7);
   assert.equal(new Set(held.recoveredMemories).size, held.recoveredMemories.length);
   assert.ok(held.party.every(member => member.mana <= member.maxMana));
+});
+
+test('the memories he casts read as themselves in the log, never "the the feast"', () => {
+  const battle: Battle = { ...createBattle('human', ['The Feast', 'His Training'], { lostMemories: ['feast', 'training'] }), phase: 'enemy' };
+  const said = (dodge: 'graze' | 'miss', round: number) => strike({ ...battle, round }, dodge).log.slice(battle.log.length).join(' ');
+  assert.match(said('graze', 1), /The feast only grazes them\./);
+  assert.doesNotMatch(said('graze', 1), /the the/i);
+  assert.match(said('miss', 2), /His training catches /);
 });

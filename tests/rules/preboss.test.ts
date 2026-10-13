@@ -12,7 +12,7 @@ const start = (flags: string[] = []): Context => ({ world: { ...createWorld(), f
 const options = (dialogue: Parameters<typeof conversation>[0], name: string, context: Context) => replies(conversation(dialogue, name, context).choices, context).map(choice => choice.text);
 const pick = (dialogue: Parameters<typeof conversation>[0], name: string, context: Context, text: string) => replies(conversation(dialogue, name, context).choices, context).find(choice => choice.text === text)!;
 
-test('the boar\'s sister lets the hero through only once he knows about the kid and the burn order', () => {
+test('the boar\'s sister lets the hero through only once he knows about the kid and the burn order, and has the bear with him', () => {
   let context = start();
   assert.ok(options(border, 'sister', context).includes('Let me through.'));
   assert.ok(!options(border, 'sister', context).some(text => text.startsWith('I know he didn')));
@@ -20,6 +20,11 @@ test('the boar\'s sister lets the hero through only once he knows about the kid 
   context = apply(context, conversation(hall, 'records', context).then!);
   context = apply(context, pick(downs, 'kid', context, 'Did the boar ever hurt you?').then!);
   assert.ok(!options(border, 'sister', context).includes('Let me through.'));
+  // Alone, she won't move the beams: he would never get a word out.
+  const alone = pick(border, 'sister', context, "I know he didn't do it. Let me speak to him.");
+  assert.equal(alone.then, undefined);
+  assert.match(alone.lines.join(' '), /someone who can stand in front of him/);
+  context = apply(context, { set: 'bear-free' });
   context = apply(context, pick(border, 'sister', context, "I know he didn't do it. Let me speak to him.").then!);
   assert.ok(context.world.flags.includes('lane-open'));
 });

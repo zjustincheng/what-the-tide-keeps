@@ -47,7 +47,8 @@ test('brambles stop walking and repeated hops, then the lamb’s real favor open
 });
 
 test('the sister’s barricade cannot be walked around, hopped through, or bypassed at the exit', async ({ page }) => {
-  await start(page, ['hedge-open']); await visit(page, 'border-road');
+  // The bear is already free: she only opens the lane to someone who doesn't come alone.
+  await start(page, ['hedge-open', 'bear-free']); await visit(page, 'border-road');
   // Sneak past the exile so this check can inspect the barricade without a fight.
   await page.locator('#game').focus(); await page.keyboard.press('q');
   for (const x of [256, 184]) {
