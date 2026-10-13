@@ -2,6 +2,8 @@ import type Phaser from 'phaser';
 import { church } from '../content/church';
 import { farm } from '../content/farm';
 import type { Dialogue } from '../content/dialogue';
+import { HOLLOWS, SECRETS } from '../content/secrets';
+import type { Hollow } from '../content/secrets';
 import { churchLore, downsLore, fieldsLore, fortLore, innLore, townLore, weirLore } from '../content/lore';
 import { border } from '../content/border';
 import { fields } from '../content/fields';
@@ -64,6 +66,8 @@ export type Area = {
   // Climbs, by the point at their foot: a wall climbed side on, hold to hold (src/ui/ClimbView.ts). top: the point on the ledge above,
   // where he stands after, and where he can climb back down. height: rows of holds. every: how often something falls, in milliseconds.
   climbs?: Record<string, { top: string; prompt: string; title: string; height: number; hazard: 'stones' | 'icicles'; every?: number }>;
+  // Rooms behind walls that only look solid (src/content/secrets.ts).
+  hollows?: readonly Hollow[];
   // Points where the hero can fish.
   fishing?: Record<string, SpotId>;
   // Places to rest: resting heals every wound and brings the area's enemies back.
@@ -1134,3 +1138,5 @@ export const LAMP: Area = {
 };
 
 export const AREAS = [CHURCH, FARMLAND, TOWN, BORDER_ROAD, BOAR_FARM, INN, HALL, TANNERY, MILL, DOWNS, BARROW, FEN, PASS, FORT, BARRACKS, BATTLEFIELD, ABBEY, OSSUARY, WEIR, TARN, DROVE, SQUARE, HARBOUR, FEAST_HALL, BORDER_KEEP, ROOKERY_ROAD, CAUSEWAY, WICKMERE, HOSPICE, FAR_BANK, APOTHECARY, CLIMB, HOLD, UPPER, ARCHIVE, HOUSE_HALL, PENS, CREEK, CELLARS, SUMMIT, RING, OUTLAW_PORT, OPEN_WATER, SEA_PENS, KRAKEN_GRAVE, REEF, ORCHARD, QUARRY, SHIELING, LANES, CISTERN, PEAT, FLEET, GORGE, SPIRES, ROWS, WATCHTOWER, FALLS, LANDING, WORKS, WHITEHOUSE, LIGHTHOUSE, LAMP];
+// The rooms behind false walls, and what was left in them.
+for (const area of AREAS) if (HOLLOWS[area.key]) { area.hollows = HOLLOWS[area.key]; area.dialogue = { ...area.dialogue, ...SECRETS[area.key] }; }

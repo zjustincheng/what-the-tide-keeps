@@ -57,6 +57,7 @@ import { Traversal } from './area/traversal';
 import { Hunt } from './area/hunt';
 import { TownLife } from './area/townLife';
 import { DayNight } from './area/dayNight';
+import { Hollows } from './area/hollows';
 import { beginBattle, beginKrakenTutorial } from './area/battles';
 import { openBestiary, openEquipment, openFishing, openJournal, openParty, openSettings, wake } from './area/panels';
 
@@ -94,6 +95,7 @@ export class AreaScene extends Phaser.Scene {
   hunt!: Hunt;
   town!: TownLife;
   private dayNight!: DayNight;
+  private hollows!: Hollows;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   private held = new Set<Direction>();
   private nearby?: Point;
@@ -157,6 +159,7 @@ export class AreaScene extends Phaser.Scene {
     this.player.setDepth(characterDepth(this.player));
     this.player.setSize(9, 7).setOffset(5, 17).setCollideWorldBounds(true);
     this.traversal = new Traversal(this, gapTile, spawn);
+    this.hollows = new Hollows(this);
     this.physics.world.setBounds(...this.area.bounds ?? [0, 0, map.widthInPixels, map.heightInPixels]);
     // Maps larger than the view scroll with the hero.
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels).startFollow(this.player, true, 0.15, 0.15);
@@ -639,7 +642,7 @@ export class AreaScene extends Phaser.Scene {
     if (this.talking || traversal.leaping) { x = 0; y = 0; }
     if (x || y) traversal.facing = Math.abs(x) >= Math.abs(y) ? { dx: Math.sign(x), dy: 0 } : { dx: 0, dy: Math.sign(y) };
     const motion = new Phaser.Math.Vector2(x, y).normalize().scale(this.sneaking ? 42 : 70);
-    if (!traversal.leaping) { this.player.setVelocity(motion.x, motion.y); traversal.slideAroundCorners(x, y); traversal.footing(time); }
+    if (!traversal.leaping) { this.player.setVelocity(motion.x, motion.y); traversal.slideAroundCorners(x, y); traversal.footing(time); this.hollows.update(); }
     // Holding the party's mana down costs mana: a point from everyone every few seconds. When the hero runs dry, it shows again.
     if (this.sneaking && time - this.lastDrain > HIDE_DRAIN) {
       this.lastDrain = time;

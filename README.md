@@ -480,6 +480,18 @@ Three places reached only by leaping, Hollow Knight style: gaps, single pillars 
 - **The old watchtower** on the downs, climbed from the inside once the pack has gone from its foot: four faces of ivy between ledges where the floors used to be, each faster with falling stones than the last, to the watch's hearth at the top. The **watch's flint** (hits 2 harder, -5% dodge timing) is in a niche, and from the top you can see the whole farmland, and far out past the capital, a light that turns.
 - **The frozen falls**, east off the rookery road: three faces of ice to climb, with icicles coming down them, a crack to leap, and loose ice to the hollow behind the falls, where couriers waited out storms. A courier's **ice pick** (bear: hits 2 harder, 3 more health, shows 1 more mana) is with the old picks.
 
+### Behind false walls
+
+One room in each land region is hidden behind a wall that only looks solid (`src/content/secrets.ts`, `src/scenes/area/hollows.ts`). The only tell is a thin crack along the face that opens onto the map. Walk into it and the wall crumbles, and stays open. Each holds something the church buried, and a little to keep going on.
+
+- **The robbers' tunnel**, in the west end of the barrow mound on the downs. Someone dug in from the side and stopped: CHURCH GOT THERE FIRST. Coins and smelling salts.
+- **A cleft in the rock**, in the outcrop at the top of the high pass. A deserter's hide: a levy notice with the name torn off, a letter that stops. A trail cake.
+- **A room with no door**, in a Wickmere house, through the alcove in its front. Sealed from outside, QUARANTINE. BY ORDER. Antivenom.
+- **Inside the wall**, the hold's tower wall. Where the messengers waited out the winter, with the letters the holds never sent, all to the light. A salve.
+- **A door nobody uses**, in the tenement row on the east side of the lanes. The soup line's second ledger, with a price beside every name. A firepot.
+
+The rooms are cut into the maps by `scripts/add-secrets.mjs`, which patches the map JSON in place and can be run again safely; run it after any `create-` script.
+
 ## The old roads and the bestiary
 
 - **Waystones.** Standing stones carved with roads that go nowhere stand at the crossroads, in Millbrook, on the downs, at the weir, in the fort town, and in the capital's square. They sleep until the hero knows the old roads: the pilgrim asks for a stone from the last shrine (on the harbour quay, where her walk ends), and when you bring her one she teaches you. After that, touching a stone wakes it (its carving lights up), and from any woken stone you can walk the old road to any other (`src/rules/waystones.ts`).
