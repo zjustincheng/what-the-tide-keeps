@@ -1,10 +1,10 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 test.use({ storageState: { cookies: [], origins: [] } });
 
 // Nobody should stand with their feet in a stall, a counter, or a wall, and no exit's arrow should sit on a person.
 // Every arrow should sit across the middle of its doorway: a door in the wall ahead, or a narrow way off the edge.
 // Some people are meant to be inside something: behind a grate, in a cage, in a tank.
-const CAGED = new Set(['frog', 'newt-boy', 'adder', 'brother', 'crab', 'newt', 'lord', 'son', 'hide-1', 'hide-2', 'hide-3']);
+const CAGED = new Set(['frog', 'newt-boy', 'adder', 'brother', 'crab', 'newt', 'lord', 'son', 'hide-1', 'hide-2', 'hide-3', 'caged-1', 'caged-2', 'caged-3']);
 
 test('no one stands inside a stall or a wall, no arrow sits on anyone, and every arrow is centred on its doorway', async ({ page }) => {
   test.setTimeout(240000);

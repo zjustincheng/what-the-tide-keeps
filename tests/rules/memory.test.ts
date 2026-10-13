@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { act, createBattle, ENEMIES, MEMBERS, resolveEnemy } from '../../src/rules/battle.ts';
-import { anchor, canRemind, createMemory, forget, forgettable, held, hollow, INITIAL_LOST, MEMORY_IDS, PERK_BONUS, remind, tideTakes, wipe } from '../../src/rules/memory.ts';
+import { anchor, canRemind, createMemory, forget, forgetAll, forgettable, held, hollow, INITIAL_LOST, MEMORY_IDS, PERK_BONUS, remind, tideTakes, wipe } from '../../src/rules/memory.ts';
 import type { Memory } from '../../src/rules/memory.ts';
 
 test('the hero wakes with some memories gone and no Hollow strength beyond his base', () => {
@@ -85,4 +85,24 @@ test('forgetting the kraken tightens everyone\'s dodging', async () => {
   const sharp = createBattle('locust');
   const dull = createBattle('locust', [], { hollow: { mana: 0, damage: 2, trained: true, kraken: false } });
   for (const index of [0, 1, 2]) assert.ok(Math.abs(agility(sharp.party[index]) - agility(dull.party[index]) - NO_KRAKEN / 100) < 1e-9);
+});
+
+test('an anchor protects the last memory for one death, then the page is used up',()=>{
+  const last:Memory={lost:MEMORY_IDS.filter(id=>id!=='feast'),pending:false};
+  const owed=wipe(anchor(last,'feast'));
+  for(let death=0;death<20;death++)assert.equal(tideTakes(owed,death),undefined);
+  const paid=forgetAll(owed,[]);
+  assert.deepEqual(held(paid),['feast']);assert.deepEqual(paid.anchors,[]);assert.equal(paid.pending,false);
+  assert.equal(tideTakes(wipe(paid),21),'feast');
+});
+test('a written reminder becomes truly held even when there is no other memory to take',()=>{
+  const memory:Memory={lost:MEMORY_IDS.filter(id=>id!=='bear'),pending:false,keepsakeMemories:['bear']};
+  const owed=wipe(anchor(remind(memory,'bear','trial'),'trial'),2);
+  assert.equal(tideTakes(owed,1),undefined);
+  const paid=forgetAll(owed,[]);
+  assert.ok(held(paid).includes('trial'));assert.ok(!paid.lost.includes('trial'));
+  assert.deepEqual(paid.reminded,[]);assert.deepEqual(paid.anchors,[]);assert.deepEqual(paid.keepsakeMemories,['bear']);
+});
+test('passing an empty list cannot forgive a wipe that still has an unprotected memory',()=>{
+  const owed=wipe(createMemory());assert.equal(forgetAll(owed,[]),owed);
 });

@@ -3,9 +3,10 @@ import type { Condition, Effect } from '../rules/world';
 // A reply the hero can choose once the speaker is done. It may only be offered under a condition,
 // such as still remembering the feast, and may lead to further replies. After its answer the hero
 // returns to the same replies to ask something else, unless the reply ends the conversation.
-export type Choice = { text: string; if?: Condition; lines: string[]; then?: Effect; choices?: Choice[]; ends?: boolean };
-export type Conversation = { speaker: string; lines: string[]; then?: Effect; choices?: Choice[] };
-type Variant = { if: Condition; lines: string[]; then?: Effect; choices?: Choice[] };
+export type DialogueVoice = {speaker:string; portrait?:string};
+export type Choice = { text: string; if?: Condition; lines: string[]; voices?: readonly (DialogueVoice | undefined)[]; then?: Effect; choices?: Choice[]; ends?: boolean };
+export type Conversation = { speaker: string; lines: string[]; voices?: readonly (DialogueVoice | undefined)[]; then?: Effect; choices?: Choice[] };
+type Variant = { if: Condition; lines: string[]; voices?: readonly (DialogueVoice | undefined)[]; then?: Effect; choices?: Choice[] };
 // The first variant whose condition holds replaces the usual lines.
 // A point whose hiddenIf condition holds can no longer be interacted with, like a bell already picked up.
 // portrait names the texture to show beside the speaker when it is not the NPC standing at that point.

@@ -1,26 +1,31 @@
-import type {Choice,Dialogue} from './dialogue';
+import type {Choice,Dialogue,DialogueVoice} from './dialogue';
 import type {Condition} from '../rules/world';
+
+const bear:DialogueVoice={speaker:'THE BEAR',portrait:'bear'};
+const miller:DialogueVoice={speaker:'THE MILLER',portrait:'miller'};
+const reeve:DialogueVoice={speaker:'THE REEVE',portrait:'reeve'};
+const mill:DialogueVoice={speaker:'AT THE MILL'};
 
 const ready:Condition={all:[{flag:'bear-free'},{flag:'boar-defeated'},{not:{fallen:'bear'}}]};
 const unresolved:Condition={all:[ready,{not:{flag:'bear-quest-complete'}}]};
 const settled:Condition={any:[{flag:'bear-reeve-accountable'},{flag:'bear-mill-left'}]};
 
 export const bearReturn:Dialogue={
-  'bear-return':{speaker:'THE BEAR',portrait:'bear',prompt:'Speak to the bear at the old chain',hiddenIf:[{not:ready}],lines:[
-    'He stands beside the stone without touching it. “The boar said nobody came back to his farm. I keep thinking about that.”',
-    '“I do not want this mill burned. I want to know what they wrote down while I was turning it.” He looks toward the door. “Will you read it with me?”',
+  'mill-chain':{speaker:'THE OLD CHAIN',prompt:'Look at the old chain',hiddenIf:[{not:{flag:'bear-quest-complete'}}],lines:['The chain lies loose beside the stone. A small gap shows where the worn link came away.','The bear brushes your shoulder as you pass. He keeps walking.']},
+  'bear-return':{speaker:'THE BEAR',portrait:'bear',prompt:'Speak to the bear at the old chain',hiddenIf:[{not:ready},{flag:'bear-quest-complete'}],lines:[
+    'His paw stops just short of the stone. “Still wearing the same groove,” he says. He looks at the bare patch on his wrist.',
+    '“There was a book inside. He used to count the sacks while I worked.” He looks toward the door. “Could we have a look?”',
   ],then:{set:'bear-mill-returned'},variants:[
     {if:{flag:'bear-quest-complete'},lines:[
       'He rests a paw on the stone. It does not move unless he decides to push it.',
       '“That little link is ours now. This place does not get to tell us what it means.”',
     ]},
     {if:settled,lines:[
-      'He lifts the old chain. One link gives where the stone wore it thin. It fits in your hand.',
-      '“You remembered me when you could. I remembered you when you could not. Let this do some of the work.”',
+      'He works a claw into a link worn thin against the stone. The metal gives with a small, dull click. He turns it over, rubbing away the rust.',
+      '“Ugly little thing.” He almost laughs. Then he holds it out. “Here. If you forget which one I am, I will ask you where you got this.”',
     ],choices:[{text:'Keep the broken link.',ends:true,lines:[
       'He closes your fingers around the metal. It is warm from his paw.',
-      'You remember the laugh at the feast, the chain at the mill, and the friend who stayed. This memory has somewhere the tide cannot reach.',
-      'Found: Broken mill-chain link. The bear’s memory is held permanently, even when the keepsake is not equipped.',
+      'You rub your thumb along the worn edge. For a moment, there is bread on the table and he is laughing with his mouth full.',
     ],then:{set:'bear-quest-complete',find:'broken-link',keepMemory:'bear'}}]},
     {if:{flag:'bear-miller-witnessed'},lines:[
       '“He signed his own name. Now I want the reeve to put mine where his order said CONVICT.”',
@@ -38,33 +43,38 @@ export const bearReturn:Dialogue={
 };
 
 const millerChoices:Choice[]=[
-  {text:'Let the bear speak about the labour record.',if:{all:[unresolved,{flag:'bear-mill-record'},{not:{flag:'bear-miller-witnessed'}},{not:{flag:'bear-mill-left'}}]},lines:[
-    'The bear steps forward. “You wrote that I could not be trusted loose. I turned your stone until I could not lift my hands. What did I do to make you afraid?”',
-    'The miller reaches for the key on his belt, then lets it go. “Nothing. The brand said enough. I did not wait to find out.”',
-    '“Write that,” the bear says. “And write that you asked for another convict when I left.” He turns to you. “We can take his name to the reeve. Or we can leave him here. I will not beg for another writ.”',
-  ],choices:[
-    {text:'Take his signed statement to the reeve.',ends:true,lines:[
-      'The miller writes what the bear tells him. No church seal, no charge against a species. His own name beneath what he did.',
-      'The bear reads it once. “I want the order changed too. Not just the lock.”',
-      'You keep a copy with the grimoire. It will survive the walk back, and a death.',
-    ],then:{set:'bear-miller-witnessed'}},
-    {text:'Leave on the bear’s terms.',ends:true,lines:[
-      '“You were afraid of me,” the bear says. “You made that my punishment. I will not spend the rest of my life proving you wrong.”',
-      'He takes the key from the miller’s open hand and hangs it on the empty chain. “Keep it. Find another way to turn your stone.”',
-      'He turns toward the stream. “There is one piece of that chain I want to take. Come with me.”',
-    ],then:{set:'bear-mill-left'}},
+  {text:'Let the bear speak.',if:{all:[unresolved,{flag:'bear-mill-record'},{not:{flag:'bear-miller-witnessed'}},{not:{flag:'bear-mill-left'}}]},lines:[
+    'He sets the open book on a flour sack. “That day. Nine sacks. I remember the ninth.”',
+    '“Those were owed to the church.” The miller keeps his eyes on the column. “The carts were waiting.”',
+    '“My legs gave out. You wrote it down.” He puts a claw beside the entry. “Then you charged me for standing up.”',
+    'The miller starts to answer, but the bear has already turned the page. The request for a replacement lies between them.',
+    '“Was there someone else before me?”',
+    '“They said you were dangerous. After the feast, everyone—” He stops. “I had the key. I could have let you sit.”',
+    '“Put that underneath. With your name.” The bear waits until the miller reaches for the pen.',
+    'He speaks quietly to you while the nib scratches. “The reeve signed the order. I could ask him to sign this too.” A pause. “Or we could just go. I do not want to spend another night here.”',
+  ],voices:[bear,miller,bear,mill,bear,miller,bear,bear],choices:[
+    {text:'Take it to the reeve.',ends:true,lines:[
+      'The miller signs below the entry and sands the wet ink. He pulls a clean sheet from the back of the book and makes a copy.',
+      'The bear reads it slowly. “I want him to stop asking for another one of us.”',
+      'You tuck the sheet between two pages of the grimoire. The bear keeps a finger on the corner until you close it.',
+    ],voices:[mill,bear,mill],then:{set:'bear-miller-witnessed'}},
+    {text:'Leave with him.',ends:true,lines:[
+      '“Keep the page,” the bear says to the miller. “You know what it says now.”',
+      'He takes the key from the miller’s open hand and hangs it on the empty chain. He watches it settle, then lets go.',
+      '“One thing first.” He turns toward the old stone. “There is a piece I want to take with me.”',
+    ],voices:[bear,mill,bear],then:{set:'bear-mill-left'}},
     {text:'We can come back to this.',ends:true,lines:['The bear nods. “We can. That is the difference now.”']},
   ]},
 ];
 
 const reeveChoices:Choice[]=[
-  {text:'Show the miller’s statement. Let the bear speak.',if:{all:[unresolved,{flag:'bear-miller-witnessed'},{not:{flag:'bear-reeve-accountable'}}]},ends:true,lines:[
-    'The reeve begins to read the statement aloud. The bear stops him. “I know what it says. I was there. I want to know whether you will send him somebody else.”',
-    '“The church permits—” “You signed the writ. He held the key. Put your name beside that.”',
+  {text:'Show the miller’s statement.',if:{all:[unresolved,{flag:'bear-miller-witnessed'},{not:{flag:'bear-reeve-accountable'}}]},ends:true,lines:[
+    'The reeve reads the page twice. “The mill must turn. The highlands are waiting for grain.” He sets it beside your release writ.',
+    '“The carts are moving because we went up that road.” The bear does not raise his voice. “There is water in the stream. There are people you can pay. Cross out the request.”',
     'The reeve draws a line through the request for another convict. In a new order, he writes that the mill will receive no chained labour. He signs it where the bear can see.',
-    '“And my name,” the bear says. The reeve writes it in place of CONVICT. The bear reads the page, folds his copy, and leaves through the front door.',
-    'Outside, he lets out a long breath. “Now I can go back for the piece I want to keep.”',
-  ],then:{set:'bear-reeve-accountable'}},
+    '“My name, too.” The bear waits while the reeve finds room beside the old entry. Then he folds the copy himself. The reeve does not offer to call a guard.',
+    'Outside, he stops halfway down the steps and looks at his empty hands. “There is something I want to take from that chain. Will you walk back with me?”',
+  ],voices:[reeve,bear,{speaker:'THE REEVE’S OFFICE'},bear,bear],then:{set:'bear-reeve-accountable'}},
 ];
 
 // Add quest replies to every existing variant so other writs, rewards and rumours remain available.
@@ -98,10 +108,10 @@ export function withBearLedger(dialogue:Dialogue):Dialogue {
       'You remember those things. The book is no longer the only place that holds his story.',
     ]},
     {if:{all:[unresolved,{flag:'bear-mill-returned'}]},lines:[
-      ...original.lines,
+      'A strip of grey cloth marks a page near the back. The bear recognizes it before you do. “He cut that off my sleeve.”',
       'Farther on: CONVICT UNIT, BEAR. Days worked, flour owed to the church, food deducted. Beside several dates: UNABLE TO STAND. The next column still charges a full day’s flour.',
-      'After his release: REQUEST REPLACEMENT CONVICT. ENDORSEMENT REQUIRED: REEVE. The bear runs one claw under the line. “It was never the stone that needed me.”',
-    ],then:{set:'bear-mill-record'}},
+      'He turns another page. REQUEST REPLACEMENT CONVICT. ENDORSEMENT REQUIRED: REEVE. “He wrote this the day we left.” The bear closes his hand over the edge of the book. “Let me speak to him.”',
+    ],voices:[undefined,undefined,bear],choices:[{text:'Earlier pages.',lines:original.lines},{text:'Close the book.',ends:true,lines:[]}],then:{set:'bear-mill-record'}},
     ...(original.variants ?? []),
   ]}};
 }

@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './fixtures';
 
 const at = (page: Page, key: string) => page.evaluate(async key => {
   const { game } = await import('/src/main.ts');

@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './fixtures';
 // From a fresh browser, with whatever each test seeds.
 test.use({ storageState: { cookies: [], origins: [] } });
 const at = (page: Page, key: string) => page.evaluate(async key => {

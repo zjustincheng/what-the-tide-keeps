@@ -46,6 +46,18 @@ test('the quest keeps writs, pest rewards, and the heron clue available and need
   const fallen={...ctx([...ready,'bear-mill-record']),world:{...ctx([...ready,'bear-mill-record']).world,fallen:['bear' as const]}};
   assert.ok(!replies(conversation(withBearReplies(fields,'miller'),'miller',fallen).choices,fallen).some(choice=>choice.text.startsWith('Let the bear speak')));
 });
+test('quest dialogue follows the actual speakers and retains the older ledger clue',()=>{
+  const context=ctx([...ready,'bear-mill-returned','bear-mill-record']);
+  const speech=replies(conversation(withBearReplies(fields,'miller'),'miller',context).choices,context).find(choice=>choice.text==='Let the bear speak.')!;
+  assert.equal(speech.voices?.length,speech.lines.length);
+  assert.equal(speech.voices?.[0]?.speaker,'THE BEAR');
+  assert.equal(speech.voices?.[1]?.speaker,'THE MILLER');
+  const ledger=conversation(withBearLedger(millInside),'mill-ledger',context);
+  assert.match(ledger.choices!.find(choice=>choice.text==='Earlier pages.')!.lines.join(' '),/PIKE TAKEN FROM THE POND/);
+  assert.equal(ledger.voices?.[2]?.portrait,'bear');
+  const reward=conversation(bearReturn,'bear-return',ctx([...ready,'bear-mill-left'])).choices![0];
+  assert.doesNotMatch(reward.lines.join(' '),/equipment|permanently|mana/);
+});
 test('the keepsake restores a lost bear memory and protects it through every later wipe without an anchor slot',()=>{
   let memory=keepMemory({lost:['bear','home','name'],pending:false,anchors:['bear']},'bear');
   assert.ok(held(memory).includes('bear'));assert.ok(!memory.lost.includes('bear'));

@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './fixtures';
 import { win } from './helpers';
 
 // A fresh game except for what each test seeds.
@@ -78,7 +78,7 @@ test('the courier\'s letter is lost on a wipe, and pays at the fort when deliver
     game.scene.getScene('pass').scene.start('fort', { spawn: 'from-pass' });
   });
   await expect.poll(() => at(page, 'fort')).not.toBeNull();
-  await go(page, 'fort', 568, 174, 'Speak to the quartermaster');
+  await go(page, 'fort', 548, 148, 'Speak to the quartermaster');
   await expect(page.locator('#dialogue-text')).toContainText('church seal');
   await talk(page);
   await expect(page.locator('#purse')).toHaveText('15 coins');
@@ -150,7 +150,7 @@ test('coming to the vulture with her note in hand, there is no fight', async ({ 
   await expect(page.locator('#hud .hud-member')).toHaveCount(3);
 });
 
-test('the deserters, the hyena, her ledger, and the inquisitor on the road', async ({ page }) => {
+test('the deserters, the hyena, and her ledger', async ({ page }) => {
   await start(page, { ...BEAR, flags: ['bear-free', 'boar-defeated', 'vulture-free', 'bridge-lowered', 'ossuary-key', 'hyena-challenged', 'lantern'] }, 'abbey', 'from-battlefield');
   await place(page, 'abbey', 260, 240);
   await page.keyboard.down('d');
@@ -170,18 +170,7 @@ test('the deserters, the hyena, her ledger, and the inquisitor on the road', asy
   await go(page, 'ossuary', 328, 112, 'Read the ledger');
   await talk(page);
   expect(JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.world.v1')))!).flags).toEqual(expect.arrayContaining(['hyena-slain', 'ration-ledger', 'pair-slain']));
-  // On the way back, something far larger is on the pass.
-  await page.evaluate(async () => {
-    const { game } = await import('/src/main.ts');
-    game.scene.getScene('ossuary').scene.start('pass', { spawn: 'from-fort' });
-  });
-  await expect.poll(() => at(page, 'pass')).not.toBeNull();
-  await place(page, 'pass', 360, 120);
-  await page.keyboard.down('s');
-  await expect(page.getByRole('heading', { name: 'The inquisitor' })).toBeVisible();
-  await page.keyboard.up('s');
-  await page.getByRole('button', { name: /^Run/ }).click();
-  await page.getByRole('button', { name: 'Get away' }).click();
+  // After the hyena, the inquisitor hunts the roads: that chase is checked in pursuit.spec.ts.
 });
 
 test('the old border fort: the captain holds the lantern, and the smith tempers what you carry', async ({ page }) => {

@@ -48,3 +48,17 @@ export async function attackUntilWiped(page: Page) {
   }
   await expect(wake).toBeVisible({ timeout: 15000 });
 }
+
+// Dodge results show for a moment before the next blow replaces them. Record every message the dodge bar shows,
+// from now on, so a check can ask whether one appeared without having to catch it on screen.
+export async function recordDodgeCalls(page: Page) {
+  await page.evaluate(() => {
+    const seen: string[] = ((window as unknown as { dodgeCalls?: string[] }).dodgeCalls = []);
+    new MutationObserver(() => {
+      const text = document.querySelector('.dodge-call')?.textContent ?? '';
+      if (text && seen.at(-1) !== text) seen.push(text);
+    }).observe(document.body, { childList: true, characterData: true, subtree: true });
+  });
+  return (text: string | RegExp) => expect.poll(() => page.evaluate(() => (window as unknown as { dodgeCalls: string[] }).dodgeCalls))
+    .toContainEqual(typeof text === 'string' ? text : expect.stringMatching(text));
+}

@@ -48,7 +48,7 @@ test('mercy leads through the full aftermath, restores the save, and returns to 
 test('the lost-memory ending stays distinct and does not grant the pardon',async({page})=>{
   await start(page,true);await page.getByRole('button',{name:/Take the seat beside him/}).click();await page.locator('#continue').click();await page.locator('#continue').click();
   const ending=page.locator('.cinematic[data-story="ending-bad"]');await expect(ending).toBeVisible();
-  await expect(ending.locator('.cinema-line')).toContainText('cannot remember why');
+  await expect(ending.locator('.cinema-line')).toContainText("can't remember why");
   for(let i=0;i<5;i++)await ending.locator('.cinema-next').click();await expect(ending).toHaveCount(0);
   const flags=await page.evaluate(()=>JSON.parse(localStorage.getItem('tide-keeps.world.v1')!).flags);
   expect(flags).toContain('human-seated');expect(flags).not.toContain('human-spared');

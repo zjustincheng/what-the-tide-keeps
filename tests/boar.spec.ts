@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './fixtures';
 
 const at = (page: Page, key: string) => page.evaluate(async key => {
   const { game } = await import('/src/main.ts');
@@ -115,13 +115,13 @@ test('brought down the first time, the boar gets back up after a scene, as his s
   await scene.getByRole('button', { name: /Continue/ }).click();
   await expect(scene.locator('.cutscene-speaker')).toHaveText('THE BADGER');
   // The speaker appears as themselves, and the line types out.
-  await expect(scene.locator('img')).toHaveAttribute('src', /badger\.svg/);
+  await expect(scene.locator('[data-speaking="true"] img')).toHaveAttribute('src', /badger\.svg/);
   await expect(scene.locator('.cutscene-line')).toHaveText("Stay down! It's done. Stay down!");
   await scene.getByRole('button', { name: /Continue/ }).click();
   await expect(scene.locator('.cutscene-line')).toHaveText('I stayed down last time.');
   await scene.getByRole('button', { name: /Continue/ }).click();
   await expect(scene.locator('.cutscene-line')).toHaveText('He gets up. Smoke is rising off his bristles.');
-  await scene.getByRole('button', { name: /Continue/ }).click();
+  await scene.getByRole('button', { name: /Return to battle/ }).click();
   await expect(scene).toHaveCount(0);
   await expect(page.locator('#battle-title')).toHaveText('The boar, cornered.');
   await expect(page.locator('.battle-heading .eyebrow')).toHaveText('SECOND STAGE');

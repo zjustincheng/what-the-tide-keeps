@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { characterDepth, characterFootprint } from '../presentation/townsfolk';
 import { createBattle, downed, drainedAfter, enemyMana, ENEMIES, LIEUTENANTS, MEMBERS, woundsAfter } from '../rules/battle';
 import type { Battle, BattleOptions } from '../rules/battle';
 import type { Encounter, Escort } from '../rules/battle';
@@ -29,6 +30,8 @@ import { boutAfter, boutWon, BOUTS } from '../rules/ring';
 import { landing } from '../rules/leap';
 import { ClimbView } from '../ui/ClimbView';
 import { EndingView } from '../ui/EndingView';
+import {KeepsakeView} from '../ui/KeepsakeView';
+import {equip,SLOTS} from '../rules/gear';
 import { endingStory } from '../rules/ending';
 import type { Ending } from '../rules/ending';
 import type { Ground } from '../rules/leap';
@@ -73,7 +76,7 @@ import { OceanAtmosphere } from '../presentation/oceanLife';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 type Point = { name: string; x: number; y: number };
-type Prop = { sprite: Phaser.Physics.Arcade.Sprite; hiddenIf: Condition[]; shadow?: Phaser.GameObjects.Ellipse };
+type Prop = { sprite: Phaser.Physics.Arcade.Sprite; hiddenIf: Condition[]; shadow?: Phaser.GameObjects.Ellipse; transition?: Phaser.Tweens.Tween };
 type Foe = { encounter: Encounter; defeat?: Effect; fledAt?: number; ambush?: boolean; lurks?: boolean; hidden?: boolean; decoy?: boolean; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container;
   home: { x: number; y: number }; phase: number; point: string; waves?: number; company?: readonly Escort[]; pursuer?: boolean };
 // Ordinary enemies come after the hero once he is in sight, a little slower than he walks; bosses and guardians hold their ground.
@@ -81,7 +84,7 @@ type Foe = { encounter: Encounter; defeat?: Effect; fledAt?: number; ambush?: bo
 const CHASE: Partial<Record<Encounter, { sight: number; speed: number }>> = {
   locust: { sight: 90, speed: 44 }, weevil: { sight: 80, speed: 36 }, acolyte: { sight: 96, speed: 40 }, hound: { sight: 120, speed: 58 },
   wisp: { sight: 100, speed: 50 }, raider: { sight: 110, speed: 52 }, ghoul: { sight: 90, speed: 34 }, inquisitor: { sight: 170, speed: 40 },
-  harrier: { sight: 140, speed: 62 }, hornet: { sight: 130, speed: 60 }, cricket: { sight: 110, speed: 56 }, sentinel: { sight: 110, speed: 46 }, barracuda: { sight: 120, speed: 66 }, jelly: { sight: 80, speed: 26 },
+  harrier: { sight: 140, speed: 62 }, hornet: { sight: 130, speed: 60 }, cricket: { sight: 110, speed: 56 }, barracuda: { sight: 120, speed: 66 }, jelly: { sight: 80, speed: 26 },
 };
 // How far a chaser will follow from where it stands before giving up and going back.
 const LEASH = 200;
@@ -100,7 +103,7 @@ const HIDE_DRAIN = 2500;
 const FALL_WOUND = 3, CRACKS = 450, GIVES = 800, COMES_BACK = 3000;
 // Physics bodies sized to each enemy's drawn silhouette: width, height, x offset, y offset.
 const BODY: Record<Encounter, [number, number, number, number]> = { locust: [22, 20, 5, 8], acolyte: [20, 20, 6, 9], weevil: [22, 16, 5, 10], boar: [30, 22, 5, 10], swarm: [30, 24, 9, 8], warden: [22, 26, 5, 4], leech: [28, 24, 2, 4], hound: [20, 22, 6, 8], pack: [22, 24, 5, 6], wisp: [14, 14, 9, 9], drowned: [20, 26, 6, 4], kraken: [48, 40, 0, 0],
-  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4], captain: [22, 24, 5, 6], harrier: [22, 18, 5, 8], mosquito: [20, 16, 6, 8], scorpion: [24, 16, 4, 12], brood: [26, 20, 3, 8], apprentice: [22, 22, 5, 8], viper: [26, 20, 3, 10], hornet: [20, 16, 6, 8], spider: [26, 16, 3, 12], duellist: [20, 22, 6, 8], cuckoo: [22, 22, 5, 8], warder: [26, 18, 3, 12], cricket: [22, 14, 5, 14], flight: [26, 20, 3, 8], champion: [22, 22, 5, 8], shark: [26, 18, 3, 10], barracuda: [24, 12, 4, 12], jelly: [22, 20, 5, 8], eel: [26, 14, 3, 12], cuttlefish: [28, 22, 2, 8], sentinel: [22, 24, 5, 6], keeper: [26, 26, 3, 4], human: [24, 30, 4, 2] };
+  raider: [20, 20, 6, 9], ghoul: [20, 22, 6, 7], vulture: [22, 22, 5, 8], pair: [22, 22, 5, 8], hyena: [24, 20, 4, 10], inquisitor: [22, 26, 5, 4], captain: [22, 24, 5, 6], harrier: [22, 18, 5, 8], mosquito: [20, 16, 6, 8], scorpion: [24, 16, 4, 12], brood: [26, 20, 3, 8], apprentice: [22, 22, 5, 8], viper: [26, 20, 3, 10], hornet: [20, 16, 6, 8], spider: [26, 16, 3, 12], duellist: [20, 22, 6, 8], cuckoo: [22, 22, 5, 8], warder: [26, 18, 3, 12], cricket: [22, 14, 5, 14], flight: [26, 20, 3, 8], champion: [22, 22, 5, 8], shark: [26, 18, 3, 10], barracuda: [24, 12, 4, 12], jelly: [22, 20, 5, 8], eel: [26, 14, 3, 12], cuttlefish: [28, 22, 2, 8], human: [24, 30, 4, 2] };
 // Whether the last save succeeded, shared by every area.
 let saved = true;
 // The way out of a conversation, offered whenever the hero comes back to the replies.
@@ -144,7 +147,7 @@ export class AreaScene extends Phaser.Scene {
   private people: Phaser.Physics.Arcade.Sprite[] = [];
   private walls!: Phaser.Tilemaps.TilemapLayer;
   private pendingStories: StoryId[] = [];
-  private overlay?: CinematicView | MemoriesView | BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView;
+  private overlay?: CinematicView | MemoriesView | BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView | KeepsakeView;
   // A shop to open once the current conversation ends.
   private pendingShop?: ShopId;
   // A campfire to rest at once the current conversation ends.
@@ -196,6 +199,8 @@ export class AreaScene extends Phaser.Scene {
   private huntLabel = '';
   private millbrook?: MillbrookAtmosphere;
   private memoryEcho?: HTMLElement;
+  private dialogueBasePortrait?:string;
+  private pendingKeepsake=false;
   private pendingCampTalk?: 'bear' | 'vulture' | 'frog' | 'hero' | 'octopus';
   private oceanLife?: OceanAtmosphere;
   private holdsLife?: HoldsAtmosphere;
@@ -209,7 +214,7 @@ export class AreaScene extends Phaser.Scene {
     this.pendingStories = [];
     this.arrival = data?.spawn ?? 'spawn';
     this.hunter = undefined; this.huntRoute = []; this.huntRouteAt = 0; this.huntSavedAt = 0; this.huntLabel = '';
-    this.oceanLife = undefined; this.holdsLife = undefined; this.millbrook = undefined; this.fortLife = undefined; this.marshLife = undefined; this.memoryEcho = undefined; this.pendingCampTalk = undefined;
+    this.oceanLife = undefined; this.holdsLife = undefined; this.millbrook = undefined; this.fortLife = undefined; this.marshLife = undefined; this.memoryEcho = undefined; this.pendingCampTalk = undefined; this.pendingKeepsake=false;
     this.following = loadPursuit().phase === 'chasing';
     this.hunterDelay = this.following ? 2500 : 0;
     this.thrownOut = data?.caught;
@@ -238,8 +243,9 @@ export class AreaScene extends Phaser.Scene {
     this.points = map.getObjectLayer('Points')!.objects.map(p => ({ name: p.name, x: p.x!, y: p.y! }));
     const spawn = this.point(this.arrival);
     createSprites(this);
-    this.shadow = this.add.ellipse(spawn.x, spawn.y + 3, 14, 6, 0x122b22, 0.6);
+    this.shadow = this.add.ellipse(spawn.x, spawn.y + 9, 14, 6, 0x122b22, 0.6).setDepth(3.5);
     this.player = this.physics.add.sprite(spawn.x, spawn.y, 'hero');
+    this.player.setDepth(characterDepth(this.player));
     this.player.setSize(9, 7).setOffset(5, 17).setCollideWorldBounds(true);
     this.safe = { x: spawn.x, y: spawn.y };
     this.physics.world.setBounds(...this.area.bounds ?? [0, 0, map.widthInPixels, map.heightInPixels]);
@@ -248,11 +254,12 @@ export class AreaScene extends Phaser.Scene {
     this.physics.add.collider(this.player, furniture);
     for (const { point, texture, hiddenIf = [], peek } of this.area.npcs) {
       const at = this.point(point);
-      const shadow = this.add.ellipse(at.x, at.y + 4, 15, 6, 0x142a23, 0.6);
+      const shadow = this.add.ellipse(at.x, at.y + 9, 15, 6, 0x142a23, 0.6).setDepth(3.5);
       const npc = this.physics.add.staticSprite(at.x, at.y, texture);
       // Someone hiding badly: smaller, and in shadow.
       if (peek) npc.setScale(0.7).setTint(0x8a8e88);
-      npc.setSize(10, 8).setOffset(5, 16);
+      characterFootprint(npc);
+      npc.setDepth(characterDepth(npc));
       this.physics.add.collider(this.player, npc);
       // People breathe, each at their own pace, and look at the hero as he passes. A hider holds their breath.
       if (!peek) this.breathe(npc);
@@ -269,6 +276,7 @@ export class AreaScene extends Phaser.Scene {
       const at = this.point(point);
       this.add.ellipse(at.x, at.y + 4, range * 2, range * 2, 0xc8b878, 0.06).setStrokeStyle(1, 0xc8b878, 0.25).setDepth(2);
       const sprite = this.physics.add.staticSprite(at.x, at.y, texture).setDepth(4);
+      sprite.setDepth(characterDepth(sprite));
       this.physics.add.collider(this.player, sprite);
       this.breathe(sprite);
       this.sentries.push({ sprite, range });
@@ -280,7 +288,7 @@ export class AreaScene extends Phaser.Scene {
       // Loose things glint so they can be found without a marker.
       else this.tweens.add({ targets: sprite, alpha: 0.55, duration: 900, yoyo: true, repeat: -1 });
       if (BREATHING.has(texture)) this.breathe(sprite);
-      sprite.setDepth(3);
+      sprite.setDepth(BREATHING.has(texture) ? characterDepth(sprite) : 3);
       this.props.push({ sprite, hiddenIf });
     }
     for (const [point, ingredient] of Object.entries(this.area.forage ?? {})) {
@@ -303,11 +311,11 @@ export class AreaScene extends Phaser.Scene {
     this.area.decorate?.(this);
     atmosphere(this, this.area);
     this.grade();
-    if(this.area.key==='town') this.millbrook = new MillbrookAtmosphere(this,this.context());
-    if(this.area.key==='fort') this.fortLife = new FortAtmosphere(this,this.context());
-    if(this.area.key==='outlaw-port' || this.area.key==='sea-pens') this.oceanLife = new OceanAtmosphere(this,this.area.key,this.context(),furniture);
-    if(this.area.key==='hold') this.holdsLife = new HoldsAtmosphere(this,this.context());
-    if(this.area.key==='wickmere' || this.area.key==='hospice') this.marshLife = new MarshAtmosphere(this,this.area.key,this.context());
+    if(this.area.key==='town') this.millbrook = new MillbrookAtmosphere(this,this.context(),this.player);
+    if(this.area.key==='fort') this.fortLife = new FortAtmosphere(this,this.context(),this.player);
+    if(this.area.key==='outlaw-port' || this.area.key==='sea-pens') this.oceanLife = new OceanAtmosphere(this,this.area.key,this.context(),furniture,this.player);
+    if(this.area.key==='hold') this.holdsLife = new HoldsAtmosphere(this,this.context(),this.player);
+    if(this.area.key==='wickmere' || this.area.key==='hospice') this.marshLife = new MarshAtmosphere(this,this.area.key,this.context(),this.player);
     this.keys = this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT', false) as typeof this.keys;
     this.bindControls();
     element('location-region').textContent = this.area.region;
@@ -319,10 +327,15 @@ export class AreaScene extends Phaser.Scene {
     // The first time in a place with gaps to leap, say how.
     const climbable=Object.keys(this.area.climbs ?? {}).length>0;
     const gaps=this.gapTile!==undefined && Boolean(this.walls.findTile(tile=>tile.index===this.gapTile));
-    if((gaps || climbable) && !HINTED.has(this.area.key)) { HINTED.add(this.area.key); this.time.delayedCall(900, () => this.notice([
-      ...(climbable ? ['Walls with handholds can be climbed: go to the foot of one. Dodge what falls.'] : []),
-      ...(gaps ? ['Shift (or Leap) to jump a gap. Loose ground won\'t hold you for long.'] : []),
-    ].join(' '), 6000)); }
+    // Shown once, when nothing else is being said; if something is, it waits for the next visit.
+    if((gaps || climbable) && !HINTED.has(this.area.key)) this.time.delayedCall(900, () => {
+      if(!element('sneaking').hidden) return;
+      HINTED.add(this.area.key);
+      this.notice([
+        ...(climbable ? ['Walls with handholds can be climbed: go to the foot of one. Dodge what falls.'] : []),
+        ...(gaps ? ['Shift (or Leap) to jump a gap. Loose ground won\'t hold you for long.'] : []),
+      ].join(' '), 6000);
+    });
     music.play(this.area.music);
     this.prepareHunt();
     this.renderMemory();
@@ -532,16 +545,20 @@ export class AreaScene extends Phaser.Scene {
     this.holdsLife?.refresh(context);
     this.oceanLife?.refresh(context);
     if(['town','fort','wickmere','hold','outlaw-port'].includes(this.area.key)) element('location-place').textContent = `/ ${this.locationTitle()}`;
-    for (const { sprite, hiddenIf, shadow } of this.props) {
+    for (const prop of this.props) {
+      const {sprite,hiddenIf,shadow} = prop;
       const hidden = hiddenIf.some(condition => holds(context, condition));
       shadow?.setVisible(!hidden);
       if (hidden && sprite.active) {
+        prop.transition?.stop();
         sprite.disableBody(true, false);
-        if (instant) sprite.setVisible(false);
-        else this.tweens.add({ targets: sprite, alpha: 0, scale: 0.6, duration: 700, delay: 300, onComplete: () => sprite.setVisible(false) });
+        if (instant) sprite.setVisible(false).setAlpha(0);
+        else prop.transition = this.tweens.add({ targets: sprite, alpha: 0, duration: 350, onComplete: () => sprite.setVisible(false) });
       } else if (!hidden && !sprite.active) {
+        prop.transition?.stop();
         sprite.enableBody(false, 0, 0, true, true);
-        if (!instant) this.tweens.add({ targets: sprite, alpha: { from: 0, to: 1 }, duration: 700 });
+        if (instant) sprite.setAlpha(1);
+        else prop.transition = this.tweens.add({ targets: sprite, alpha: { from: sprite.alpha, to: 1 }, duration: 350 });
       }
     }
   }
@@ -550,6 +567,11 @@ export class AreaScene extends Phaser.Scene {
   private ground(tx: number, ty: number): Ground {
     const tile = this.walls.getTileAt(tx, ty);
     if (tx < 0 || ty < 0 || tx >= this.walls.layer.width || ty >= this.walls.layer.height) return 'wall';
+    const size=this.walls.tilemap.tileWidth, height=this.walls.tilemap.tileHeight;
+    const left=tx*size, top=ty*height;
+    // Leaps obey the same solid people and story gates as walking. Hidden props
+    // remain in Arcade's search tree but must not leave an invisible obstacle.
+    if(this.physics.overlapRect(left,top,size,height,false,true).some(body=>body.enable && body.left<left+size && body.right>left && body.top<top+height && body.bottom>top))return 'wall';
     if (!tile || !tile.collides) return 'open';
     return (tile.tileset?.getTileProperties(tile.index) as { gap?: boolean } | null)?.gap ? 'gap' : 'wall';
   }
@@ -600,6 +622,7 @@ export class AreaScene extends Phaser.Scene {
     const from = this.feet();
     const { dx, dy } = this.facing;
     const lands = landing((tx, ty) => this.ground(tx, ty), from, dx, dy);
+    if(!lands) { this.notice('There is no room to leap that way.',1200); return; }
     const below = body.center.y - this.player.y;
     this.leaping = true;
     this.player.setVelocity(0);
@@ -675,7 +698,7 @@ export class AreaScene extends Phaser.Scene {
   private slideAroundCorners(x: number, y: number) {
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     // Walls, and anything solid standing on the map: dark water, barricades, people.
-    const solid = (wx: number, wy: number) => Boolean(this.walls.getTileAtWorldXY(wx, wy)?.collides) || this.physics.overlapRect(wx, wy, 1, 1, false, true).length > 0;
+    const solid = (wx: number, wy: number) => Boolean(this.walls.getTileAtWorldXY(wx, wy)?.collides) || this.physics.overlapRect(wx, wy, 1, 1, false, true).some(body => body.enable);
     const reach = 7, speed = this.sneaking ? 42 : 70;
     if (y && !x && (body.blocked.up || body.blocked.down || body.touching.up || body.touching.down)) {
       const ahead = y < 0 ? body.top - 2 : body.bottom + 2;
@@ -897,11 +920,7 @@ export class AreaScene extends Phaser.Scene {
   // Speak with a portrait in its own box above the text, as in Omori; objects and places show only a name.
   private say(conversation: Conversation, portrait=this.portraitKey, returning=false) {
     this.active=conversation;this.line=0;this.portraitKey=portrait;this.returning=returning;
-    element('speaker').textContent=conversation.speaker;
-    const frame=element('portrait');
-    frame.hidden=!portrait;
-    element('dialogue').classList.toggle('with-portrait',Boolean(portrait));
-    if(portrait) (frame.querySelector('img') as HTMLImageElement).src=this.portrait(portrait);
+    this.dialogueBasePortrait=portrait;
     element('dialogue').hidden=false;
     this.showLine();
   }
@@ -909,6 +928,12 @@ export class AreaScene extends Phaser.Scene {
   // Show the current line; under the last one, offer whatever replies the hero can still give.
   private showLine() {
     const active=this.active!;
+    const voice=active.voices?.[this.line];
+    this.portraitKey=voice?voice.portrait:this.dialogueBasePortrait;
+    element('speaker').textContent=voice?.speaker ?? active.speaker;
+    const frame=element('portrait');frame.hidden=!this.portraitKey;
+    element('dialogue').classList.toggle('with-portrait',Boolean(this.portraitKey));
+    if(this.portraitKey) (frame.querySelector('img') as HTMLImageElement).src=this.portrait(this.portraitKey);
     const text=fill(active.lines[this.line], this.context());
     element('dialogue-text').textContent=text;
     this.speak(text);
@@ -958,7 +983,7 @@ export class AreaScene extends Phaser.Scene {
     if(!option.then && record({ speaker: this.active!.speaker, topic: option.text, lines: option.lines.map(line=>fill(line, this.context())), place: this.area.place })) music.effect('key', 7);
     // After an answer, the hero can ask something else from the same replies, unless this one ends it.
     const back=option.choices ?? (option.ends ? undefined : this.menu);
-    this.say({ speaker: this.active!.speaker, lines: option.lines, choices: back }, this.portraitKey, Boolean(back && !option.choices));
+    this.say({ speaker: this.active!.speaker, lines: option.lines, voices:option.voices, choices: back }, this.dialogueBasePortrait, Boolean(back && !option.choices));
   }
 
   private effect(then?: Effect) {
@@ -974,6 +999,7 @@ export class AreaScene extends Phaser.Scene {
     if(then.arm) this.pendingArm=then.arm;
     if(then.dice) this.pendingDice={ stake: then.dice, opponent: (this.active?.speaker ?? 'the house').toLowerCase().replace(/^(a|an|the) /, 'the ') };
     if(then.shop) this.pendingShop=then.shop;
+    if(then.find==='broken-link' && !loadWorld().found.includes('broken-link')) this.pendingKeepsake=true;
     if(then.find || then.learn || then.give) music.effect('find');
     if(then.earn || then.pay) music.effect('coins');
     if(then.rest) music.effect('rest');
@@ -1008,7 +1034,7 @@ export class AreaScene extends Phaser.Scene {
     for(const timer of this.blips) clearTimeout(timer);
     this.blips=[];
     if(!this.portraitKey) { music.effect('select'); return; }
-    const voice=[...this.active!.speaker].reduce((sum,letter)=>sum+letter.charCodeAt(0),0)%12-6;
+    const voice=[...element('speaker').textContent!].reduce((sum,letter)=>sum+letter.charCodeAt(0),0)%12-6;
     const count=Math.min(6,Math.max(2,Math.ceil(text.length/22)));
     for(let i=0;i<count;i++) this.blips.push(setTimeout(()=>music.effect('blip', voice+[0,2,-1,3,1,-2][i]),i*75));
   }
@@ -1025,7 +1051,7 @@ export class AreaScene extends Phaser.Scene {
   private closeDialogue() {
     // Focus left on the hidden Continue button would strand the keyboard, so it returns to the map.
     if(element('dialogue').contains(document.activeElement)) element('game').focus({preventScroll:true});
-    this.active=undefined;this.options=[];this.portraitKey=undefined;this.menu=undefined;this.returning=false;element('dialogue').hidden=true;element('choices').hidden=true;element('continue').hidden=false;
+    this.active=undefined;this.options=[];this.portraitKey=undefined;this.dialogueBasePortrait=undefined;this.menu=undefined;this.returning=false;element('dialogue').hidden=true;element('choices').hidden=true;element('continue').hidden=false;
     if (this.pendingStories.length && !this.leaving) {
       this.showStory(STORIES[this.pendingStories.shift()!], () => this.closeDialogue());
       return;
@@ -1035,6 +1061,15 @@ export class AreaScene extends Phaser.Scene {
       this.pendingCampTalk=undefined;
       const moment=companion==='octopus'?octopusAtCamp(this.context()):companion==='hero'?heroAtCamp(this.context()):companion==='bear'?bearAtCamp(this.context()):companion==='vulture'?vultureAtCamp(this.context()):frogAtCamp(this.context());
       if(moment) { this.say(moment,companion); return; }
+    }
+    if(this.pendingKeepsake && !this.leaving){
+      this.pendingKeepsake=false;
+      const slot=loadGear().bear.length<SLOTS?loadGear().bear.length:-1;
+      this.openPanel(()=>new KeepsakeView(slot>=0,()=>{
+        if(slot>=0){saved=saveGear(equip(loadGear(),loadWorld().found.filter(id=>id==='broken-link'),'bear',slot,'broken-link')) && saved;this.closePanel();}
+        else{this.closePanel();this.openEquipment();}
+      },()=>this.closePanel()));
+      return;
     }
     const fight=this.pendingFight;this.pendingFight=undefined;
     if(fight && !this.leaving) { this.time.delayedCall(250, () => this.beginBattle(fight)); }
@@ -1294,7 +1329,7 @@ export class AreaScene extends Phaser.Scene {
   }
 
   // A panel over the map: cooking, the journal, or a game of bones.
-  private openPanel(make: () => MemoriesView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView) {
+  private openPanel(make: () => MemoriesView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView | KeepsakeView) {
     if(this.overlay || this.leaving) return;
     this.player.setVelocity(0);
     this.held.clear();
@@ -1436,7 +1471,12 @@ export class AreaScene extends Phaser.Scene {
     music.play('wake');
     // The tide chooses: the same memory however often the game is reloaded, until he stands.
     const taken = tideTakesAll(loadMemory(), loadWorld().deaths);
-    if (!taken.length) { saved = saveMemory({ ...loadMemory(), pending: false }); this.resumeExploration(); return; }
+    if (!taken.length) {
+      const written=Boolean(loadMemory().anchors?.length);
+      saved=saveMemory(forgetAll(loadMemory(),[]));this.renderMemory();music.play(this.area.music);this.resumeExploration();
+      if(written)this.notice('Your written memory survived. Write it down again before the next death.',5000);
+      return;
+    }
     this.showStory(resurrectionStory(taken.map(id => memories[id].name)), () => {
       this.physics.pause(); this.setExplorationEnabled(false);
       this.overlay = new ResurrectionView(loadMemory(), taken, () => {
@@ -1668,6 +1708,7 @@ export class AreaScene extends Phaser.Scene {
     // Enemies come alive: they bob where they stand, turn to face the hero, and the ordinary ones give chase.
     for(const foe of this.foes) {
       if(!foe.sprite.active) continue;
+      foe.sprite.setDepth(characterDepth(foe.sprite));
       if(foe.pursuer) continue;
       const toHero=Phaser.Math.Distance.Between(this.player.x,this.player.y,foe.sprite.x,foe.sprite.y);
       const chase=foe.decoy ? undefined : CHASE[foe.encounter];
@@ -1719,7 +1760,7 @@ export class AreaScene extends Phaser.Scene {
     // Footsteps while walking, alternating feet.
     if((x||y) && !this.sneaking && time-this.lastStep>290) { this.lastStep=time; this.foot=-this.foot; music.effect(`step-${this.surface()}`, this.foot); }
     if(x) this.player.setFlipX(x<0);
-    this.player.setDepth(4);
+    this.player.setDepth(characterDepth(this.player));
     this.shadow.setPosition(this.player.x,this.player.y+9);
     this.shading?.carried.setPosition(this.player.x,this.player.y);
     // A restrained walking bob, or slow breathing when standing still, while the physics body stays steady.

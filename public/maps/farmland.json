@@ -11,7 +11,7 @@
   "version": "1.10",
   "type": "map",
   "nextlayerid": 4,
-  "nextobjectid": 68,
+  "nextobjectid": 69,
   "layers": [
     {
       "id": 1,
@@ -6988,6 +6988,18 @@
         {
           "id": 67,
           "name": "bear-return",
+          "type": "",
+          "x": 104,
+          "y": 232,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "point": true
+        },
+        {
+          "id": 68,
+          "name": "mill-chain",
           "type": "",
           "x": 104,
           "y": 232,

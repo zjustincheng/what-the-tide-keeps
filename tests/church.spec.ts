@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 async function position(page: import('@playwright/test').Page) {
   return page.evaluate(async () => {

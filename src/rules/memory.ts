@@ -46,12 +46,12 @@ export function tideTakesAll(memory: Memory, deaths: number): MemoryId[] {
   return taken;
 }
 
-// What the tide can take after a wipe: anything truly held and not written down, unless everything left is written down.
+// What the tide can take after a wipe: anything truly held and not written down.
 // What a companion reminded him of goes back by itself.
 export function forgettable(memory: Memory): MemoryId[] {
   const own = held(memory).filter(id => !(memory.reminded ?? []).includes(id) && !(memory.keepsakeMemories ?? []).includes(id));
   const free = own.filter(id => !(memory.anchors ?? []).includes(id));
-  return free.length ? free : own;
+  return free;
 }
 
 // The tide chooses, not the hero: one of the memories he could lose, the same one however often the game is reloaded.
@@ -74,6 +74,12 @@ export function forget(memory: Memory, id: MemoryId): Memory {
 
 // Pay a whole wipe's debt at once.
 export function forgetAll(memory: Memory, ids: readonly MemoryId[]): Memory {
+  // A protected last memory can leave nothing to take. The page still carries
+  // it through this death and is used up; written reminders become truly held.
+  if(memory.pending && !ids.length && !forgettable(memory).length) {
+    const restored=(memory.reminded ?? []).filter(id=>(memory.anchors ?? []).includes(id));
+    return {...memory,lost:memory.lost.filter(id=>!restored.includes(id)),pending:false,anchors:[],reminded:[],owed:undefined};
+  }
   return ids.reduce<Memory>((paid, id, index) => index === 0 ? forget(paid, id) : forget({ ...paid, pending: true }, id), memory);
 }
 

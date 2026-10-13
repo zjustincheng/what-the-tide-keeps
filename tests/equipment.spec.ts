@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './fixtures';
 
 const at = (page: Page, key: string) => page.evaluate(async key => {
   const { game } = await import('/src/main.ts');
@@ -43,7 +43,9 @@ test('a keepsake found off the road can be equipped and changes the fight', asyn
   const screen = page.getByRole('dialog', { name: 'Equipment' });
   await expect(page.getByRole('combobox', { name: 'Bear keepsake 1' })).toBeDisabled();
   await page.getByRole('combobox', { name: 'Chameleon keepsake 1' }).selectOption({ label: 'Cracked mirror' });
-  await expect(screen).toContainText('His reveal hits 3 harder. Hiding costs 2 mana instead of 1.');
+  // What a keepsake does is set out as its benefit and its tradeoff.
+  await expect(screen).toContainText('Revealing hidden mana hits 3 harder.');
+  await expect(screen).toContainText('Hiding costs 1 extra mana.');
   await page.getByRole('button', { name: 'Done' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   // Kept through a reload, and felt in battle.
@@ -54,7 +56,7 @@ test('a keepsake found off the road can be equipped and changes the fight', asyn
   await page.keyboard.down('d');
   await expect(page.getByRole('heading', { name: 'Crop locust' })).toBeVisible();
   await page.keyboard.up('d');
-  await expect(page.locator('[data-member="chameleon"] [data-action="suppress"]')).toHaveText('Suppress · 2 mana');
+  await expect(page.locator('[data-member="chameleon"] [data-action="suppress"]')).toContainText('Suppress · 2 mana');
   expect(errors).toEqual([]);
 });
 

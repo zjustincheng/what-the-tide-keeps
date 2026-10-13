@@ -128,7 +128,7 @@ button:focus-visible { outline: 2px solid #dace9c; outline-offset: 3px; }
 @keyframes brand-red { 0%, 25% { opacity: 0; } 42% { opacity: .88; } 55% { opacity: .55; } 68% { opacity: .82; } 100% { opacity: 0; } }
 @keyframes gavel-strike { 0%, 35% { transform: rotate(-32deg); } 75%, 100% { transform: rotate(24deg); } }
 @keyframes judge-impact { 0%, 100% { transform: translateX(0); } 30% { transform: translateX(-5px); } 65% { transform: translateX(4px); } }
-@keyframes battle-arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes battle-arrive { from { opacity: 0; } to { opacity: 1; } }
 @keyframes tutorial-pulse { to { box-shadow: 0 0 0 2px #d7c581, 0 0 18px #d7c58177; border-color: #e6d18c; } }
 @keyframes combat-spark { to { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; } }
 @keyframes combat-word { from { opacity: 0; transform: translate(-50%, 5px); } 20% { opacity: 1; } to { opacity: 0; transform: translate(-50%, -27px); } }
@@ -148,7 +148,10 @@ button:focus-visible { outline: 2px solid #dace9c; outline-offset: 3px; }
 .battle-help summary { cursor: pointer; color: #a6bab3; }
 .party-battle .battle-heading { flex-shrink: 0; }
 .party-battle .enemy-row h3, .party-battle .enemy-row h4 { text-shadow: 0 2px 7px #000; }
-@media(max-width:650px) { .party-battle .enemy-row { top: -13px; min-height: 100px; gap: 6px; } }
+@media(max-width:650px) {
+  .party-battle .enemy-row { position: relative; top: auto; min-height: 100px; gap: 6px; }
+  .party-battle .intent { position: sticky; top: -12px; z-index: 4; width: 100%; padding: 7px 4px; box-sizing: border-box; background: #14211ff5; border-bottom: 1px solid #897d5555; }
+}
 .ending { isolation: isolate; }
 .ending-art { position: absolute; inset: 0; overflow: hidden; z-index: -1; opacity: .23; pointer-events: none; animation: cinema-drift 32s ease-out both; }
 .ending-art svg { height: 100%; width: 100%; }
@@ -214,7 +217,84 @@ main[hidden] { display: none; }
 .cinematic[data-art="home-table"] .cinema-actors { bottom: 31%; left: 9%; right: 9%; display: flex; align-items: end; justify-content: space-around; gap: 4px; }
 .cinematic[data-art="home-table"] .cinema-actors img { width: clamp(38px, 8vw, 88px); max-height: 112px; animation: none; }
 
-.game-frame:has(.party-battle) .area-title-card { display: none; }
+.game-frame:has(.battle, .cinematic) .area-title-card { display: none; }
 .party-battle[data-encounter="human"] .enemy-fighter[data-defeated="true"] img { animation: human-yields 900ms ease forwards; }
 @keyframes human-yields { to { transform: translateY(12px) scale(.96); opacity: .7; } }
 @media(prefers-reduced-motion:reduce) { .party-battle[data-encounter="human"] .enemy-fighter[data-defeated="true"] img { animation: none; opacity: .7; } }
+
+.cinematic[data-story="bearChain"][data-art="feast"] .cinema-actors { display:flex; left:6%; right:58%; bottom:18%; }
+.game-frame:has(.keepsake-award, #dialogue:not([hidden])) .area-title-card { display: none; }
+
+.combat-aura[data-effect="guard"] { border-radius: 25% 25% 50% 50%; border-width: 3px; box-shadow: 0 0 9px #e3ca8144; }
+.combat-aura[data-effect="poison"] { border-style: dotted; background: radial-gradient(ellipse, #89aa4722, transparent 70%); box-shadow: 0 0 9px #a9c66b33; }
+.combat-particle[data-effect="graze"] { width: 2px; height: 2px; }
+.combat-particle[data-effect="fizzle"] { border-radius: 50%; opacity: .65; }
+
+/* The boar stays in the shot when his followers speak; every actor shares the floor. */
+.phase-cast { position: absolute; inset: 0; }
+.phase-cast[hidden], .phase-picture [hidden] { display: none; }
+.phase-actor { position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%); width: 140px; text-align: center; }
+.phase-actor img { position: relative; display: block; height: clamp(94px, 17vh, 145px); width: 100%; max-width: 100%; object-fit: contain; object-position: center bottom; margin: auto; image-rendering: pixelated; transform-origin: 50% 100%; filter: drop-shadow(0 4px 2px #000a); }
+.phase-actor[data-actor="badger"] { left: 25%; }
+.phase-actor[data-actor="rat"] { left: 76%; }
+.phase-actor[data-actor="badger"] img, .phase-actor[data-actor="rat"] img { height: clamp(70px, 12vh, 100px); }
+.phase-actor-shadow { position: absolute; bottom: -3px; left: 20%; width: 60%; height: 8px; border-radius: 50%; background: #020807aa; }
+.cutscene[data-pose="fallen"] .phase-actor[data-actor="boar"] img { transform: scaleY(.82) rotate(-7deg); filter: brightness(.75) drop-shadow(0 4px 2px #000a); }
+.cutscene[data-pose="bracing"] .phase-actor[data-actor="boar"] img { transform: scaleY(.93) rotate(-3deg); }
+.cutscene[data-pose="standing"] .phase-actor[data-actor="boar"] img { animation: boar-stands .7s ease-out both; }
+.phase-actor[data-speaking="true"] img { filter: brightness(1.1) drop-shadow(0 4px 2px #000a); }
+.cinematic[data-art="farmhouse-hearth"] .cinema-set, .cinematic[data-art^="grain-road"] .cinema-set { inset: 0; animation: none; }
+.cinematic[data-art="farmhouse-hearth"] .cinema-dust, .cinematic[data-art^="grain-road"] .cinema-dust { display: none; }
+@keyframes boar-stands { from { transform: scaleY(.93) rotate(-3deg); filter: brightness(.8); } to { transform: none; filter: brightness(1.12) drop-shadow(0 4px 2px #000a); } }
+@media(max-width:650px) { .phase-actor { width: 90px; } }
+@media(prefers-reduced-motion:reduce) { .cutscene[data-pose="standing"] .phase-actor img { animation: none; } }
+
+.battle.in-cutscene { overflow: hidden; }
+.cutscene > * { flex-shrink: 0; }
+.phase-cast img { animation: none; }
+
+/* Reserve a line's full wrapping before its first letter appears. */
+.cinema-line, .cutscene-line { display: grid; }
+.cinema-line > span, .cutscene-line > span, .cinema-line::after, .cutscene-line::after { grid-area: 1 / 1; }
+.cinema-line::after, .cutscene-line::after { content: attr(data-full); visibility: hidden; pointer-events: none; }
+.cinema-navigation { display: flex; gap: 8px; align-items: center; }
+.cinema-back { padding: 10px 14px; color: #adbbb2; border-color: #71897a66; background: #142322; }
+.cinema-back:disabled { opacity: .35; }
+@media(max-width:650px) {
+  .cinema-bottom { gap: 10px; }
+  .cinema-count { flex-shrink: 0; font-size: 9px; }
+  .cinema-next { padding: 10px 12px; font-size: 12px; }
+  .cinema-next span { margin-left: 10px; }
+  .cinema-back { padding: 10px; font-size: 12px; }
+}
+
+.cinematic[data-story="prologue"][data-art="harbor"] .cinema-actors { left: 3%; right: 34%; bottom: 7%; gap: 2px; }
+
+/* A single stage coordinate system keeps feet on their painted surface. */
+.cinema-stage { display: contents; }
+.cinematic.cinema-composed .cinema-picture { container-type: size; }
+.cinematic.cinema-composed .cinema-stage { display: block; position: absolute; left: 50%; top: 50%; width: min(100cqw, 200cqh); height: min(50cqw, 100cqh); transform: translate(-50%, -50%); }
+.cinematic.cinema-composed .cinema-set { inset: 0; animation: none; }
+.cinematic.cinema-composed .cinema-actors { inset: 0; display: block; }
+.cinematic.cinema-composed .cinema-actors img { position: absolute; max-height: none; transform: translateX(-50%); animation: none; filter: drop-shadow(0 3px 2px #0009); }
+.cinematic.cinema-composed .cinema-dust { display: none; }
+.cinematic[data-art="island-shore"] .cinema-set { inset: 0; animation: none; }
+.cinematic[data-art="island-shore"] .cinema-actors { left: 8%; right: 46%; bottom: 10%; }
+.cinematic[data-art="island-shore"] .cinema-actors img { animation: none; }
+@media(max-width:650px) {
+  .cinematic { position: fixed; inset: 12px; }
+  .cinema-letterbox { flex-shrink: 0; }
+}
+
+/* Boss weight stays in the scenery, leaving input targets steady. */
+.fighter.is-winding img { transform: translateY(-5px) scale(.97); filter: brightness(1.15); transition: transform .18s ease-out; }
+.party-battle.boss-impact .enemy-row { animation: boss-impact .22s ease-out both; }
+.phase-returning .enemy-row { animation: phase-settle .42s ease-out both; }
+@keyframes boss-impact { 0%,100% { translate: 0 0; } 25% { translate: -4px 3px; } 55% { translate: 3px -2px; } 80% { translate: -1px 1px; } }
+@keyframes phase-settle { from { opacity: .65; } to { opacity: 1; } }
+/* A ring in the fixed warning remains visible even when its hero is offscreen. */
+.dodge-bar .dodge-ring { position: relative; left: auto; top: auto; width: 32px; height: 32px; margin: 32px auto; }
+@media(prefers-reduced-motion:reduce) {
+  .fighter.is-winding img { transform: none; transition: none; }
+  .party-battle.boss-impact .enemy-row, .phase-returning .enemy-row { animation: none; }
+}

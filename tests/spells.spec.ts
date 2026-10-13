@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './fixtures';
 
 const at = (page: Page, key: string) => page.evaluate(async key => {
   const { game } = await import('/src/main.ts');
@@ -33,7 +33,7 @@ test('typing the shown sequence casts the spell', async ({ page }) => {
   await expect(page.getByRole('log')).toContainText('Vulture casts Gale quill. It tears into the locust.');
   await expect(page.locator('[data-member="vulture"] .member-mana')).toContainText('Mana 5 / 10');
   // The caster flares, drawing the enemy, and the grimoire must settle before the next cast.
-  await expect(page.locator('[data-member="vulture"] .member-status')).toHaveText('Flaring · the enemy sees them');
+  await expect(page.locator('[data-member="vulture"] .member-status')).toHaveText('Flaring');
   await expect(page.locator('#enemy-intent')).toContainText('Watching Vulture.');
   await page.getByRole('button', { name: 'Bear support', exact: true }).click();
   await page.getByRole('button', { name: 'Chameleon support', exact: true }).click();

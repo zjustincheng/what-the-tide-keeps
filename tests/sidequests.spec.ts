@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './fixtures';
 import { win } from './helpers';
 
 const at = (page: Page, key: string) => page.evaluate(async key => {

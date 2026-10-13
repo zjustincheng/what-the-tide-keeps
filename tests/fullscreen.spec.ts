@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 test('full screen enlarges the map and can be left again', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });

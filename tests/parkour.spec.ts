@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './fixtures';
 
 // Leaping: Shift clears a narrow gap; loose ground gives way under someone who stands on it; a fall puts you back, hurt.
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -33,8 +33,10 @@ test('walking stops at the crack; a leap clears it', async ({ page }) => {
 
 test('loose ground gives way under someone standing still, and the fall hurts', async ({ page }) => {
   await place(page, 340, 140);
-  await page.keyboard.down('d'); await page.waitForTimeout(500); await page.keyboard.up('d');
-  // Standing on the loose ledge.
+  // Walk until he is out on the loose ledge, however slowly the frames come, then stand still on it.
+  await page.keyboard.down('d');
+  await expect.poll(async () => (await at(page, 'gorge'))!.x, { timeout: 5000 }).toBeGreaterThan(362);
+  await page.keyboard.up('d');
   await expect(page.locator('#sneaking')).toContainText('You fall', { timeout: 4000 });
   expect((await saved(page)).wounds.chameleon).toBe(3);
   await expect.poll(async () => (await at(page, 'gorge'))!.x).toBeLessThanOrEqual(352);

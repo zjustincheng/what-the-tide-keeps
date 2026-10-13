@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './fixtures';
 
 // What the ground sounds like where the hero stands.
 const surface = (page: Page, key: string, x: number, y: number) => page.evaluate(async ([key, x, y]) => {

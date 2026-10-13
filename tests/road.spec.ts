@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './fixtures';
 import { lose } from './helpers';
 
 const area = (page: Page, key: string) => page.evaluate(async key => {

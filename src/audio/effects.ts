@@ -6,7 +6,7 @@ export type Effect =
   | 'cast-line' | 'plop' | 'splash' | 'catch'
   | 'lash' | 'maul' | 'talons' | 'hit' | 'block' | 'barrier' | 'dodge' | 'graze'
   | 'memory' | 'glass' | 'toll' | 'heartbeat' | 'chain' | 'hammer' | 'wind' | 'surf' | 'submerge' | 'page'
-  | 'key' | 'spell' | 'fizzle' | 'heal' | 'gather' | 'victory' | 'defeat' | 'roar';
+  | 'boss-windup' | 'boss-impact' | 'key' | 'spell' | 'fizzle' | 'heal' | 'gather' | 'victory' | 'defeat' | 'roar';
 
 // pitch shifts tonal effects by semitones, so each speaker's voice blips at their own pitch.
 export function playEffect(context: BaseAudioContext, out: AudioNode, noise: AudioBuffer, name: Effect, pitch = 0) {
@@ -88,6 +88,8 @@ export function playEffect(context: BaseAudioContext, out: AudioNode, noise: Aud
     lash: () => { hiss('highpass', 1200, 5000, 0, 0.12, 0.14); hiss('bandpass', 3000, 2000, 0.1, 0.04, 0.2, 2); },
     maul: () => { tone('sine', 95, 38, 0, 0.32, 0.28); hiss('lowpass', 900, 200, 0, 0.2, 0.16); },
     talons: () => { hiss('bandpass', 3400, 2400, 0, 0.07, 0.4, 3); hiss('bandpass', 3800, 2600, 0.08, 0.07, 0.4, 3); },
+    'boss-windup': () => { tone('sine', 65, 110, 0, 0.28, 0.09); hiss('lowpass', 280, 650, 0, 0.23, 0.06); },
+    'boss-impact': () => { tone('sine', 110, 32, 0, 0.35, 0.28); hiss('lowpass', 1600, 180, 0, 0.19, 0.18); tone('triangle', 180, 70, 0.02, 0.16, 0.06, 900); },
     hit: () => { tone('sine', 140, 50, 0, 0.22, 0.26); hiss('bandpass', 1200, 400, 0, 0.12, 0.16, 1.5); },
     block: () => { ping(440, 0, 0.4, 0.12, 1.41); hiss('bandpass', 2500, 1800, 0, 0.06, 0.08, 3); },
     barrier: () => { [0, 7, 12].forEach((step, i) => tone('sine', 523 * 2 ** (step / 12), 523 * 2 ** (step / 12), i * 0.05, 0.9, 0.05)); ping(1568, 0.1, 1, 0.04, 2); },

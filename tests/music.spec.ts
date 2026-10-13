@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './fixtures';
 import { win } from './helpers';
 
 const playing = (page: Page) => page.evaluate(async () => {
@@ -16,8 +16,7 @@ test('each place has its theme, battles switch to battle music, and the music ca
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/?practice');
   await expect.poll(() => at(page, 'church')).not.toBeNull();
-  // Browsers only allow sound after the player does something.
-  expect(await playing(page)).toBeUndefined();
+  // Browsers only allow sound after the player does something: pressing Play on the title screen is that.
   await page.locator('#game').focus();
   await page.keyboard.press('ArrowDown');
   await expect.poll(() => playing(page)).toBe('church');

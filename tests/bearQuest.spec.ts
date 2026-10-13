@@ -25,35 +25,44 @@ async function record(page:Page){
   await travel(page,'farmland','mill-inside');await talk(page,'mill-inside',312,252,'ledger');
   await page.locator('#continue').click();await expect(page.locator('#dialogue-text')).toContainText('UNABLE TO STAND');await page.keyboard.press('Escape');
   await travel(page,'mill-inside','farmland');await talk(page,'farmland',56,240,'miller');
-  await advanceToChoice(page,/Let the bear speak about the labour record/);await page.getByRole('button',{name:/Let the bear speak about the labour record/}).click();
-  await advanceToChoice(page,/Leave on the bear/);
+  await advanceToChoice(page,/Let the bear speak/);await page.getByRole('button',{name:/Let the bear speak/}).click();
+  await expect(page.locator('#speaker')).toHaveText('THE BEAR');
+  const bearPortrait=await page.locator('#portrait img').getAttribute('src');
+  await page.screenshot({path:'/tmp/tide-bear-confrontation.png'});
+  await page.locator('#continue').click();await expect(page.locator('#speaker')).toHaveText('THE MILLER');
+  expect(await page.locator('#portrait img').getAttribute('src')).not.toBe(bearPortrait);
+  await advanceToChoice(page,/Leave with him/);
 }
-async function reward(page:Page){
+async function reward(page:Page,equipNow=false){
   await talk(page,'farmland',120,248,'bear');await advanceToChoice(page,/Keep the broken link/);await page.getByRole('button',{name:/Keep the broken link/}).click();
   await expect(page.locator('#dialogue-text')).toContainText('warm from his paw');await page.keyboard.press('Escape');
   const story=page.locator('.cinematic[data-story="bearChain"]');await expect(story).toBeVisible();await page.screenshot({path:'/tmp/tide-bear-keepsake.png'});
   await story.locator('.cinema-skip').click();await expect(story).toHaveCount(0);
+  await expect(page.locator('.keepsake-award')).toContainText('This bond survives death');await page.screenshot({path:'/tmp/tide-bear-reward-card.png'});
+  await page.getByRole('button',{name:equipNow?'Equip on the bear':'Keep in the pack',exact:true}).click();
+  await expect(page.locator('.keepsake-award')).toHaveCount(0);
   const saved=await page.evaluate(()=>({world:JSON.parse(localStorage.getItem('tide-keeps.world.v1')!),memory:JSON.parse(localStorage.getItem('tide-keeps.memory.v1')!)}));
   expect(saved.world.found).toContain('broken-link');expect(saved.memory.keepsakeMemories).toEqual(['bear']);expect(saved.memory.lost).not.toContain('bear');
 }
 
 test('the formal route changes the labour order before the bear gives the link',async({page})=>{
-  await start(page);await record(page);await page.getByRole('button',{name:/Take his signed statement/}).click();await page.keyboard.press('Escape');
+  await start(page);await record(page);await page.getByRole('button',{name:/Take it to the reeve/}).click();await page.keyboard.press('Escape');
   await talk(page,'farmland',120,248,'bear');await expect(page.locator('#dialogue-text')).toContainText('reeve');await expect(page.getByRole('button',{name:/Keep the broken link/})).toHaveCount(0);await page.keyboard.press('Escape');
   await travel(page,'farmland','town');await talk(page,'town',120,128,'reeve');
   await advanceToChoice(page,/Show the miller’s statement/);await page.getByRole('button',{name:/Show the miller’s statement/}).click();
   await page.locator('#continue').click();await page.locator('#continue').click();await expect(page.locator('#dialogue-text')).toContainText('no chained labour');await page.keyboard.press('Escape');
-  await travel(page,'town','farmland');await reward(page);
-  await talk(page,'farmland',120,248,'bear');await expect(page.locator('#dialogue-text')).toContainText('does not move');await expect(page.getByRole('button',{name:/Keep the broken link/})).toHaveCount(0);await page.keyboard.press('Escape');
+  await travel(page,'town','farmland');await reward(page,true);
+  const worn=await page.evaluate(()=>JSON.parse(localStorage.getItem('tide-keeps.gear.v1')!).bear);expect(worn).toContain('broken-link');
+  await talk(page,'farmland',120,248,'old chain');await expect(page.locator('#dialogue-text')).toContainText('lies loose');await expect(page.getByRole('button',{name:/Keep the broken link/})).toHaveCount(0);await page.keyboard.press('Escape');
   await travel(page,'farmland','mill-inside');await talk(page,'mill-inside',312,252,'ledger');await page.locator('#continue').click();await expect(page.locator('#dialogue-text')).toContainText('NO CHAINED LABOUR');
 });
 
 test('leaving on the bear’s terms restores his memory, and it survives death and reload while unequipped',async({page})=>{
   const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
-  await start(page);await record(page);await page.getByRole('button',{name:/Leave on the bear/}).click();await page.keyboard.press('Escape');await reward(page);
+  await start(page);await record(page);await page.getByRole('button',{name:/Leave with him/}).click();await page.keyboard.press('Escape');await reward(page);
   await page.locator('#game').focus();await page.keyboard.press('Tab');
   const slot=page.getByRole('combobox',{name:'Bear keepsake 1',exact:true});await slot.selectOption('broken-link');
-  await expect(page.locator('.equipment')).toContainText('Protect guards both allies');await slot.selectOption('');
+  await expect(page.locator('.equipment')).toContainText('Protect guards the whole party');await slot.selectOption('');
   await page.getByRole('button',{name:'Done',exact:true}).click();
   // A real battle finish invokes the normal death, resurrection, and memory-save path.
   await page.evaluate(()=>{

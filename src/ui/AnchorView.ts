@@ -1,5 +1,5 @@
 import { memories } from '../content/memories';
-import { ANCHOR_SLOTS, canRemind, held } from '../rules/memory';
+import { ANCHOR_SLOTS, canRemind, held, PERKS, PERK_BONUS } from '../rules/memory';
 import type { Companion, Memory, MemoryId } from '../rules/memory';
 
 // At a fire, before sleeping: write down the one memory the tide must not take, and let a companion remind you of something lost.
@@ -30,7 +30,9 @@ export class AnchorView {
       ${offers.length ? `<fieldset class="memory-choices reminders"><legend>Ask a friend to remind you</legend>${offers.map(({ by, name, id }) => `
         <label class="memory-choice"><input type="radio" name="remind" value="${by}:${id}" />
           <span><strong>${name}: ${memories[id].name}</strong><small>Yours again until the next time you die.</small></span></label>`).join('')}
+        <label class="memory-choice reminder-anchor" hidden><input type="radio" name="anchor" disabled /><span><strong></strong><small>Write this reminder down now. It will remain yours after the next death.</small></span></label>
       </fieldset>` : ''}
+      <p class="anchor-summary" role="status"></p>
       <div class="anchor-actions"><button id="write" type="button">Done</button><button id="skip" type="button">Not tonight</button></div>`;
     document.querySelector('.game-frame')!.append(this.root);
     const signal = this.cleanup.signal;
@@ -42,12 +44,25 @@ export class AnchorView {
       const [by, id] = value.split(':') as [Companion, MemoryId];
       return { by, id };
     };
+    const update = () => {
+      const offer=reminder();const extra=this.root.querySelector<HTMLElement>('.reminder-anchor');
+      if(extra && offer) {
+        const input=extra.querySelector<HTMLInputElement>('input')!;
+        extra.hidden=false;input.disabled=false;input.value=offer.id;
+        extra.querySelector('strong')!.textContent=`Write down ${memories[offer.id].name}`;
+      }
+      const id=chosen()?.value as MemoryId|undefined;
+      const protection=id?`${memories[id].name} will be protected through your next death. The page is used up afterward.${written.length && !written.includes(id)?' This replaces the page for '+written.map(old=>memories[old].name).join(', ')+'.':''}`:'Choose a memory to protect through your next death.';
+      const bonus=offer?PERKS[offer.id]==='mana'?`+${PERK_BONUS.mana} mana`:`+${PERK_BONUS.force} damage`:'';
+      this.root.querySelector('.anchor-summary')!.textContent=`${protection}${offer?` Restoring ${memories[offer.id].name} removes its Hollow bonus (${bonus}).${id!==offer.id?' This reminder fades at death unless you write it down.':''}`:''}`;
+    };
+    this.root.addEventListener('change',update,{signal});update();
     write.addEventListener('click', () => onDone((chosen()?.value ?? null) as MemoryId | null, reminder()), { signal });
     this.root.querySelector('#skip')!.addEventListener('click', () => onDone(null, null), { signal });
     this.root.addEventListener('keydown', event => {
       if (event.key === 'Escape') { event.preventDefault(); onDone(null, null); return; }
       if (event.key !== 'Tab') return;
-      const radios = ['anchor', 'remind'].map(name => this.root.querySelector<HTMLInputElement>(`input[name="${name}"]:checked`) ?? this.root.querySelector<HTMLInputElement>(`input[name="${name}"]`));
+      const radios = ['anchor', 'remind'].map(name => this.root.querySelector<HTMLInputElement>(`input[name="${name}"]:checked:not(:disabled)`) ?? this.root.querySelector<HTMLInputElement>(`input[name="${name}"]:not(:disabled)`));
       const controls = [...radios, write, this.root.querySelector<HTMLButtonElement>('#skip')].filter((control): control is HTMLInputElement | HTMLButtonElement => Boolean(control));
       event.preventDefault();
       const index = controls.indexOf(document.activeElement as HTMLInputElement);

@@ -184,6 +184,13 @@ export function createSprites(scene: Phaser.Scene) {
   stocks.fillStyle(0x161210).fillRect(3, 8, 3, 2).fillRect(9, 7, 3, 3).fillRect(14, 8, 3, 2);
   stocks.fillStyle(0x5a2a22).fillRect(9, 11, 2, 2);
   stocks.generateTexture('stocks', 20, 18); stocks.destroy();
+  const chain=scene.make.graphics({x:0,y:0});
+  for(const [x,y] of [[0,5],[4,3],[8,5],[12,3]]){
+    chain.fillStyle(0x787b68).fillRect(x,y,6,4);
+    chain.fillStyle(0xb6af8e).fillRect(x+1,y,4,1);
+    chain.fillStyle(0x2b3329).fillRect(x+2,y+1,2,2);
+  }
+  chain.generateTexture('loose-chain',18,11);chain.destroy();
   // A crow.
   const crow = scene.make.graphics({ x: 0, y: 0 });
   crow.fillStyle(0x0e0f10).fillRect(0, 2, 3, 1).fillRect(2, 1, 4, 3).fillRect(5, 2, 3, 1).fillRect(3, 0, 2, 1);

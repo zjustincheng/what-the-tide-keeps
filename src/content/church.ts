@@ -13,12 +13,6 @@ export const church: Dialogue = {
     'No orders today. Or tomorrow. Your name is in the ledger, but the sentence beside it is struck through.',
     'I kept bringing you back. I thought that meant I was saving you. I should have asked what it cost, and where it went.',
     'The basin is empty. If you stay, it is because you want to. There is still a clean bed here.',
-  ] }, { if: { flag: 'light-out' }, lines: [
-    'The basin is going down. A finger a week. I don\'t know what fills it, and I find I don\'t want to.',
-    'I can raise you a few more times. Then I can\'t. Be careful out there. Be careful the way everyone else has to be.',
-  ] }, { if: { flag: 'light-kept' }, lines: [
-    'Pardoned. It says so in the ledger, in a hand I don\'t know, from upstairs.',
-    'You\'ll still come back here when you die. That hasn\'t changed. I don\'t think it ever will now.',
   ] }, { if: { flag: 'cuttlefish-slain' }, lines: [
     'You came back from the sea. I wrote that you were lost. I am going to go on writing it.',
     'They say the fish isn\'t coming any more. They say it in the cellars, not the chapel. Whatever you did out there, the ledger doesn\'t have a column for it.',

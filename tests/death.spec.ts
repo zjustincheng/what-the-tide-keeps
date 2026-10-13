@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './fixtures';
 import { lose } from './helpers';
 
 async function ready(page: Page) {
@@ -38,7 +38,7 @@ test('a wipe takes a memory the tide chooses, grants its Hollow perk, and surviv
   await page.reload(); await ready(page);
   await expect(page.locator('#memory-status')).toContainText('7 of 10 memories remain');
   await enterLocust(page);
-  await expect(page.locator('[data-member="chameleon"] .member-mana')).toHaveText('Mana 12 / 12 · showing 12');
+  await expect(page.locator('[data-member="chameleon"] .member-mana')).toHaveText('Mana 12 / 12');
   expect(errors).toEqual([]);
 });
 

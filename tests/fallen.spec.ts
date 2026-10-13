@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './fixtures';
 import { win } from './helpers';
 
 // A hero still down when a fight ends has fallen: no fire raises them, only the church, for coins or for a memory.

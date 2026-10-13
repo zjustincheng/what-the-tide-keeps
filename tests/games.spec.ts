@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './fixtures';
 import { attackUntilWiped, doom, win } from './helpers';
 
 // A fresh game except for what each test seeds.

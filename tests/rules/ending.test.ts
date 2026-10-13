@@ -34,7 +34,7 @@ test('the finale closes the frame, memory conduit, sentence, sea agreement, and 
   assert.match(text,/officials who concealed the project must answer/);
   assert.match(text,/sea is named in the new Covenant/);
   for(const name of ['THE BEAR','THE VULTURE','THE FROG','THE OCTOPUS'])assert.ok(story.shots.some(shot=>shot.caption===name));
-  assert.equal(story.finalAction,'Return to the harbor');
+  assert.equal(story.finalAction,'Return to the harbour');
   assert.ok(new Set(story.shots.map(shot=>shot.art)).size>=6);
   assert.match(text,/You do not know where he went/);
 });

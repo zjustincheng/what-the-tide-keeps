@@ -36,7 +36,13 @@ const state = (page: Page) => page.evaluate(() => window.tideHunt.loadPursuit())
 
 test('the hunt follows a real exit, pauses in Settings, expires, and stops at sea', async ({ page }) => {
   await start(page);
-  await page.evaluate(() => window.tideRun.game!.scene.getScene('church').scene.start('farmland', { spawn: 'from-town' }));
+  await page.evaluate(() => {
+    // Hold the hunter at the door from the moment the fields are made, so a slow machine can't let him catch up
+    // while the hero is still being set by the exit.
+    const fields = window.tideRun.game!.scene.getScene('farmland') as unknown as { hunterDelay: number; events: { once(event: string, handler: () => void): void } };
+    fields.events.once('create', () => { fields.hunterDelay = 8000; });
+    window.tideRun.game!.scene.getScene('church').scene.start('farmland', { spawn: 'from-town' });
+  });
   await ready(page, 'farmland');
   await page.evaluate(() => {
     const scene = window.tideRun.game!.scene.getScene('farmland') as import('../src/scenes/AreaScene').AreaScene;

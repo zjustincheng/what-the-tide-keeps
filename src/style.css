@@ -45,7 +45,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 24px 7%;
   background: radial-gradient(ellipse at 50% 40%, #354437, #16231f 75%);
   border: 1px solid #65705a;
@@ -76,7 +76,6 @@
 .battle-actions small { display: block; margin-top: 5px; font: 10px ui-monospace, monospace; color: #b6bf9c; }
 .battle button:disabled { opacity: .45; cursor: default; }
 .battle-help { font: 10px/1.7 ui-monospace, monospace; color: #91a18a; text-align: center; margin-bottom: 0; }
-#battle-finish { margin-top: 18px; }
 @media(max-width:650px) {
   .in-battle #game { min-height: 370px; }
   .battle { padding: 12px 4%; justify-content: flex-start; }
@@ -478,7 +477,8 @@ footer span:last-child {
 @media(prefers-reduced-motion:reduce) {
   .health-bar span { transition: none; }
 }
-.party-battle { padding: 18px 4%; }
+.party-battle { padding: 18px 4%; justify-content: flex-start; }
+.party-battle > * { flex-shrink: 0; }
 .party-battle h2 { font-size: 26px; }
 .enemy-row { display: flex; gap: 14px; align-items: center; justify-content: center; }
 .enemy-row .fighter { margin: 0; height: 70px; width: 85px; }
@@ -982,3 +982,92 @@ button.die[aria-pressed="true"] { border-color: #bc755e; color: #d8a890; }
 .reclamation-memories span { padding:3px 6px; border:1px solid #788d8755; color:#a3b0a9; font:10px ui-monospace,monospace; }
 .reclamation-memories span[data-returned="true"] { border-color:#c7c596; color:#e7e2bf; background:#52624a66; }
 .reclamation-note { margin:8px 0 0; color:#d1d9c8; font:13px/1.45 Georgia,serif; }
+
+.keepsake-award { background:radial-gradient(ellipse at 50% 35%,#2e3d32,#0e1e1df5 75%); }
+.keepsake-receipt { max-width:460px; width:100%; text-align:center; }
+.keepsake-link { display:block; width:78px; height:78px; margin:18px auto; filter:drop-shadow(0 6px 4px #0007); }
+.keepsake-receipt h2 { margin:8px 0; font:26px/1.2 Georgia,serif; color:#ece1bf; }
+.keepsake-inscription { color:#b6beaa; font:italic 14px/1.5 Georgia,serif; }
+.keepsake-receipt dl { text-align:left; margin:24px 0; }
+.keepsake-receipt dl div { padding:12px 0; border-top:1px solid #bac09833; }
+.keepsake-receipt dt { color:#e6d6a5; margin-bottom:6px; font:11px ui-monospace,monospace; }
+.keepsake-receipt dd { margin:0; color:#d0d7c5; font:15px/1.5 Georgia,serif; }
+.keepsake-receipt dd span { color:#abb8a7; font-size:13px; }
+.keepsake-receipt-actions { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+@media(max-height:600px){.keepsake-award { justify-content:flex-start; }.keepsake-link { width:50px;height:50px;margin:8px auto; }.keepsake-receipt dl { margin:12px 0; }}
+
+/* Keep the final fight’s memory readout beside its spell information. */
+.memory-reclamation { width:100%; box-sizing:border-box; margin:0 0 12px; padding:8px 12px; background:#152b2b80; border-color:#a9b99433; }
+.reclamation-count { cursor:pointer; margin:0; }
+.memory-reclamation details[open] .reclamation-count { margin-bottom:7px; }
+.reclamation-count:focus-visible { outline:2px solid #dace9c; outline-offset:3px; }
+.reclamation-note { margin-top:6px; }
+
+/* A stable, quiet explanation of the action under the pointer or keyboard focus. */
+.action-preview { width: 100%; box-sizing: border-box; min-height: 2.8em; margin: 5px 0 0; padding: 9px 12px; border-left: 2px solid #897d55; background: #101b17; color: #c7c8ac; font: 11px/1.5 ui-monospace, monospace; text-align: left; }
+.action-preview[hidden] { display: none; }
+@media(max-width: 600px) { .action-preview { font-size: 10px; padding: 8px; } }
+
+.spellcraft button small { display: block; margin-top: 5px; color: #b6bf9c; font: 9px/1.4 ui-monospace, monospace; }
+
+.combat-feedback { width: 100%; box-sizing: border-box; margin: 4px 0; padding: 7px 10px; font: 10px/1.5 ui-monospace, monospace; text-align: left; color: #e9b77f; border-left: 3px solid currentColor; background: #0e1918; }
+.combat-feedback[data-effect="ward"] { color: #b9d7ef; }
+.combat-feedback[data-effect="guard"] { color: #e3ca81; }
+.combat-feedback[data-effect="dodge"] { color: #c8ede5; }
+.combat-feedback[data-effect="graze"] { color: #d5b28d; }
+.combat-feedback[data-effect="spell"] { color: #b8a7f1; }
+.combat-feedback[data-effect="fizzle"] { color: #ba92a5; }
+.combat-feedback[data-effect="mana"] { color: #8ad0e2; }
+.dodge-sequence { display: flex; justify-content: center; gap: 8px; margin: 8px 0; }
+.dodge-sequence span { width: 32px; padding: 6px; border: 1px solid #73745f; color: #aab6a2; font: 20px ui-monospace, monospace; }
+.dodge-sequence [data-state="next"] { border-color: #f0dc97; color: #f0dc97; background: #80704033; }
+.dodge-sequence [data-state="done"] { border-color: #7da998; color: #b6deca; background: #2b5d4933; }
+.dodge-sequence [data-state="wrong"] { border-color: #c77772; color: #e7a9a4; }
+.dodge-instruction { margin: 4px 0 8px; font: 10px/1.5 ui-monospace, monospace; color: #c6c8ad; }
+.dodge-pad button { min-height: 44px; }
+
+.anchor { justify-content: flex-start; }
+.anchor > *, .equipment > * { flex-shrink: 0; }
+.anchor-summary { width: 100%; padding: 10px; background: #10201b; border-left: 2px solid #c2ac73; font: 11px/1.6 ui-monospace, monospace; color: #d2cbb0; }
+.memory-choice[hidden] { display: none; }
+.reminder-anchor { grid-column: 1 / -1; border-color: #a9bd8b; }
+.equipment-behavior { color: #aabbaa; font: 10px/1.5 ui-monospace, monospace; }
+.keepsake-catalog { width: 100%; margin-top: 8px; font: 12px/1.6 ui-monospace, monospace; }
+.keepsake-catalog summary { cursor: pointer; padding: 10px; border: 1px solid #718366; color: #d0c499; }
+.keepsake-comparisons { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin-top: 8px; }
+.keepsake-comparison { padding: 12px; border: 1px solid #71836666; background: #13221e; }
+.keepsake-comparison h3 { margin: 0 0 4px; font: 16px Georgia,serif; color: #e2d7b6; }
+.keepsake-holder { font-size: 10px; color: #aab8a1; }
+.keepsake-comparison dt { margin-top: 8px; font-size: 10px; color: #c2b078; }
+.keepsake-comparison dd { margin: 3px 0; font: 12px/1.5 Georgia,serif; color: #c8d5bd; }
+.keepsake-comparison .keepsake-drawback { color: #d0ada0; }
+.keepsake-memory { color: #bacb9f; font-size: 10px; }
+.keepsake-memory:empty { display: none; }
+@media(max-width:650px) { .keepsake-comparisons { grid-template-columns: 1fr; } }
+
+/* Keep battle explanations available without competing with live decisions. */
+.battle-details { width: 100%; margin: 4px 0; text-align: left; color: #aab8a1; font: 11px ui-monospace, monospace; }
+.battle-details > summary { cursor: pointer; padding: 8px 0; }
+.battle-details .battle-help { width: 100%; }
+.party-battle .battle-sr, .party-battle .member-condition, .party-battle #enemy-condition, .party-battle .follower-condition { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.party-battle .member-actions [data-action="attack"] small { display: none; }
+.party-battle .member-actions [data-action="support"] small { display: none; }
+.party-battle [data-member="bear"] [data-action="support"] small, .party-battle [data-member="frog"] [data-action="support"] small { display: block; }
+.party-battle .member-mana { min-height: 15px; }
+.party-battle .combat-feedback { text-align: center; margin: 3px 0; padding: 4px 8px; border: 0; background: transparent; }
+
+.party-battle [data-action="attack"][data-matchup="true"] small { display: block; }
+
+/* Centred when there is room, but never cut off at the top when there isn't: the auto margins collapse instead. */
+.battle > :first-child { margin-top: auto; }
+.battle > :last-child { margin-bottom: auto; }
+/* The way out of a finished fight, next to the round, so it is never below the fold. */
+#battle-finish:not([hidden]) { display: block; margin: 8px auto 4px; }
+/* The log: the last few things that happened, always in view above the party. */
+.party-battle .battle-log { height: 64px; margin: 4px 0 2px; }
+/* Five heroes fit in one row when the screen is wide enough. */
+@media (min-width: 1100px) {
+  .party-roster[data-size="5"] { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+  .party-roster[data-size="5"] .member-card, .party-roster[data-size="5"] .member-card:nth-child(4), .party-roster[data-size="5"] .member-card:nth-child(5) { grid-column: auto; }
+  .party-roster[data-size="5"] .member-actions button { padding-left: 2px; padding-right: 2px; font-size: 12px; }
+}

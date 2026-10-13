@@ -1,17 +1,20 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
-test.use({ storageState: { cookies: [], origins: [] } });
+test.use({ storageState: { cookies: [], origins: [] }, storiesSeen: false });
 
-test('opening can be skipped, remembers completion, and replays without changing progress', async ({ page }, info) => {
+test('the opening can be skipped into the kraken fight, and replayed later without changing progress', async ({ page }, info) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
-  await expect(page.getByRole('dialog', { name: 'What the tide keeps', exact: true })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Before the tide turned', exact: true })).toBeVisible();
   await page.screenshot({ path: info.outputPath('opening.png') });
+  // Skipping the story still leaves the fight that teaches combat.
   await page.keyboard.press('Escape');
   await expect(page.locator('.cinematic')).toHaveCount(0);
-  await expect(page.locator('.settings')).toHaveCount(0);
-  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('tide-keeps.scenes.v1') ?? '[]'))).toEqual(['waking']);
+  await expect(page.locator('#battle-title')).toHaveText('The Kraken');
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('tide-keeps.scenes.v1') ?? '[]'))).toContain('prologue');
+  // Once the opening has been seen through, it doesn't play again; it can be revisited from Settings.
+  await page.evaluate(() => localStorage.setItem('tide-keeps.scenes.v1', JSON.stringify(['prologue', 'krakenSlain', 'waking'])));
   await page.reload();
   await expect(page.locator('#game canvas')).toBeVisible();
   await expect(page.locator('.cinematic')).toHaveCount(0);
@@ -73,10 +76,11 @@ test('mobile reduced-motion scenes remain readable and keyboard operable', async
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
-  await expect(page.locator('.cinema-line')).toContainText('For one night');
-  expect(await page.locator('.cinema-line span').textContent()).toContain('The sea is quiet.');
+  // Reduced motion shows each line whole, at once.
+  await expect(page.locator('.cinema-line')).toContainText('The harbour bell has not stopped.');
+  expect(await page.locator('.cinema-line span').textContent()).toContain('The bear holds a broken gate');
   await page.getByRole('button', { name: 'Continue', exact: false }).click();
-  await expect(page.locator('.cinema-caption')).toHaveText('THE CUP');
+  await expect(page.locator('.cinema-caption')).toHaveText('THE OTHERS');
   await page.screenshot({ path: info.outputPath('mobile-memory.png') });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.keyboard.press('Escape');

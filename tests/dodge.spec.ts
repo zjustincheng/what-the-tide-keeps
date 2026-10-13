@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './fixtures';
+import { recordDodgeCalls } from './helpers';
 
 async function enterLocust(page: Page) {
   await page.goto('/?practice');
@@ -19,30 +20,34 @@ async function attackAll(page: Page) {
   for (const name of ['Chameleon', 'Bear', 'Vulture']) await page.getByRole('button', { name: `${name} attack`, exact: true }).click();
 }
 // Press Space inside the page, offset from the moment the blow lands, so test timing does not depend on the driver.
-async function pressAt(page: Page, offset: number) {
-  await expect(page.getByRole('button', { name: /Dodge/ })).toBeVisible();
-  await page.evaluate(offset => new Promise<void>(resolve => {
+// Press at a blow's impact, plus an offset. after: the impact of a blow already answered, so this waits for the next one
+// to begin, inside the page, without stopping to read anything that might have changed by then.
+async function pressAt(page: Page, offset: number, after?: number): Promise<number> {
+  return page.evaluate(([offset, after]) => new Promise<number>(resolve => {
     const battle = document.querySelector<HTMLElement>('.battle')!;
-    setTimeout(() => {
-      battle.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
-      resolve();
-    }, Number(battle.dataset.impact) - performance.now() + offset);
-  }), offset);
+    const wait = () => {
+      const impact = Number(battle.dataset.impact);
+      if (!impact || impact === after) { setTimeout(wait, 5); return; }
+      setTimeout(() => { document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true })); resolve(impact); }, impact - performance.now() + offset);
+    };
+    wait();
+  }), [offset, after ?? 0] as const);
 }
 
 test('pressing as the ring closes dodges the blow', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await enterLocust(page);
+  const saw = await recordDodgeCalls(page);
   await attackAll(page);
   await expect(page.locator('.dodge-ring')).toHaveCount(1);
-  await expect(page.locator('.dodge-call')).toContainText(/Mandible strike \(1 of 2\) → Bear/);
-  await pressAt(page, 0);
+  // It strikes twice: dodge both, the second as soon as it comes.
+  const first = await pressAt(page, 0);
+  await pressAt(page, 0, first);
+  await saw(/Mandible strike \(1 of 2\) → Bear/);
+  await saw(/Mandible strike \(2 of 2\) → Bear/);
+  await saw('Dodged!');
   await expect(page.getByRole('log')).toContainText('finds only air');
-  await expect(page.locator('.dodge-call')).toHaveText('Dodged!');
-  // It strikes twice: dodge the second blow too.
-  await expect(page.locator('.dodge-call')).toContainText(/Mandible strike \(2 of 2\) → Bear/);
-  await pressAt(page, 0);
   await expect(page.locator('#battle-turn')).toHaveText('Round 2 · 3 actions remaining');
   await expect(page.locator('[data-member="bear"] .member-condition')).toHaveText('Unhurt');
   expect(errors).toEqual([]);
@@ -50,11 +55,12 @@ test('pressing as the ring closes dodges the blow', async ({ page }) => {
 
 test('pressing too soon or not at all takes the full blow', async ({ page }) => {
   await enterLocust(page);
+  const saw = await recordDodgeCalls(page);
   await attackAll(page);
   // Press the moment the prompt appears: far too soon, however slow the machine.
   await expect(page.getByRole('button', { name: /Dodge/ })).toBeVisible();
-  await page.evaluate(() => document.querySelector<HTMLElement>('.battle')!.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true })));
-  await expect(page.locator('.dodge-call')).toHaveText('Too soon.');
+  await page.keyboard.press(' ');
+  await saw('Too soon · hit.');
   await expect(page.getByRole('log')).toContainText('The mandible strike (1 of 2) catches Bear.');
   await expect(page.locator('#battle-turn')).toHaveText('Round 2 · 3 actions remaining');
   // Hold the vulture back so the locust survives to leap.
@@ -63,7 +69,7 @@ test('pressing too soon or not at all takes the full blow', async ({ page }) => 
   await page.getByRole('button', { name: 'Vulture support', exact: true }).click();
   // The heavy leap closes a ring like any blow; not pressing means it lands.
   await expect(page.locator('.dodge-call')).toContainText('Crushing leap');
-  await expect(page.locator('.dodge-call')).toHaveText('Too slow.');
+  await saw(/Too slow · hit\.|Time ran out · hit\./);
   await expect(page.getByRole('log')).toContainText('The crushing leap catches');
 });
 

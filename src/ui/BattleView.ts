@@ -1,3 +1,8 @@
+import {battlePacing} from '../presentation/battlePacing';
+import {BOAR_PHASE_SHOTS} from '../presentation/bossScenes';
+import {strikeFeedback} from '../presentation/battleFeedback';
+import type {BattleFeedback} from '../presentation/battleFeedback';
+import {actionPreview} from '../presentation/battleActions';
 import { act, agility, canAct, canCast, canFlee, canUse, cast, condition, cost, createBattle, DODGE, dodgeKind, ENEMIES, enemyMana, enemyTarget, flee, GATHER, grade, hesitate, intent, matchup, MEMORY_NAMES, MEMBERS, nextStrike, PATIENCE, SPELL, STAGES, strike, SURVIVE, TRAITS, useSupply, venom, visibleMana, warded } from '../rules/battle';
 import type { Action, Battle, BattleOptions, Dodge, DodgeKind, Fighter, Foe, MemberId, Encounter } from '../rules/battle';
 import { checkSequence, SPELLS } from '../rules/spells';
@@ -15,8 +20,8 @@ import {reclaimedMemories} from '../content/reclaimedMemories';
 import type {MemoryId} from '../rules/memory';
 
 const PHASE_SETS: Partial<Record<Encounter, Tableau>> = {
-  boar: 'farmhouse', hyena: 'ossuary', viper: 'apothecary', cuckoo: 'rookery',
-  cuttlefish: 'sea', human: 'laboratory', keeper: 'lighthouse', warden: 'church',
+  boar: 'farmhouse', hyena: 'ossuary', viper: 'apothecary', cuckoo: 'house-hall',
+  cuttlefish: 'sea', human: 'laboratory', warden: 'church',
   leech: 'sea', drowned: 'church', swarm: 'farmhouse', pack: 'battlefield',
 };
 
@@ -42,18 +47,23 @@ export class BattleView {
   private root: HTMLElement;
   private timer?: ReturnType<typeof setTimeout>;
   private cleanup = new AbortController();
+  private delays=new Set<ReturnType<typeof setTimeout>>();
   private sceneCleanup?: () => void;
   private previousFocus = document.activeElement as HTMLElement | null;
   private onFinish: (won: boolean, state: Battle) => void;
   // Set while a dodge prompt is open: when the blow lands, and how to answer it.
   private prompts = 0;
-  private prompt?: { impact: number; kind: DodgeKind; answer: (dodge: Dodge, early?: boolean) => void; key?: (digit: number) => void; stop?: () => Dodge };
+  private casts=0;
+  private promptCleanup?:()=>void;
+  private prompt?: { impact: number; kind: DodgeKind; answer: (dodge: Dodge, early?: boolean, reason?: string) => void; key?: (digit: number) => void; stop?: () => Dodge };
   // Set while a spell is being typed.
   private casting?: (key: number) => void;
   // The stage the screen last showed, so a boss's rising scene plays when it changes during the fight.
   private shownStage: 1 | 2 = 1;
   private originalMemories: readonly MemoryId[];
   private shownReclaimed=0;
+  private previewed?: {actor:MemberId;action:Action};
+  private incomingTarget?:MemberId;
 
   // A bout in the Talon Ring: losing walks you out of the ring, not back to the cot.
   private arena: boolean;
@@ -79,11 +89,10 @@ export class BattleView {
     this.root.setAttribute('aria-modal', 'true');
     this.root.setAttribute('aria-labelledby', 'battle-title');
     this.root.innerHTML = `
-      <div class="battle-heading"><p class="eyebrow">${tutorial ? 'THE FIVE · BEFORE THE FEAST' : 'THE CONDEMNED'}</p><h2 id="battle-title">${tutorial ? 'The Kraken' : 'Stand together.'}</h2><p id="battle-turn"></p><button id="flee" class="flee" type="button" title="Drop half your coins and take a parting blow">Run</button></div>
+      <div class="battle-heading"><p class="eyebrow">${tutorial ? 'THE FIVE · BEFORE THE FEAST' : 'THE CONDEMNED'}</p><h2 id="battle-title">${tutorial ? 'The Kraken' : 'Stand together.'}</h2><p id="battle-turn"></p><button id="battle-finish" type="button" hidden></button><button id="flee" class="flee" type="button" title="Drop half your coins and take a parting blow">Run</button></div>
       ${tutorial ? '<p class="battle-tutorial" id="battle-tutorial" aria-live="polite"></p>' : ''}
-      ${encounter==='human'?'<section class="memory-reclamation" aria-label="Memories held by the human"><p class="reclamation-count"></p><div class="reclamation-memories"></div><p class="reclamation-note" role="status"></p></section>':''}
       <div class="enemy-row">
-        <div class="arena-backdrop" aria-hidden="true">${tableau(['human', 'keeper'].includes(encounter) ? 'lighthouse' : encounter === 'kraken' ? 'kraken' : ['cuttlefish', 'shark', 'eel', 'barracuda', 'jelly'].includes(encounter) ? 'sea' : ['hyena', 'ghoul', 'raider'].includes(encounter) ? 'battlefield' : encounter === 'cuckoo' ? 'feast' : ['viper', 'apprentice'].includes(encounter) ? 'cell' : 'mill')}</div>
+        <div class="arena-backdrop" aria-hidden="true">${tableau(encounter === 'human' ? 'lighthouse' : encounter === 'kraken' ? 'kraken' : ['cuttlefish', 'shark', 'eel', 'barracuda', 'jelly'].includes(encounter) ? 'sea' : ['hyena', 'ghoul', 'raider'].includes(encounter) ? 'battlefield' : encounter === 'cuckoo' ? 'house-hall' : ['viper', 'apprentice'].includes(encounter) ? 'cell' : 'mill')}</div>
         <div class="fighter enemy-fighter" data-foe="0"><img src="${import.meta.env.BASE_URL}assets/${encounter}.${encounter === 'kraken' ? 'png' : 'svg'}" alt="${enemyName}" /></div>
         <div><h3>${enemyName}</h3>${TRAITS[encounter].length ? `<p class="enemy-traits" title="The bear's maul breaks armour and can't reach flyers; the vulture's talons take flyers and skid off armour; the chameleon strikes casters hardest; the frog's poison is double in insects and nothing in the dead. Spells ignore all of it.">${TRAITS[encounter].map(trait => trait[0].toUpperCase() + trait.slice(1)).join(' · ')}</p>` : ''}<div class="health-bar" role="meter" aria-label="${enemyName} health" aria-valuemin="0" aria-valuemax="100"><span></span></div><p id="enemy-condition"></p><p class="mana" id="enemy-mana"></p></div>
         ${this.state.followers.map((follower, index) => `<div class="follower" data-foe="${index + 1}">
@@ -92,7 +101,9 @@ export class BattleView {
         </div>`).join('')}
       </div>
       ${this.state.followers.length ? `<label class="strike-label">Strike at <select id="strike-target" aria-label="Attack target"><option value="0">${enemyName}</option>${this.state.followers.map((follower, index) => `<option value="${index + 1}">${follower.name}</option>`).join('')}</select></label>` : ''}
-      <p class="intent" id="enemy-intent"></p><div class="patience" aria-hidden="true"><span></span></div><p class="grimoire-status" aria-live="polite"></p>
+      <p class="intent" id="enemy-intent"></p><p class="combat-feedback" role="status" hidden></p><div class="patience" aria-hidden="true"><span></span></div><p class="grimoire-status" aria-live="polite"></p>
+      ${encounter==='human'?'<section class="memory-reclamation" aria-label="Memories held by the human"><details><summary class="reclamation-count"></summary><div class="reclamation-memories"></div></details><p class="reclamation-note" role="status"></p></section>':''}
+      <p class="action-preview" id="action-preview" role="status"></p>
       <div class="party-roster" data-size="${this.state.party.length}">${this.state.party.map(member => {
         const info = MEMBERS[member.id];
         return `<section class="member-card" data-member="${member.id}" aria-label="${info.name}">
@@ -102,7 +113,7 @@ export class BattleView {
           <div class="member-actions"><button data-action="attack" aria-label="${info.name} attack">${info.attack}<small>${member.id === 'frog' ? (venom(encounter) > 1 ? 'Poison · strong' : venom(encounter) === 0 ? 'Poison · useless' : 'Physical') : matchup(member.id, encounter) > 1 ? 'Physical · strong' : matchup(member.id, encounter) < 1 ? 'Physical · weak' : 'Physical'}</small></button><button data-action="support" aria-label="${info.name} support" title="${member.id==='bear' && member.gear.guardAll>0?'Protect: guards both allies and the bear against physical blows for 3 mana. Uses his action. Spells still require barriers.':SUPPORT_HELP[member.id]}">${info.support}<small>${member.id==='bear' && member.gear.guardAll>0?'Both allies · 3 mana':SUPPORT_SHORT[member.id]}</small></button><button data-action="gather" aria-label="${info.name} gather">Gather<small>+${GATHER} mana</small></button></div>
           ${encounter === 'cuckoo' ? `<button class="unmask-button" type="button" data-unmask="${member.id}" aria-label="Strike ${info.name}" title="Strike ${info.name}, in case it is the cuckoo wearing their shape. His mana never moves. The first ready hero does it. Strike the wrong one, and you hurt a friend.">Strike<small>In case it's him</small></button>` : ''}
           ${member.spell ? `<button class="cast-button" data-cast aria-label="${info.name} cast ${SPELLS[member.spell].name}">${SPELLS[member.spell].name}<small>${SPELLS[member.spell].cost} mana · ${SPELLS[member.spell].length} keys</small></button>` : ''}
-          <details class="spellcraft"><summary>Spellcraft</summary><button data-action="suppress" aria-label="${info.name} suppress">Suppress · ${cost(member, 'suppress')} mana</button><button data-action="barrier" aria-label="${info.name} barrier" title="A barrier stops spells, but only ones you have studied, for the ally chosen on this card. It does nothing against physical blows: guard against those.">Barrier · 5 mana</button><button data-action="analyze" aria-label="${info.name} analyze">Analyze · 2 mana</button></details>
+          <details class="spellcraft"><summary>Spellcraft</summary><button data-action="suppress" aria-label="${info.name} suppress">Suppress · ${cost(member, 'suppress')} mana<small>Hide</small></button><button data-action="barrier" aria-label="${info.name} barrier" title="A barrier stops spells, but only ones you have studied, for the ally chosen on this card. It does nothing against physical blows: guard against those.">Barrier · 5 mana<small>Stops studied spells</small></button><button data-action="analyze" aria-label="${info.name} analyze">Analyze · 2 mana<small>Study</small></button></details>
           ${SUPPLY_IDS.some(id => this.state.supplies[id] > 0) ? `<details class="spellcraft supplies-menu"><summary>Supplies</summary>${SUPPLY_IDS.map(id => `<button data-supply="${id}" aria-label="${info.name} use ${SUPPLIES[id].name}"></button>`).join('')}</details>` : ''}
         </section>`;
       }).join('')}</div>
@@ -111,7 +122,14 @@ export class BattleView {
         <div class="spell-pad">${[1, 2, 3, 4].map(key => `<button type="button" data-key="${key}">${key}</button>`).join('')}</div></div>
       <div class="dodge-bar" hidden><p class="dodge-call" aria-live="assertive"></p><button id="dodge" type="button">Dodge <small>Space or tap · as the ring closes</small></button></div>
       <details class="battle-help"><summary>Battle controls</summary><p>Each living companion acts once. Spellcraft uses that action too.<br />Guard physical blows. Analyze spells before blocking them. Attack while hidden to reveal.<br />Mana returns slowly: 1 a round, or Gather to draw back more. Spent mana stays spent until you rest.<br />A spell needs time to settle before it can be cast again, and casting floods the caster's mana into view.<br />When a blow comes, press Space as the ring closes to dodge. Unknown spells cannot be dodged.</p></details>
-      <button id="battle-finish" hidden></button>`;
+      `;
+    const details=document.createElement('details');details.className='battle-details';
+    const summary=document.createElement('summary');summary.textContent='Battle details';details.append(summary);
+    for(const selector of ['.action-preview','.grimoire-status','.battle-help'])details.append(this.get(selector));
+    const feedbackDetail=document.createElement('p');feedbackDetail.className='feedback-detail';feedbackDetail.hidden=true;details.insertBefore(feedbackDetail,this.get('.grimoire-status'));
+    this.root.append(details);
+    // The log of what happened sits above the party, where it can be read without opening anything.
+    this.get('.party-roster').before(this.get('.battle-log'));
     for (const member of this.state.party) {
       this.card(member.id).querySelector<HTMLImageElement>('img')!.src = member.id === 'chameleon' ? heroImage
         : `${import.meta.env.BASE_URL}assets/${member.id}.svg`;
@@ -124,6 +142,10 @@ export class BattleView {
       const card = this.card(member.id);
       card.querySelector<HTMLButtonElement>('[data-unmask]')?.addEventListener('click', () => { const striker = this.striker(member.id); if (striker) this.choose(striker, 'unmask', member.id); }, { signal });
       for (const action of ['attack', 'support', 'gather', 'suppress', 'barrier', 'analyze'] as const) {
+        const button=card.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)!;
+        const preview=()=>{this.previewed={actor:member.id,action};this.renderPreview();};
+        button.addEventListener('pointermove',preview,{signal});
+        button.addEventListener('focus',preview,{signal});
         card.querySelector(`[data-action="${action}"]`)?.addEventListener('click', () => {
           const target = (action === 'barrier' || ((member.id === 'bear' || member.id === 'frog') && action === 'support')) ? card.querySelector<HTMLSelectElement>('select')!.value as MemberId : member.id;
           this.choose(member.id, action, target, action === 'attack' ? this.foe() : 0);
@@ -144,13 +166,14 @@ export class BattleView {
       event.preventDefault(); this.casting?.(Number(button.dataset.key));
     }, { signal }));
     // Dodges answer on press, not release: keydown and pointerdown keep the timing honest.
+    // They are heard wherever the keyboard focus happens to be, so a dodge is never lost to a stray click.
     // Keys answer a spell's dodge.
-    this.root.addEventListener('keydown', event => {
+    document.addEventListener('keydown', event => {
       if (this.prompt?.kind !== 'keys' || !['1', '2', '3', '4'].includes(event.key) || event.repeat) return;
       event.preventDefault(); this.prompt.key!(Number(event.key));
     }, { signal });
-    this.root.addEventListener('keydown', event => {
-      if (!this.prompt || ![' ', 'Enter'].includes(event.key) || event.repeat) return;
+    document.addEventListener('keydown', event => {
+      if (!this.prompt || this.prompt.kind==='keys' || ![' ', 'Enter'].includes(event.key) || event.repeat) return;
       event.preventDefault(); this.press();
     }, { signal });
     this.get('#dodge').addEventListener('pointerdown', event => { event.preventDefault(); this.press(); }, { signal });
@@ -176,7 +199,11 @@ export class BattleView {
     this.root.addEventListener('keydown', event => {
       if (event.key !== 'Tab') return;
       const controls = Array.from(this.root.querySelectorAll<HTMLElement>('button:not([disabled]):not([hidden]),select:not([disabled]),summary'))
-        .filter(control => !control.closest('[hidden]') && (control.tagName === 'SUMMARY' || !control.closest('details:not([open])')));
+        .filter(control => {
+          if(control.closest('[hidden]'))return false;
+          const closed=control.closest('details:not([open])');
+          return !closed || control.tagName==='SUMMARY' && closed===control.parentElement && !closed.parentElement?.closest('details:not([open])');
+        });
       event.preventDefault();
       if (!controls.length) { this.root.focus(); return; }
       const index = controls.indexOf(document.activeElement as HTMLElement);
@@ -187,7 +214,12 @@ export class BattleView {
     if (this.tutorial) this.card('chameleon').querySelector<HTMLButtonElement>('[data-action="attack"]')!.focus({ preventScroll: true });
     else this.focusNext();
     // An ambush opens on the enemy's turn.
-    if (this.state.phase === 'enemy') { this.root.focus({ preventScroll: true }); this.timer = setTimeout(() => this.enemyTurn(), 900); }
+    if (this.state.phase === 'enemy') { this.root.focus({ preventScroll: true }); this.timer = this.later(() => this.enemyTurn(), battlePacing(this.state.encounter).turnLead); }
+  }
+
+  private later(run:()=>void,ms:number) {
+    const id=setTimeout(()=>{this.delays.delete(id);if(!this.cleanup.signal.aborted)run();},ms);
+    this.delays.add(id);return id;
   }
 
   private bindDrag(actor: MemberId) {
@@ -230,6 +262,7 @@ export class BattleView {
     bar.dataset.level = fraction <= 0.25 ? 'low' : fraction <= 0.5 ? 'wounded' : 'healthy';
     bar.setAttribute('aria-valuenow', String(Math.round(fraction * 100)));
     bar.setAttribute('aria-valuetext', condition(fighter));
+    bar.title=condition(fighter);
   }
 
   private focusNext() {
@@ -257,13 +290,13 @@ export class BattleView {
       return;
     }
     if (state.round === 1) {
-      hint.textContent = 'STEP 1 · Choose a hero and tap Attack. Each of the five can act once before the kraken strikes.';
+      hint.textContent = 'STEP 1 · Attack once with each hero.';
       for (const member of state.party.filter(hero => hero.health > 0 && !hero.acted)) this.card(member.id).querySelector('[data-action="attack"]')!.classList.add('tutorial-pulse');
     } else if (state.round === 2) {
-      hint.textContent = 'STEP 2 · The bear can Protect an ally from blows. The frog’s Dose heals one. Both use that hero’s turn.';
+      hint.textContent = 'STEP 2 · Protect with Bear. Heal with Frog.';
       for (const id of ['bear', 'frog'] as const) if (state.party.some(member => member.id === id && member.health > 0 && !member.acted)) this.card(id).querySelector('[data-action="support"]')!.classList.add('tutorial-pulse');
     } else {
-      hint.textContent = 'STEP 3 · Use all five heroes each round. Attack together, use support when needed, and dodge the kraken’s tells.';
+      hint.textContent = 'STEP 3 · Fight together. Watch for the dodge warning.';
       for (const member of state.party.filter(hero => hero.health > 0 && !hero.acted)) this.card(member.id).querySelector('[data-action="attack"]')!.classList.add('tutorial-pulse');
     }
   }
@@ -275,7 +308,7 @@ export class BattleView {
     const bar = this.root.querySelector<HTMLElement>('.patience span');
     if (this.state.phase !== 'player' || !bar) return;
     bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = `patience ${PATIENCE}ms linear forwards`;
-    this.patience = setTimeout(() => {
+    this.patience = this.later(() => {
       if (this.state.phase !== 'player' || this.casting) { this.armPatience(); return; }
       this.state = hesitate(this.state);
       music.effect('hit');
@@ -288,10 +321,36 @@ export class BattleView {
     return Number(this.root.querySelector<HTMLSelectElement>('#strike-target')?.value ?? 0);
   }
 
+  private actionTarget(actor:MemberId,action:Action):MemberId {
+    return action==='barrier' || action==='support' && (actor==='bear' || actor==='frog')
+      ? this.card(actor).querySelector<HTMLSelectElement>('select')!.value as MemberId : actor;
+  }
+
+  private renderPreview() {
+    const preview=this.get<HTMLElement>('#action-preview');
+    preview.hidden=this.state.phase==='victory'||this.state.phase==='defeat'||this.state.phase==='fled';
+    preview.textContent=this.previewed
+      ? actionPreview(this.state,this.previewed.actor,this.previewed.action,this.actionTarget(this.previewed.actor,this.previewed.action),this.previewed.action==='attack'?this.foe():0)
+      : 'Each hero acts once. Choose an enemy for attacks and an ally for support or barriers.';
+  }
+
+  private showFeedback(feedback:BattleFeedback,target?:MemberId) {
+    const status=this.get<HTMLElement>('.combat-feedback');
+    status.hidden=false;status.dataset.effect=feedback.kind;
+    status.title=feedback.message;
+    const detail=this.get<HTMLElement>('.feedback-detail');detail.hidden=false;detail.textContent=feedback.message;
+    const label=document.createElement('span');label.className='feedback-label';
+    label.textContent=`${target?MEMBERS[target].name+' · ':''}${feedback.label}`;
+    const explanation=document.createElement('span');explanation.className='battle-sr';explanation.textContent=feedback.message;
+    status.replaceChildren(label,explanation);
+    if(target)combatEffect(this.card(target).querySelector('.party-fighter'),feedback.kind,feedback.label);
+  }
+
   private choose(actor: MemberId, action: Action, target: MemberId = actor, foe: Foe = 0) {
     if (this.casting || !canAct(this.state, actor, action, target, foe)) return;
     this.strikeKind = action === 'attack' ? 'slash' : undefined;
     this.state = act(this.state, actor, action, target, foe);
+    if(action==='analyze')this.showFeedback({kind:'mana',label:'STUDIED',message:`${this.state.studied.at(-1)} is recorded in the shared grimoire and survives death.`},actor);
     // Each hero strikes with their own sound; spellcraft has its own.
     const sounds: Record<Action, Sound> = { attack: ({ chameleon: 'lash', bear: 'maul', vulture: 'talons', frog: 'lash', octopus: 'maul' } as const)[actor], support: actor === 'vulture' || actor === 'frog' ? 'gather' : actor === 'octopus' ? 'barrier' : 'block', suppress: 'open', barrier: 'barrier', analyze: 'key', gather: 'gather', unmask: 'hit' };
     music.effect(sounds[action]);
@@ -323,7 +382,9 @@ export class BattleView {
     const spell = SPELLS[this.state.party.find(member => member.id === actor)!.spell!];
     const sequence = Array.from({ length: spell.length }, () => 1 + Math.floor(Math.random() * 4));
     const typed: number[] = [];
+    const shown=++this.casts;
     const bar = this.get('.spell-bar'), keys = this.get('.spell-keys');
+    delete bar.dataset.result;
     bar.hidden = false; bar.dataset.sequence = sequence.join('');
     this.get('.spell-name').textContent = `${MEMBERS[actor].name} · ${spell.name} — type the keys`;
     const show = () => { keys.innerHTML = sequence.map((key, index) => `<span data-state="${index < typed.length ? 'done' : index === typed.length ? 'next' : 'todo'}">${key}</span>`).join(''); };
@@ -334,9 +395,10 @@ export class BattleView {
       clearTimeout(this.timer); this.casting = undefined;
       bar.dataset.result = success ? 'cast' : 'fizzle';
       this.get('.spell-name').textContent = success ? `${spell.name}!` : `${spell.name} fizzles.`;
-      setTimeout(() => { bar.hidden = true; delete bar.dataset.result; }, 600);
+      this.later(() => { if(this.casts===shown){bar.hidden = true; delete bar.dataset.result;} }, 350);
       this.strikeKind = success ? 'burst' : undefined;
       this.state = cast(this.state, actor, success, foe);
+      if(!success)this.showFeedback({kind:'fizzle',label:'FIZZLED',message:`${MEMBERS[actor].name}'s spell failed. The action and mana were spent.`},actor);
       music.effect(!success ? 'fizzle' : spell.kind === 'heal' ? 'heal' : spell.kind === 'ward' ? 'barrier' : 'spell');
       this.afterAction();
     };
@@ -346,7 +408,7 @@ export class BattleView {
       const result = checkSequence(sequence, typed);
       if (result !== 'typing') finish(result === 'cast');
     };
-    this.timer = setTimeout(() => finish(false), spell.seconds * 1000);
+    this.timer = this.later(() => finish(false), spell.seconds * 1000);
     this.render(); this.root.focus({ preventScroll: true });
   }
 
@@ -359,7 +421,7 @@ export class BattleView {
     this.ended();
     if (this.state.phase === 'enemy') {
       this.root.focus({ preventScroll: true });
-      this.timer = setTimeout(() => this.enemyTurn(), 650);
+      this.timer = this.later(() => this.enemyTurn(), battlePacing(this.state.encounter).turnLead);
     } else if (this.state.phase === 'player') this.focusNext();
   }
 
@@ -367,36 +429,60 @@ export class BattleView {
   private enemyTurn() {
     this.timer = undefined;
     const next = nextStrike(this.state);
-    const land = (dodge: Dodge) => {
+    const follower=next?this.state.followers.findIndex(follower=>next.move.name.startsWith(`${follower.name.toLowerCase()}'s `)):-1;
+    const source=follower+1;
+    const pacing=battlePacing(this.state.encounter,source===0);
+    const fighter=this.root.querySelector(`[data-foe="${source}"] .fighter, .fighter[data-foe="${source}"]`);
+    if(next && !next.move.revive && !next.move.feed) {
+      this.card(next.target.id).dataset.targeted='true';
+      fighter?.classList.add('is-winding');
+      if(pacing.heavy && next.damage>0 && !next.move.revive)music.effect('boss-windup');
+    }
+    const land = (dodge: Dodge,reason?:string) => {
       // How the blow lands decides its sound: stopped, dodged, grazed, or taken.
       const before = next;
       // The enemy lunges as its blow lands.
-      if (before && !before.move.revive) this.play(this.root.querySelector('.fighter[data-foe="0"]'), 'is-striking');
+      fighter?.classList.remove('is-winding');
+      if(before)this.card(before.target.id).dataset.targeted='false';
+      if (before && !before.move.revive) this.play(fighter, 'is-striking');
       this.strikeKind = undefined;
       const previousStage=this.state.stage;
+      this.incomingTarget=before?.target.id;
       this.state = strike(this.state, dodge); this.persist(); this.render();
+      this.incomingTarget=undefined;
+      const feedback=strikeFeedback(before,dodge);
+      if(feedback) {
+        if(feedback.label==='UNSTUDIED' && this.state.studied.includes(before!.move.spell??''))feedback.message=`${MEMBERS[before!.target.id].name} survives the unknown spell. Its structure is now recorded for barriers and dodges.`;
+        if(reason && dodge!=='perfect')feedback.message=`${reason.replace(' · hit.','.')} ${feedback.message}`;
+        if(this.state.party.find(member=>member.id===before!.target.id)!.health===0)feedback.message+=' They fall.';
+        this.showFeedback(feedback,before!.target.id);
+      }
       if (before && before.damage === 0 && !before.move.revive) music.effect('block');
       else if (before?.dodgeable && dodge === 'perfect') music.effect('dodge');
       else if (before?.dodgeable && dodge === 'graze') music.effect('graze');
-      else if (before && before.damage > 0) music.effect('hit');
+      else if (before && before.damage > 0) {
+        music.effect(pacing.heavy?'boss-impact':'hit');
+        if(pacing.heavy && !matchMedia('(prefers-reduced-motion: reduce)').matches)this.play(this.root,'boss-impact');
+      }
       if(previousStage===1 && this.state.stage===2 && STAGES[this.state.encounter]){this.playScene(()=>this.afterAction());return;}
       this.ended();
-      if (this.state.phase === 'enemy') this.timer = setTimeout(() => this.enemyTurn(), 450);
+      if (this.state.phase === 'enemy') this.timer = this.later(() => this.enemyTurn(), pacing.recovery);
       else if (this.state.phase === 'player') this.focusNext();
     };
     if (!next?.dodgeable) {
       // A blow that cannot be dodged is announced, so the player sees why no ring came.
-      if (next && next.damage > 0 && next.move.undodgeable) {
+      if (next && next.damage > 0 && (next.move.undodgeable || next.move.type==='spell' && !this.state.studied.includes(next.move.spell??''))) {
         const bar = this.get('.dodge-bar');
         const shown = ++this.prompts;
-        this.get('.dodge-call').textContent = `${next.move.name} → ${MEMBERS[next.target.id].name}. It cannot be dodged.`;
+        bar.dataset.kind='unavailable';
+        this.get('.dodge-call').textContent = `${next.move.name} → ${MEMBERS[next.target.id].name} · ${next.move.type==='spell' && !this.state.studied.includes(next.move.spell??'')?'Unstudied':'Cannot dodge'}`;
         this.get<HTMLButtonElement>('#dodge').hidden = true;
         bar.hidden = false;
-        setTimeout(() => { if (this.prompts === shown) bar.hidden = true; }, 900);
-        this.timer = setTimeout(() => land('miss'), 800);
+        this.later(() => { if (this.prompts === shown) bar.hidden = true; }, 900);
+        this.timer = this.later(() => land('miss'), pacing.warning);
         return;
       }
-      this.timer = setTimeout(() => land('miss'), next ? 400 : 0);
+      this.timer = this.later(() => land('miss'), next ? pacing.windup : 0);
       return;
     }
     // Each blow asks for its own kind of dodge: a closing ring, keys to type, or a bar to stop.
@@ -409,15 +495,28 @@ export class BattleView {
     const impact = performance.now() + LEAD;
     const bar = this.get('.dodge-bar'), button = this.get<HTMLButtonElement>('#dodge');
     const shown = ++this.prompts;
+    bar.dataset.kind=kind;
     const call = `${next.move.name} → ${MEMBERS[next.target.id].name}.`;
     const pieces: HTMLElement[] = [ring];
     let hint = 'Space or tap · as the ring closes';
-    if (kind === 'ring') { card.append(ring); this.root.dataset.impact = String(impact); }
+    if (kind === 'ring') { bar.insertBefore(ring,button); this.root.dataset.impact = String(impact); }
     let keys: number[] = [];
+    let sequence:HTMLElement|undefined;
     if (kind === 'keys') {
       // Trace the spell's sigil back at it: three keys, quickly.
       keys = Array.from({ length: 3 }, () => 1 + Math.floor(Math.random() * 4));
-      hint = `Type ${keys.join(' ')}`;
+      hint = 'Match all three numbers quickly · slower matches graze';
+      sequence=document.createElement('div');sequence.className='dodge-sequence';
+      sequence.setAttribute('aria-label','Spell dodge sequence');
+      sequence.innerHTML=keys.map((key,index)=>`<span data-state="${index===0?'next':'todo'}">${key}</span>`).join('');
+      const pad=document.createElement('div');pad.className='spell-pad dodge-pad';
+      for(const digit of [1,2,3,4]) {
+        const key=document.createElement('button');key.type='button';key.textContent=String(digit);key.setAttribute('aria-label',`Dodge key ${digit}`);
+        key.addEventListener('pointerdown',event=>{event.preventDefault();this.prompt?.key?.(digit);},{signal:this.cleanup.signal});
+        key.addEventListener('click',event=>{if(event.detail===0)this.prompt?.key?.(digit);},{signal:this.cleanup.signal});pad.append(key);
+      }
+      const instruction=document.createElement('p');instruction.className='dodge-instruction';instruction.textContent='Quick match: dodge. Slower match: graze.';
+      bar.append(sequence,instruction,pad);pieces.push(sequence,instruction,pad);
     }
     let sweep = 0;
     const zone = { start: 0.2 + Math.random() * 0.5, width: Math.min(0.4, 0.2 * quick) };
@@ -435,30 +534,36 @@ export class BattleView {
     }
     this.get('.dodge-call').textContent = `${call} ${kind === 'keys' ? `Type ${keys.join(' ')}!` : 'Dodge!'}`;
     button.querySelector('small')!.textContent = hint;
-    bar.hidden = false; button.hidden = false; button.disabled = false; button.focus({ preventScroll: true });
+    bar.hidden = false; button.hidden = kind==='keys'; button.disabled = false;
+    if(kind==='keys')this.root.focus({preventScroll:true});else button.focus({ preventScroll: true });
     let typed = 0;
     const allowed = LEAD * 1.6 * quick;
+    this.promptCleanup=()=>{cancelAnimationFrame(sweep);pieces.forEach(piece=>piece.remove());};
     this.prompt = {
       impact, kind,
-      answer: (dodge, early = false) => {
+      answer: (dodge, early = false, reason) => {
         clearTimeout(this.timer); cancelAnimationFrame(sweep); this.prompt = undefined;
         card.dataset.targeted = 'false';
-        if (dodge === 'perfect') combatEffect(card.querySelector('.fighter'), 'dodge', 'EVADED');
         delete this.root.dataset.impact;
+        pieces.forEach(piece=>piece.querySelectorAll<HTMLButtonElement>('button').forEach(key=>key.disabled=true));
         button.disabled = true; this.root.focus({ preventScroll: true });
         // Leave the result up briefly, unless the next blow has already opened a new prompt.
-        setTimeout(() => { if (this.prompts === shown) bar.hidden = true; }, 700);
+        this.later(() => { if (this.prompts === shown) bar.hidden = true; }, 700);
         ring.dataset.result = dodge;
-        this.get('.dodge-call').textContent = dodge === 'perfect' ? 'Dodged!' : dodge === 'graze' ? 'Grazed.' : early ? 'Too soon.' : 'Too slow.';
-        setTimeout(() => pieces.forEach(piece => piece.remove()), 350);
-        land(dodge);
+        this.get('.dodge-call').textContent = reason ?? (dodge === 'perfect' ? 'Dodged!' : dodge === 'graze' ? 'Grazed · partial dodge.' : early ? 'Too soon · hit.' : 'Too slow · hit.');
+        this.promptCleanup?.();this.promptCleanup=undefined;
+        land(dodge,reason);
       },
       key: digit => {
-        if (digit !== keys[typed]) { this.prompt?.answer('miss'); return; }
+        if (digit !== keys[typed]) { sequence!.children[typed].setAttribute('data-state','wrong');this.prompt?.answer('miss',false,'Wrong key · hit.'); return; }
         music.effect('key', digit * 2);
         typed++;
+        Array.from(sequence!.children).forEach((key,index)=>key.setAttribute('data-state',index<typed?'done':index===typed?'next':'todo'));
         this.get('.dodge-call').textContent = `${call} Type ${keys.map((key, i) => i < typed ? '·' : key).join(' ')}!`;
-        if (typed === keys.length) this.prompt?.answer(performance.now() - started <= allowed * 0.6 ? 'perfect' : 'graze');
+        if (typed === keys.length) {
+          const quick=performance.now()-started<=allowed*.6;
+          this.prompt?.answer(quick?'perfect':'graze',false,quick?'Dodged!':'Matched late · grazed.');
+        }
       },
       stop: () => {
         const t = ((performance.now() - started) / 700) % 2, at = t < 1 ? t : 2 - t;
@@ -468,7 +573,7 @@ export class BattleView {
     };
     // No answer at all means the blow lands in full.
     const wait = kind === 'keys' ? allowed : kind === 'bar' ? 2400 : LEAD + DODGE.graze + 1;
-    this.timer = setTimeout(() => this.prompt?.answer('miss'), wait);
+    this.timer = this.later(() => this.prompt?.answer('miss',false,'Time ran out · hit.'), wait);
   }
 
   private press() {
@@ -522,14 +627,14 @@ export class BattleView {
   private play(target: Element | null, name: string) {
     if (!target) return;
     target.classList.remove(name); void (target as HTMLElement).offsetWidth; target.classList.add(name);
-    setTimeout(() => target.classList.remove(name), 500);
+    this.later(() => target.classList.remove(name), 500);
   }
   private mark(target: Element | null, kind: 'slash' | 'burst' | 'fire') {
     if (!target) return;
     const fx = document.createElement('span');
     fx.className = `fx fx-${kind}`;
     target.append(fx);
-    setTimeout(() => fx.remove(), 520);
+    this.later(() => fx.remove(), 520);
   }
   private animateChanges() {
     const state = this.state;
@@ -541,26 +646,28 @@ export class BattleView {
       if (fighter) fighter.dataset.defeated = String(follower.health === 0);
     });
     const now = new Map<string, number>([
-      ...state.party.flatMap(member => [[`hp:${member.id}`, member.health], [`act:${member.id}`, Number(member.acted)], [`mp:${member.id}`, member.mana], [`ward:${member.id}`, Number(member.barrier)]] as [string, number][]),
-      ['hp:0', state.enemy.health], ...state.followers.map((follower, index) => [`hp:${index + 1}`, follower.health] as [string, number]),
+      ...state.party.flatMap(member => [[`hp:${member.id}`, member.health], [`act:${member.id}`, Number(member.acted)], [`mp:${member.id}`, member.mana], [`ward:${member.id}`, Number(member.barrier)], [`poison:${member.id}`, member.poison]] as [string, number][]),
+      ['hp:0', state.enemy.health], ['poison:0',state.enemyPoison], ...state.followers.map((follower, index) => [`hp:${index + 1}`, follower.health] as [string, number]),
       ['stage', state.stage],
     ]);
     const play = (target: Element | null, name: string) => {
       if (!target) return;
       target.classList.remove(name); void (target as HTMLElement).offsetWidth; target.classList.add(name);
-      setTimeout(() => target.classList.remove(name), 500);
+      this.later(() => target.classList.remove(name), 500);
     };
     for (const [key, value] of now) {
       const before = this.seen.get(key);
       if (before === undefined) continue;
       const [kind, who] = key.split(':');
-      const fighter = kind === 'hp' && /^\d+$/.test(who) ? this.root.querySelector(`[data-foe="${who}"] .fighter, .fighter[data-foe="${who}"]`) : this.root.querySelector(`.member-card[data-member="${who}"] .party-fighter`);
+      const fighter = /^\d+$/.test(who) ? this.root.querySelector(`[data-foe="${who}"] .fighter, .fighter[data-foe="${who}"]`) : this.root.querySelector(`.member-card[data-member="${who}"] .party-fighter`);
       if (kind === 'hp' && value < before) {
         play(fighter, 'is-hit');
-        combatEffect(fighter, this.strikeKind === 'burst' ? 'spell' : 'hit', value === 0 ? 'FALLEN' : undefined);
+        const poisoned=this.seen.get(`poison:${who}`)!>0 && state.phase==='player' && (now.get(`poison:${who}`)??0)<this.seen.get(`poison:${who}`)!;
+        if(who!==this.incomingTarget)combatEffect(fighter, poisoned?'poison':this.strikeKind === 'burst' ? 'spell' : 'hit', value === 0 ? 'FALLEN' : poisoned?'POISON':undefined);
         // An enemy struck by the party shows what struck it.
         if (/^\d+$/.test(who) && this.strikeKind) this.mark(fighter, this.strikeKind);
       }
+      if(kind==='poison' && value>before)combatEffect(fighter,'poison','POISONED');
       if (kind === 'hp' && value > before) combatEffect(fighter, 'heal', 'MENDED');
       if (kind === 'mp' && value > before && state.phase === 'player') combatEffect(fighter, 'mana');
       if (kind === 'ward' && value > before) combatEffect(fighter, 'ward', 'WARDED');
@@ -575,18 +682,20 @@ export class BattleView {
     const original=STAGES[this.state.encounter]!;
     const returned=this.state.recoveredMemories[0];
     const stage=this.state.encounter==='human' && returned?{...original,scene:[...original.scene,{who:'',line:`${MEMORY_NAMES[returned]} returns: ${reclaimedMemories[returned]}`}]}:original;
+    const previousScroll=this.root.scrollTop;
     const scene = document.createElement('div');
     scene.className = 'cutscene';
     scene.dataset.encounter = this.state.encounter;
     scene.setAttribute('role', 'dialog');
     scene.setAttribute('aria-label', stage.title);
     scene.setAttribute('aria-modal', 'true');
-    scene.innerHTML = `<div class="phase-header"><p class="eyebrow">THE TIDE TURNS</p><button type="button" class="cutscene-skip">Skip scene</button></div><div class="phase-picture"><div class="phase-backdrop">${tableau(PHASE_SETS[this.state.encounter] ?? 'battlefield')}</div><div class="phase-footing"></div><img class="phase-portrait" src="${import.meta.env.BASE_URL}assets/${this.state.encounter}.${this.state.encounter === 'kraken' ? 'png' : 'svg'}" alt="" /></div><div class="phase-copy"><h2></h2><p class="cutscene-speaker"></p><p class="cutscene-line" aria-live="polite"></p><div class="phase-footer"><span class="phase-count"></span><button type="button" class="cutscene-next">Continue <span>↵</span></button></div></div>`;
+    scene.innerHTML = `<div class="phase-header"><p class="eyebrow">THE TIDE TURNS</p><button type="button" class="cutscene-skip">Skip scene</button></div><div class="phase-picture"><div class="phase-backdrop">${tableau(PHASE_SETS[this.state.encounter] ?? 'battlefield')}</div><div class="phase-footing"></div><div class="phase-cast" hidden></div><img class="phase-portrait" src="${import.meta.env.BASE_URL}assets/${this.state.encounter}.${this.state.encounter === 'kraken' ? 'png' : 'svg'}" alt="" /></div><div class="phase-copy"><h2></h2><p class="cutscene-speaker"></p><p class="cutscene-line" aria-live="polite"></p><div class="phase-footer"><span class="phase-count"></span><button type="button" class="cutscene-next">Continue <span>↵</span></button></div></div>`;
     scene.querySelector('h2')!.textContent = stage.title;
     this.root.append(scene);
     const backdrop = Array.from(this.root.children).filter(child => child !== scene) as HTMLElement[];
     backdrop.forEach(element => { element.inert = true; });
     this.root.classList.add('in-cutscene');
+    this.root.scrollTop=0;
     const block = this.casting;
     this.casting = () => {};
     let index = 0;
@@ -597,6 +706,24 @@ export class BattleView {
     const portrait = scene.querySelector<HTMLImageElement>('.phase-portrait')!;
     const show = () => {
       const { who, line } = stage.scene[index];
+      const shot=this.state.encounter==='boar'?BOAR_PHASE_SHOTS[index]:undefined;
+      scene.dataset.shot=String(index);
+      const cast=scene.querySelector<HTMLElement>('.phase-cast')!;
+      cast.hidden=!shot;portrait.hidden=Boolean(shot);
+      (scene.querySelector('.phase-footing') as HTMLElement).hidden=Boolean(shot);
+      if(shot) {
+        scene.dataset.pose=shot.pose;
+        scene.querySelector('.phase-header .eyebrow')!.textContent=shot.caption;
+        scene.querySelector('.phase-backdrop')!.innerHTML=tableau(shot.art);
+        cast.replaceChildren(...shot.actors.map(actor=>{
+          const place=document.createElement('div');place.className='phase-actor';place.dataset.actor=actor;
+          place.dataset.speaking=String(SPEAKER_ART[who]===actor);
+          const shadow=document.createElement('span');shadow.className='phase-actor-shadow';
+          const image=document.createElement('img');image.src=`${import.meta.env.BASE_URL}assets/${actor}.svg`;image.alt='';
+          place.append(shadow,image);return place;
+        }));
+        if(shot.sound)music.effect(shot.sound);
+      }
       scene.querySelector('.cutscene-speaker')!.textContent = who;
       scene.classList.toggle('narration', !who);
       scene.classList.toggle('phase-awakening', index === stage.scene.length - 1);
@@ -605,12 +732,14 @@ export class BattleView {
       // A speaker shows as themselves; narration shows the boss.
       const art = SPEAKER_ART[who] ?? this.state.encounter;
       portrait.src = `${import.meta.env.BASE_URL}assets/${art}.${art === 'kraken' ? 'png' : 'svg'}`;
-      text.textContent = ''; text.dataset.full = line;
+      text.dataset.full = line;
+      text.setAttribute('aria-label',line);
+      const visible=document.createElement('span');visible.setAttribute('aria-hidden','true');text.replaceChildren(visible);
       let shown = 0;
       clearInterval(typing);
-      if (matchMedia('(prefers-reduced-motion: reduce)').matches) { text.textContent = line; typing = undefined; return; }
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) { visible.textContent = line; typing = undefined; return; }
       typing = setInterval(() => {
-        shown++; text.textContent = line.slice(0, shown);
+        shown++; visible.textContent = line.slice(0, shown);
         if (shown % 3 === 0 && who) music.effect('blip', -6);
         if (shown >= line.length) { clearInterval(typing); typing = undefined; }
       }, 24);
@@ -620,15 +749,18 @@ export class BattleView {
       if (finished) return;
       finished = true; clearInterval(typing); this.sceneCleanup = undefined;
       scene.remove(); backdrop.forEach(element => { element.inert = false; });
-      this.root.classList.remove('in-cutscene'); this.casting = block;
+      this.root.classList.remove('in-cutscene'); this.root.scrollTop=previousScroll;
+      this.root.classList.add('phase-returning');this.root.inert=true;
+      // The boss settles into its new stance before controls or the next tell return.
+      this.render();
       music.effect(this.state.encounter==='human'?'memory':'roar');
       const fighter = this.root.querySelector('.fighter[data-foe="0"]');
       fighter?.classList.add('is-turning');
-      setTimeout(() => fighter?.classList.remove('is-turning'), 600);
-      then();
+      this.later(() => fighter?.classList.remove('is-turning'), 600);
+      this.timer=this.later(()=>{this.root.classList.remove('phase-returning');this.root.inert=false;this.casting=block;then();},matchMedia('(prefers-reduced-motion: reduce)').matches?0:battlePacing(this.state.encounter).phaseReturn);
     };
     const next = () => {
-      if (typing) { clearInterval(typing); typing = undefined; text.textContent = text.dataset.full ?? ''; return; }
+      if (typing) { clearInterval(typing); typing = undefined; text.querySelector('span')!.textContent = text.dataset.full ?? ''; return; }
       if (++index < stage.scene.length) show(); else finish();
     };
     scene.querySelector('.cutscene-skip')!.addEventListener('click', finish, { signal: this.cleanup.signal });
@@ -695,14 +827,28 @@ export class BattleView {
       card.dataset.downed = String(member.health === 0);
       card.querySelector('.member-condition')!.textContent = condition(member);
       this.renderHealth(card.querySelector<HTMLElement>('.health-bar')!, member);
-      card.querySelector('.member-mana')!.textContent = `Mana ${member.mana} / ${member.maxMana} · showing ${visibleMana(member)}`;
+      card.querySelector('.member-mana')!.textContent = `Mana ${member.mana} / ${member.maxMana}${visibleMana(member)!==member.mana?` · showing ${visibleMana(member)}`:''}`;
       card.dataset.poisoned = String(member.poison > 0 && member.health > 0);
       card.querySelector('.member-status')!.textContent = member.health === 0 ? 'Cannot act'
         : member.poison ? `Poisoned · ${member.poison} round${member.poison === 1 ? '' : 's'}${member.acted ? ' · acted' : ''}`
-        : member.flaring ? 'Flaring · the enemy sees them' : member.barrier ? 'Barrier raised' : member.suppressed ? 'Hidden · attack to reveal'
+        : member.flaring ? 'Flaring' : member.barrier ? 'Barrier raised' : member.suppressed ? 'Hidden'
         : member.guardingFor ? `Guarding ${MEMBERS[member.guardingFor].name}` : member.focused ? 'Focused'
-        : member.acted ? 'Acted' : done ? '' : 'Ready';
-      for (const action of ['attack', 'support', 'gather', 'suppress', 'barrier', 'analyze'] as const) card.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)!.disabled = Boolean(this.casting) || !canAct(state, member.id, action, member.id, action === 'attack' ? this.foe() : 0);
+        : member.acted ? 'Acted' : '';
+      for (const action of ['attack', 'support', 'gather', 'suppress', 'barrier', 'analyze'] as const) {
+        const button=card.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)!;
+        const ally=this.actionTarget(member.id,action),foe=action==='attack'?this.foe():0;
+        button.disabled=Boolean(this.casting)||!canAct(state,member.id,action,ally,foe);
+        button.title=actionPreview(state,member.id,action,ally,foe);
+        if(action==='attack') {
+          const strength=member.id==='frog'?venom(state.encounter):matchup(member.id,state.encounter);
+          const hint=button.querySelector('small')!;
+          hint.textContent=strength>1?'Strong':strength===0?'Immune':'Weak';
+          if(strength!==1) {button.dataset.matchup='true';button.title+=` ${hint.textContent} against this enemy.`;}else delete button.dataset.matchup;
+        }
+        button.setAttribute('aria-description',button.title);
+        if(action==='barrier')button.querySelector('small')!.textContent=`Protect ${MEMBERS[ally].name}`;
+        if(action==='support')button.querySelector('small')!.textContent=member.id==='bear' && member.gear.guardAll>0?'Whole party · 3 mana':member.id==='bear'||member.id==='frog'?MEMBERS[ally].name:SUPPORT_SHORT[member.id];
+      }
       const strike = card.querySelector<HTMLButtonElement>('[data-unmask]');
       if (strike) strike.disabled = Boolean(this.casting) || !this.striker(member.id);
       card.querySelectorAll<HTMLButtonElement>('[data-supply]').forEach(button => {
@@ -722,11 +868,14 @@ export class BattleView {
       card.querySelector<HTMLButtonElement>('.party-fighter')!.disabled = !canAct(state, member.id, 'support');
       const select = card.querySelector('select');
       if (select) {
-        for (const option of Array.from(select.options)) option.disabled = state.party.find(ally => ally.id === option.value)!.health === 0;
-        if (select.selectedOptions[0]?.disabled) select.value = member.id;
+        for (const option of Array.from(select.options)) {
+          const ally=state.party.find(ally=>ally.id===option.value)!;
+          option.textContent=`${MEMBERS[ally.id].name}${ally.health===0?' · downed':''}`;
+        }
         select.disabled = state.phase !== 'player' || member.acted || member.health === 0;
       }
     }
+    this.renderPreview();
     const log = this.get('.battle-log');
     for (const line of state.log.slice(log.childElementCount)) {
       const p = document.createElement('p'); p.textContent = line; log.append(p);
@@ -740,11 +889,13 @@ export class BattleView {
     run.hidden = done || this.tutorial;
     run.disabled = Boolean(this.casting) || !canFlee(state);
     run.title = state.encounter === 'boar' ? 'The boar stands between you and the road.' : '';
-    if (done) finish.focus({ preventScroll: true });
+    // A finished fight shows its way out at the top of the panel, next to the round.
+    if (done) { this.root.scrollTop = 0; finish.focus({ preventScroll: true }); }
   }
 
   destroy(restoreFocus = true) {
-    this.sceneCleanup?.();
+    this.sceneCleanup?.();this.promptCleanup?.();this.prompt=undefined;this.casting=undefined;
+    for(const delay of this.delays)clearTimeout(delay);this.delays.clear();
     clearTimeout(this.timer); clearTimeout(this.patience); this.cleanup.abort(); this.root.remove();
     if (restoreFocus && this.previousFocus?.isConnected) this.previousFocus.focus({ preventScroll: true });
   }

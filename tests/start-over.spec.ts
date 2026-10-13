@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 // A save with progress in it, from a fresh browser.
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -22,6 +22,7 @@ test('starting over erases progress but keeps preferences, after asking first', 
   await page.getByRole('button', { name: 'Start over…' }).click();
   await page.getByRole('button', { name: 'Erase and start over' }).click();
   await page.waitForLoadState('load');
+  await page.locator('#title-play').click();
   await expect(page.locator('#purse')).toHaveText('0 coins');
   await expect(page.locator('#memory-status')).toContainText('8 of 10 memories remain');
   await expect(page.locator('#hud .hud-member')).toHaveCount(1);

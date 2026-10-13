@@ -128,7 +128,7 @@ export const FARMLAND: Area = {
   key: 'farmland', map: 'farmland', tileset: 'fields', music: 'fields', region: 'THE FARMLAND', place: 'The fields',
   dialogue: { ...withBearReplies(fields,'miller'), ...fieldsLore, ...bearReturn }, assets: ['bear', 'nymph', 'votive'],
   ground: 'grass', surfaces: { 3: 'dirt', 16: 'wood', 17: 'water', 27: 'leaves' },
-  npcs: [{point:'bear-return',texture:'bear',hiddenIf:[{not:{flag:'bear-free'}},{not:{flag:'boar-defeated'}},{fallen:'bear'}]}, { point: 'bear', texture: 'bear', hiddenIf: [{ flag: 'bear-free' }] }, { point: 'miller', texture: 'miller' }, { point: 'heron', texture: 'heron' }, { point: 'shepherd', texture: 'shepherd' },
+  npcs: [{point:'bear-return',texture:'bear',hiddenIf:[{not:{flag:'bear-free'}},{not:{flag:'boar-defeated'}},{fallen:'bear'},{flag:'bear-quest-complete'}]}, { point: 'bear', texture: 'bear', hiddenIf: [{ flag: 'bear-free' }] }, { point: 'miller', texture: 'miller' }, { point: 'heron', texture: 'heron' }, { point: 'shepherd', texture: 'shepherd' },
     { point: 'pilgrim', texture: 'pilgrim', hiddenIf: [{ flag: 'warden-slain' }] }, { point: 'pilgrim-shrine', texture: 'pilgrim', hiddenIf: [{ not: { flag: 'warden-slain' } }] },
     { point: 'carter', texture: 'carter' }, { point: 'beekeeper', texture: 'beekeeper' }],
   enemies: [
@@ -144,6 +144,7 @@ export const FARMLAND: Area = {
     { point: 'leech', encounter: 'leech', hiddenIf: [{ flag: 'leech-slain' }], defeat: { set: 'leech-slain' } },
   ],
   props: [
+    {point:'mill-chain',texture:'loose-chain',hiddenIf:[{not:{flag:'bear-quest-complete'}}]},
     { point: 'bell', texture: 'bell', hiddenIf: [{ has: 'bell' }, { flag: 'lamb-thanked' }] },
     ...([['camp-cache', 'cracked-mirror'], ['orchard-cache', 'crow-feather'], ['shrine-cache', 'covenant-token'], ['ford-cache', 'yoke-peg']] as const)
       .map(([point, keepsake]) => ({ point, texture: 'cache', hiddenIf: [{ owns: keepsake }, ...(GUARDED[point] ? [{ not: { flag: GUARDED[point]! } }] : [])] })),
@@ -230,7 +231,8 @@ export const BORDER_ROAD: Area = {
   exits: {
     north: { to: 'town', spawn: 'from-border', prompt: 'Return to Millbrook' },
     east: { to: 'farmland', spawn: 'from-border', prompt: 'Take the field track' },
-    south: { to: 'boar-farm', spawn: 'spawn', prompt: 'Follow the smoke' },
+    south: { to: 'boar-farm', spawn: 'spawn', prompt: 'Follow the smoke', requires: { any: [{ flag: 'lane-open' }, { flag: 'boar-defeated' }] },
+      barred: { speaker: 'THE BOAR’S SISTER', lines: ['The sow keeps the lane shut. “Speak to me first. You are not going to his door without knowing what happened here.”'] } },
     west: { to: 'quarry', spawn: 'from-border', prompt: 'Follow the white track to the quarry' },
     // The pass to the highlands opens once the carts move again.
     pass: { to: 'pass', spawn: 'from-border', prompt: 'Take the track up to the pass', requires: { flag: 'boar-defeated' },
@@ -1077,7 +1079,6 @@ export const FALLS: Area = {
 
 // The island past the charts: the church's landing under the lighthouse, the works, the white house, the tower, and the lamp.
 const ISLAND_GROUND: Pick<Area, 'region' | 'tileset' | 'ground' | 'surfaces'> = { region: 'THE ISLAND', tileset: 'island', ground: 'stone', surfaces: { 2: 'dirt', 5: 'wood', 21: 'dirt' } };
-const OVERSEER: Escort = { name: 'Works hand', art: 'sentinel', health: 26, weapon: 'hook', damage: 5 };
 export const LANDING: Area = {
   ...ISLAND_GROUND, key: 'landing', map: 'landing', music: 'sea', place: 'The landing', dialogue: landing,
   grade: { saturation: -0.45, brightness: 0.74, vignette: 0.55 }, npcs: [],
