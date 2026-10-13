@@ -19,45 +19,45 @@ async function start(page: import('@playwright/test').Page, key: string) {
   await page.waitForFunction(key => Boolean((window.collisionRun.game?.scene.getScene(key) as AreaScene | undefined)?.player?.active), key);
 }
 
-for (const [key, atmosphere, group] of [
-  ['town', 'millbrook', 'queue'], ['fort', 'fortLife', 'queue'], ['wickmere', 'marshLife', 'queue'], ['hold', 'holdsLife', 'workers'],
+for (const [key, group] of [
+  ['town', 'queue'], ['fort', 'queue'], ['wickmere', 'queue'], ['hold', 'workers'],
 ]) {
   test(`${key} crowd blocks walking and leaves no invisible obstacle`, async ({ page }) => {
     await start(page, key);
-    const target = await page.evaluate(([key, atmosphere, group]) => {
-      const scene = window.collisionRun.game!.scene.getScene(key) as AreaScene & Record<string, Record<string, Townsperson[]>>;
-      const person = scene[atmosphere][group][0];
+    const target = await page.evaluate(([key, group]) => {
+      const scene = window.collisionRun.game!.scene.getScene(key) as AreaScene;
+      const person = (scene.town.life as unknown as Record<string, Townsperson[]>)[group][0];
       expectVisible(person);
       scene.player.setPosition(person.sprite.x + .5, person.sprite.y + (key === 'hold' ? 12 : 30));
       (scene.player.body as Phaser.Physics.Arcade.Body).reset(scene.player.x, scene.player.y);
       return { x: person.sprite.x, y: person.sprite.y };
       function expectVisible(person: Townsperson) { if (!person.sprite.visible || !person.sprite.body!.enable) throw Error('Crowd member must be visible and solid'); }
-    }, [key, atmosphere, group]);
+    }, [key, group]);
     await page.locator('#game').focus();
     await page.keyboard.down('ArrowUp'); await page.waitForTimeout(650); await page.keyboard.up('ArrowUp');
     const stopped = await page.evaluate(key => (window.collisionRun.game!.scene.getScene(key) as AreaScene).player.y, key);
     expect(stopped).toBeGreaterThan(target.y + 4);
     expect(stopped).toBeLessThan(target.y + 15);
-    await page.evaluate(([key, atmosphere, group]) => {
-      const scene = window.collisionRun.game!.scene.getScene(key) as AreaScene & Record<string, Record<string, Townsperson[]>>;
-      scene[atmosphere][group][0].setVisible(false);
-    }, [key, atmosphere, group]);
+    await page.evaluate(([key, group]) => {
+      const scene = window.collisionRun.game!.scene.getScene(key) as AreaScene;
+      (scene.town.life as unknown as Record<string, Townsperson[]>)[group][0].setVisible(false);
+    }, [key, group]);
     await page.keyboard.down('ArrowUp'); await page.waitForTimeout(250); await page.keyboard.up('ArrowUp');
     expect(await page.evaluate(key => (window.collisionRun.game!.scene.getScene(key) as AreaScene).player.y, key)).toBeLessThan(target.y);
     // A reflow must move the foot body as well as the sprite; scene revisits must recreate it.
-    const moved = await page.evaluate(([key, atmosphere, group]) => {
-      const scene = window.collisionRun.game!.scene.getScene(key) as AreaScene & Record<string, Record<string, Townsperson[]>>;
-      const person = scene[atmosphere][group][0];
+    const moved = await page.evaluate(([key, group]) => {
+      const scene = window.collisionRun.game!.scene.getScene(key) as AreaScene;
+      const person = (scene.town.life as unknown as Record<string, Townsperson[]>)[group][0];
       person.setPosition(person.sprite.x + 24, person.sprite.y + 16); person.setVisible(true);
       const body = person.sprite.body as Phaser.Physics.Arcade.StaticBody;
       return { x: body.center.x - person.sprite.x, y: body.bottom - person.sprite.y };
-    }, [key, atmosphere, group]);
+    }, [key, group]);
     expect(moved.x).toBeCloseTo(0); expect(moved.y).toBeCloseTo(11);
     await page.evaluate(key => window.collisionRun.game!.scene.getScene(key).scene.restart({ spawn: ({ town: 'spawn', fort: 'from-pass', wickmere: 'from-causeway', hold: 'from-climb' } as Record<string, string>)[key] }), key);
-    await page.waitForFunction(([key, atmosphere, group]) => {
-      const scene = window.collisionRun.game!.scene.getScene(key) as AreaScene & Record<string, Record<string, Townsperson[]>>;
-      return Boolean(scene.player?.active && scene[atmosphere]?.[group][0].sprite.body?.enable);
-    }, [key, atmosphere, group]);
+    await page.waitForFunction(([key, group]) => {
+      const scene = window.collisionRun.game!.scene.getScene(key) as AreaScene;
+      return Boolean(scene.player?.active && (scene.town.life as unknown as Record<string, Townsperson[]> | undefined)?.[group][0].sprite.body?.enable);
+    }, [key, group]);
   });
 }
 
@@ -65,21 +65,21 @@ test('characters layer by their feet and idle motion keeps collision anchored', 
   await start(page, 'town');
   for (const [offset, front] of [[-8, false], [12, true]] as const) {
     await page.evaluate(offset => {
-      const scene = window.collisionRun.game!.scene.getScene('town') as AreaScene & { millbrook: { queue: Townsperson[] } };
-      const citizen = scene.millbrook.queue[0].sprite;
+      const scene = window.collisionRun.game!.scene.getScene('town') as AreaScene & { town: { life: { queue: Townsperson[] } } };
+      const citizen = scene.town.life.queue[0].sprite;
       (scene.player.body as Phaser.Physics.Arcade.Body).reset(citizen.x + 9, citizen.y + offset);
     }, offset);
     await page.waitForTimeout(150);
     const layers = await page.evaluate(() => {
-      const scene = window.collisionRun.game!.scene.getScene('town') as AreaScene & { millbrook: { queue: Townsperson[] } };
-      return { hero: scene.player.depth, citizen: scene.millbrook.queue[0].sprite.depth };
+      const scene = window.collisionRun.game!.scene.getScene('town') as AreaScene & { town: { life: { queue: Townsperson[] } } };
+      return { hero: scene.player.depth, citizen: scene.town.life.queue[0].sprite.depth };
     });
     if (front) expect(layers.hero).toBeGreaterThan(layers.citizen);
     else expect(layers.hero).toBeLessThan(layers.citizen);
   }
   const anchored = await page.evaluate(() => {
-    const scene = window.collisionRun.game!.scene.getScene('town') as AreaScene & { millbrook: { queue: Townsperson[] } };
-    const person = scene.millbrook.queue[0];
+    const scene = window.collisionRun.game!.scene.getScene('town') as AreaScene & { town: { life: { queue: Townsperson[] } } };
+    const person = scene.town.life.queue[0];
     person.sprite.setScale(1, 1.025);
     person.setPosition(person.sprite.x, person.sprite.y);
     const body = person.sprite.body as Phaser.Physics.Arcade.StaticBody;

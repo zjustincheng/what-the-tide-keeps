@@ -39,8 +39,8 @@ test('the hunt follows a real exit, pauses in Settings, expires, and stops at se
   await page.evaluate(() => {
     // Hold the hunter at the door from the moment the fields are made, so a slow machine can't let him catch up
     // while the hero is still being set by the exit.
-    const fields = window.tideRun.game!.scene.getScene('farmland') as unknown as { hunterDelay: number; events: { once(event: string, handler: () => void): void } };
-    fields.events.once('create', () => { fields.hunterDelay = 8000; });
+    const fields = window.tideRun.game!.scene.getScene('farmland') as unknown as { hunt: { delay: number }; events: { once(event: string, handler: () => void): void } };
+    fields.events.once('create', () => { fields.hunt.delay = 8000; });
     window.tideRun.game!.scene.getScene('church').scene.start('farmland', { spawn: 'from-town' });
   });
   await ready(page, 'farmland');
@@ -58,8 +58,8 @@ test('the hunt follows a real exit, pauses in Settings, expires, and stops at se
   expect((await state(page)).remaining).toBeGreaterThan(before - 4000);
   await page.keyboard.down('ArrowDown'); await page.waitForTimeout(1600); await page.keyboard.up('ArrowDown');
   await page.waitForFunction(() => {
-    const scene = window.tideRun.game!.scene.getScene('town') as unknown as { hunter?: { sprite: { y: number } } };
-    return scene.hunter && scene.hunter.sprite.y > 50;
+    const scene = window.tideRun.game!.scene.getScene('town') as unknown as { hunt: { hunter?: { sprite: { y: number } } } };
+    return scene.hunt.hunter && scene.hunt.hunter.sprite.y > 50;
   });
   await expect(page.locator('.hunt-hud')).toContainText('He follows through doors');
   await page.keyboard.press('Escape');
@@ -70,8 +70,8 @@ test('the hunt follows a real exit, pauses in Settings, expires, and stops at se
   expect(await state(page)).toEqual(paused);
   // Test timeout with clear separation; capture has its own test below.
   await page.evaluate(() => {
-    const scene = window.tideRun.game!.scene.getScene('town') as unknown as { hunter?: { fledAt?: number }; time: { now: number } };
-    if (scene.hunter) scene.hunter.fledAt = scene.time.now;
+    const scene = window.tideRun.game!.scene.getScene('town') as unknown as { hunt: { hunter?: { fledAt?: number } }; time: { now: number } };
+    if (scene.hunt.hunter) scene.hunt.hunter.fledAt = scene.time.now;
     window.tideHunt.keepPursuit({ phase: 'chasing', remaining: 100 });
   });
   await page.locator('[data-action="close"]').click();
@@ -96,11 +96,11 @@ test('being caught starts the Inquisitor fight and preserves the hunt clock', as
   await ready(page, 'town');
   await page.locator('#game').focus();
   await page.keyboard.down('ArrowDown'); await page.waitForTimeout(1600); await page.keyboard.up('ArrowDown');
-  await page.waitForFunction(() => Boolean((window.tideRun.game!.scene.getScene('town') as unknown as { hunter?: unknown }).hunter));
+  await page.waitForFunction(() => Boolean((window.tideRun.game!.scene.getScene('town') as unknown as { hunt: { hunter?: unknown } }).hunt.hunter));
   await page.evaluate(() => {
-    const scene = window.tideRun.game!.scene.getScene('town') as unknown as { player: { x: number; y: number }; hunter: { sprite: import('phaser').Physics.Arcade.Sprite } };
-    scene.hunter.sprite.setPosition(scene.player.x, scene.player.y - 1);
-    const body = scene.hunter.sprite.body as import('phaser').Physics.Arcade.Body;
+    const scene = window.tideRun.game!.scene.getScene('town') as unknown as { player: { x: number; y: number }; hunt: { hunter: { sprite: import('phaser').Physics.Arcade.Sprite } } };
+    scene.hunt.hunter.sprite.setPosition(scene.player.x, scene.player.y - 1);
+    const body = scene.hunt.hunter.sprite.body as import('phaser').Physics.Arcade.Body;
     body.reset(scene.player.x, scene.player.y - 1); body.updateFromGameObject();
   });
   await expect(page.locator('.enemy-fighter img').first()).toHaveAttribute('src', /inquisitor\.svg$/);

@@ -24,7 +24,7 @@ async function die(page: Page) {
 test('a friend’s reminder can be written down in the same visit and survives death', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await start(page, { lost: ['home', 'name', 'trial'], pending: false, anchors: ['feast'], keepsakeMemories: ['bear'] }, ['broken-link']);
-  await page.evaluate(() => (window.loadoutRun.game!.scene.getScene('church') as unknown as { writeDown: (then: () => void) => void }).writeDown(() => {}));
+  await page.evaluate(async () => (await import('/src/scenes/area/panels.ts')).writeDown(window.loadoutRun.game!.scene.getScene('church') as AreaScene, () => {}));
   await page.getByRole('radio', { name: /Bear: The trial/ }).check();
   await expect(page.locator('.anchor-summary')).toContainText('removes its Hollow bonus (+2 mana)');
   await page.getByRole('radio', { name: /Write down The trial/ }).check();

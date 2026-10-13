@@ -14,35 +14,37 @@ async function start(page: Page, key: string, spawn: string) {
   await page.evaluate(([key, spawn]) => window.sceneryRun.game!.scene.getScene('church').scene.start(key, { spawn }), [key, spawn]);
   await page.waitForFunction(key => Boolean((window.sceneryRun.game?.scene.getScene(key) as AreaScene | undefined)?.sys.isActive()), key);
 }
-for (const [key, spawn, atmosphere, id] of [
-  ['town', 'spawn', 'millbrook', 'bread-stall'], ['fort', 'from-pass', 'fortLife', 'memorial'],
-  ['wickmere', 'from-causeway', 'marshLife', 'landing-barrel-520'], ['hospice', 'spawn', 'marshLife', 'meal-table'],
-  ['hold', 'from-climb', 'holdsLife', 'sorting-bench'], ['outlaw-port', 'from-sea', 'oceanLife', 'shared-table'],
+for (const [key, spawn, id] of [
+  ['town', 'spawn', 'bread-stall'], ['fort', 'from-pass', 'memorial'],
+  ['wickmere', 'from-causeway', 'landing-barrel-520'], ['hospice', 'spawn', 'meal-table'],
+  ['hold', 'from-climb', 'sorting-bench'], ['outlaw-port', 'from-sea', 'shared-table'],
 ]) test(`${key} added furniture blocks walking, sorts at its feet, and rebuilds without ghost walls`, async ({ page }) => {
   await start(page, key, spawn);
-  const target = await page.evaluate(([key, atmosphere, id]) => {
-    const scene = window.sceneryRun.game!.scene.getScene(key) as AreaScene & Record<string, { structures: Scenery }>;
-    const pieces = scene[atmosphere].structures.pieces;
+  const target = await page.evaluate(([key, id]) => {
+    const scene = window.sceneryRun.game!.scene.getScene(key) as AreaScene;
+    const life = scene.town.life as unknown as { structures: Scenery };
+    const pieces = life.structures.pieces;
     for (const piece of pieces) if (!piece.footprint.body || !piece.footprint.body.enable) throw Error('Missing solid footprint: ' + piece.id);
     const piece = pieces.find(piece => piece.id === id)!;
     const body = piece.footprint.body as Phaser.Physics.Arcade.StaticBody;
     (scene.player.body as Phaser.Physics.Arcade.Body).reset(body.center.x, key === 'hold' ? body.top - 24 : body.bottom + 24);
     return { bottom: body.bottom, top: body.top, depth: piece.art.depth, count: pieces.length };
-  }, [key, atmosphere, id]);
+  }, [key, id]);
   await page.locator('#game').focus(); const direction = key === 'hold' ? 'ArrowDown' : 'ArrowUp'; await page.keyboard.down(direction); await page.waitForTimeout(650); await page.keyboard.up(direction);
   const stopped = await page.evaluate(key => { const scene = window.sceneryRun.game!.scene.getScene(key) as AreaScene; return { y: scene.player.y, depth: scene.player.depth }; }, key);
   if (key === 'hold') { expect(stopped.y).toBeGreaterThan(target.top - 16); expect(stopped.y).toBeLessThanOrEqual(target.top - 10); expect(stopped.depth).toBeLessThan(target.depth); }
   else { expect(stopped.y).toBeGreaterThanOrEqual(target.bottom - 5); expect(stopped.y).toBeLessThan(target.bottom + 5); expect(stopped.depth).toBeGreaterThan(target.depth); }
-  const refreshed = await page.evaluate(([key, atmosphere, id]) => {
-    const scene = window.sceneryRun.game!.scene.getScene(key) as AreaScene & Record<string, { structures: Scenery; refresh: (context: unknown) => void }> & { context: () => unknown };
-    const before = scene[atmosphere].structures.pieces.map(piece => piece.footprint);
+  const refreshed = await page.evaluate(([key, id]) => {
+    const scene = window.sceneryRun.game!.scene.getScene(key) as AreaScene;
+    const life = scene.town.life as unknown as { structures: Scenery; refresh: (context: unknown) => void; key: string };
+    const before = life.structures.pieces.map(piece => piece.footprint);
     const context = scene.context() as { world: { night?: boolean } }; context.world.night = !context.world.night;
     // Holds and sea refresh on their own story state; exercise the collection lifecycle directly too.
-    scene[atmosphere].structures.clear();
-    (scene[atmosphere] as unknown as { key: string }).key = '';
-    scene[atmosphere].refresh(context);
-    return { oldGone: before.every(piece => !piece.active), count: scene[atmosphere].structures.pieces.length, found: scene[atmosphere].structures.pieces.some(piece => piece.id === id && piece.footprint.body?.enable) };
-  }, [key, atmosphere, id]);
+    life.structures.clear();
+    life.key = '';
+    life.refresh(context);
+    return { oldGone: before.every(piece => !piece.active), count: life.structures.pieces.length, found: life.structures.pieces.some(piece => piece.id === id && piece.footprint.body?.enable) };
+  }, [key, id]);
   expect(refreshed.oldGone).toBe(true); expect(refreshed.count).toBe(target.count); expect(refreshed.found).toBe(true);
 });
 
