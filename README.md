@@ -22,7 +22,7 @@ Every push to `main` builds the game and publishes it to GitHub Pages at **https
 
 ## Movement
 
-Walking into a wall you only clip by a few pixels slides you along it, so narrow bridges, boardwalks, and doorways don't need lining up exactly (`slideAroundCorners` in `src/scenes/AreaScene.ts`). Solid things on the map, like dark water, barricades, and people, count as walls for this too.
+Walking into a wall you only clip by a few pixels slides you along it, so narrow bridges, boardwalks, and doorways don't need lining up exactly (`slideAroundCorners` in `src/scenes/area/traversal.ts`). Solid things on the map, like dark water, barricades, and people, count as walls for this too.
 
 
 **Leaping (Shift, or Leap on a touch screen).** A hop the way you're facing: one tile on open ground, or over a gap up to two tiles wide onto the far side. Only some drops can be leapt, the narrow ones in places built for it; walls, and the wide water and chasms that guard the story, can't. Some ground is **loose**: it holds while you keep moving, cracks if you stop, and gives way under you a moment later (it comes back after a while). Leap short or stand too long, and you **fall**: back to where you last stood firm, 3 health down (a fall never takes the last of it). The rules are in `src/rules/leap.ts`, and a map test checks that leaping reaches every parkour reward and opens nothing else anywhere.
@@ -48,23 +48,23 @@ npm test        # Browser checks using an installed Google Chrome
 npm run test:unit # Pure TypeScript combat and memory rule tests
 ```
 
-`npm test` runs rule tests and browser checks. The browser checks cover exploration, encounters, drag and button actions, turn locking, victory, defeat, memory loss, saves, and mobile controls. On machines without Google Chrome, install it or change the Playwright channel in `playwright.config.ts` to use an installed browser. Rule tests require Node.js 22.18+ or 24.
+`npm test` runs rule tests and browser checks. The browser checks play the real game in Chrome, region by region and feature by feature, from the first fight to the ending (see **Project layout**). Stop any running `npm run dev` first: Playwright reuses a server on port 5173, and source edits reload its pages mid-test. On machines without Google Chrome, install it or change the Playwright channel in `playwright.config.ts` to use an installed browser. Rule tests require Node.js 22.18+ or 24.
 
-## Current milestone
+## The game today
 
-Build the repeatable loop in miniature before adding the full story. The first playable milestone is a small Tiled map with a moving character, starting with the hero waking in the church. Add the feast opening after the loop works.
+The whole story is playable, from the church and farmland through the highlands, marsh, mountain holds, ocean, and island finale, with side roads, secrets, and optional fights in every region. The game opens with the hero waking in the church: speak to the priest and inspect the ledger and basin. The church is safe ground: the first fights are out in the farmland, where enemies show their mana signatures and touching one starts a battle. (The automated tests open the game at `/?practice`, which puts a crop locust and a hooded exile in the church to fight.) The priest gives the farmland mission, and the south door opens onto the farmland. The art and most names are still placeholders.
 
-The full regional route is playable, from the church and farmland through the highlands, marsh, mountain holds, ocean, and island finale. Speak to the priest and inspect the ledger and basin. The church is safe ground: the first fights are out in the farmland, where enemies show their mana signatures and touching one starts a battle. (The automated tests open the game at `/?practice`, which puts a crop locust and a hooded exile in the church to fight.) The priest gives the farmland mission, and the south door opens onto the farmland. The artwork and dialogue are original placeholders.
+## Battles
 
-In battle, command the chameleon and whichever companions have joined him (see **Companions**). Each living member acts once in any order; only then does the enemy act and each surviving companion regain 1 mana. Downed members cannot act, and the party only wipes when all three fall. Party members and enemies have health bars and condition descriptions; exact health and damage numbers remain hidden. Mana is numeric. Enemies target the living member with the most visible mana, preferring the bear in a tie.
+In battle, command the chameleon and whichever companions are fighting beside him (see **Companions**). Each living member acts once in any order; only then does the enemy act and each surviving companion regain 1 mana. Downed members cannot act, and the party only wipes when everyone fighting has fallen. Party members and enemies have health bars and condition descriptions; exact health and damage numbers remain hidden. Mana is numeric. Enemies target the living member with the most visible mana, preferring the bear in a tie.
 
-Drag any member onto the locust to attack, or tap that member for self-support. Per-member action buttons offer keyboard and touch access. Chameleon guards himself. Bear can guard himself or protect another companion: drag him onto that ally, or choose a target with his **Protect** selector before using the **Protect** button. Vulture focuses to strengthen her next shot; focus does not stack. Guards last for one enemy turn. Bear also blocks attacks aimed at himself while protecting another companion.
+Drag any member onto the enemy to attack, or tap that member for self-support. Per-member action buttons offer keyboard and touch access. Chameleon guards himself. Bear can guard himself or protect another companion: drag him onto that ally, or choose a target with his **Protect** selector before using the **Protect** button. Vulture focuses to strengthen her next shot; focus does not stack. Guards last for one enemy turn. Bear also blocks attacks aimed at himself while protecting another companion.
 
-Prototype tuning: ordinary fights last two or three rounds, and the boar about five. All numbers live in `src/rules/battle.ts`. Attacks are physical, so they cost no mana: the chameleon's tail lash, the bear's maul, the vulture's talons. Mana is for spells and spellcraft. Physical guarding and focusing are free, so an empty mana pool cannot stall the turn. Guarding stops physical damage; it is not a spell barrier. Spell barriers cost 5 mana and protect the selected ally until the end of the enemy turn, but only against studied spells. Physical blows pass through them. Enemy health scales with the size of the party: 45% for the chameleon alone, 65% with one companion, full strength with three.
+Tuning: ordinary fights last two or three rounds, and the boar about five. All numbers live in `src/rules/battle.ts`. Attacks are physical, so they cost no mana: the chameleon's tail lash, the bear's maul, the vulture's talons. Mana is for spells and spellcraft. Physical guarding and focusing are free, so an empty mana pool cannot stall the turn. Guarding stops physical damage; it is not a spell barrier. Spell barriers cost 5 mana and protect the selected ally until the end of the enemy turn, but only against studied spells. Physical blows pass through them. Enemy health scales with the size of the party: 45% for the chameleon alone, 65% with one companion, full strength with three.
 
 Any fight but the boar can be run from with **Run**, at a price: half the coins you carry scatter behind you, and the enemy gets a free parting blow on whoever it's watching (the wound carries, though it never drops your last standing hero). The enemy stays where it was, and you get a moment's head start.
 
-Victory removes an enemy until you rest or leave the area. Defeat wakes you at the cot (see below). Wounds and spent mana both carry from one fight into the next (see **Wounds and rest**). **Gather**, on every hero's card, spends that hero's action to draw back 3 mana, so a drained hero is never stuck. Supplies are not implemented yet. Encounter progress resets on reload; studied spells and memories persist.
+Victory removes an enemy until you rest or leave the area. Defeat wakes you at the cot (see below). Wounds and spent mana both carry from one fight into the next (see **Wounds and rest**). **Gather**, on every hero's card, spends that hero's action to draw back 3 mana, so a drained hero is never stuck. Supplies are covered under **Coins, shops, and supplies**. Encounter progress resets on reload; studied spells and memories persist.
 
 ## Replies
 
@@ -90,10 +90,10 @@ The score is original and synthesised live in the browser with Web Audio, with n
 | The Talon Ring | War drums and a fanfare on staccato strings, G minor |
 | The open sea, the pens, the kraken's grave | A bass rising and falling like a swell, choir far off, A minor |
 | Wrecktown | A tired sea shanty, 3/4, D Dorian |
-| The cuttlefish's reef | A drone, and celesta rising like bubbles, B Locrian |
+| The cuttlefish's reef, the drowned fleet, the spars | A drone, and celesta rising like bubbles, B Locrian |
 | Inside buildings | A music-box lullaby, F major |
 | Battle | A string ostinato over drums, A minor |
-| The boar, the warden, the leech, the swarm-mother | Faster and darker, with choir, D Phrygian |
+| Each lieutenant, guardian, and named foe, and the kraken | Its own theme: the boar's is "The farm they burned", the hyena's "A table for the dead", and so on (`src/audio/bossThemes.ts`) |
 | Waking after a wipe | Choir and bells, C Lydian |
 
 Sound effects are synthesised the same way and have their own volume:
@@ -118,7 +118,7 @@ The writing is deliberately plain. People talk about what is in front of them: t
 
 ## Buildings
 
-Doors lead inside four buildings, each a small room with people and things to look at:
+In and around Millbrook, doors lead inside four buildings, each a small room with people and things to look at:
 
 - **The reeve's hall** in Millbrook: a clerk writing to the church for a better convict, and the town's records, which hold the order that burned the boar out.
 - **The inn**: barred while the innkeeper stands in the doorway. Pay her 12 coins, or come back once the boar is beaten, and the bed by the west wall is yours to rest in. Inside, a carter will trade what he knows about the ford for a drink, and a rabbit by the fire talks about the watch.
@@ -152,12 +152,12 @@ Rest to heal every wound and restore every hero's mana. Campfires cost coins for
 None of these are marked. Someone mentions a problem and the player works out the rest.
 
 - **The shepherd's strays.** A ram in the south meadow lost three sheep to the locusts: one on the path into the dark woods, one in the orchard, one by the hay yard. Call each home, then return to him for 15 coins and the **Wool charm** keepsake (5 more health; shows 1 more mana).
-- **Free the caught.** The fishmonger will sell his barrel for 25 coins. Inside is a young squid, a child of the sea. Tip the barrel into the mill stream south of the bridge. This is the first of the guideline's "free the caught" encounters; the sea elder who rewards them comes with the ocean.
+- **Free the caught.** The fishmonger will sell his barrel for 25 coins. Inside is a young squid, a child of the sea. Tip the barrel into the mill stream south of the bridge. This is the first of the guideline's "free the caught" encounters; the sea elder in the fleet's pens counts it toward her reward (see **The ocean**).
 - **The swarm-mother.** The notice board posts a 25-coin bounty, paid by the reeve. She nests in a hollow deep in the dark woods with two nymphs. The nymphs can be killed, but every third round her brood call raises them again, so the fight rewards striking her hard and fast. Killing her does not end the fight: her nymphs fight on until they are dead too, though with her gone, nothing raises them again. (The boar's followers are different: they yield the moment he falls.) She stays dead once beaten.
 
 ## Coins, shops, and supplies
 
-Defeated enemies leave coins: 4 for a locust, 5 for a weevil, 10 for a hooded follower, 12 for the swarm-mother, 15 for the Shrine warden, 10 for the Mire leech, 30 for the boar. Coins are shown at the top right of the game frame. As the guideline says, coins and supplies gathered since the last death are lost on a wipe.
+Defeated enemies leave coins, from 4 for a locust to 60 for the cuttlefish; lieutenants and guardians pay the most (`BOUNTY` in `src/rules/economy.ts`). Coins are shown at the top right of the game frame. As the guideline says, coins and supplies gathered since the last death are lost on a wipe.
 
 The stallholder in Millbrook's market square sells supplies at three times the citizen's price because of the brand, and at twice the price once the boar is beaten and the town thaws:
 
@@ -225,7 +225,7 @@ Every caster has its own spell: the exile and the deserter hexer cast Salt lance
 
 ## Story presentation
 
-The opening, companion reunions, archive fragment, island laboratory, kraken’s grave, and human encounter now have illustrated scenes. Each lieutenant has an entrance scene, and resurrection has a short memory-loss sequence. **Continue** reveals the current sentence first, then advances; **Escape** or **Skip scene** returns control immediately. Scenes pause exploration and never select a story choice for the player.
+The opening, companion reunions, archive fragment, island laboratory, kraken’s grave, and human encounter have illustrated scenes. Each lieutenant has an entrance scene, and resurrection has a short memory-loss sequence. **Continue** reveals the current sentence first, then advances; **Escape** or **Skip scene** returns control immediately. Scenes pause exploration and never select a story choice for the player.
 
 **Settings → Revisit memories** replays unlocked scenes without changing progress. Existing saves can replay memories associated with their completed story flags; the opening is always available. Viewed scenes are remembered in `tide-keeps.scenes.v1`, cleared by **Start over…**. Scene data lives in `src/presentation/stories.ts`, with layered SVG sets, camera drift, and sound cues. New motion effects respect the system’s reduced-motion preference.
 
@@ -251,13 +251,15 @@ Blows ask for different kinds of dodge (`dodgeKind` in `src/rules/battle.ts`):
 - **Keys:** spells you have studied. Type the three keys shown before the spell lands.
 - **Bar:** draining blows, like the leech's latch and the raised dead's gnaw. A marker sweeps a bar; stop it in the gold, as when reeling a fish.
 
-Each hero has an **agility** that widens or narrows their dodge windows: the vulture is quick (125%), the chameleon ordinary, the bear slow (80%). Keepsakes can change it: the Tide shell helps, the Iron collar hinders. The base windows are a little tighter than before.
+Each hero has an **agility** that widens or narrows their dodge windows: the vulture is quickest (125%), then the octopus (115%) and the frog (110%), the chameleon ordinary, the bear slow (80%). Keepsakes can change it: many add or take away a few percent of dodge timing.
 
-- **Perfect** (within 90 ms; 60 ms for heavy, telegraphed blows such as a leap or charge): no damage.
-- **Graze** (within 200 ms): half damage.
+- **Perfect** (within 75 ms; 50 ms for heavy blows of 10 damage or more): no damage.
+- **Graze** (within 170 ms): half damage.
 - **Too soon, too slow, or no press**: the full blow. A press cannot be retried, so mashing does not work.
 
-Stronger enemies leave less room: the boar's Tusk charge and a studied Salt lance give only about 40–45 ms for a perfect dodge and 110–120 ms to graze, and the leech's Latch is tighter than a pest's bite. Some blows cannot be dodged at all, and their warnings say so: the weevil's Rolling charge, the leech's Coil, and the warden's Judgement. For those, guard or raise a barrier ahead of time.
+Stronger enemies leave less room: the boar's Tusk charge and a studied Salt lance give only about 40–45 ms for a perfect dodge and 110–120 ms to graze, Marsh-fire 35 ms, and the leech's Latch is tighter than a pest's bite.
+
+Bosses also keep their own time, so a dodge can't be learned once and repeated (`lead`, `feint`, and `tempo` on a move in `src/rules/battle.ts`). A charge that is telegraphed closes its ring slowly; a quick strike closes it fast. A **feint** stops the ring part-way and holds it, to catch anyone pressing on the usual beat (the boar's Trample, the hyena's Rend, the cuckoo's Borrowed blade). Some bosses' combos come on an uneven rhythm, each hit with its own timing. Some blows cannot be dodged at all, and their warnings say so: the weevil's Rolling charge, the leech's Coil, and the warden's Judgement. For those, guard or raise a barrier ahead of time.
 
 Each blow in a turn, including each of the boar's followers, is its own dodge. Blows already stopped by a guard or barrier skip the prompt. A spell the party has not studied cannot be dodged. The timing windows live in `DODGE` in `src/rules/battle.ts`.
 
@@ -267,17 +269,15 @@ Open a companion's **Spellcraft** menu for these actions. Each spends that compa
 
 - **Suppress (1 mana):** show at most 1 mana to enemies until attacking. The next attack reveals the pool and adds damage, with the chameleon receiving the largest bonus.
 - **Barrier (5 mana):** protect the ally selected above the action buttons against studied spells for this enemy turn. It cannot stop unknown magic or physical attacks.
-- **Analyze (2 mana):** study the exile's gathering spell before it strikes. It becomes named and blockable immediately.
+- **Analyze (2 mana):** study an enemy's gathering spell before it strikes. It becomes named and blockable immediately.
 
 The exile alternates staff attacks with a spell. Its two-turn countdown initially reads **???**. Surviving its cast also adds **Salt lance** to the grimoire, even if the target falls while another companion survives. A total wipe does not discover an unstudied spell. The exile reveals its hidden mana when casting.
 
 The shared grimoire survives cot resets, defeats, and reloads in browser local storage (`tide-keeps.grimoire.v1`). If storage is unavailable, it remains usable for the current page session and the battle view reports that it cannot save. Memories and story progress are saved separately (see below).
 
-These are prototype combat encounters in the church, not the final regional placement or recruitment story. Spellcraft options supplement the original attack/support controls while testing the rules.
-
 ## Companions
 
-As in the story, the chameleon sets out alone; his companions are scattered across the regions and must be found. The **bear** is chained to the millstone west of the stream, and the miller answers only to a writ. The reeve in Millbrook will sign one once the pests are cleared from his fields: the locust in the wheat and the weevil in the hay yard. He also hands it over, pests or no pests, once the boar is beaten, and he'll sell it for 60 coins. Asking him "About the bear." tells you exactly which pests are left. Show the writ to the miller and the bear joins for good. The vulture joins in the highlands and the **frog** in the marsh; the octopus waits in a region still to come. The equipment screen and battles show only the heroes who have joined. **Who fights** (press **P**, or choose it in Settings): any three who have joined, the hero included. Anyone can be sent to wait, so you can go in with fewer; once four are with you, the newest waits by default, and bringing a waiting hero back sends the newest fighter to wait in their place. Someone always fights. Against a region's lieutenant the hero always fights whatever you chose, taking the newest fighter's place. Whoever waits keeps their wounds.
+As in the story, the chameleon sets out alone; his companions are scattered across the regions and must be found. The **bear** is chained to the millstone west of the stream, and the miller answers only to a writ. The reeve in Millbrook will sign one once the pests are cleared from his fields: the locust in the wheat and the weevil in the hay yard. He also hands it over, pests or no pests, once the boar is beaten, and he'll sell it for 60 coins. Asking him "About the bear." tells you exactly which pests are left. Show the writ to the miller and the bear joins for good. The **vulture** joins in the highlands, the **frog** in the marsh, and the **octopus** at sea. The equipment screen and battles show only the heroes who have joined. **Who fights** (press **P**, or choose it in Settings): any three who have joined, the hero included. Anyone can be sent to wait, so you can go in with fewer; once four are with you, the newest waits by default, and bringing a waiting hero back sends the newest fighter to wait in their place. Someone always fights. Against a region's lieutenant the hero always fights whatever you chose, taking the newest fighter's place. Whoever waits keeps their wounds.
 
 **Matchups.** Every enemy is some of: **armoured, flying, caster, insect, dead** (shown under its name in battle, and in the bestiary). Each hero's own blow fares differently against them: the **bear**'s maul hits armour half again as hard and only half-reaches flyers; the **vulture**'s talons are the reverse; the **chameleon** strikes casters half again as hard; the **frog**'s poison is double in insects and does nothing to the dead. Attack buttons say *strong* or *weak* for the enemy in front of you. Spells, supplies, and followers ignore all of it: magic is the equaliser. Simulated, the right three against the armoured deserter captain win almost every time without dodging; three without the bear win 2% of the time, or about three in four with some dodging (`TRAITS` and `MATCHUPS` in `src/rules/battle.ts`).
 
@@ -285,7 +285,7 @@ As in the story, the chameleon sets out alone; his companions are scattered acro
 
 South of the church lies the open farmland, a scrolling map about four screens across with no set route. A waymark at the crossroads points the way:
 
-- **West, over the stream:** the mill, where the bear is chained to the millstone and the miller keeps the key. The bear still remembers the hero. Freeing him comes with companions in build step 9.
+- **West, over the stream:** the mill, where the bear is chained to the millstone and the miller keeps the key. The bear still remembers the hero (see **Companions** for freeing him).
 - **Southwest:** dark woods with an abandoned camp. A fallen oak blocks the path from the track, and dark water fills the ford around the Mire leech, so the only way in is through it.
 - **The locust field:** a trampled clearing where a locust feeds and something glints.
 - **The meadow:** a pond with a heron who fishes for herself.
@@ -306,9 +306,9 @@ Upstream of the mill, the water spreads over the drowned hamlet of Wetherby; the
 
 The sluice gate above the mill holds the fen back. Open it and the water drops enough to uncover a causeway, three tiles wide, from the middle island's boardwalk to the sunken chapel, where **the drowned** still holds the bell rope: it tolls an undodgeable, guard-piercing blow every third round and tries to pull someone under. Beyond it is the **Drowned psalter**, which teaches **Undertow**, the hardest-hitting spell so far (seven keys in three seconds). Opening the sluice slows the mill wheel, and the miller notices.
 
-Crop pests show their full mana and only strike physically, as the guideline describes. The weevil jabs most turns and makes a heavy rolling charge every third round.
+### Millbrook, the border road, and the boar
 
-Millbrook is a prosperous herbivore market town. The reeve, the innkeeper, a stallholder, a lamb, and the fishmonger live on the west side and around the market square. The carnivore quarter lies east, behind a wall whose gate locks from the herbivore side. Townsfolk react to the hero's species and his brand: the stallholder triples his prices, the inn turns him away, and the notice board still shows his face. The fishmonger's barrel and the shuttered stall behind the tannery are left unexplained. Money, shops, camping, and the night market are not implemented yet, so those beats are dialogue for now.
+Millbrook is a prosperous herbivore market town. The reeve, the innkeeper, a stallholder, a lamb, and the fishmonger live on the west side and around the market square. The carnivore quarter lies east, behind a wall whose gate locks from the herbivore side. Townsfolk react to the hero's species and his brand: the stallholder triples his prices, the inn turns him away, and the notice board still shows his face. Nobody explains the fishmonger's barrel or the shuttered stall behind the tannery (see **Side quests** and **The night market**).
 
 South of Millbrook, the border road is blocked by a wall of brambles. The lamb in the market square lost her bell in the locust field; it lies in the trampled clearing in the locust field, where it can be grabbed by slipping past the locust or after a fight. Bring it to her and she teaches **Bramble's leave**, a favor spell written into the grimoire. Speak it at the hedge and the brambles draw back. Beyond them, loaded grain carts sit turned around while a highland carter and a farmland guard wait for each other to move first. Further south, one of the boar's hooded followers waits on the road with veiled mana and an unknown spell.
 
@@ -323,6 +323,10 @@ The road ends at the boar's burned farm, where he waits between his followers, a
 
 Nothing marks the quest. A carried item is lost on a wipe and returns to where it was found. The opened hedge and learned spells persist, saved in `tide-keeps.world.v1` and the grimoire.
 
+## Enemies and bosses
+
+Crop pests show their full mana and only strike physically, as the guideline describes. The weevil jabs most turns and makes a heavy rolling charge every third round.
+
 Every boss has a **second stage**. The first time a boss is brought down, it doesn't stay down: the fight stops for a short scene, told line by line over the boss's art (the boar's badger begging him to stay down, the hyena explaining that nobody down here stays dead). Then it gets back up with half its health (the warden with less, the hyena with a little less) and fights on as something worse: the battle title changes, SECOND STAGE shows above it, the boss burns redder and moves faster, and it roars. The second time it falls, it stays down (`STAGES` in `src/rules/battle.ts`):
 
 - **The boar, cornered:** gains fury and charges every round.
@@ -333,7 +337,9 @@ Every boss has a **second stage**. The first time a boss is brought down, it doe
 - **The drowned, the bell freed:** swings the bell itself every other round, harder than the toll.
 - **The hyena, not laughing:** eats her own standing dead on the spot, then feeds every round there is a body and lunges every other round.
 
-Ordinary enemies notice the hero when he comes close and come after him, a little slower than he walks; they give up and go back if he gets far enough away (`CHASE` in `src/scenes/AreaScene.ts`). Bosses and guardians hold their ground. Ambushers hide their mana: besides the highland raiders, the downs hounds, the battlefield's raised dead, and a weevil in the dark woods strike first if they reach you unseen. People breathe and turn to look at the hero as he passes, enemies bob and face him, and in battle every fighter breathes, heroes hop when they act, and anyone hit flinches.
+The viper, the cuckoo, and the cuttlefish rise again too, as described with their regions. The human's second stage comes when he is brought down once: a stolen memory returns, and one of his borrowed spells goes quiet.
+
+Ordinary enemies notice the hero when he comes close and come after him, a little slower than he walks; they give up and go back if he gets far enough away (`CHASE` in `src/scenes/area/foes.ts`). Bosses and guardians hold their ground. Ambushers hide their mana: besides the highland raiders, the downs hounds, the battlefield's raised dead, and a weevil in the dark woods strike first if they reach you unseen. People breathe and turn to look at the hero as he passes, enemies bob and face him, and in battle every fighter breathes, heroes hop when they act, and anyone hit flinches.
 
 Every fight is optional except the boar. Leaving an area and coming back respawns its enemies. A wipe anywhere wakes the party at the church cot, and **Return to the cot** works from any area.
 
@@ -349,6 +355,8 @@ Once the boar is dead the priest has new orders: bodies are going missing from t
 - **The ossuary key.** The stair is locked behind an iron grate. The abbey's last monk has the key, but won't give it up while three of the hyena's dead lie in his yard. Bury them (with the vulture along, she does it properly), and he hands it over. He also tells you he ate what she brought that winter, and preached against her after.
 - **The ossuary.** The hyena **talks first**: why she keeps the dead from the ground while the fish ration shrinks, and the monk's part in it. The fight starts when you tell her the church sent you. She keeps the dead of the famine in its niches, and she is the hardest fight so far. She attacks with two ghouls and raises them every third round. **Anyone falling**, on either side, makes her stronger, as the guideline says. Every other round she **feeds on a fallen body**, healing and growing stronger still. Her laughing lunge is very fast and drives through most of a guard. A fallen hero is safe only under a barrier, which can now be cast on the fallen, and she will eat her own downed ghouls, which she then can't raise again. Beaten, she tells you why she was exiled, that the man with no fur ate at her table, and that her ledger proves the church cut the fish first. The vulture notices the kingdom punished her with the same work it exiled the hyena for.
 - **Afterwards.** On the pass, a signature far larger than anything so far waits by the road: the inquisitor. He cannot be beaten yet. Run.
+
+**The inquisitor's hunt.** From the hyena's death until you speak with him in the holds' archive, he can pick up your trail anywhere on land: about one chance in twenty for each minute you spend exploring. A bar warns **Spotted**, and you have five seconds to get moving. Then he comes after you for 45 seconds, under his own theme, following you through doors and between areas. If he reaches you, you fight him. Stay ahead until the time runs out and he loses you for at least five minutes. Menus and hidden tabs don't count toward any of it, and he never follows you to sea or to the island (`src/rules/pursuit.ts`, `src/scenes/area/hunt.ts`, saved in `tide-keeps.pursuit.v1`).
 
 ### The old border fort
 
@@ -511,7 +519,7 @@ The time is saved with the world (`clock`, 0 to 1 from dawn, and `night`, in `ti
 
 - **Hiding your mana (Q, or Hide on a touch screen).** As the guideline describes, the party can suppress its mana to slip past. Holding it down costs every hero a point of mana every few seconds; when the hero runs dry, his mana shows again, and he can't hide with none. While hidden, the hero walks slower and silently, ordinary enemies don't notice him until he's almost on them, and ambushers can't vanish before he sees them. Walk into an enemy while hidden and it loses its first move. A badge over the map shows when your mana is hidden.
 - **Foraging.** Wild thyme, field mushrooms, and hedge berries grow around the farmland, the downs, the fen, the weir, the pass, the tarn, and the drove road. Pick them with E; they grow back after you rest. Like fish, they're lost on a wipe.
-- **Cooking.** A campfire now asks whether to cook or sleep (a bed or the church cot still just sleeps). Cooking turns fish and forage into supplies: smoked fish (1 fish), **fish stew** (2 fish and thyme, heals 18), **herb salve** (2 thyme and a mushroom, revives with 14), and **trail cake** (2 berries, heals 7). Rules are in `src/rules/cooking.ts`.
+- **Cooking.** A campfire asks whether to cook or sleep (a bed or the church cot still just sleeps). Cooking turns fish and forage into supplies: smoked fish (1 fish), **fish stew** (2 fish and thyme, heals 18), **herb salve** (2 thyme and a mushroom, revives with 14), and **trail cake** (2 berries, heals 7). Rules are in `src/rules/cooking.ts`.
 - **The journal (J, or Journal in Settings).** Every answer someone gives when you ask them something is written down, grouped by who said it and where. It's paper, so it survives every death, and it's kept in `tide-keeps.journal.v1`.
 - **Bones.** A dice game you can bet on: 5 coins with the carter in Millbrook's inn, 10 with the old wolf in the fort. Throw three dice, choose which to throw again once, then the house throws. Three of a kind beats a pair beats a plain total (`src/rules/dice.ts`).
 
@@ -562,101 +570,28 @@ The placeholder tilesets are drawn in code by the `scripts/create-*.mjs` scripts
 
 ## Project layout
 
-- `src/scenes/AreaScene.ts` — Phaser exploration, collision, input, encounters, and travel, shared by every area.
-- `src/scenes/areas.ts` — each area's map, people, enemies, exits, and decoration.
-- `src/content/dialogue.ts` — dialogue types: variants and replies by memory, items, flags, or spells, and their effects.
-- `src/content/church.ts`, `fields.ts`, `town.ts`, `border.ts`, `farm.ts`, `interiors.ts` — prototype dialogue for each area.
-- `src/scenes/sprites.ts` — generated placeholder sprites for the hero and townsfolk.
-- `src/rules/battle.ts` — immutable, renderer-independent combat state and transitions.
-- `src/rules/memory.ts` — memory loss and Hollow perks, independent of the renderer.
-- `src/rules/economy.ts` — coins, prices, supplies, and bounties.
-- `src/rules/fishing.ts` — fish, spots, the sweeping marker, and landing a catch.
-- `src/rules/spells.ts` — grimoires, their spells, and sequence checking.
-- `src/rules/gear.ts` — keepsakes, slots, and what they change in battle.
-- `src/rules/world.ts` — story flags, carried items, favor spells, and which dialogue variant applies.
-- `src/rules/ending.ts` — ending outcomes and epilogue text, based on story evidence and memories.
-- `src/content/memories.ts` — memory names and what forgetting each costs.
-- `src/storage/grimoire.ts` — versioned browser storage for studied spells.
-- `src/storage/memory.ts` — versioned browser storage for lost memories and an unpaid wipe.
-- `src/storage/world.ts` — versioned browser storage for story flags, carried items, and found keepsakes.
-- `src/storage/gear.ts` — versioned browser storage for equipped keepsakes.
-- `src/storage/books.ts` — versioned browser storage for which grimoire each hero carries.
-- `src/ui/BattleView.ts` — accessible combat view, drag input, and turn pacing.
-- `src/ui/ResurrectionView.ts` — the wake screen where a memory is chosen.
-- `src/ui/EquipmentView.ts` — the equipment screen.
-- `src/ui/ShopView.ts` — a shopkeeper's wares.
-- `src/ui/FishingView.ts` — the fishing screen.
-- `src/ui/EndingView.ts` — the ending screen.
-- `src/content/shops.ts` — what each shop sells.
-- `src/audio/themes.ts` — the compositions, as notes on beats.
-- `src/audio/music.ts` — the synthesised instruments, reverb, scheduler, and crossfades.
-- `src/audio/effects.ts` — the synthesised sound effects.
-- `src/storage/settings.ts` — volumes, mute, and how the party display is shown.
-- `scripts/create-capital.mjs` — the city tileset, the church square, and the harbour.
-- `src/content/capital.ts` — what is said and found in the capital.
-- `scripts/create-highlands.mjs` — the highland and fort tilesets, and the pass, fort town, battlefield, abbey, and ossuary.
-- `src/content/highlands.ts` — everything said and found in the highlands.
-- `src/ui/AnchorView.ts` — writing a memory down at a fire.
-- `scripts/create-downs.mjs`, `scripts/create-fen.mjs` — the downs and barrow, and the fen.
-- `src/content/downs.ts`, `src/content/fen.ts` — what is said and found there.
-- `src/content/island.ts` — dialogue for the island, its works, laboratory, and lighthouse.
-- `scripts/create-island.mjs` — island maps and tileset.
-- `src/storage/progress.ts` — erasing a playthrough to start over.
-- `src/ui/fullscreen.ts` — the full screen button and the F key.
-- `src/ui/SettingsView.ts` — the controls list and menu actions.
-- `public/maps/church.json` — editable Tiled JSON map with floor, furniture, and named interaction points.
-- `public/assets/church-tiles.svg` — original placeholder tileset.
-- `public/maps/farmland.json`, `town.json`, `border-road.json`, `boar-farm.json`, and the interiors `inn.json`, `hall.json`, `tannery.json`, `mill-inside.json` — the farmland maps, with placeholder tilesets in `public/assets/`.
-- `scripts/create-*.mjs` — regenerate each map and tileset; running one replaces manual edits to that map.
-- `tests/church.spec.ts` — browser checks.
-- `tests/battle.spec.ts` — encounter and combat browser checks.
-- `tests/road.spec.ts` — the open fields, scrolling, routes between places, and waking after a wipe outside.
-- `tests/quest.spec.ts` — the lamb's bell, the favor spell, and the hedge gate.
-- `tests/boar.spec.ts` — the boar's rule, his defeat, and its aftermath.
-- `tests/death.spec.ts` — wipe, memory choice, and save browser checks.
-- `tests/rules/battle.test.ts` — combat tests without a browser.
-- `tests/rules/memory.test.ts` — memory and Hollow perk tests without a browser.
-- `tests/equipment.spec.ts` — finding, equipping, and fighting with a keepsake.
-- `tests/rules/gear.test.ts` — slots, restrictions, and keepsake effects.
-- `tests/shop.spec.ts` — buying, using supplies, earning coins, and buying the writ.
-- `tests/rules/economy.test.ts` — prices, the thaw, wipes, and supply effects.
-- `tests/fishing.spec.ts` — landing, scaring off, and selling a catch.
-- `tests/rules/fishing.test.ts` — the marker, the zone, bites, and the catch's value.
-- `tests/elites.spec.ts` — the guardians of the Covenant token and the yoke peg.
-- `tests/rules/elites.test.ts` — the warden's ward and the leech's drain.
-- `tests/buildings.spec.ts` — entering the hall, tannery, and mill.
-- `tests/music.spec.ts` — themes per place and battle, muting, volume, and levels.
-- `tests/rules/themes.test.ts` — every theme fits its loop and range.
-- `tests/waystones.spec.ts` and `tests/rules/waystones.test.ts` — the pilgrim's stone, waking waystones, and travelling between them.
-- `tests/capital.spec.ts` — the capital: the square, the harbour, the steward's key, the crab, and the feast hall.
-- `tests/pastimes.spec.ts` and `tests/rules/pastimes.test.ts` — foraging and cooking, hiding your mana, the journal, and bones.
-- `tests/lore.spec.ts` and `tests/rules/lore.test.ts` — the keepers of lore and what they know.
-- `tests/connected.spec.ts` and `tests/rules/connected.test.ts` — the weir, the tarn, the drove road, and their shortcuts.
-- `tests/preboss.spec.ts` and `tests/rules/preboss.test.ts` — what has to be done before the boar and the hyena, and their conversations.
-- `tests/alive.spec.ts` — enemies chasing and giving up, and fighters reacting in battle.
-- `tests/highlands.spec.ts` — the pass and its ambushes, the courier's letter, the vulture's duel and note, the bridge, anchors, the deserters, the hyena, and the inquisitor.
-- `tests/rules/highlands.test.ts` — ambushes, the survival duel, the paired spell and blow, the hyena's feeding, and anchors.
-- `tests/footsteps.spec.ts` — which surface the hero is standing on.
-- `tests/regions.spec.ts` — reaching the downs, the barrow, and the fen, their quests, and the new enemies.
-- `tests/rules/regions.test.ts` — feeding the hounds, the pack rush, the otter, and the sluice.
-- `tests/running.spec.ts` — running away, campfire costs, the way into the woods, and the death count.
-- `tests/rules/consequences2.test.ts` — fleeing, the ledger, and the reeve's letter.
-- `tests/consequences.spec.ts` — sparing or reporting the boar's followers, and a paid bed.
-- `tests/rules/consequences.test.ts` — every consequential reply and what it changes.
-- `tests/sidequests.spec.ts` — the strays, the barrel, and the swarm-mother's bounty.
-- `tests/rules/quests.test.ts` — the brood call and each quest's dialogue and rewards.
-- `tests/spells.spec.ts` — casting, fizzling, phone keys, and swapping grimoires.
-- `tests/rules/spells.test.ts` — spell effects, fizzles, and carrying grimoires.
-- `tests/dodge.spec.ts` — dodge timing in the browser.
-- `tests/rules/dodge.test.ts` — dodge grading and the stepwise enemy turn.
-- `tests/rules/boar.test.ts` — the boar's shielding, fury, and both strategies.
-- `tests/companions.spec.ts` — the solo start and freeing the bear, from a fresh game.
-- `tests/rules/companions.test.ts` — the roster, party scaling, and the writ.
-- `tests/full-party.json` — the save most browser checks start from, with the bear and vulture already in the party.
-- `tests/replies.spec.ts` — choosing replies, replies lost with a memory, and the priest's care.
-- `tests/wounds.spec.ts` — wounds carried between fights and healed at a campfire.
-- `tests/rules/wounds.test.ts` — wounds, the fallen, and rest.
-- `tests/rules/world.test.ts` — dialogue variants, replies, and the favor-spell quest.
+- `src/main.ts`: starts the game, the title screen, and the top bar.
+- `src/rules/`: the game's rules as plain TypeScript, with no Phaser or DOM imports.
+  - `battle.ts`: enemies, moves, matchups, second stages, dodge timing, and the turn.
+  - `memory.ts`, `world.ts`: memories and Hollow perks, and story flags, carried items, and dialogue conditions.
+  - `economy.ts`, `gear.ts`, `spells.ts`, `cooking.ts`, `fishing.ts`: coins, supplies, keepsakes, grimoires, cooking, and fishing.
+  - `leap.ts`, `climb.ts`, `clock.ts`, `pursuit.ts`, `waystones.ts`: leaping, climbing, day and night, the inquisitor's hunt, and the old roads.
+  - `orders.ts`, `ending.ts`: the journal's orders and leads, and the endings.
+  - `ring.ts`, `dice.ts`: the Talon Ring and bones.
+  - `millbrook.ts`, `highlandLife.ts`, `holdsLife.ts`, `marshLife.ts`, `oceanLife.ts`: how each region's towns and camp talk change as the story moves.
+- `src/content/`: what people say and what is found, one file per region or theme (`dialogue.ts` defines the format). `outskirts.ts` holds the places off the roads, `secrets.ts` the rooms behind false walls, `lore.ts` the keepers of history, `shops.ts` every shop's wares, and `memories.ts` what each memory is worth.
+- `src/scenes/`: Phaser exploration.
+  - `areas.ts`: every area's map, music, colour grade, people, enemies, and exits.
+  - `AreaScene.ts`: the scene shared by every area. It hands the work to helpers in `area/`: `traversal.ts` (walking, leaping, climbing, footing), `foes.ts` (enemies on the map and chasing), `battles.ts`, `dialogue.ts`, `aftermath.ts` (what a conversation sets off), `exits.ts`, `dayNight.ts`, `hunt.ts`, `hollows.ts` (false walls), `townLife.ts`, and `panels.ts` (shops and menus).
+  - `sprites.ts`: the hero and townsfolk, drawn in code.
+- `src/ui/`: the HTML screens over the map: battle, equipment, party, journal, bestiary, memories, settings, shop, fishing, cooking, climbing, the games, the wake screen, and the ending.
+- `src/presentation/`: illustrated story scenes (`stories.ts`, `bossScenes.ts`, `tableau.ts`), battle effects and pacing, scenery, and how town life is staged.
+- `src/audio/`: `themes.ts` and `bossThemes.ts` (the compositions, as notes on beats), `music.ts` (the synthesised instruments, reverb, and crossfades), and `effects.ts` (sound effects).
+- `src/storage/`: versioned local-storage saves, one file per kind (`tide-keeps.*.v1`), and `progress.ts` for starting over.
+- `public/maps/`: Tiled JSON maps, one per area, with named points for people, things, and exits. `public/assets/` holds the tilesets and art.
+- `scripts/create-*.mjs`: regenerate each region's maps and tileset (shared helpers in `tile-kit.mjs`). Running one replaces manual edits to its maps, so run `add-secrets.mjs` after it.
+- `tests/*.spec.ts`: browser checks with Playwright, one file per feature or region. Most start from `tests/full-party.json`, with the bear and vulture already in the party; `fixtures.ts` marks the one-time story scenes as seen. `route.spec.ts` plays the whole story at the level of its rules, from the church to the good ending, and simulates every fight on the way for a player who never dodges, one who half-dodges, and one who dodges perfectly.
+- `tests/rules/*.test.ts`: rule tests without a browser, including `maps.test.ts` (every map's tiles, points, and leap reach). `play.ts` is a simple simulated player that the battle tests use to play out rounds.
 
 Combat rules have no Phaser or DOM imports. Future party and memory rules should preserve that boundary, as specified in the design guideline.
 
