@@ -34,8 +34,8 @@ export class CinematicView {
       event.stopPropagation();
       if (event.repeat) { event.preventDefault(); return; }
       if (event.key === 'Escape') { event.preventDefault(); this.finish(false); }
-      else if(event.key==='ArrowLeft') { event.preventDefault(); this.previous(); }
-      else if(event.key==='ArrowRight') { event.preventDefault(); this.next(); }
+      else if (event.key === 'ArrowLeft') { event.preventDefault(); this.previous(); }
+      else if (event.key === 'ArrowRight') { event.preventDefault(); this.next(); }
       else if ([' ', 'Enter'].includes(event.key) && !(event.target as Element).closest('.cinema-skip, .cinema-back')) { event.preventDefault(); this.next(); }
       else if (event.key === 'Tab') {
         event.preventDefault();
@@ -58,7 +58,7 @@ export class CinematicView {
     this.root.classList.toggle('cinema-trial', shot.art === 'trial');
     this.root.classList.toggle('cinema-sentence', this.story.id === 'waking' && shot.caption === 'THE SENTENCE');
     this.root.dataset.art = shot.art;
-    this.root.classList.toggle('cinema-composed',Boolean(shot.staging));
+    this.root.classList.toggle('cinema-composed', Boolean(shot.staging));
     this.root.classList.toggle('cinema-past', !!shot.flashback);
     this.root.querySelector('.cinema-kicker')!.textContent = `${this.story.subtitle}${shot.flashback ? ' · Earlier' : ''}`;
     this.root.classList.toggle('cinema-grounded', shot.art === 'ossuary');
@@ -66,8 +66,8 @@ export class CinematicView {
     const actors = this.root.querySelector('.cinema-actors')!;
     actors.replaceChildren(...(shot.actors ?? []).filter(actor => shot.art !== 'trial' || actor !== 'church-official').map(actor => {
       const img = document.createElement('img'); img.src = `${import.meta.env.BASE_URL}assets/${actor}.${actor === 'kraken' ? 'png' : 'svg'}`; img.dataset.actor = actor; img.alt = '';
-      const place=shot.staging?.[actor];
-      if(place) {img.style.left=`${place.x/9}%`;img.style.bottom=`${(450-place.ground)/4.5}%`;img.style.width=`${(place.size??96)/9}%`;}
+      const place = shot.staging?.[actor];
+      if (place) { img.style.left = `${place.x / 9}%`; img.style.bottom = `${(450 - place.ground) / 4.5}%`; img.style.width = `${(place.size ?? 96) / 9}%`; }
       return img;
     }));
     this.root.querySelector('.cinema-caption')!.textContent = shot.caption;
@@ -75,7 +75,7 @@ export class CinematicView {
     const line = this.root.querySelector<HTMLElement>('.cinema-line')!;
     // A stable accessible sentence while the visible letters appear.
     line.setAttribute('aria-label', shot.text);
-    line.dataset.full=shot.text;
+    line.dataset.full = shot.text;
     line.innerHTML = '<span aria-hidden="true"></span>';
     const visible = line.firstElementChild!;
     this.complete = read || matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -94,19 +94,19 @@ export class CinematicView {
   }
 
   private renderNavigation() {
-    const label=!this.complete?'Show text':this.index===this.story.shots.length-1?this.story.finalAction??'Return':'Continue';
-    this.root.querySelector('.cinema-next')!.innerHTML=`${label} <span>↵</span>`;
-    this.root.querySelector<HTMLButtonElement>('.cinema-back')!.disabled=this.index===0;
+    const label = !this.complete ? 'Show text' : this.index === this.story.shots.length - 1 ? this.story.finalAction ?? 'Return' : 'Continue';
+    this.root.querySelector('.cinema-next')!.innerHTML = `${label} <span>↵</span>`;
+    this.root.querySelector<HTMLButtonElement>('.cinema-back')!.disabled = this.index === 0;
   }
 
   private previous() {
-    if(this.finished || this.index===0)return;
-    this.index--;music.effect('page');this.show(true);
-    if(this.index===0)this.root.querySelector<HTMLButtonElement>('.cinema-next')!.focus({preventScroll:true});
+    if (this.finished || this.index === 0) return;
+    this.index--; music.effect('page'); this.show(true);
+    if (this.index === 0) this.root.querySelector<HTMLButtonElement>('.cinema-next')!.focus({ preventScroll: true });
   }
 
   private next() {
-    if(this.finished)return;
+    if (this.finished) return;
     music.unlock();
     if (!this.complete) {
       clearInterval(this.typing); this.complete = true;

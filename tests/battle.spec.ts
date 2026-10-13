@@ -50,7 +50,7 @@ test('party acts in any order, locks spent turns, and wins with protection', asy
   await expect(page.getByRole('button', { name: 'Bear attack', exact: true })).toBeDisabled();
   await expect(page.locator('#battle-turn')).toHaveText('Round 2 · 3 actions remaining');
   await expect(page.getByRole('log')).toContainText('Bear turns aside');
-  for(let round=2;round<=3;round++) {
+  for (let round = 2; round <= 3; round++) {
     await expect(page.locator('#battle-turn')).toHaveText(`Round ${round} · 3 actions remaining`);
     await page.getByRole('button', { name: 'Bear support', exact: true }).click();
     await page.getByRole('button', { name: 'Chameleon attack', exact: true }).click();
@@ -85,13 +85,13 @@ test('downed companions are skipped and only a full party wipe returns to the co
   await enterEncounter(page);
   await doom(page);
   // The first enemy turn downs someone; their actions are skipped from then on.
-  for(const id of ['chameleon','bear','vulture']) await page.getByRole('button', { name: `${id[0].toUpperCase()+id.slice(1)} attack`, exact: true }).click();
+  for (const id of ['chameleon', 'bear', 'vulture']) await page.getByRole('button', { name: `${id[0].toUpperCase() + id.slice(1)} attack`, exact: true }).click();
   await expect(page.locator('.battle')).toHaveAttribute('data-phase', /player|defeat/, { timeout: 15000 });
   const downed = page.locator('.member-card[data-downed="true"]');
   expect(await downed.count()).toBeGreaterThan(0);
   const fallen = await downed.first().getAttribute('data-member');
-  if(await page.locator('.battle').getAttribute('data-phase') === 'player') {
-    await expect(page.getByRole('button', { name: `${fallen![0].toUpperCase()+fallen!.slice(1)} attack`, exact: true })).toBeDisabled();
+  if (await page.locator('.battle').getAttribute('data-phase') === 'player') {
+    await expect(page.getByRole('button', { name: `${fallen![0].toUpperCase() + fallen!.slice(1)} attack`, exact: true })).toBeDisabled();
     await expect(page.locator('#battle-turn')).toHaveText(`Round 2 · ${3 - await downed.count()} actions remaining`);
   }
   // Only the whole party falling ends it.
@@ -100,8 +100,8 @@ test('downed companions are skipped and only a full party wipe returns to the co
   await page.getByRole('button', { name: 'Stand up' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   const position = await page.evaluate(async () => {
-    const path='/src/main.ts'; const { game } = await import(/* @vite-ignore */ path);
-    const hero=game.scene.getScene('church').player;
+    const path = '/src/main.ts'; const { game } = await import(/* @vite-ignore */ path);
+    const hero = game.scene.getScene('church').player;
     return { x: hero.x, y: hero.y };
   });
   expect(position).toEqual({ x: 88, y: 124 });
@@ -113,7 +113,7 @@ test('mobile party controls, ally selector, and focus remain accessible', async 
   await page.setViewportSize({ width: 390, height: 844 });
   await enterEncounter(page);
   await expect(page.locator('#settings')).toHaveAttribute('inert', '');
-  for(let i=0;i<12;i++) {
+  for (let i = 0; i < 12; i++) {
     await page.keyboard.press('Tab');
     expect(await page.evaluate(() => Boolean(document.activeElement?.closest('.battle')))).toBe(true);
   }

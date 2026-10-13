@@ -66,7 +66,7 @@ export function leads(world: World): string[] {
   const has = (flag: Flag) => world.flags.includes(flag);
   const carrying = (item: Item) => world.carried.includes(item);
   return [
-    ...(has('bear-mill-returned') && !has('bear-quest-complete') ? [has('bear-reeve-accountable') || has('bear-mill-left')?'The bear wants one piece of the old mill chain. Return to him by the millstone.':has('bear-miller-witnessed')?'The bear has the miller’s signed statement. He wants to speak to the reeve in Millbrook.':has('bear-mill-record')?'The mill book asks for another convict. The bear wants to speak to the miller outside.':'The bear wants to read what was written about him. The labour record is inside the mill.'] : []),
+    ...(has('bear-mill-returned') && !has('bear-quest-complete') ? [has('bear-reeve-accountable') || has('bear-mill-left') ? 'The bear wants one piece of the old mill chain. Return to him by the millstone.' : has('bear-miller-witnessed') ? 'The bear has the miller’s signed statement. He wants to speak to the reeve in Millbrook.' : has('bear-mill-record') ? 'The mill book asks for another convict. The bear wants to speak to the miller outside.' : 'The bear wants to read what was written about him. The labour record is inside the mill.'] : []),
     ...(carrying('bell') ? ['A small brass bell. The lamb in Millbrook lost one.'] : []),
     ...(has('barrel-bought') && !has('squid-freed') ? ['The fishmonger\'s barrel has a live squid in it. The mill stream runs to the sea.'] : []),
     ...(carrying('crate') ? ['A crate from the weir\'s smuggler, for the weasel in the fort town\'s alley.'] : []),

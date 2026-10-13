@@ -87,22 +87,22 @@ test('forgetting the kraken tightens everyone\'s dodging', async () => {
   for (const index of [0, 1, 2]) assert.ok(Math.abs(agility(sharp.party[index]) - agility(dull.party[index]) - NO_KRAKEN / 100) < 1e-9);
 });
 
-test('an anchor protects the last memory for one death, then the page is used up',()=>{
-  const last:Memory={lost:MEMORY_IDS.filter(id=>id!=='feast'),pending:false};
-  const owed=wipe(anchor(last,'feast'));
-  for(let death=0;death<20;death++)assert.equal(tideTakes(owed,death),undefined);
-  const paid=forgetAll(owed,[]);
-  assert.deepEqual(held(paid),['feast']);assert.deepEqual(paid.anchors,[]);assert.equal(paid.pending,false);
-  assert.equal(tideTakes(wipe(paid),21),'feast');
+test('an anchor protects the last memory for one death, then the page is used up', () => {
+  const last: Memory = { lost: MEMORY_IDS.filter(id => id !== 'feast'), pending: false };
+  const owed = wipe(anchor(last, 'feast'));
+  for (let death = 0; death < 20; death++) assert.equal(tideTakes(owed, death), undefined);
+  const paid = forgetAll(owed, []);
+  assert.deepEqual(held(paid), ['feast']); assert.deepEqual(paid.anchors, []); assert.equal(paid.pending, false);
+  assert.equal(tideTakes(wipe(paid), 21), 'feast');
 });
-test('a written reminder becomes truly held even when there is no other memory to take',()=>{
-  const memory:Memory={lost:MEMORY_IDS.filter(id=>id!=='bear'),pending:false,keepsakeMemories:['bear']};
-  const owed=wipe(anchor(remind(memory,'bear','trial'),'trial'),2);
-  assert.equal(tideTakes(owed,1),undefined);
-  const paid=forgetAll(owed,[]);
-  assert.ok(held(paid).includes('trial'));assert.ok(!paid.lost.includes('trial'));
-  assert.deepEqual(paid.reminded,[]);assert.deepEqual(paid.anchors,[]);assert.deepEqual(paid.keepsakeMemories,['bear']);
+test('a written reminder becomes truly held even when there is no other memory to take', () => {
+  const memory: Memory = { lost: MEMORY_IDS.filter(id => id !== 'bear'), pending: false, keepsakeMemories: ['bear'] };
+  const owed = wipe(anchor(remind(memory, 'bear', 'trial'), 'trial'), 2);
+  assert.equal(tideTakes(owed, 1), undefined);
+  const paid = forgetAll(owed, []);
+  assert.ok(held(paid).includes('trial')); assert.ok(!paid.lost.includes('trial'));
+  assert.deepEqual(paid.reminded, []); assert.deepEqual(paid.anchors, []); assert.deepEqual(paid.keepsakeMemories, ['bear']);
 });
-test('passing an empty list cannot forgive a wipe that still has an unprotected memory',()=>{
-  const owed=wipe(createMemory());assert.equal(forgetAll(owed,[]),owed);
+test('passing an empty list cannot forgive a wipe that still has an unprotected memory', () => {
+  const owed = wipe(createMemory()); assert.equal(forgetAll(owed, []), owed);
 });

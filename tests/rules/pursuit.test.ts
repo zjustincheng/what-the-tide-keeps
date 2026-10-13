@@ -21,7 +21,7 @@ test('a hunt warns, pursues for 45 seconds, then gives a long cooldown', () => {
 
 test('an encounter roll can fail repeatedly instead of forcing a scheduled hunt', () => {
   let state = initialPursuit();
-  for(let check = 0; check < 10; check++) {
+  for (let check = 0; check < 10; check++) {
     state = advancePursuit(state, ENCOUNTER_CHECK, .9);
     assert.deepEqual(state, initialPursuit());
   }
@@ -49,10 +49,10 @@ test('the hunter routes around walls, with no diagonal cuts or impassable shortc
   let previous = { x: 0, y: 1 };
   for (const cell of path) {
     assert.ok(walk(cell.x, cell.y));
-    assert.equal(Math.abs(cell.x-previous.x)+Math.abs(cell.y-previous.y), 1);
+    assert.equal(Math.abs(cell.x - previous.x) + Math.abs(cell.y - previous.y), 1);
     previous = cell;
   }
-  assert.deepEqual(pursuitPath({ x: 0, y: 0 }, { x: 2, y: 0 }, 3, 1, x=>x!==1), []);
+  assert.deepEqual(pursuitPath({ x: 0, y: 0 }, { x: 2, y: 0 }, 3, 1, x => x !== 1), []);
 });
 
 test('malformed pursuit saves cannot create infinite or negative timers', () => {

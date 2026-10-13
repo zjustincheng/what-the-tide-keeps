@@ -10,12 +10,12 @@ function parse(raw: string | null): Memory | undefined {
   if (typeof saved !== 'object' || saved === null) return undefined;
   const { lost, pending, anchors = [], reminded = [], keepsakeMemories = [], owed } = saved as Record<string, unknown>;
   if (!Array.isArray(lost) || typeof pending !== 'boolean') return undefined;
-  const bound=Array.isArray(keepsakeMemories)?MEMORY_IDS.filter(id=>keepsakeMemories.includes(id)):[];
+  const bound = Array.isArray(keepsakeMemories) ? MEMORY_IDS.filter(id => keepsakeMemories.includes(id)) : [];
   const ids = MEMORY_IDS.filter(id => lost.includes(id));
   // Keep the order memories were lost in, dropping anything unknown.
   const kept = lost.filter((id, index): id is MemoryId => !bound.includes(id) && ids.includes(id) && lost.indexOf(id) === index);
   const back = Array.isArray(reminded) ? MEMORY_IDS.filter(id => reminded.includes(id) && kept.includes(id)) : [];
-  return { lost: kept, pending, keepsakeMemories:bound, owed: typeof owed === 'number' && owed > 1 ? Math.min(3, Math.floor(owed)) : undefined, reminded: back, anchors: Array.isArray(anchors) ? MEMORY_IDS.filter(id => !bound.includes(id) && anchors.includes(id) && (!kept.includes(id) || back.includes(id))) : [] };
+  return { lost: kept, pending, keepsakeMemories: bound, owed: typeof owed === 'number' && owed > 1 ? Math.min(3, Math.floor(owed)) : undefined, reminded: back, anchors: Array.isArray(anchors) ? MEMORY_IDS.filter(id => !bound.includes(id) && anchors.includes(id) && (!kept.includes(id) || back.includes(id))) : [] };
 }
 
 export function loadMemory(): Memory {

@@ -1,4 +1,4 @@
-import {keepsakeDescription} from '../presentation/equipment';
+import { keepsakeDescription } from '../presentation/equipment';
 import { cost, createBattle, MEMBERS, visibleMana } from '../rules/battle';
 import type { MemberId } from '../rules/battle';
 import { canEquip, equip, KEEPSAKES, SLOTS } from '../rules/gear';
@@ -72,8 +72,8 @@ export class EquipmentView {
     for (const id of this.party) {
       const card = this.root.querySelector<HTMLElement>(`[data-member="${id}"]`)!;
       const member = party.find(member => member.id === id)!;
-      card.querySelector('.equipment-stats')!.textContent = `Health ${member.maxHealth} · Mana ${member.maxMana} · Damage ${MEMBERS[id].damage + member.gear.damage + (id==='chameleon'?this.hollow.damage:0)}`;
-      card.querySelector('.equipment-behavior')!.textContent=`Showing ${visibleMana(member)} mana · hiding costs ${cost(member,'suppress')} mana`;
+      card.querySelector('.equipment-stats')!.textContent = `Health ${member.maxHealth} · Mana ${member.maxMana} · Damage ${MEMBERS[id].damage + member.gear.damage + (id === 'chameleon' ? this.hollow.damage : 0)}`;
+      card.querySelector('.equipment-behavior')!.textContent = `Showing ${visibleMana(member)} mana · hiding costs ${cost(member, 'suppress')} mana`;
       const book = card.querySelector<HTMLSelectElement>('[data-book]')!;
       const carrying = this.carried[id];
       const holder = (other: BookId) => this.party.find(member => member !== id && this.carried[member] === other);
@@ -88,27 +88,27 @@ export class EquipmentView {
         select.innerHTML = `<option value="">— empty —</option>${fits.map(keepsake => `<option value="${keepsake}" ${keepsake === held ? 'selected' : ''}>${KEEPSAKES[keepsake].name}${this.tempered.includes(keepsake) ? ' (tempered)' : ''}${elsewhere(keepsake) ? ` (from ${MEMBERS[elsewhere(keepsake)!].name})` : ''}</option>`).join('')}`;
         // A second slot opens once the first is filled.
         select.disabled = !fits.length || (slot > 0 && !this.gear[id][slot - 1]);
-        const description=held?keepsakeDescription(held,this.tempered.includes(held)):undefined;
-        select.nextElementSibling!.textContent=description?`${description.benefit} Tradeoff: ${description.drawback}${description.memory?' '+description.memory:''}`:slot>0&&!this.gear[id][slot-1]?'Fill the first slot to use this one.':!fits.length?'No keepsakes for this hero yet.':'Empty slot.';
+        const description = held ? keepsakeDescription(held, this.tempered.includes(held)) : undefined;
+        select.nextElementSibling!.textContent = description ? `${description.benefit} Tradeoff: ${description.drawback}${description.memory ? ' ' + description.memory : ''}` : slot > 0 && !this.gear[id][slot - 1] ? 'Fill the first slot to use this one.' : !fits.length ? 'No keepsakes for this hero yet.' : 'Empty slot.';
       });
     }
-    const catalog=this.root.querySelector<HTMLDetailsElement>('.keepsake-catalog')!;
-    catalog.hidden=!this.owned.length;
-    catalog.querySelector('summary')!.textContent=`Compare keepsakes · ${this.owned.length} found`;
-    const comparisons=catalog.querySelector('.keepsake-comparisons')!;
-    comparisons.replaceChildren(...this.owned.map(id=>{
-      const item=KEEPSAKES[id],description=keepsakeDescription(id,this.tempered.includes(id));
-      const holder=this.party.find(member=>this.gear[member].includes(id));
-      const card=document.createElement('article');card.className='keepsake-comparison';card.dataset.keepsake=id;
-      card.innerHTML='<h3></h3><p class="keepsake-holder"></p><dl><dt>Benefit</dt><dd class="keepsake-benefit"></dd><dt>Tradeoff</dt><dd class="keepsake-drawback"></dd></dl><p class="keepsake-memory"></p>';
-      card.querySelector('h3')!.textContent=item.name+(this.tempered.includes(id)?' · tempered':'');
-      card.querySelector('.keepsake-holder')!.textContent=`${item.holder?MEMBERS[item.holder].name+' only · ':''}${holder?'Worn by '+MEMBERS[holder].name:'In the pack'}`;
-      card.querySelector('.keepsake-benefit')!.textContent=description.benefit;
-      card.querySelector('.keepsake-drawback')!.textContent=description.drawback;
-      card.querySelector('.keepsake-memory')!.textContent=description.memory;
+    const catalog = this.root.querySelector<HTMLDetailsElement>('.keepsake-catalog')!;
+    catalog.hidden = !this.owned.length;
+    catalog.querySelector('summary')!.textContent = `Compare keepsakes · ${this.owned.length} found`;
+    const comparisons = catalog.querySelector('.keepsake-comparisons')!;
+    comparisons.replaceChildren(...this.owned.map(id => {
+      const item = KEEPSAKES[id], description = keepsakeDescription(id, this.tempered.includes(id));
+      const holder = this.party.find(member => this.gear[member].includes(id));
+      const card = document.createElement('article'); card.className = 'keepsake-comparison'; card.dataset.keepsake = id;
+      card.innerHTML = '<h3></h3><p class="keepsake-holder"></p><dl><dt>Benefit</dt><dd class="keepsake-benefit"></dd><dt>Tradeoff</dt><dd class="keepsake-drawback"></dd></dl><p class="keepsake-memory"></p>';
+      card.querySelector('h3')!.textContent = item.name + (this.tempered.includes(id) ? ' · tempered' : '');
+      card.querySelector('.keepsake-holder')!.textContent = `${item.holder ? MEMBERS[item.holder].name + ' only · ' : ''}${holder ? 'Worn by ' + MEMBERS[holder].name : 'In the pack'}`;
+      card.querySelector('.keepsake-benefit')!.textContent = description.benefit;
+      card.querySelector('.keepsake-drawback')!.textContent = description.drawback;
+      card.querySelector('.keepsake-memory')!.textContent = description.memory;
       return card;
     }));
-    this.root.querySelector('.found-keepsakes')!.textContent=this.owned.length?'Keepsakes survive death. Moving an item takes it off its previous wearer.':'Nothing found yet. Keepsakes are hidden off the roads.';
+    this.root.querySelector('.found-keepsakes')!.textContent = this.owned.length ? 'Keepsakes survive death. Moving an item takes it off its previous wearer.' : 'Nothing found yet. Keepsakes are hidden off the roads.';
   }
 
   destroy() {

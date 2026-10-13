@@ -71,7 +71,7 @@ test('the hunt follows a real exit, pauses in Settings, expires, and stops at se
   // Test timeout with clear separation; capture has its own test below.
   await page.evaluate(() => {
     const scene = window.tideRun.game!.scene.getScene('town') as unknown as { hunter?: { fledAt?: number }; time: { now: number } };
-    if(scene.hunter) scene.hunter.fledAt = scene.time.now;
+    if (scene.hunter) scene.hunter.fledAt = scene.time.now;
     window.tideHunt.keepPursuit({ phase: 'chasing', remaining: 100 });
   });
   await page.locator('[data-action="close"]').click();
@@ -99,9 +99,9 @@ test('being caught starts the Inquisitor fight and preserves the hunt clock', as
   await page.waitForFunction(() => Boolean((window.tideRun.game!.scene.getScene('town') as unknown as { hunter?: unknown }).hunter));
   await page.evaluate(() => {
     const scene = window.tideRun.game!.scene.getScene('town') as unknown as { player: { x: number; y: number }; hunter: { sprite: import('phaser').Physics.Arcade.Sprite } };
-    scene.hunter.sprite.setPosition(scene.player.x, scene.player.y-1);
+    scene.hunter.sprite.setPosition(scene.player.x, scene.player.y - 1);
     const body = scene.hunter.sprite.body as import('phaser').Physics.Arcade.Body;
-    body.reset(scene.player.x, scene.player.y-1); body.updateFromGameObject();
+    body.reset(scene.player.x, scene.player.y - 1); body.updateFromGameObject();
   });
   await expect(page.locator('.enemy-fighter img').first()).toHaveAttribute('src', /inquisitor\.svg$/);
   const caught = await state(page);

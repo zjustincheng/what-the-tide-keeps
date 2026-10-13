@@ -3,7 +3,7 @@ import type { Choice, Dialogue } from './dialogue';
 // The ocean: no church, no orders, and the sea's side of everything the land has been eating.
 // People talk about what is in front of them. Names are placeholders.
 
-const portmasterReplies:Choice[]=[
+const portmasterReplies: Choice[] = [
     { text: 'Who runs the water?', lines: [
       'The shark clans hold the deep. The crews hold the shipping lanes. The cuttlefish holds the reef, and lately the cuttlefish holds everybody.',
       'It\'s been going round the clans, the crews, the pods, saying the same thing: no more fish for the land. Nobody\'s argued with it for long.',
@@ -19,14 +19,14 @@ export const port: Dialogue = {
     'Welcome to Wrecktown. Every deck here ran aground somewhere else first. We just tied them together.',
     'Nobody here cares about your brand. Half the port has one. The other half took theirs off with a knife.',
   ], variants: [
-    {if:{flag:'cuttlefish-slain'},lines:[
+    { if: { flag: 'cuttlefish-slain' }, lines: [
       'The crews are meeting on the old deck. No church stamp on the agreement. Every captain has to sign for their own boat.',
       'The fish trade stays shut. Passage is another matter. We can start there.',
-    ],choices:portmasterReplies},
-    {if:{flag:'elder-thanked'},lines:[
+    ], choices: portmasterReplies },
+    { if: { flag: 'elder-thanked' }, lines: [
       'The elder sent word ahead. There is a place for you at the table. It does not settle what happened to the kraken.',
       'But we know you have opened things the land meant to keep shut. We can talk from there.',
-    ],choices:portmasterReplies},
+    ], choices: portmasterReplies },
   ], choices: portmasterReplies },
   stranger: { speaker: 'A HOODED SAILOR', prompt: 'Speak to the sailor', hiddenIf: [{ flag: 'octopus-free' }], portrait: 'octopus', lines: [
     'A sailor in a hood, sitting very still at the rail. Too many arms under the coat for one person.',
@@ -61,13 +61,13 @@ export const port: Dialogue = {
   fisher: { speaker: 'A SEAL WITH A NET', prompt: 'Speak to the seal', lines: [
     'I fish for the port. Not for the land. There\'s a difference: I take what we eat and leave the rest.',
     'The land\'s boats take everything, every night, and sort it later. What they don\'t want goes back in dead.',
-  ],variants:[{if:{flag:'cuttlefish-slain'},lines:[
+  ], variants: [{ if: { flag: 'cuttlefish-slain' }, lines: [
     'Still fishing for the port. The crews have agreed to that much. Nobody has agreed to send a catch inland.',
     'There will be hungry people on the land. I know. There were hungry people under its nets too. We have to find another answer.',
-  ]},{if:{any:[{flag:'squid-freed'},{flag:'crab-freed'},{flag:'brother-freed'},{flag:'newt-freed'},{flag:'pens-freed'},{flag:'nets-cut'}]},lines:[
+  ] }, { if: { any: [{ flag: 'squid-freed' }, { flag: 'crab-freed' }, { flag: 'brother-freed' }, { flag: 'newt-freed' }, { flag: 'pens-freed' }, { flag: 'nets-cut' }] }, lines: [
     'I heard you opened a cage. The water carries news the land does not think to write down.',
     'He pushes a second bowl across the table. You can sit. You can also listen.',
-  ]}] },
+  ] }] },
   pirate: { speaker: 'A PIRATE', prompt: 'Speak to the pirate', lines: [
     'A shark with one fin cut short, cleaning a knife. "The church boats used to pay us to leave them alone. Then they stopped paying and started sailing past us at night with no lights."',
     '"Going out to that light. Nobody follows them. Even we don\'t follow them."',
@@ -123,20 +123,20 @@ export const seaPens: Dialogue = {
   ] },
   caught: { speaker: 'IN THE PEN', prompt: 'Look into the pen', lines: [
     'A young seal, in the net with the fish, has stopped trying. When you look at it, it looks back.',
-  ],variants:[{if:{flag:'nets-cut'},lines:[
+  ], variants: [{ if: { flag: 'nets-cut' }, lines: [
     'The torn net lifts with the water. Nothing looks back now.',
     'A small trail in the sand ends at the tide. The seal went home.',
-  ]}] },
+  ] }] },
 };
 
 // The kraken's grave.
 export const krakenGrave: Dialogue = {
   ribs: { speaker: 'THE RIBS', prompt: 'Look at the ribs', lines: [
     'The kraken\'s ribs, arching out of the sand, each as tall as a house. You stood on its back, once. You remember the weight of it under your feet.',
-  ],variants:[{if:{not:{remembers:'kraken'}},lines:[
+  ], variants: [{ if: { not: { remembers: 'kraken' } }, lines: [
     'Bones rise out of the sand, each as tall as a house. You know the kingdom celebrated their fall.',
     'You cannot remember the fight. The net under the bones is still here, whether you remember or not.',
-  ]}] },
+  ] }] },
   nets: { speaker: 'IN THE SAND', prompt: 'Dig at the sand', lines: [
     'Under the bones, the sand is full of net. Old net, church net, miles of it, wrapped around everything. Around the kraken\'s arms.',
     'It didn\'t come up out of the sea to attack the land. It came up tangled in the land\'s nets, after they took a whole reef in one night.',

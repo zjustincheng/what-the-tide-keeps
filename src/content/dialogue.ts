@@ -3,7 +3,7 @@ import type { Condition, Effect } from '../rules/world';
 // A reply the hero can choose once the speaker is done. It may only be offered under a condition,
 // such as still remembering the feast, and may lead to further replies. After its answer the hero
 // returns to the same replies to ask something else, unless the reply ends the conversation.
-export type DialogueVoice = {speaker:string; portrait?:string};
+export type DialogueVoice = { speaker: string; portrait?: string };
 export type Choice = { text: string; if?: Condition; lines: string[]; voices?: readonly (DialogueVoice | undefined)[]; then?: Effect; choices?: Choice[]; ends?: boolean };
 export type Conversation = { speaker: string; lines: string[]; voices?: readonly (DialogueVoice | undefined)[]; then?: Effect; choices?: Choice[] };
 type Variant = { if: Condition; lines: string[]; voices?: readonly (DialogueVoice | undefined)[]; then?: Effect; choices?: Choice[] };

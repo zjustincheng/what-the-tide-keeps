@@ -45,7 +45,7 @@ export type Drained = Readonly<Partial<Record<MemberId, number>>>;
 // fallen: heroes who went down in a fight and stayed down. Rest doesn't raise them; only the church can.
 export type World = Readonly<{ fallen?: readonly MemberId[]; night?: boolean; clock?: number; waiting?: readonly MemberId[]; tempered?: readonly KeepsakeId[]; flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number; pantry?: Pantry }>;
 export const ITEMS: readonly Item[] = ['bell', 'letter', 'note', 'crate', 'ring', 'shrine-stone', 'raven-letter', 'sealed-order', 'venom-vial'];
-export const FLAGS: readonly Flag[] = ['bear-mill-returned','bear-mill-record','bear-miller-witnessed','bear-reeve-accountable','bear-mill-left','bear-quest-complete', 'island-landed', 'works-seen', 'cages-opened', 'name-read', 'house-seen', 'human-challenged', 'human-beaten', 'human-seated', 'human-spared', 'orchard-cleared', 'overseer-slain', 'quarrymen-freed', 'collie-told', 'cistern-asked', 'cistern-cleared', 'ratling-home', 'lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
+export const FLAGS: readonly Flag[] = ['bear-mill-returned', 'bear-mill-record', 'bear-miller-witnessed', 'bear-reeve-accountable', 'bear-mill-left', 'bear-quest-complete', 'island-landed', 'works-seen', 'cages-opened', 'name-read', 'house-seen', 'human-challenged', 'human-beaten', 'human-seated', 'human-spared', 'orchard-cleared', 'overseer-slain', 'quarrymen-freed', 'collie-told', 'cistern-asked', 'cistern-cleared', 'ratling-home', 'lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
   'sheep-woods', 'sheep-orchard', 'sheep-yard', 'sheep-reward', 'barrel-bought', 'squid-freed', 'swarm-slain', 'bounty-paid',
   'warden-slain', 'leech-slain',
   'followers-spared', 'followers-reported', 'followers-paid', 'fishmonger-angry', 'stall-cowed', 'stood-count', 'inn-room', 'reeve-pardon',
@@ -207,7 +207,7 @@ export function fill(text: string, context: Context): string {
 export function conversation(dialogue: Dialogue, name: string, context: Context): Conversation {
   const { speaker, lines, voices, then, choices, variants = [] } = dialogue[name];
   const variant = variants.find(variant => holds(context, variant.if));
-  return variant ? { speaker, lines: variant.lines, then: variant.then, choices: variant.choices, ...(variant.voices?{voices:variant.voices}:{}) } : { speaker, lines, then, choices, ...(voices?{voices}:{}) };
+  return variant ? { speaker, lines: variant.lines, then: variant.then, choices: variant.choices, ...(variant.voices ? { voices: variant.voices } : {}) } : { speaker, lines, then, choices, ...(voices ? { voices } : {}) };
 }
 
 // The replies the hero can give right now. What he has forgotten, he cannot say.

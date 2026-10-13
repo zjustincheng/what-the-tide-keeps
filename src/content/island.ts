@@ -144,7 +144,7 @@ const strangerReplies: Choice[] = [
   { text: 'Spare him.', if: { flag: 'human-beaten' }, ends: true, lines: [
     'He is on his knees. You remember the child in the cage, and the door you opened.',
     'You set the key beside him. “Tell them what you did. Then we end the basin.” For the first time, he has no borrowed memory left to hide behind.',
-  ], then: { set: ['human-spared','cages-opened'], recallAll: true, ending: 'good' } },
+  ], then: { set: ['human-spared', 'cages-opened'], recallAll: true, ending: 'good' } },
 ];
 
 // The lamp room.

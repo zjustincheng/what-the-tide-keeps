@@ -65,7 +65,7 @@ export const SHOPS: Record<ShopId, { title: string; note: string; wares: Ware[] 
   smith: {
     title: 'The smith',
     note: 'He looks at each thing a long time before he names a price. Whatever it gives you, tempered, it gives more. What it costs you stays.',
-    wares: KEEPSAKE_IDS.filter(id=>id!=='broken-link').map(id => ({ temper: id, price: 30 })),
+    wares: KEEPSAKE_IDS.filter(id => id !== 'broken-link').map(id => ({ temper: id, price: 30 })),
   },
   reeve: {
     title: 'The reeve',

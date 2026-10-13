@@ -63,7 +63,7 @@ test('priest dialogue pauses movement and can be completed', async ({ page }) =>
 
 test('furniture blocks walking and the south door leads outside', async ({ page }) => {
   await page.evaluate(async () => {
-    const path='/src/main.ts'; const {game}=await import(/* @vite-ignore */ path);
+    const path = '/src/main.ts'; const { game } = await import(/* @vite-ignore */ path);
     game.scene.getScene('church').player.setPosition(120, 187);
   });
   await page.locator('#game').focus();
@@ -72,7 +72,7 @@ test('furniture blocks walking and the south door leads outside', async ({ page 
   await page.keyboard.up('w');
   expect((await position(page)).y).toBeGreaterThan(165);
   await page.evaluate(async () => {
-    const path='/src/main.ts'; const {game}=await import(/* @vite-ignore */ path);
+    const path = '/src/main.ts'; const { game } = await import(/* @vite-ignore */ path);
     game.scene.getScene('church').player.setPosition(256, 330);
   });
   await expect(page.locator('#prompt')).toContainText('Step outside');
@@ -82,17 +82,17 @@ test('furniture blocks walking and the south door leads outside', async ({ page 
 
 test('mobile controls move and release without page overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  const down=page.getByRole('button',{name:'Move down'});
-  const bounds=(await down.boundingBox())!;
-  await page.mouse.move(bounds.x+bounds.width/2,bounds.y+bounds.height/2);
+  const down = page.getByRole('button', { name: 'Move down' });
+  const bounds = (await down.boundingBox())!;
+  await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
   await page.mouse.down();
   await expect.poll(async () => (await position(page)).y).toBeGreaterThan(136);
   await page.mouse.up();
   await page.waitForTimeout(100);
-  const stopped=await position(page);
+  const stopped = await position(page);
   await page.waitForTimeout(150);
-  expect((await position(page)).y).toBeCloseTo(stopped.y,1);
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+  expect((await position(page)).y).toBeCloseTo(stopped.y, 1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
 test('a normal game has no enemies in the church', async ({ page }) => {

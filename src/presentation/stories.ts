@@ -4,7 +4,7 @@ import type { Encounter } from '../rules/battle';
 import type { Flag } from '../rules/world';
 
 export type Tableau = 'house-hall' | 'house-threshold' | 'family-register' | 'rookery-open' | 'island-shore' | 'lamp-room' | 'cell-open' | 'home-table' | 'empty-cell' | 'feast' | 'feast-high-table' | 'feast-cup' | 'feast-fall' | 'feast-dead' | 'trial' | 'wake' | 'farmhouse' | 'farmhouse-hearth' | 'grain-road' | 'grain-road-open' | 'ossuary' | 'hospice' | 'apothecary' | 'rookery' | 'archive' | 'laboratory' | 'church' | 'mill' | 'battlefield' | 'cell' | 'sea' | 'harbor' | 'kraken' | 'lighthouse';
-export type Shot = { art: Tableau; caption: string; text: string; sound?: Effect; actors?: readonly string[]; flashback?: boolean; staging?: Readonly<Partial<Record<string, {x:number; ground:number; size?:number}>>> };
+export type Shot = { art: Tableau; caption: string; text: string; sound?: Effect; actors?: readonly string[]; flashback?: boolean; staging?: Readonly<Partial<Record<string, { x: number; ground: number; size?: number }>>> };
 export type Story = { id: string; title: string; subtitle: string; shots: readonly Shot[]; music?: ThemeId; finalAction?: string };
 
 export const STORIES = {
@@ -59,10 +59,10 @@ export const STORIES = {
   boar: {
     id: 'boar', title: 'What they burned', subtitle: 'The farmland · lieutenant', music: 'wilds', finalAction: 'Face the boar', shots: [
       { art: 'grain-road', caption: 'CARTS WITHOUT DRIVERS', text: 'The grain carts have been left across the road. Beyond them, smoke-black beams stand against the sky. No one has repaired the house. No one has come to ask permission to pass.', sound: 'wind' },
-      { art: 'farmhouse', caption: 'THE HOUSE AT THE BORDER', text: 'The boar watches you from the broken doorway. A badger and a rat stand behind him. Their weapons are tools worn smooth by work. He moves in front of them before you say a word.', actors: ['boar','badger','rat'], sound: 'chain' },
+      { art: 'farmhouse', caption: 'THE HOUSE AT THE BORDER', text: 'The boar watches you from the broken doorway. A badger and a rat stand behind him. Their weapons are tools worn smooth by work. He moves in front of them before you say a word.', actors: ['boar', 'badger', 'rat'], sound: 'chain' },
       { art: 'farmhouse-hearth', caption: 'THE LAST LOAF', text: 'Inside, a loaf has been divided into three small pieces. You tell him the highlands are starving. He looks back at the cold hearth. “People were hungry here before anyone cared about that road.”', actors: ['boar'], sound: 'page' },
-      { art: 'farmhouse-hearth', caption: 'SOMEONE WHO LISTENED', text: 'You ask who ordered the blockade. “Someone who listened before he judged.” The boar closes a route ledger. The badger looks at it, then lowers his eyes. Neither of them gives you a name.', actors: ['boar','badger'], sound: 'heartbeat' },
-      { art: 'farmhouse', caption: 'NO ONE WAITED FOR PROOF', text: '“They sent branded heroes to make me obey. Of course they did.” He plants his feet in the doorway. Behind him, the rat tightens both hands around a cudgel. “If you want them, you go through me.”', actors: ['boar','badger','rat'], sound: 'heartbeat' },
+      { art: 'farmhouse-hearth', caption: 'SOMEONE WHO LISTENED', text: 'You ask who ordered the blockade. “Someone who listened before he judged.” The boar closes a route ledger. The badger looks at it, then lowers his eyes. Neither of them gives you a name.', actors: ['boar', 'badger'], sound: 'heartbeat' },
+      { art: 'farmhouse', caption: 'NO ONE WAITED FOR PROOF', text: '“They sent branded heroes to make me obey. Of course they did.” He plants his feet in the doorway. Behind him, the rat tightens both hands around a cudgel. “If you want them, you go through me.”', actors: ['boar', 'badger', 'rat'], sound: 'heartbeat' },
     ],
   },
   hyena: {
@@ -96,11 +96,11 @@ export const STORIES = {
 
   boarAfter: {
     id: 'boarAfter', title: 'What the ashes remember', subtitle: 'After the battle · A story told by the defeated', music: 'hearth', finalAction: 'Return to the farm', shots: [
-      { art: 'farmhouse-hearth', caption: 'AFTER THE BATTLE', text: 'The rat drops his cudgel. The badger kneels beside the boar, who turns away from your brand. “The child was alive. He knew that when he came to my door.” His eyes settle on the cold hearth. He begins to tell you.', actors: ['boar','badger','rat'], sound: 'memory' },
+      { art: 'farmhouse-hearth', caption: 'AFTER THE BATTLE', text: 'The rat drops his cudgel. The badger kneels beside the boar, who turns away from your brand. “The child was alive. He knew that when he came to my door.” His eyes settle on the cold hearth. He begins to tell you.', actors: ['boar', 'badger', 'rat'], sound: 'memory' },
       { art: 'farmhouse', caption: 'A STRANGER AT THE DOOR', text: 'A hooded stranger stands in the doorway. “The child they said you ate was found alive.” The boar keeps his eyes on the ashes. “I know. Nobody came back to tell me.”', actors: ['boar', 'hooded'], flashback: true, sound: 'memory' },
       { art: 'farmhouse-hearth', caption: 'WHAT AN APOLOGY WOULD COST', text: '“If they admitted it,” the stranger says, “they would have to admit what they did to you.” The boar looks up. “What do you want?” “For once, let them be the ones who have to ask.”', actors: ['boar', 'hooded'], flashback: true },
       { art: 'farmhouse-hearth', caption: 'THE GRAIN ROAD', text: 'The stranger lays a route ledger on the scorched threshold. “Every cart passes your land. Close the road.” “There are hungry people beyond that pass.” “There are hungry people in this room. Who came for them?”', actors: ['boar', 'hooded'], flashback: true, sound: 'page' },
-      { art: 'farmhouse-hearth', caption: 'BACK AT THE COLD HEARTH', text: 'The doorway is empty again. The boar closes his eyes. “Move the carts.” The badger starts to object, then stops. “Feed them,” the boar says. “This house has had enough of hungry people.”', actors: ['boar','badger'], sound: 'wind' },
+      { art: 'farmhouse-hearth', caption: 'BACK AT THE COLD HEARTH', text: 'The doorway is empty again. The boar closes his eyes. “Move the carts.” The badger starts to object, then stops. “Feed them,” the boar says. “This house has had enough of hungry people.”', actors: ['boar', 'badger'], sound: 'wind' },
       { art: 'farmhouse-hearth', caption: 'A CUP THAT DOES NOT BELONG HERE', text: 'A gilded cup lies beside the ledger. You know its shape from the feast. The rat follows your gaze. “The one with no fur brought it. No claws, either. He listened.” You leave the cup where you can examine it.', actors: ['rat'], sound: 'glass' },
       { art: 'grain-road-open', caption: 'THE FIRST CART THROUGH', text: 'Outside, a wheel turns out of its rut. The badger takes one side; the rat takes the other. The road to the highlands opens a cart-width at a time. Behind you, the burned house stays burned.', sound: 'chain' },
     ],
@@ -128,15 +128,15 @@ export const STORIES = {
 
   cuckooAfter: {
     id: 'cuckooAfter', title: 'The place that was his', subtitle: 'After the battle · The cuckoo’s account', music: 'hearth', finalAction: 'Return to the holds', shots: [
-      { art: 'house-hall', caption: 'BENEATH THE BANNERS', text: 'The cuckoo stays on the floor when the fighting stops. The lord’s face is gone. “That chair was his,” he says. “Mine was beside it.” He looks toward the empty place, and begins.', actors: ['cuckoo'], staging: {cuckoo:{x:370,ground:382}}, sound: 'wind' },
-      { art: 'house-hall', caption: 'YEARS EARLIER · A PLACE AT THE TABLE', text: 'Before the house knew what he was, the lord saved him a place at supper. “Tell me what you saw from the roof.” The young bird talked until the candles guttered. Nobody counted his feathers then.', actors: ['falcon-lord','cuckoo'], staging: {'falcon-lord':{x:535,ground:292},cuckoo:{x:370,ground:292,size:64}}, flashback: true, sound: 'memory' },
+      { art: 'house-hall', caption: 'BENEATH THE BANNERS', text: 'The cuckoo stays on the floor when the fighting stops. The lord’s face is gone. “That chair was his,” he says. “Mine was beside it.” He looks toward the empty place, and begins.', actors: ['cuckoo'], staging: { cuckoo: { x: 370, ground: 382 } }, sound: 'wind' },
+      { art: 'house-hall', caption: 'YEARS EARLIER · A PLACE AT THE TABLE', text: 'Before the house knew what he was, the lord saved him a place at supper. “Tell me what you saw from the roof.” The young bird talked until the candles guttered. Nobody counted his feathers then.', actors: ['falcon-lord', 'cuckoo'], staging: { 'falcon-lord': { x: 535, ground: 292 }, cuckoo: { x: 370, ground: 292, size: 64 } }, flashback: true, sound: 'memory' },
       { art: 'family-register', caption: 'THE FAMILY REGISTER', text: 'A scholar examined the shell kept from his hatching. The household opened its register. A clerk scraped away the name they had written there when he was small. He waited for his father to stop the knife. His father said nothing.', staging: {}, flashback: true, sound: 'page' },
-      { art: 'house-threshold', caption: 'OUTSIDE HIS OWN DOOR', text: 'They put his things on the stair. “The house cannot keep an impostor.” From outside, he heard supper being called. The same bell. The same voices. The door stayed shut.', actors: ['cuckoo'], staging:{cuckoo:{x:390,ground:386}}, flashback:true, sound:'door' },
-      { art: 'house-threshold', caption: 'LATER · THE STRANGER ON THE STAIR', text: 'The hooded stranger sits two steps below him. “You still come back.” “I keep thinking he will open the door.” The stranger waits. “Would he listen if the voice on the other side were his own?”', actors:['cuckoo','hooded'], staging:{cuckoo:{x:390,ground:386},hooded:{x:570,ground:416}}, flashback:true, sound:'heartbeat' },
-      { art: 'house-hall', caption: 'A BORROWED AUTHORITY', text: 'The stranger brings him through a servants’ passage. The cuckoo wears the lord’s face; the guards bow. “The real lord is below, alive,” the stranger says. “Now give the order. Close the rookery.” For the first time since his exile, the house obeys him.', actors:['falcon-lord','hooded'], staging:{'falcon-lord':{x:450,ground:338},hooded:{x:650,ground:380}}, flashback:true, sound:'door' },
-      { art: 'rookery', caption: 'WHAT THE ORDER COST', text: 'He seals the doors. Appeals for grain, warnings of sickness, letters asking whether someone is alive: all of them stay in the sacks. “How long?” he asks. “Until the nations have learned to listen,” the stranger says. He never names a day.', actors:['cuckoo','hooded'], staging:{cuckoo:{x:355,ground:390},hooded:{x:610,ground:390}}, flashback:true, sound:'page' },
-      { art: 'house-hall', caption: 'BACK BENEATH THE BANNERS', text: '“I thought he was giving my home back.” The cuckoo looks at the borrowed chair. “He only needed the doors shut.” He points toward the cellar stair. “The lord is down there. I do not know what I want him to say anymore.”', actors:['cuckoo'], staging:{cuckoo:{x:370,ground:382}}, sound:'wind' },
-      { art: 'rookery-open', caption: 'LET THEM GO', text: 'The first messenger rises from the gallery. The cuckoo watches without changing shape. “The stranger knew you. He said you opened a door for him once.” He leaves the gallery doors open. “Open another.”', actors:['cuckoo'], staging:{cuckoo:{x:355,ground:390}}, sound:'memory' },
+      { art: 'house-threshold', caption: 'OUTSIDE HIS OWN DOOR', text: 'They put his things on the stair. “The house cannot keep an impostor.” From outside, he heard supper being called. The same bell. The same voices. The door stayed shut.', actors: ['cuckoo'], staging: { cuckoo: { x: 390, ground: 386 } }, flashback: true, sound: 'door' },
+      { art: 'house-threshold', caption: 'LATER · THE STRANGER ON THE STAIR', text: 'The hooded stranger sits two steps below him. “You still come back.” “I keep thinking he will open the door.” The stranger waits. “Would he listen if the voice on the other side were his own?”', actors: ['cuckoo', 'hooded'], staging: { cuckoo: { x: 390, ground: 386 }, hooded: { x: 570, ground: 416 } }, flashback: true, sound: 'heartbeat' },
+      { art: 'house-hall', caption: 'A BORROWED AUTHORITY', text: 'The stranger brings him through a servants’ passage. The cuckoo wears the lord’s face; the guards bow. “The real lord is below, alive,” the stranger says. “Now give the order. Close the rookery.” For the first time since his exile, the house obeys him.', actors: ['falcon-lord', 'hooded'], staging: { 'falcon-lord': { x: 450, ground: 338 }, hooded: { x: 650, ground: 380 } }, flashback: true, sound: 'door' },
+      { art: 'rookery', caption: 'WHAT THE ORDER COST', text: 'He seals the doors. Appeals for grain, warnings of sickness, letters asking whether someone is alive: all of them stay in the sacks. “How long?” he asks. “Until the nations have learned to listen,” the stranger says. He never names a day.', actors: ['cuckoo', 'hooded'], staging: { cuckoo: { x: 355, ground: 390 }, hooded: { x: 610, ground: 390 } }, flashback: true, sound: 'page' },
+      { art: 'house-hall', caption: 'BACK BENEATH THE BANNERS', text: '“I thought he was giving my home back.” The cuckoo looks at the borrowed chair. “He only needed the doors shut.” He points toward the cellar stair. “The lord is down there. I do not know what I want him to say anymore.”', actors: ['cuckoo'], staging: { cuckoo: { x: 370, ground: 382 } }, sound: 'wind' },
+      { art: 'rookery-open', caption: 'LET THEM GO', text: 'The first messenger rises from the gallery. The cuckoo watches without changing shape. “The stranger knew you. He said you opened a door for him once.” He leaves the gallery doors open. “Open another.”', actors: ['cuckoo'], staging: { cuckoo: { x: 355, ground: 390 } }, sound: 'memory' },
     ],
   },
   cuttlefishAfter: {
@@ -158,36 +158,36 @@ export const STORIES = {
   },
   kraken: {
     id: 'kraken', title: 'The other shore', subtitle: 'The sea remembers differently', shots: [
-      { art: 'island-shore', caption: 'THE KRAKEN’S GRAVE', text: 'You remember banners, cheering, a kingdom calling you its saviour. Here there are no banners.', actors: ['octopus'], staging:{octopus:{x:260,ground:405}}, sound: 'surf' },
-      { art: 'island-shore', caption: 'WHAT THE LAND CALLED A MONSTER', text: 'The nets came first. Then the kraken rose. Your companion cannot look at the water.', actors: ['octopus'], staging:{octopus:{x:260,ground:405}}, sound: 'memory' },
+      { art: 'island-shore', caption: 'THE KRAKEN’S GRAVE', text: 'You remember banners, cheering, a kingdom calling you its saviour. Here there are no banners.', actors: ['octopus'], staging: { octopus: { x: 260, ground: 405 } }, sound: 'surf' },
+      { art: 'island-shore', caption: 'WHAT THE LAND CALLED A MONSTER', text: 'The nets came first. Then the kraken rose. Your companion cannot look at the water.', actors: ['octopus'], staging: { octopus: { x: 260, ground: 405 } }, sound: 'memory' },
     ],
   },
   bearChain: {
-    id:'bearChain',title:'What the chain holds',subtitle:'At the old mill',music:'hearth',finalAction:'Keep the link',shots:[
-      {art:'mill',caption:'ONE SMALL PIECE',text:'The key knocks softly against the chain. The bear turns the broken link in his paws until the sharp edge faces away from you. “There. That should not catch.”',actors:['bear'],sound:'chain'},
-      {art:'feast',caption:'THE BURNT EDGE',text:'At the feast, he takes the crust nobody else wants and pretends it was the best piece. You laugh. He gives you a look over the rim of his cup, pleased that you noticed.',actors:['bear'],flashback:true,sound:'memory'},
-      {art:'mill',caption:'THE ROAD IS STILL THERE',text:'You wrap the link in a scrap of paper and slip it beside the grimoire. At the road, the bear waits for you. “Same way?” he asks. You nod. The mill turns behind you.',actors:['hero','bear'],sound:'memory'},
+    id: 'bearChain', title: 'What the chain holds', subtitle: 'At the old mill', music: 'hearth', finalAction: 'Keep the link', shots: [
+      { art: 'mill', caption: 'ONE SMALL PIECE', text: 'The key knocks softly against the chain. The bear turns the broken link in his paws until the sharp edge faces away from you. “There. That should not catch.”', actors: ['bear'], sound: 'chain' },
+      { art: 'feast', caption: 'THE BURNT EDGE', text: 'At the feast, he takes the crust nobody else wants and pretends it was the best piece. You laugh. He gives you a look over the rim of his cup, pleased that you noticed.', actors: ['bear'], flashback: true, sound: 'memory' },
+      { art: 'mill', caption: 'THE ROAD IS STILL THERE', text: 'You wrap the link in a scrap of paper and slip it beside the grimoire. At the road, the bear waits for you. “Same way?” he asks. You nod. The mill turns behind you.', actors: ['hero', 'bear'], sound: 'memory' },
     ],
   },
   humanChallenge: {
-    id:'humanChallenge',title:'The lives he carries',subtitle:'The lamp room · Before the last fight',music:'wake',finalAction:'Stand together',shots:[
-      {art:'lamp-room',caption:'YOU REFUSE THE CUP',text:'You move the chair aside. “I came to clear our names. I came for the others. I am not staying here to watch you finish this.” The cup stays untouched.',actors:['hero'],staging:{hero:{x:360,ground:405}},sound:'glass'},
-      {art:'lamp-room',caption:'THE VOICES IN HIS HEAD',text:'He speaks with a voice you almost recognize. Then another. “Every time you woke, I woke with something else of yours. I could not make them stop.” The borrowed voices overlap until you hear your own.',actors:['human'],staging:{human:{x:665,ground:405}},sound:'memory'},
-      {art:'lamp-room',caption:'NO MANA TO READ',text:'You look for the gathering light of a spell. Nothing. He lifts an empty hand. The force behind it belongs to everything you forgot. You will have to take it back, a piece at a time.',actors:['human'],staging:{human:{x:665,ground:405}},sound:'heartbeat'},
-      {art:'lamp-room',caption:'A REASON TO COME BACK',text:'You remember the promise before the kraken: all five coming back. This time, coming back means more than surviving. You turn toward the people beside you, and give the last order of your sentence.',actors:['hero','bear','vulture','frog','octopus'],staging:{hero:{x:410,ground:418},bear:{x:150,ground:418},vulture:{x:280,ground:418},frog:{x:560,ground:418},octopus:{x:760,ground:418}},sound:'gather'},
+    id: 'humanChallenge', title: 'The lives he carries', subtitle: 'The lamp room · Before the last fight', music: 'wake', finalAction: 'Stand together', shots: [
+      { art: 'lamp-room', caption: 'YOU REFUSE THE CUP', text: 'You move the chair aside. “I came to clear our names. I came for the others. I am not staying here to watch you finish this.” The cup stays untouched.', actors: ['hero'], staging: { hero: { x: 360, ground: 405 } }, sound: 'glass' },
+      { art: 'lamp-room', caption: 'THE VOICES IN HIS HEAD', text: 'He speaks with a voice you almost recognize. Then another. “Every time you woke, I woke with something else of yours. I could not make them stop.” The borrowed voices overlap until you hear your own.', actors: ['human'], staging: { human: { x: 665, ground: 405 } }, sound: 'memory' },
+      { art: 'lamp-room', caption: 'NO MANA TO READ', text: 'You look for the gathering light of a spell. Nothing. He lifts an empty hand. The force behind it belongs to everything you forgot. You will have to take it back, a piece at a time.', actors: ['human'], staging: { human: { x: 665, ground: 405 } }, sound: 'heartbeat' },
+      { art: 'lamp-room', caption: 'A REASON TO COME BACK', text: 'You remember the promise before the kraken: all five coming back. This time, coming back means more than surviving. You turn toward the people beside you, and give the last order of your sentence.', actors: ['hero', 'bear', 'vulture', 'frog', 'octopus'], staging: { hero: { x: 410, ground: 418 }, bear: { x: 150, ground: 418 }, vulture: { x: 280, ground: 418 }, frog: { x: 560, ground: 418 }, octopus: { x: 760, ground: 418 } }, sound: 'gather' },
     ],
   },
   human: {
     id: 'human', title: 'The one who remembers', subtitle: 'At the end of the sea', shots: [
-      { art: 'lamp-room', caption: 'THE LAMP ROOM', text: 'You search for a mana signature. There is nothing. Only a chair, a cup, and someone who has been waiting.', actors: ['human'], staging:{human:{x:665,ground:405}}, sound: 'toll' },
+      { art: 'lamp-room', caption: 'THE LAMP ROOM', text: 'You search for a mana signature. There is nothing. Only a chair, a cup, and someone who has been waiting.', actors: ['human'], staging: { human: { x: 665, ground: 405 } }, sound: 'toll' },
       { art: 'feast-cup', caption: 'A HAND AT YOUR CUP', text: 'No fur. No scales. No claws. You have seen those hands before.', sound: 'glass' },
-      { art: 'lamp-room', caption: 'THE HUMAN', text: '“You opened the door.” He says it gently. As though it is the only thing about you he has never forgotten.', actors: ['human'], staging:{human:{x:665,ground:405}}, sound: 'memory' },
+      { art: 'lamp-room', caption: 'THE HUMAN', text: '“You opened the door.” He says it gently. As though it is the only thing about you he has never forgotten.', actors: ['human'], staging: { human: { x: 665, ground: 405 } }, sound: 'memory' },
     ],
   },
 } satisfies Record<string, Story>;
 export type StoryId = keyof typeof STORIES;
 export const STORY_FLAGS: Partial<Record<Flag, StoryId>> = {
-  'bear-quest-complete':'bearChain', 'bear-free': 'bear', 'vulture-free': 'vulture', 'lab-remembered': 'transfer', 'house-seen': 'laboratory', 'grave-seen': 'kraken',
+  'bear-quest-complete': 'bearChain', 'bear-free': 'bear', 'vulture-free': 'vulture', 'lab-remembered': 'transfer', 'house-seen': 'laboratory', 'grave-seen': 'kraken',
 };
 
 export function resurrectionStory(names: readonly string[]): Story {
@@ -198,6 +198,6 @@ export function resurrectionStory(names: readonly string[]): Story {
 }
 
 export const BOSS_STORIES: Partial<Record<Encounter, StoryId>> = {
-  human:'humanChallenge', boar: 'boar', hyena: 'hyena', viper: 'viper', cuckoo: 'cuckoo', cuttlefish: 'cuttlefish' };
+  human: 'humanChallenge', boar: 'boar', hyena: 'hyena', viper: 'viper', cuckoo: 'cuckoo', cuttlefish: 'cuttlefish' };
 
 export const BOSS_AFTERMATH: Partial<Record<Encounter, StoryId>> = { boar: 'boarAfter', hyena: 'hyenaAfter', viper: 'viperAfter', cuckoo: 'cuckooAfter', cuttlefish: 'cuttlefishAfter' };

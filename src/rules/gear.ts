@@ -22,7 +22,7 @@ export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; ef
     effect: 'Every attack hits 3 harder.', drawback: '4 less health.', mods: { damage: 3, health: -4 } },
   'covenant-token': { name: 'Covenant token',
     effect: '6 more health.', drawback: 'Shows 2 more mana, so enemies watch the holder.', mods: { health: 6, shown: 2 } },
-  'broken-link': {name:'Broken mill-chain link',holder:'bear',effect:'Protect guards both allies as well as himself. Permanently holds the hero’s memory of the bear, even when unequipped.',drawback:'Protect costs 3 mana and uses his action.',mods:{guardAll:1}},
+  'broken-link': { name: 'Broken mill-chain link', holder: 'bear', effect: 'Protect guards both allies as well as himself. Permanently holds the hero’s memory of the bear, even when unequipped.', drawback: 'Protect costs 3 mana and uses his action.', mods: { guardAll: 1 } },
   'yoke-peg': { name: 'Yoke peg', holder: 'bear',
     effect: '8 more health.', drawback: 'Attacks hit 2 softer.', mods: { health: 8, damage: -2 } },
   'wool-charm': { name: 'Wool charm',

@@ -1,5 +1,5 @@
 export type CombatEffect = 'hit' | 'spell' | 'heal' | 'mana' | 'ward' | 'dodge' | 'guard' | 'graze' | 'poison' | 'fizzle';
-const COLORS: Record<CombatEffect, string> = { hit: '#e9b77f', spell: '#b8a7f1', heal: '#a2dfab', mana: '#8ad0e2', ward: '#b9d7ef', dodge: '#c8ede5', guard:'#e3ca81', graze:'#d5b28d', poison:'#a9c66b', fizzle:'#ba92a5' };
+const COLORS: Record<CombatEffect, string> = { hit: '#e9b77f', spell: '#b8a7f1', heal: '#a2dfab', mana: '#8ad0e2', ward: '#b9d7ef', dodge: '#c8ede5', guard: '#e3ca81', graze: '#d5b28d', poison: '#a9c66b', fizzle: '#ba92a5' };
 
 // Effects are decorative and never delay the turn or change the battle state.
 export function combatEffect(target: Element | null, kind: CombatEffect, word?: string) {
@@ -13,7 +13,7 @@ export function combatEffect(target: Element | null, kind: CombatEffect, word?: 
   };
   if (word) make('combat-word').textContent = word;
   if (kind === 'heal' || kind === 'ward' || kind === 'mana' || kind === 'dodge' || kind === 'guard' || kind === 'poison') make('combat-aura');
-  const count=kind==='graze'||kind==='fizzle'?4:9;
+  const count = kind === 'graze' || kind === 'fizzle' ? 4 : 9;
   for (let i = 0; i < count; i++) {
     const node = make('combat-particle');
     const angle = i / count * Math.PI * 2;

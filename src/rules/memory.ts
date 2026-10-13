@@ -69,16 +69,16 @@ export function tideTakes(memory: Memory, deaths: number): MemoryId | undefined 
 export function forget(memory: Memory, id: MemoryId): Memory {
   if (!memory.pending || !forgettable(memory).includes(id)) return memory;
   const restored = (memory.reminded ?? []).filter(other => (memory.anchors ?? []).includes(other));
-  return { lost: [...memory.lost.filter(other => !restored.includes(other)), id], pending: false, anchors: [], reminded: [], owed: undefined, ...(memory.keepsakeMemories?.length?{keepsakeMemories:memory.keepsakeMemories}:{}) };
+  return { lost: [...memory.lost.filter(other => !restored.includes(other)), id], pending: false, anchors: [], reminded: [], owed: undefined, ...(memory.keepsakeMemories?.length ? { keepsakeMemories: memory.keepsakeMemories } : {}) };
 }
 
 // Pay a whole wipe's debt at once.
 export function forgetAll(memory: Memory, ids: readonly MemoryId[]): Memory {
   // A protected last memory can leave nothing to take. The page still carries
   // it through this death and is used up; written reminders become truly held.
-  if(memory.pending && !ids.length && !forgettable(memory).length) {
-    const restored=(memory.reminded ?? []).filter(id=>(memory.anchors ?? []).includes(id));
-    return {...memory,lost:memory.lost.filter(id=>!restored.includes(id)),pending:false,anchors:[],reminded:[],owed:undefined};
+  if (memory.pending && !ids.length && !forgettable(memory).length) {
+    const restored = (memory.reminded ?? []).filter(id => (memory.anchors ?? []).includes(id));
+    return { ...memory, lost: memory.lost.filter(id => !restored.includes(id)), pending: false, anchors: [], reminded: [], owed: undefined };
   }
   return ids.reduce<Memory>((paid, id, index) => index === 0 ? forget(paid, id) : forget({ ...paid, pending: true }, id), memory);
 }
@@ -117,7 +117,7 @@ export function recall(memory: Memory, id: MemoryId): Memory {
 }
 
 // Companion keepsakes hold a memory forever, whether or not the equipment is worn.
-export function keepMemory(memory:Memory,id:MemoryId):Memory {
-  return {...recall(memory,id),keepsakeMemories:[...new Set([...(memory.keepsakeMemories ?? []),id])],
-    anchors:(memory.anchors ?? []).filter(other=>other!==id),reminded:(memory.reminded ?? []).filter(other=>other!==id)};
+export function keepMemory(memory: Memory, id: MemoryId): Memory {
+  return { ...recall(memory, id), keepsakeMemories: [...new Set([...(memory.keepsakeMemories ?? []), id])],
+    anchors: (memory.anchors ?? []).filter(other => other !== id), reminded: (memory.reminded ?? []).filter(other => other !== id) };
 }

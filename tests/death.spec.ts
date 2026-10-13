@@ -74,7 +74,9 @@ test('a forgotten memory changes what the church says', async ({ page }) => {
     game.scene.getScene('church').player.setPosition(248, 148);
   });
   await page.locator('#game').focus();
+  await expect(page.locator('#prompt')).toContainText('Speak to the priest');
   await page.keyboard.press('e');
+  await expect(page.locator('#dialogue-text')).toBeVisible();
   await page.keyboard.press('e');
   await expect(page.locator('#dialogue-text')).toContainText('You did not say it this time.');
 });

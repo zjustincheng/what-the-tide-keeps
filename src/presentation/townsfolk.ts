@@ -26,7 +26,7 @@ export class Townsperson {
     characterFootprint(this.sprite);
     this.collider = scene.physics.add.collider(hero, this.sprite);
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      this.idle = scene.tweens.add({targets:this.sprite,scaleY:1.025,duration:1600+(x*7)%500,delay:(x+y*3)%1300,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
+      this.idle = scene.tweens.add({ targets: this.sprite, scaleY: 1.025, duration: 1600 + (x * 7) % 500, delay: (x + y * 3) % 1300, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
   }
 
@@ -48,9 +48,9 @@ export class Townsperson {
     this.sprite.setDepth(characterDepth(this.sprite));
   }
 
-  update(hero: {x:number;y:number}, speaking: boolean) {
-    if (this.sprite.visible && !speaking && Phaser.Math.Distance.Between(hero.x,hero.y,this.sprite.x,this.sprite.y)<72) {
-      this.sprite.setFlipX(hero.x<this.sprite.x);
+  update(hero: { x: number; y: number }, speaking: boolean) {
+    if (this.sprite.visible && !speaking && Phaser.Math.Distance.Between(hero.x, hero.y, this.sprite.x, this.sprite.y) < 72) {
+      this.sprite.setFlipX(hero.x < this.sprite.x);
     }
   }
 

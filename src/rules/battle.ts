@@ -368,32 +368,32 @@ export const SOUR = 2;
 export const RISE = 0.5;
 const QUIET = 'The signature flickers out. It is quiet again.';
 
-export const MEMORY_NAMES:Record<MemoryId,string>={feast:'The Feast',trial:'The Trial',kraken:'The Kraken',bear:'The Bear',vulture:'The Vulture',frog:'The Frog',octopus:'The Octopus',training:'His Training',home:'His Home',name:'His Name'};
+export const MEMORY_NAMES: Record<MemoryId, string> = { feast: 'The Feast', trial: 'The Trial', kraken: 'The Kraken', bear: 'The Bear', vulture: 'The Vulture', frog: 'The Frog', octopus: 'The Octopus', training: 'His Training', home: 'His Home', name: 'His Name' };
 
-function reclaimHumanMemory(battle:Battle):Battle {
-  const id=battle.lostMemories[0];
-  if(!id)return battle;
-  const perk=INITIAL_LOST.includes(id)?undefined:PERKS[id];
-  const hollow={...battle.hollow,
-    mana:Math.max(0,battle.hollow.mana-(perk==='mana'?PERK_BONUS.mana:0)),
-    damage:Math.max(0,battle.hollow.damage-(perk==='force'?PERK_BONUS.force:0)),
-    trained:battle.hollow.trained || id==='training',kraken:battle.hollow.kraken || id==='kraken'};
-  const party=battle.party.map(member=>{
-    const maxMana=member.id==='chameleon'?Math.max(1,member.maxMana-(battle.hollow.mana-hollow.mana)):member.maxMana;
-    return {...member,maxMana,mana:Math.min(member.mana,maxMana),
-      gear:id==='kraken'&&!battle.hollow.kraken?{...member.gear,agility:member.gear.agility+NO_KRAKEN}:member.gear};
+function reclaimHumanMemory(battle: Battle): Battle {
+  const id = battle.lostMemories[0];
+  if (!id) return battle;
+  const perk = INITIAL_LOST.includes(id) ? undefined : PERKS[id];
+  const hollow = { ...battle.hollow,
+    mana: Math.max(0, battle.hollow.mana - (perk === 'mana' ? PERK_BONUS.mana : 0)),
+    damage: Math.max(0, battle.hollow.damage - (perk === 'force' ? PERK_BONUS.force : 0)),
+    trained: battle.hollow.trained || id === 'training', kraken: battle.hollow.kraken || id === 'kraken' };
+  const party = battle.party.map(member => {
+    const maxMana = member.id === 'chameleon' ? Math.max(1, member.maxMana - (battle.hollow.mana - hollow.mana)) : member.maxMana;
+    return { ...member, maxMana, mana: Math.min(member.mana, maxMana),
+      gear: id === 'kraken' && !battle.hollow.kraken ? { ...member.gear, agility: member.gear.agility + NO_KRAKEN } : member.gear };
   });
-  return {...battle,hollow,party,lostMemories:battle.lostMemories.slice(1),recoveredMemories:[...battle.recoveredMemories,id],
-    log:[...battle.log,`${MEMORY_NAMES[id]} returns to you. He can no longer cast it.${perk==='mana'?' The Hollow mana falls away.':perk==='force'?' The Hollow force falls away.':''}`]};
+  return { ...battle, hollow, party, lostMemories: battle.lostMemories.slice(1), recoveredMemories: [...battle.recoveredMemories, id],
+    log: [...battle.log, `${MEMORY_NAMES[id]} returns to you. He can no longer cast it.${perk === 'mana' ? ' The Hollow mana falls away.' : perk === 'force' ? ' The Hollow force falls away.' : ''}`] };
 }
 
-function reclaimAtThreshold(battle:Battle):Battle {
-  const total=battle.humanMemoryCount;
-  if(!total)return battle;
-  const risen=Math.round(battle.enemy.maxHealth*(STAGES.human!.rise ?? RISE));
-  const share=Math.max(0,Math.min(1,1-battle.enemy.health/risen));
-  const goal=battle.enemy.health<=0?total:Math.min(total,1+Math.floor(share*(total-1)));
-  while(battle.recoveredMemories.length<goal)battle=reclaimHumanMemory(battle);
+function reclaimAtThreshold(battle: Battle): Battle {
+  const total = battle.humanMemoryCount;
+  if (!total) return battle;
+  const risen = Math.round(battle.enemy.maxHealth * (STAGES.human!.rise ?? RISE));
+  const share = Math.max(0, Math.min(1, 1 - battle.enemy.health / risen));
+  const goal = battle.enemy.health <= 0 ? total : Math.min(total, 1 + Math.floor(share * (total - 1)));
+  while (battle.recoveredMemories.length < goal) battle = reclaimHumanMemory(battle);
   return battle;
 }
 
@@ -409,7 +409,7 @@ function staged(battle: Battle): Battle {
       log: [...battle.log.filter(line => line !== QUIET), `Another ${ENEMIES[battle.encounter].short} comes on. (${battle.wave + 1} of ${battle.waves})`],
     };
   }
-  if(battle.encounter==='human' && battle.stage===2) return reclaimAtThreshold(battle);
+  if (battle.encounter === 'human' && battle.stage === 2) return reclaimAtThreshold(battle);
   const stage = STAGES[battle.encounter];
   if (!stage || battle.stage === 2 || battle.enemy.health > 0) return battle;
   const allActed = battle.party.every(member => member.health <= 0 || member.acted);
@@ -541,7 +541,7 @@ export function visibleMana(member: Member): number {
 
 // What an action costs this member, after keepsakes.
 export function cost(member: Member, action: Action): number {
-  return COST[action] + (action==='support' && member.id==='bear' && member.gear.guardAll>0?3:0) + (action === 'suppress' ? member.gear.suppressCost : 0);
+  return COST[action] + (action === 'support' && member.id === 'bear' && member.gear.guardAll > 0 ? 3 : 0) + (action === 'suppress' ? member.gear.suppressCost : 0);
 }
 
 export function enemyMana(battle: Battle): number {
@@ -562,9 +562,9 @@ function plainIntent(battle: Battle): Move & { tell: string } {
     ? { name: 'Undertow', type: 'physical', tell: 'The water draws back beneath your feet. An undertow is about to drag one hero under.', damage: 8, window: { perfect: 55, graze: 140 } }
     : { name: 'Arm sweep', type: 'physical', tell: 'A huge arm draws back over the harbour. It is coming down on one hero; dodge as it lands.', damage: 6, window: { perfect: 65, graze: 160 } };
   if (battle.encounter === 'human') {
-    if(!battle.lostMemories.length) return {name:'An empty hand',type:'physical',tell:'He reaches for another stolen memory. Nothing answers. His empty hand strikes out; a guard can stop it.',damage:4,window:{perfect:65,graze:160}};
-    const spell=MEMORY_NAMES[battle.lostMemories[(battle.round-1)%battle.lostMemories.length]];
-    return {name:spell,type:'spell',spell,tell:`He has no mana. ${spell} speaks through him. As memories return, these borrowed spells fall silent.`,damage:10+Math.min(5,battle.lostMemories.length),window:{perfect:45,graze:120}};
+    if (!battle.lostMemories.length) return { name: 'An empty hand', type: 'physical', tell: 'He reaches for another stolen memory. Nothing answers. His empty hand strikes out; a guard can stop it.', damage: 4, window: { perfect: 65, graze: 160 } };
+    const spell = MEMORY_NAMES[battle.lostMemories[(battle.round - 1) % battle.lostMemories.length]];
+    return { name: spell, type: 'spell', spell, tell: `He has no mana. ${spell} speaks through him. As memories return, these borrowed spells fall silent.`, damage: 10 + Math.min(5, battle.lostMemories.length), window: { perfect: 45, graze: 120 } };
   }
   if (battle.encounter === 'acolyte') {
     const casting = battle.round % 2 === 0;
@@ -959,7 +959,7 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
     : action === 'attack' ? `${definition.name}'s ${definition.attack.toLowerCase()} strikes the ${foe > 0 ? battle.followers[foe - 1].name.toLowerCase() : ENEMIES[battle.encounter].short}${member.suppressed ? ' in a burst of revealed mana' : ''}${member.focused ? ' with focused force' : ''}.${fit > 1 ? ' It lands hard.' : fit < 1 ? ' It barely tells.' : ''}${dart ? (venom(battle.encounter) === 0 ? ' The toxin does nothing to the dead.' : ' The toxin goes in.') : ''}`
     : dose ? (battle.soured ? `Frog doses ${target === actor ? 'herself' : MEMBERS[target].name}, and it burns: everything is soured.` : `Frog doses ${target === actor ? 'herself' : MEMBERS[target].name}. A small dose mends.`)
     : actor === 'vulture' ? 'Vulture steadies her aim. Her next attack will strike harder.'
-    : actor === 'bear' && member.gear.guardAll>0 ? 'Bear braces beside the broken link. His guard covers the whole party.'
+    : actor === 'bear' && member.gear.guardAll > 0 ? 'Bear braces beside the broken link. His guard covers the whole party.'
     : actor === 'bear' && target !== actor ? `Bear steps in front of ${MEMBERS[target].name}.`
     : `${definition.name} plants their feet and guards.`;
   return staged({
@@ -993,7 +993,7 @@ export function hesitate(battle: Battle): Battle {
   const target = enemyTarget(battle);
   if (!target) return battle;
   const base = Math.max(3, Math.ceil(intent(battle).damage * 0.6));
-  const guarded = target.guardingFor === target.id || battle.party.some(member => member.id === 'bear' && member.health > 0 && member.guardingFor !== null && (member.guardingFor === target.id || member.gear.guardAll>0));
+  const guarded = target.guardingFor === target.id || battle.party.some(member => member.id === 'bear' && member.health > 0 && member.guardingFor !== null && (member.guardingFor === target.id || member.gear.guardAll > 0));
   const damage = guarded ? 0 : base;
   const party = battle.party.map(member => member.id === target.id ? { ...member, health: Math.max(0, member.health - damage) } : member);
   const defeat = party.every(member => member.health === 0);
@@ -1026,7 +1026,7 @@ export function nextStrike(battle: Battle) {
   const target = enemyTarget(battle);
   if (!move || !target) return undefined;
   const protector = battle.party.find(member => member.health > 0 && member.id === 'bear' && member.guardingFor !== null
-    && (member.gear.guardAll>0 || member.guardingFor === target.id || member.id === target.id));
+    && (member.gear.guardAll > 0 || member.guardingFor === target.id || member.id === target.id));
   const guarded = move.unblockable ? undefined : move.type === 'physical' ? protector || (target.guardingFor === target.id ? target : undefined) : undefined;
   const blocked = !move.unblockable && move.type === 'spell' && battle.studied.includes(move.spell ?? '') && target.barrier;
   // A guard stops an ordinary blow; piercing strength still lands.

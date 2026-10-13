@@ -30,8 +30,8 @@ import { boutAfter, boutWon, BOUTS } from '../rules/ring';
 import { landing } from '../rules/leap';
 import { ClimbView } from '../ui/ClimbView';
 import { EndingView } from '../ui/EndingView';
-import {KeepsakeView} from '../ui/KeepsakeView';
-import {equip,SLOTS} from '../rules/gear';
+import { KeepsakeView } from '../ui/KeepsakeView';
+import { equip, SLOTS } from '../rules/gear';
 import { endingStory } from '../rules/ending';
 import type { Ending } from '../rules/ending';
 import type { Ground } from '../rules/leap';
@@ -125,7 +125,7 @@ export class AreaScene extends Phaser.Scene {
   private blips: ReturnType<typeof setTimeout>[] = [];
   // The ground under the hero's feet.
   surface(): Surface {
-    const tile=this.floor.getTileAtWorldXY(this.player.x, this.player.y+8);
+    const tile = this.floor.getTileAtWorldXY(this.player.x, this.player.y + 8);
     return (tile && this.area.surfaces?.[tile.index]) ?? this.area.ground;
   }
   private lastStep = 0;
@@ -199,8 +199,8 @@ export class AreaScene extends Phaser.Scene {
   private huntLabel = '';
   private millbrook?: MillbrookAtmosphere;
   private memoryEcho?: HTMLElement;
-  private dialogueBasePortrait?:string;
-  private pendingKeepsake=false;
+  private dialogueBasePortrait?: string;
+  private pendingKeepsake = false;
   private pendingCampTalk?: 'bear' | 'vulture' | 'frog' | 'hero' | 'octopus';
   private oceanLife?: OceanAtmosphere;
   private holdsLife?: HoldsAtmosphere;
@@ -214,7 +214,7 @@ export class AreaScene extends Phaser.Scene {
     this.pendingStories = [];
     this.arrival = data?.spawn ?? 'spawn';
     this.hunter = undefined; this.huntRoute = []; this.huntRouteAt = 0; this.huntSavedAt = 0; this.huntLabel = '';
-    this.oceanLife = undefined; this.holdsLife = undefined; this.millbrook = undefined; this.fortLife = undefined; this.marshLife = undefined; this.memoryEcho = undefined; this.pendingCampTalk = undefined; this.pendingKeepsake=false;
+    this.oceanLife = undefined; this.holdsLife = undefined; this.millbrook = undefined; this.fortLife = undefined; this.marshLife = undefined; this.memoryEcho = undefined; this.pendingCampTalk = undefined; this.pendingKeepsake = false;
     this.following = loadPursuit().phase === 'chasing';
     this.hunterDelay = this.following ? 2500 : 0;
     this.thrownOut = data?.caught;
@@ -311,11 +311,11 @@ export class AreaScene extends Phaser.Scene {
     this.area.decorate?.(this);
     atmosphere(this, this.area);
     this.grade();
-    if(this.area.key==='town') this.millbrook = new MillbrookAtmosphere(this,this.context(),this.player);
-    if(this.area.key==='fort') this.fortLife = new FortAtmosphere(this,this.context(),this.player);
-    if(this.area.key==='outlaw-port' || this.area.key==='sea-pens') this.oceanLife = new OceanAtmosphere(this,this.area.key,this.context(),furniture,this.player);
-    if(this.area.key==='hold') this.holdsLife = new HoldsAtmosphere(this,this.context(),this.player);
-    if(this.area.key==='wickmere' || this.area.key==='hospice') this.marshLife = new MarshAtmosphere(this,this.area.key,this.context(),this.player);
+    if (this.area.key === 'town') this.millbrook = new MillbrookAtmosphere(this, this.context(), this.player);
+    if (this.area.key === 'fort') this.fortLife = new FortAtmosphere(this, this.context(), this.player);
+    if (this.area.key === 'outlaw-port' || this.area.key === 'sea-pens') this.oceanLife = new OceanAtmosphere(this, this.area.key, this.context(), furniture, this.player);
+    if (this.area.key === 'hold') this.holdsLife = new HoldsAtmosphere(this, this.context(), this.player);
+    if (this.area.key === 'wickmere' || this.area.key === 'hospice') this.marshLife = new MarshAtmosphere(this, this.area.key, this.context(), this.player);
     this.keys = this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT', false) as typeof this.keys;
     this.bindControls();
     element('location-region').textContent = this.area.region;
@@ -325,11 +325,11 @@ export class AreaScene extends Phaser.Scene {
     element('game').setAttribute('aria-label', `${this.area.place} map. Move with WASD or arrow keys. Press E or Space to interact.`);
     this.cameras.main.fadeIn(650, 16, 27, 24);
     // The first time in a place with gaps to leap, say how.
-    const climbable=Object.keys(this.area.climbs ?? {}).length>0;
-    const gaps=this.gapTile!==undefined && Boolean(this.walls.findTile(tile=>tile.index===this.gapTile));
+    const climbable = Object.keys(this.area.climbs ?? {}).length > 0;
+    const gaps = this.gapTile !== undefined && Boolean(this.walls.findTile(tile => tile.index === this.gapTile));
     // Shown once, when nothing else is being said; if something is, it waits for the next visit.
-    if((gaps || climbable) && !HINTED.has(this.area.key)) this.time.delayedCall(900, () => {
-      if(!element('sneaking').hidden) return;
+    if ((gaps || climbable) && !HINTED.has(this.area.key)) this.time.delayedCall(900, () => {
+      if (!element('sneaking').hidden) return;
       HINTED.add(this.area.key);
       this.notice([
         ...(climbable ? ['Walls with handholds can be climbed: go to the foot of one. Dodge what falls.'] : []),
@@ -346,11 +346,11 @@ export class AreaScene extends Phaser.Scene {
     else if (this.area.key === 'church' && !loadWorld().flags.length && !loadWorld().deaths && !seenStories().includes('waking')) this.showStory(STORIES.prologue, () => this.beginKrakenTutorial(), true);
     else if (this.area.key === 'church') this.showAreaTitle('The Church');
     else this.showAreaTitle(this.locationTitle());
-    if(this.area.key==='town' && !millbrookState(this.context()).familiar) this.showTownEcho();
-    if(this.area.key==='fort' && !fortState(this.context()).familiar) this.showTownEcho('fort');
-    if(this.area.key==='wickmere' && !marshState(this.context()).familiar) this.showTownEcho('wickmere');
-    if(this.area.key==='hold' && !holdsState(this.context()).familiar) this.showTownEcho('hold');
-    if(this.area.key==='outlaw-port' && !oceanState(this.context()).familiar) this.showTownEcho('port');
+    if (this.area.key === 'town' && !millbrookState(this.context()).familiar) this.showTownEcho();
+    if (this.area.key === 'fort' && !fortState(this.context()).familiar) this.showTownEcho('fort');
+    if (this.area.key === 'wickmere' && !marshState(this.context()).familiar) this.showTownEcho('wickmere');
+    if (this.area.key === 'hold' && !holdsState(this.context()).familiar) this.showTownEcho('hold');
+    if (this.area.key === 'outlaw-port' && !oceanState(this.context()).familiar) this.showTownEcho('port');
     this.events.once('shutdown', () => {
       this.leaving = true; this.pendingStories = [];
       // Leaving an area keeps the time it is.
@@ -363,8 +363,8 @@ export class AreaScene extends Phaser.Scene {
       this.marshLife?.destroy(); this.marshLife = undefined;
       this.holdsLife?.destroy(); this.holdsLife = undefined;
       this.oceanLife?.destroy(); this.oceanLife = undefined;
-      const seaFrame=document.querySelector<HTMLElement>('.game-frame');
-      if(seaFrame){delete seaFrame.dataset.seaReception;delete seaFrame.dataset.seaPens;delete seaFrame.dataset.seaTrade;}
+      const seaFrame = document.querySelector<HTMLElement>('.game-frame');
+      if (seaFrame) { delete seaFrame.dataset.seaReception; delete seaFrame.dataset.seaPens; delete seaFrame.dataset.seaTrade; }
       delete document.querySelector<HTMLElement>('.game-frame')?.dataset.holdsRoutes;
       delete document.querySelector<HTMLElement>('.game-frame')!.dataset.millbrookGrain;
       delete document.querySelector<HTMLElement>('.game-frame')!.dataset.millbrookFish;
@@ -544,9 +544,9 @@ export class AreaScene extends Phaser.Scene {
     this.marshLife?.refresh(context);
     this.holdsLife?.refresh(context);
     this.oceanLife?.refresh(context);
-    if(['town','fort','wickmere','hold','outlaw-port'].includes(this.area.key)) element('location-place').textContent = `/ ${this.locationTitle()}`;
+    if (['town', 'fort', 'wickmere', 'hold', 'outlaw-port'].includes(this.area.key)) element('location-place').textContent = `/ ${this.locationTitle()}`;
     for (const prop of this.props) {
-      const {sprite,hiddenIf,shadow} = prop;
+      const { sprite, hiddenIf, shadow } = prop;
       const hidden = hiddenIf.some(condition => holds(context, condition));
       shadow?.setVisible(!hidden);
       if (hidden && sprite.active) {
@@ -567,11 +567,11 @@ export class AreaScene extends Phaser.Scene {
   private ground(tx: number, ty: number): Ground {
     const tile = this.walls.getTileAt(tx, ty);
     if (tx < 0 || ty < 0 || tx >= this.walls.layer.width || ty >= this.walls.layer.height) return 'wall';
-    const size=this.walls.tilemap.tileWidth, height=this.walls.tilemap.tileHeight;
-    const left=tx*size, top=ty*height;
+    const size = this.walls.tilemap.tileWidth, height = this.walls.tilemap.tileHeight;
+    const left = tx * size, top = ty * height;
     // Leaps obey the same solid people and story gates as walking. Hidden props
     // remain in Arcade's search tree but must not leave an invisible obstacle.
-    if(this.physics.overlapRect(left,top,size,height,false,true).some(body=>body.enable && body.left<left+size && body.right>left && body.top<top+height && body.bottom>top))return 'wall';
+    if (this.physics.overlapRect(left, top, size, height, false, true).some(body => body.enable && body.left < left + size && body.right > left && body.top < top + height && body.bottom > top)) return 'wall';
     if (!tile || !tile.collides) return 'open';
     return (tile.tileset?.getTileProperties(tile.index) as { gap?: boolean } | null)?.gap ? 'gap' : 'wall';
   }
@@ -612,7 +612,7 @@ export class AreaScene extends Phaser.Scene {
 
   // A leap the way the hero faces: over a gap of up to two tiles, or a hop forward on open ground. Short of the far side, he falls.
   private leap() {
-    if(this.leaping || this.overlay || this.leaving || this.active) return;
+    if (this.leaping || this.overlay || this.leaving || this.active) return;
     // The visual arc changes the sprite origin. Sample and land with the normal
     // origin so the physics feet cannot end up a tile above the landing point.
     this.player.setOrigin(0.5, 0.5);
@@ -622,7 +622,7 @@ export class AreaScene extends Phaser.Scene {
     const from = this.feet();
     const { dx, dy } = this.facing;
     const lands = landing((tx, ty) => this.ground(tx, ty), from, dx, dy);
-    if(!lands) { this.notice('There is no room to leap that way.',1200); return; }
+    if (!lands) { this.notice('There is no room to leap that way.', 1200); return; }
     const below = body.center.y - this.player.y;
     this.leaping = true;
     this.player.setVelocity(0);
@@ -773,274 +773,274 @@ export class AreaScene extends Phaser.Scene {
   }
 
   private bindControls() {
-    const signal=this.cleanup.signal;
-    window.addEventListener('keydown',event=>{
+    const signal = this.cleanup.signal;
+    window.addEventListener('keydown', event => {
       // Keys pressed inside a panel belong to it, even once that press has closed it.
-      if(this.overlay || (event.target instanceof Element && event.target.closest('.battle'))) return;
-      if(event.target instanceof HTMLButtonElement && [' ', 'Enter'].includes(event.key)) return;
-      if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(event.key)) event.preventDefault();
-      if(['e','E',' ','Enter'].includes(event.key)) this.interact(event);
-      if(['h','H'].includes(event.key) && !event.repeat && !this.active) this.toggleHud();
-      if(['q','Q'].includes(event.key) && !event.repeat && !this.active) this.toggleSneak();
-      if(event.key==='Shift' && !event.repeat && !this.active) this.leap();
-      if(['j','J'].includes(event.key) && !event.repeat && !this.active) this.openPanel(()=>new JournalView(loadJournal(), ()=>this.closePanel(), orders(loadWorld()), leads(loadWorld())));
-      if(['b','B'].includes(event.key) && !event.repeat && !this.active) this.openPanel(()=>new BestiaryView(loadBestiary(), loadGrimoire(), ()=>this.closePanel()));
-      if(['p','P'].includes(event.key) && !event.repeat && !this.active) this.openParty();
+      if (this.overlay || (event.target instanceof Element && event.target.closest('.battle'))) return;
+      if (event.target instanceof HTMLButtonElement && [' ', 'Enter'].includes(event.key)) return;
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(event.key)) event.preventDefault();
+      if (['e', 'E', ' ', 'Enter'].includes(event.key)) this.interact(event);
+      if (['h', 'H'].includes(event.key) && !event.repeat && !this.active) this.toggleHud();
+      if (['q', 'Q'].includes(event.key) && !event.repeat && !this.active) this.toggleSneak();
+      if (event.key === 'Shift' && !event.repeat && !this.active) this.leap();
+      if (['j', 'J'].includes(event.key) && !event.repeat && !this.active) this.openPanel(() => new JournalView(loadJournal(), () => this.closePanel(), orders(loadWorld()), leads(loadWorld())));
+      if (['b', 'B'].includes(event.key) && !event.repeat && !this.active) this.openPanel(() => new BestiaryView(loadBestiary(), loadGrimoire(), () => this.closePanel()));
+      if (['p', 'P'].includes(event.key) && !event.repeat && !this.active) this.openParty();
       // Number keys pick a reply.
-      const pick=this.options[Number(event.key)-1];
-      if(this.active && pick && !event.repeat) { event.preventDefault(); this.choose(pick); }
+      const pick = this.options[Number(event.key) - 1];
+      if (this.active && pick && !event.repeat) { event.preventDefault(); this.choose(pick); }
       // Escape closes a conversation; with none open, it opens settings.
-      if(event.key==='Escape') { if(this.active) this.closeDialogue(); else if(!event.repeat) this.openSettings(); }
+      if (event.key === 'Escape') { if (this.active) this.closeDialogue(); else if (!event.repeat) this.openSettings(); }
       // Tab opens equipment only from the map, so it still moves focus everywhere else on the page.
-      const onMap=[element('game'),document.body].includes(document.activeElement as HTMLElement);
-      if(event.key==='Tab' && !event.shiftKey && onMap && !this.active && !event.repeat) { event.preventDefault(); this.openEquipment(); }
-    },{signal});
-    element('settings').addEventListener('click',()=>this.openSettings(),{signal});
-    element('hud').addEventListener('click',event=>{ if((event.target as Element).closest('.hud-toggle')) this.toggleHud(); },{signal});
-    element('continue').addEventListener('click',()=>this.interact(),{signal});
-    element('touch-interact').addEventListener('click',()=>this.interact(),{signal});
-    element('touch-sneak').addEventListener('click',()=>{ if(!this.active && !this.overlay) this.toggleSneak(); },{signal});
-    element('touch-leap').addEventListener('click',()=>{ if(!this.active && !this.overlay) this.leap(); },{signal});
-    document.querySelectorAll<HTMLButtonElement>('[data-direction]').forEach(button=>{
-      const direction=button.dataset.direction as Direction;
-      button.addEventListener('pointerdown',event=>{
-        if(this.overlay) return;
-        event.preventDefault();button.setPointerCapture(event.pointerId);this.held.add(direction);
-      },{signal});
-      const release=()=>this.held.delete(direction);
-      button.addEventListener('pointerup',release,{signal});
-      button.addEventListener('pointercancel',release,{signal});
-      button.addEventListener('lostpointercapture',release,{signal});
+      const onMap = [element('game'), document.body].includes(document.activeElement as HTMLElement);
+      if (event.key === 'Tab' && !event.shiftKey && onMap && !this.active && !event.repeat) { event.preventDefault(); this.openEquipment(); }
+    }, { signal });
+    element('settings').addEventListener('click', () => this.openSettings(), { signal });
+    element('hud').addEventListener('click', event => { if ((event.target as Element).closest('.hud-toggle')) this.toggleHud(); }, { signal });
+    element('continue').addEventListener('click', () => this.interact(), { signal });
+    element('touch-interact').addEventListener('click', () => this.interact(), { signal });
+    element('touch-sneak').addEventListener('click', () => { if (!this.active && !this.overlay) this.toggleSneak(); }, { signal });
+    element('touch-leap').addEventListener('click', () => { if (!this.active && !this.overlay) this.leap(); }, { signal });
+    document.querySelectorAll<HTMLButtonElement>('[data-direction]').forEach(button => {
+      const direction = button.dataset.direction as Direction;
+      button.addEventListener('pointerdown', event => {
+        if (this.overlay) return;
+        event.preventDefault(); button.setPointerCapture(event.pointerId); this.held.add(direction);
+      }, { signal });
+      const release = () => this.held.delete(direction);
+      button.addEventListener('pointerup', release, { signal });
+      button.addEventListener('pointercancel', release, { signal });
+      button.addEventListener('lostpointercapture', release, { signal });
     });
-    window.addEventListener('blur',()=>{this.held.clear();this.input.keyboard?.resetKeys();this.player.setVelocity(0);},{signal});
+    window.addEventListener('blur', () => { this.held.clear(); this.input.keyboard?.resetKeys(); this.player.setVelocity(0); }, { signal });
   }
 
   private interact(event?: KeyboardEvent) {
-    if(this.overlay || this.leaving) return;
-    if(event?.repeat) return;
+    if (this.overlay || this.leaving) return;
+    if (event?.repeat) return;
     const ferry = this.area.key === 'creek' && this.nearby?.name === 'seal';
     if (hunting(loadPursuit()) && !this.active && !ferry && (!this.nearby || !(this.nearby.name in this.area.exits))) {
       this.notice('No time to stop. Keep moving — he follows through doors.', 2200);
       return;
     }
     // Let native buttons handle their own Enter/Space activation once.
-    if(event && document.activeElement instanceof HTMLButtonElement && [' ', 'Enter'].includes(event.key)) return;
-    if(this.active) {
+    if (event && document.activeElement instanceof HTMLButtonElement && [' ', 'Enter'].includes(event.key)) return;
+    if (this.active) {
       // With replies on offer, the hero must choose one; Escape still walks away.
-      if(this.options.length) return;
+      if (this.options.length) return;
       this.line++;
-      if(this.line>=this.active.lines.length) this.closeDialogue();
+      if (this.line >= this.active.lines.length) this.closeDialogue();
       else this.showLine();
-    } else if(this.nearby && this.area.climbs?.[this.nearby.name]) {
+    } else if (this.nearby && this.area.climbs?.[this.nearby.name]) {
       this.climb(this.nearby.name);
-    } else if(this.nearby && this.climbDown(this.nearby.name)!==undefined) {
+    } else if (this.nearby && this.climbDown(this.nearby.name) !== undefined) {
       // Down is easy: you came up it.
-      const foot=this.point(this.climbDown(this.nearby.name)!);
+      const foot = this.point(this.climbDown(this.nearby.name)!);
       music.effect('step-stone');
       this.cameras.main.fadeOut(180, 16, 27, 24);
       this.cameras.main.once('camerafadeoutcomplete', () => { this.player.setPosition(foot.x, foot.y); (this.player.body as Phaser.Physics.Arcade.Body).reset(foot.x, foot.y); this.cameras.main.fadeIn(220, 16, 27, 24); });
-      element('prompt').textContent='';
-    } else if(this.nearby && this.nearby.name==='waystone' && waystoneIn(this.area.key)) {
-      const here=waystoneIn(this.area.key)!;
-      const world=loadWorld();
-      if(!world.flags.includes('old-roads')) this.say({ speaker: 'A WAYSTONE', lines: ['A standing stone carved with a road that goes nowhere. It is cold, and it doesn\'t answer.'] });
-      else if(!world.flags.includes(WAYSTONES[here].flag)) {
+      element('prompt').textContent = '';
+    } else if (this.nearby && this.nearby.name === 'waystone' && waystoneIn(this.area.key)) {
+      const here = waystoneIn(this.area.key)!;
+      const world = loadWorld();
+      if (!world.flags.includes('old-roads')) this.say({ speaker: 'A WAYSTONE', lines: ['A standing stone carved with a road that goes nowhere. It is cold, and it doesn\'t answer.'] });
+      else if (!world.flags.includes(WAYSTONES[here].flag)) {
         this.effect({ set: WAYSTONES[here].flag });
         music.effect('find');
         this.refreshWaystone();
         this.say({ speaker: 'A WAYSTONE', lines: ['You put your hand on the stone the way the pilgrim showed you. The carved road fills with pale light. It is awake.'] });
       } else {
-        const ways=destinations(world, here);
+        const ways = destinations(world, here);
         this.say({ speaker: 'A WAYSTONE', lines: [ways.length ? 'The carved road is lit. You can feel the other woken stones, far off, like warmth on one side of your face.' : 'The stone is awake, but no other stone answers yet. Wake more of them.'],
-          choices: ways.map(id=>({ text: `Walk the old road to ${WAYSTONES[id].name.replace(/^The /, 'the ')}.`, ends: true, lines: [], then: { travel: id } as Effect })) }, undefined);
+          choices: ways.map(id => ({ text: `Walk the old road to ${WAYSTONES[id].name.replace(/^The /, 'the ')}.`, ends: true, lines: [], then: { travel: id } as Effect })) }, undefined);
       }
-      element('prompt').textContent='';
-    } else if(this.nearby && this.area.forage?.[this.nearby.name]) {
+      element('prompt').textContent = '';
+    } else if (this.nearby && this.area.forage?.[this.nearby.name]) {
       // Picking what grows wild; it comes back after the next rest.
-      const point=this.nearby.name, ingredient=this.area.forage[point];
-      const picked=2;
-      saved=saveWorld(forage(loadWorld(), ingredient, picked));
+      const point = this.nearby.name, ingredient = this.area.forage[point];
+      const picked = 2;
+      saved = saveWorld(forage(loadWorld(), ingredient, picked));
       PICKED.add(`${this.area.key}:${point}`);
-      const spot=this.forage.find(spot=>spot.point===point);
-      if(spot) { this.forage=this.forage.filter(other=>other!==spot); this.tweens.add({ targets: spot.sprite, alpha: 0, scale: 0.4, duration: 300, onComplete: () => spot.sprite.destroy() }); }
+      const spot = this.forage.find(spot => spot.point === point);
+      if (spot) { this.forage = this.forage.filter(other => other !== spot); this.tweens.add({ targets: spot.sprite, alpha: 0, scale: 0.4, duration: 300, onComplete: () => spot.sprite.destroy() }); }
       music.effect('find');
       this.say({ speaker: 'FORAGING', lines: [`You pick ${picked} ${INGREDIENTS[ingredient].plural}. They'll do for cooking at a fire.`] }, 'hero');
-      element('prompt').textContent='';
-    } else if(this.nearby && this.area.camps?.[this.nearby.name]) {
+      element('prompt').textContent = '';
+    } else if (this.nearby && this.area.camps?.[this.nearby.name]) {
       // Resting is told like a conversation; the rest itself, and paying for it, happen when it ends.
-      const camp=this.area.camps[this.nearby.name];
-      const coins=loadWorld().coins;
-      const cost=camp.cost ?? 0;
-      const sleep=[...(cost ? [`You pay ${cost} coins for wood and a place by the fire.`] : []), ...camp.lines];
-      this.campPoint=this.nearby.name;
+      const camp = this.area.camps[this.nearby.name];
+      const coins = loadWorld().coins;
+      const cost = camp.cost ?? 0;
+      const sleep = [...(cost ? [`You pay ${cost} coins for wood and a place by the fire.`] : []), ...camp.lines];
+      this.campPoint = this.nearby.name;
       // Resting heals, but doesn't skip the day or the night: the hour is the same when you get up. A fire can be cooked at as well, a bed or a cot cannot.
-      const price=cost ? ` (${cost} coins)` : '';
-      const night=Boolean(loadWorld().night);
-      const restHere=cost && coins<cost
+      const price = cost ? ` (${cost} coins)` : '';
+      const night = Boolean(loadWorld().night);
+      const restHere = cost && coins < cost
         ? { text: `Rest.${price}`, lines: [`Wood and a place by the fire cost ${cost} coins. You have ${coins}.`] }
         : { text: `Rest.${price}`, ends: true, lines: sleep, then: { camp: true } as Effect };
       this.say({ speaker: camp.noCooking ? 'REST' : 'THE FIRE', lines: [camp.noCooking ? (night ? 'It is dark out.' : 'It is still light out.') : `The fire is going${night ? ', and it is the only light for a long way' : ''}. You could cook something, or rest.`], choices: [
-        ...(this.area.region==='THE FARMLAND' && bearAtCamp(this.context()) ? [{ text: 'Sit with the bear.', ends: true, lines: [], then: { campTalk: 'bear' } as Effect }] : []),
-        ...(this.area.region==='THE HIGHLANDS' && vultureAtCamp(this.context()) ? [{ text: 'Sit with the vulture.', ends: true, lines: [], then: { campTalk: 'vulture' } as Effect }] : []),
-        ...(this.area.region==='THE MOUNTAIN HOLDS' ? [{ text: 'Sit quietly by the fire.', ends: true, lines: [], then: { campTalk: 'hero' } as Effect }] : []),
-        ...(this.area.region==='THE OCEAN' && octopusAtCamp(this.context()) ? [{ text: 'Sit with the octopus.', ends: true, lines: [], then: { campTalk: 'octopus' } as Effect }] : []),
-        ...(this.area.region==='THE MARSH' && frogAtCamp(this.context()) ? [{ text: 'Sit with the frog.', ends: true, lines: [], then: { campTalk: 'frog' } as Effect }] : []),
+        ...(this.area.region === 'THE FARMLAND' && bearAtCamp(this.context()) ? [{ text: 'Sit with the bear.', ends: true, lines: [], then: { campTalk: 'bear' } as Effect }] : []),
+        ...(this.area.region === 'THE HIGHLANDS' && vultureAtCamp(this.context()) ? [{ text: 'Sit with the vulture.', ends: true, lines: [], then: { campTalk: 'vulture' } as Effect }] : []),
+        ...(this.area.region === 'THE MOUNTAIN HOLDS' ? [{ text: 'Sit quietly by the fire.', ends: true, lines: [], then: { campTalk: 'hero' } as Effect }] : []),
+        ...(this.area.region === 'THE OCEAN' && octopusAtCamp(this.context()) ? [{ text: 'Sit with the octopus.', ends: true, lines: [], then: { campTalk: 'octopus' } as Effect }] : []),
+        ...(this.area.region === 'THE MARSH' && frogAtCamp(this.context()) ? [{ text: 'Sit with the frog.', ends: true, lines: [], then: { campTalk: 'frog' } as Effect }] : []),
         ...(camp.noCooking ? [] : [{ text: 'Cook something.', ends: true, lines: [], then: { cook: true } as Effect }]),
         restHere,
       ] }, 'hero');
-      element('prompt').textContent='';
+      element('prompt').textContent = '';
       this.player.setVelocity(0);
-    } else if(this.nearby && this.area.fishing?.[this.nearby.name]) {
+    } else if (this.nearby && this.area.fishing?.[this.nearby.name]) {
       this.openFishing(this.area.fishing[this.nearby.name]);
-    } else if(this.nearby && this.nearby.name in this.area.exits) {
-      const exit=this.area.exits[this.nearby.name];
+    } else if (this.nearby && this.nearby.name in this.area.exits) {
+      const exit = this.area.exits[this.nearby.name];
       // A barred way is explained instead of taken.
-      if(exit.requires && !holds(this.context(), exit.requires)) {
-        if(hunting(loadPursuit())) this.notice('That way is barred. Find another exit.');
+      if (exit.requires && !holds(this.context(), exit.requires)) {
+        if (hunting(loadPursuit())) this.notice('That way is barred. Find another exit.');
         else this.say({ speaker: exit.barred?.speaker ?? 'THE WAY', lines: exit.barred?.lines ?? ['It will not open.'] }, undefined);
       }
       else this.travel(exit, /door|out/.test(this.nearby.name));
-    } else if(this.nearby) {
-      const said=conversation(this.area.dialogue, this.nearby.name, this.context());
-      const point=this.nearby.name;
-      const portrait=this.area.dialogue[point].portrait ?? this.area.npcs.find(npc=>npc.point===point)?.texture;
+    } else if (this.nearby) {
+      const said = conversation(this.area.dialogue, this.nearby.name, this.context());
+      const point = this.nearby.name;
+      const portrait = this.area.dialogue[point].portrait ?? this.area.npcs.find(npc => npc.point === point)?.texture;
       // Someone already spoken to this visit goes straight to the replies, rather than saying it all again.
-      const again=this.talked.has(point) && replies(said.choices, this.context()).length>0 && (!said.then || Object.keys(said.then).every(key=>key==='shop'));
+      const again = this.talked.has(point) && replies(said.choices, this.context()).length > 0 && (!said.then || Object.keys(said.then).every(key => key === 'shop'));
       this.talked.add(point);
       // Dimming only marks what was asked in this conversation; talking again starts fresh.
       this.asked.clear();
       // Effects land as the conversation opens, so closing it early never loses them.
       this.effect(said.then);
       this.say(again ? { ...said, lines: ['Was there something else?'] } : said, portrait, again);
-      element('prompt').textContent='';
+      element('prompt').textContent = '';
       this.player.setVelocity(0);
     }
   }
 
   // Speak with a portrait in its own box above the text, as in Omori; objects and places show only a name.
-  private say(conversation: Conversation, portrait=this.portraitKey, returning=false) {
-    this.active=conversation;this.line=0;this.portraitKey=portrait;this.returning=returning;
-    this.dialogueBasePortrait=portrait;
-    element('dialogue').hidden=false;
+  private say(conversation: Conversation, portrait = this.portraitKey, returning = false) {
+    this.active = conversation; this.line = 0; this.portraitKey = portrait; this.returning = returning;
+    this.dialogueBasePortrait = portrait;
+    element('dialogue').hidden = false;
     this.showLine();
   }
 
   // Show the current line; under the last one, offer whatever replies the hero can still give.
   private showLine() {
-    const active=this.active!;
-    const voice=active.voices?.[this.line];
-    this.portraitKey=voice?voice.portrait:this.dialogueBasePortrait;
-    element('speaker').textContent=voice?.speaker ?? active.speaker;
-    const frame=element('portrait');frame.hidden=!this.portraitKey;
-    element('dialogue').classList.toggle('with-portrait',Boolean(this.portraitKey));
-    if(this.portraitKey) (frame.querySelector('img') as HTMLImageElement).src=this.portrait(this.portraitKey);
-    const text=fill(active.lines[this.line], this.context());
-    element('dialogue-text').textContent=text;
+    const active = this.active!;
+    const voice = active.voices?.[this.line];
+    this.portraitKey = voice ? voice.portrait : this.dialogueBasePortrait;
+    element('speaker').textContent = voice?.speaker ?? active.speaker;
+    const frame = element('portrait'); frame.hidden = !this.portraitKey;
+    element('dialogue').classList.toggle('with-portrait', Boolean(this.portraitKey));
+    if (this.portraitKey) (frame.querySelector('img') as HTMLImageElement).src = this.portrait(this.portraitKey);
+    const text = fill(active.lines[this.line], this.context());
+    element('dialogue-text').textContent = text;
     this.speak(text);
-    this.options=this.line===active.lines.length-1 ? replies(active.choices, this.context()) : [];
-    if(this.options.length) {
-      if(!this.returning || !this.menu) this.menu=active.choices;
+    this.options = this.line === active.lines.length - 1 ? replies(active.choices, this.context()) : [];
+    if (this.options.length) {
+      if (!this.returning || !this.menu) this.menu = active.choices;
       // Coming back to the replies always offers a way out.
-      if(this.returning && !this.options.some(option=>option.ends)) this.options=[...this.options, LEAVE];
+      if (this.returning && !this.options.some(option => option.ends)) this.options = [...this.options, LEAVE];
     }
-    const box=element('choices');
-    box.replaceChildren(...this.options.map((option,index)=>{
-      const button=document.createElement('button');
-      button.type='button';button.textContent=`${index+1}. ${option.text}`;
+    const box = element('choices');
+    box.replaceChildren(...this.options.map((option, index) => {
+      const button = document.createElement('button');
+      button.type = 'button'; button.textContent = `${index + 1}. ${option.text}`;
       // Questions already asked this visit are dimmed, not removed.
-      if(this.asked.has(`${active.speaker}:${option.text}`)) button.dataset.asked='true';
-      button.addEventListener('click',()=>this.choose(option));
+      if (this.asked.has(`${active.speaker}:${option.text}`)) button.dataset.asked = 'true';
+      button.addEventListener('click', () => this.choose(option));
       return button;
     }));
-    box.hidden=!this.options.length;
-    element('continue').hidden=this.options.length>0;
-    (box.querySelector('button') as HTMLButtonElement|null)?.focus({preventScroll:true});
+    box.hidden = !this.options.length;
+    element('continue').hidden = this.options.length > 0;
+    (box.querySelector('button') as HTMLButtonElement | null)?.focus({ preventScroll: true });
   }
 
   // A bust cut from the sprite: the head and shoulders, scaled up with hard pixels. Cached per texture.
   private portrait(key: string): string {
-    const cached=PORTRAITS.get(key);
-    if(cached) return cached;
-    const source=this.textures.get(key).getSourceImage() as CanvasImageSource & { width: number; height: number };
-    const width=source.width, height=Math.round(source.height*0.6);
-    const scale=Math.max(1,Math.floor(96/width));
-    const canvas=document.createElement('canvas');
-    canvas.width=width*scale;canvas.height=height*scale;
-    const context=canvas.getContext('2d')!;
-    context.imageSmoothingEnabled=false;
-    context.drawImage(source,0,0,width,height,0,0,canvas.width,canvas.height);
-    const url=canvas.toDataURL();
-    PORTRAITS.set(key,url);
+    const cached = PORTRAITS.get(key);
+    if (cached) return cached;
+    const source = this.textures.get(key).getSourceImage() as CanvasImageSource & { width: number; height: number };
+    const width = source.width, height = Math.round(source.height * 0.6);
+    const scale = Math.max(1, Math.floor(96 / width));
+    const canvas = document.createElement('canvas');
+    canvas.width = width * scale; canvas.height = height * scale;
+    const context = canvas.getContext('2d')!;
+    context.imageSmoothingEnabled = false;
+    context.drawImage(source, 0, 0, width, height, 0, 0, canvas.width, canvas.height);
+    const url = canvas.toDataURL();
+    PORTRAITS.set(key, url);
     return url;
   }
 
   private choose(option: Choice) {
     music.effect('select');
     this.effect(option.then);
-    if(!option.lines.length) { this.closeDialogue(); return; }
+    if (!option.lines.length) { this.closeDialogue(); return; }
     this.asked.add(`${this.active!.speaker}:${option.text}`);
     // Answers that tell the hero something are written down in the journal; answers that do something are not.
-    if(!option.then && record({ speaker: this.active!.speaker, topic: option.text, lines: option.lines.map(line=>fill(line, this.context())), place: this.area.place })) music.effect('key', 7);
+    if (!option.then && record({ speaker: this.active!.speaker, topic: option.text, lines: option.lines.map(line => fill(line, this.context())), place: this.area.place })) music.effect('key', 7);
     // After an answer, the hero can ask something else from the same replies, unless this one ends it.
-    const back=option.choices ?? (option.ends ? undefined : this.menu);
-    this.say({ speaker: this.active!.speaker, lines: option.lines, voices:option.voices, choices: back }, this.dialogueBasePortrait, Boolean(back && !option.choices));
+    const back = option.choices ?? (option.ends ? undefined : this.menu);
+    this.say({ speaker: this.active!.speaker, lines: option.lines, voices: option.voices, choices: back }, this.dialogueBasePortrait, Boolean(back && !option.choices));
   }
 
   private effect(then?: Effect) {
-    if(!then) return;
-    if(then.cook) this.pendingCook=true;
-    if(then.camp) this.pendingRest=this.campPoint;
-    if(then.campTalk) this.pendingCampTalk=then.campTalk;
-    if(then.travel) this.pendingTravel=then.travel;
-    if(then.church) this.pendingChurch=true;
-    if(then.bout!==undefined) this.pendingBout=then.bout;
-    if(then.sail) this.pendingSail=then.sail;
-    if(then.shells) this.pendingShells=then.shells;
-    if(then.arm) this.pendingArm=then.arm;
-    if(then.dice) this.pendingDice={ stake: then.dice, opponent: (this.active?.speaker ?? 'the house').toLowerCase().replace(/^(a|an|the) /, 'the ') };
-    if(then.shop) this.pendingShop=then.shop;
-    if(then.find==='broken-link' && !loadWorld().found.includes('broken-link')) this.pendingKeepsake=true;
-    if(then.find || then.learn || then.give) music.effect('find');
-    if(then.earn || then.pay) music.effect('coins');
-    if(then.rest) music.effect('rest');
+    if (!then) return;
+    if (then.cook) this.pendingCook = true;
+    if (then.camp) this.pendingRest = this.campPoint;
+    if (then.campTalk) this.pendingCampTalk = then.campTalk;
+    if (then.travel) this.pendingTravel = then.travel;
+    if (then.church) this.pendingChurch = true;
+    if (then.bout !== undefined) this.pendingBout = then.bout;
+    if (then.sail) this.pendingSail = then.sail;
+    if (then.shells) this.pendingShells = then.shells;
+    if (then.arm) this.pendingArm = then.arm;
+    if (then.dice) this.pendingDice = { stake: then.dice, opponent: (this.active?.speaker ?? 'the house').toLowerCase().replace(/^(a|an|the) /, 'the ') };
+    if (then.shop) this.pendingShop = then.shop;
+    if (then.find === 'broken-link' && !loadWorld().found.includes('broken-link')) this.pendingKeepsake = true;
+    if (then.find || then.learn || then.give) music.effect('find');
+    if (then.earn || then.pay) music.effect('coins');
+    if (then.rest) music.effect('rest');
     // Raised for a memory instead of coins: the tide chooses which, as it does at a death.
     // A memory found again, written down where he could read it.
-    if(then.recall) { saved=saveMemory(recall(loadMemory(), then.recall)) && saved; music.effect('find'); }
-    if(then.keepMemory) {saved=saveMemory(keepMemory(loadMemory(),then.keepMemory)) && saved;music.effect('memory');}
-    if(then.recallAll) { saved=saveMemory(MEMORY_IDS.reduce((memory, id) => recall(memory, id), loadMemory())) && saved; music.effect('find'); }
-    if(then.ending) this.pendingEnding=then.ending;
-    if(then.tithe) {
-      const owing=wipe(loadMemory(), 1);
-      const taken=tideTakesAll(owing, loadWorld().deaths + 101 * ((loadWorld().fallen ?? []).length + 1));
-      if(taken.length) { saved=saveMemory(forgetAll(owing, taken)) && saved; this.pendingTithe=taken.map(id=>memories[id].name); }
+    if (then.recall) { saved = saveMemory(recall(loadMemory(), then.recall)) && saved; music.effect('find'); }
+    if (then.keepMemory) { saved = saveMemory(keepMemory(loadMemory(), then.keepMemory)) && saved; music.effect('memory'); }
+    if (then.recallAll) { saved = saveMemory(MEMORY_IDS.reduce((memory, id) => recall(memory, id), loadMemory())) && saved; music.effect('find'); }
+    if (then.ending) this.pendingEnding = then.ending;
+    if (then.tithe) {
+      const owing = wipe(loadMemory(), 1);
+      const taken = tideTakesAll(owing, loadWorld().deaths + 101 * ((loadWorld().fallen ?? []).length + 1));
+      if (taken.length) { saved = saveMemory(forgetAll(owing, taken)) && saved; this.pendingTithe = taken.map(id => memories[id].name); }
     }
-    const before=roster(loadWorld());
-    const next=apply(this.context(), then);
+    const before = roster(loadWorld());
+    const next = apply(this.context(), then);
     for (const flag of next.world.flags) {
       const story = STORY_FLAGS[flag];
       if (story === 'transfer' && next.world.flags.includes('house-seen')) continue;
       if (story && !loadWorld().flags.includes(flag) && !seenStories().includes(story) && !this.pendingStories.includes(story)) this.pendingStories.push(story);
     }
-    saved=saveWorld(next.world)&&saveGrimoire(next.studied);
+    saved = saveWorld(next.world) && saveGrimoire(next.studied);
     this.refreshFoes(undefined, true);
     // A companion who has just joined takes their own grimoire back.
-    for(const member of roster(next.world).filter(member=>!before.includes(member))) saved=saveBooks(reclaim(loadBooks(), member)) && saved;
+    for (const member of roster(next.world).filter(member => !before.includes(member))) saved = saveBooks(reclaim(loadBooks(), member)) && saved;
     this.refreshProps();
     this.renderMemory();
   }
 
   // People blip as they talk, a few blips per line, each voice at its own pitch. Objects just click.
   private speak(text: string) {
-    for(const timer of this.blips) clearTimeout(timer);
-    this.blips=[];
-    if(!this.portraitKey) { music.effect('select'); return; }
-    const voice=[...element('speaker').textContent!].reduce((sum,letter)=>sum+letter.charCodeAt(0),0)%12-6;
-    const count=Math.min(6,Math.max(2,Math.ceil(text.length/22)));
-    for(let i=0;i<count;i++) this.blips.push(setTimeout(()=>music.effect('blip', voice+[0,2,-1,3,1,-2][i]),i*75));
+    for (const timer of this.blips) clearTimeout(timer);
+    this.blips = [];
+    if (!this.portraitKey) { music.effect('select'); return; }
+    const voice = [...element('speaker').textContent!].reduce((sum, letter) => sum + letter.charCodeAt(0), 0) % 12 - 6;
+    const count = Math.min(6, Math.max(2, Math.ceil(text.length / 22)));
+    for (let i = 0; i < count; i++) this.blips.push(setTimeout(() => music.effect('blip', voice + [0, 2, -1, 3, 1, -2][i]), i * 75));
   }
 
   private travel({ to, spawn }: { to: string; spawn: string }, door = false) {
-    if(door) music.effect('door');
+    if (door) music.effect('door');
     this.leaving = true;
     this.player.setVelocity(0);
     element('prompt').textContent = '';
@@ -1050,79 +1050,79 @@ export class AreaScene extends Phaser.Scene {
 
   private closeDialogue() {
     // Focus left on the hidden Continue button would strand the keyboard, so it returns to the map.
-    if(element('dialogue').contains(document.activeElement)) element('game').focus({preventScroll:true});
-    this.active=undefined;this.options=[];this.portraitKey=undefined;this.dialogueBasePortrait=undefined;this.menu=undefined;this.returning=false;element('dialogue').hidden=true;element('choices').hidden=true;element('continue').hidden=false;
+    if (element('dialogue').contains(document.activeElement)) element('game').focus({ preventScroll: true });
+    this.active = undefined; this.options = []; this.portraitKey = undefined; this.dialogueBasePortrait = undefined; this.menu = undefined; this.returning = false; element('dialogue').hidden = true; element('choices').hidden = true; element('continue').hidden = false;
     if (this.pendingStories.length && !this.leaving) {
       this.showStory(STORIES[this.pendingStories.shift()!], () => this.closeDialogue());
       return;
     }
-    if(this.pendingCampTalk && !this.leaving) {
-      const companion=this.pendingCampTalk;
-      this.pendingCampTalk=undefined;
-      const moment=companion==='octopus'?octopusAtCamp(this.context()):companion==='hero'?heroAtCamp(this.context()):companion==='bear'?bearAtCamp(this.context()):companion==='vulture'?vultureAtCamp(this.context()):frogAtCamp(this.context());
-      if(moment) { this.say(moment,companion); return; }
+    if (this.pendingCampTalk && !this.leaving) {
+      const companion = this.pendingCampTalk;
+      this.pendingCampTalk = undefined;
+      const moment = companion === 'octopus' ? octopusAtCamp(this.context()) : companion === 'hero' ? heroAtCamp(this.context()) : companion === 'bear' ? bearAtCamp(this.context()) : companion === 'vulture' ? vultureAtCamp(this.context()) : frogAtCamp(this.context());
+      if (moment) { this.say(moment, companion); return; }
     }
-    if(this.pendingKeepsake && !this.leaving){
-      this.pendingKeepsake=false;
-      const slot=loadGear().bear.length<SLOTS?loadGear().bear.length:-1;
-      this.openPanel(()=>new KeepsakeView(slot>=0,()=>{
-        if(slot>=0){saved=saveGear(equip(loadGear(),loadWorld().found.filter(id=>id==='broken-link'),'bear',slot,'broken-link')) && saved;this.closePanel();}
-        else{this.closePanel();this.openEquipment();}
-      },()=>this.closePanel()));
+    if (this.pendingKeepsake && !this.leaving) {
+      this.pendingKeepsake = false;
+      const slot = loadGear().bear.length < SLOTS ? loadGear().bear.length : -1;
+      this.openPanel(() => new KeepsakeView(slot >= 0, () => {
+        if (slot >= 0) { saved = saveGear(equip(loadGear(), loadWorld().found.filter(id => id === 'broken-link'), 'bear', slot, 'broken-link')) && saved; this.closePanel(); }
+        else { this.closePanel(); this.openEquipment(); }
+      }, () => this.closePanel()));
       return;
     }
-    const fight=this.pendingFight;this.pendingFight=undefined;
-    if(fight && !this.leaving) { this.time.delayedCall(250, () => this.beginBattle(fight)); }
-    const shop=this.pendingShop;this.pendingShop=undefined;
-    if(shop) this.openShop(shop);
-    if(this.pendingCook) { this.pendingCook=false; this.openPanel(()=>new CookView(loadWorld(), world=>{ saved=saveWorld(world); this.renderMemory(); }, ()=>this.closePanel())); }
+    const fight = this.pendingFight; this.pendingFight = undefined;
+    if (fight && !this.leaving) { this.time.delayedCall(250, () => this.beginBattle(fight)); }
+    const shop = this.pendingShop; this.pendingShop = undefined;
+    if (shop) this.openShop(shop);
+    if (this.pendingCook) { this.pendingCook = false; this.openPanel(() => new CookView(loadWorld(), world => { saved = saveWorld(world); this.renderMemory(); }, () => this.closePanel())); }
     // Back to the priest for the next orders: the same pale road the church wakes you by.
-    if(this.pendingChurch && !this.leaving) {
-      this.pendingChurch=false;
+    if (this.pendingChurch && !this.leaving) {
+      this.pendingChurch = false;
       music.effect('barrier');
-      this.leaving=true; this.cameras.main.fadeOut(700,16,27,24);
-      this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.start('church'));
+      this.leaving = true; this.cameras.main.fadeOut(700, 16, 27, 24);
+      this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('church'));
       return;
     }
     // Out to sea on the seal's boat, in the dark.
-    const sail=this.pendingSail;this.pendingSail=undefined;
-    if(sail && !this.leaving) {
+    const sail = this.pendingSail; this.pendingSail = undefined;
+    if (sail && !this.leaving) {
       music.effect('step-water');
-      this.leaving=true; this.cameras.main.fadeOut(900,8,14,20);
-      this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.start(sail==='out' ? 'outlaw-port' : 'creek',{ spawn: sail==='out' ? 'from-creek' : 'from-causeway' }));
+      this.leaving = true; this.cameras.main.fadeOut(900, 8, 14, 20);
+      this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(sail === 'out' ? 'outlaw-port' : 'creek', { spawn: sail === 'out' ? 'from-creek' : 'from-causeway' }));
       return;
     }
-    const ending=this.pendingEnding;this.pendingEnding=undefined;
-    if(ending && !this.leaving) { this.time.delayedCall(400, () => this.openPanel(()=>new EndingView(endingStory(loadWorld(), ending, held(loadMemory()).includes('name')), ()=>{ this.closePanel(); if(ending==='good') this.travel({to:'harbour',spawn:'from-square'}); else music.play(this.area.music); }))); return; }
-    const tithe=this.pendingTithe;this.pendingTithe=undefined;
-    if(tithe && !this.leaving) { this.time.delayedCall(250, () => this.say({ speaker: 'THE PRIEST', lines: [
+    const ending = this.pendingEnding; this.pendingEnding = undefined;
+    if (ending && !this.leaving) { this.time.delayedCall(400, () => this.openPanel(() => new EndingView(endingStory(loadWorld(), ending, held(loadMemory()).includes('name')), () => { this.closePanel(); if (ending === 'good') this.travel({ to: 'harbour', spawn: 'from-square' }); else music.play(this.area.music); }))); return; }
+    const tithe = this.pendingTithe; this.pendingTithe = undefined;
+    if (tithe && !this.leaving) { this.time.delayedCall(250, () => this.say({ speaker: 'THE PRIEST', lines: [
       'He doesn\'t ask for coins. He puts his hand on your head instead, and holds it there until something goes.',
       `You don\'t remember what it was. The ledger does: ${tithe.join(', ')}.`,
     ] }, 'priest')); return; }
-    const bout=this.pendingBout;this.pendingBout=undefined;
-    if(bout!==undefined && !this.leaving) { this.time.delayedCall(250, () => this.fightBout(bout)); return; }
-    const shells=this.pendingShells;this.pendingShells=undefined;
-    if(shells) { this.openPanel(()=>new ShellView(shells, coins=>{ const world=loadWorld(); saved=saveWorld({ ...world, coins: Math.max(0, world.coins+coins), flags: coins>0 && !world.flags.includes('shells-won') ? [...world.flags, 'shells-won'] : world.flags }); this.renderMemory(); }, ()=>this.closePanel())); return; }
-    const arm=this.pendingArm;this.pendingArm=undefined;
-    if(arm) { this.openPanel(()=>new ArmView(arm, coins=>{ const world=loadWorld(); saved=saveWorld({ ...world, coins: Math.max(0, world.coins+coins), flags: coins>0 && !world.flags.includes('arm-won') ? [...world.flags, 'arm-won'] : world.flags }); this.renderMemory(); }, ()=>this.closePanel())); return; }
-    const road=this.pendingTravel;this.pendingTravel=undefined;
-    if(road && !this.leaving) {
+    const bout = this.pendingBout; this.pendingBout = undefined;
+    if (bout !== undefined && !this.leaving) { this.time.delayedCall(250, () => this.fightBout(bout)); return; }
+    const shells = this.pendingShells; this.pendingShells = undefined;
+    if (shells) { this.openPanel(() => new ShellView(shells, coins => { const world = loadWorld(); saved = saveWorld({ ...world, coins: Math.max(0, world.coins + coins), flags: coins > 0 && !world.flags.includes('shells-won') ? [...world.flags, 'shells-won'] : world.flags }); this.renderMemory(); }, () => this.closePanel())); return; }
+    const arm = this.pendingArm; this.pendingArm = undefined;
+    if (arm) { this.openPanel(() => new ArmView(arm, coins => { const world = loadWorld(); saved = saveWorld({ ...world, coins: Math.max(0, world.coins + coins), flags: coins > 0 && !world.flags.includes('arm-won') ? [...world.flags, 'arm-won'] : world.flags }); this.renderMemory(); }, () => this.closePanel())); return; }
+    const road = this.pendingTravel; this.pendingTravel = undefined;
+    if (road && !this.leaving) {
       // The old road: a fade to pale light, and out at the other stone.
       music.effect('barrier');
-      this.leaving=true; this.cameras.main.fadeOut(600,168,216,224);
-      this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.start(WAYSTONES[road].area,{ spawn: 'from-waystone' }));
+      this.leaving = true; this.cameras.main.fadeOut(600, 168, 216, 224);
+      this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(WAYSTONES[road].area, { spawn: 'from-waystone' }));
     }
-    const dice=this.pendingDice;this.pendingDice=undefined;
-    if(dice) this.openPanel(()=>new DiceView(dice.opponent, dice.stake, coins=>{ const world=loadWorld(); saved=saveWorld({ ...world, coins: Math.max(0, world.coins+coins) }); this.renderMemory(); }, ()=>this.closePanel()));
-    const camp=this.pendingRest;this.pendingRest=undefined;
+    const dice = this.pendingDice; this.pendingDice = undefined;
+    if (dice) this.openPanel(() => new DiceView(dice.opponent, dice.stake, coins => { const world = loadWorld(); saved = saveWorld({ ...world, coins: Math.max(0, world.coins + coins) }); this.renderMemory(); }, () => this.closePanel()));
+    const camp = this.pendingRest; this.pendingRest = undefined;
     // Resting heals every wound and brings the area's enemies back, so the area starts over around the fire.
-    if(camp && !this.leaving) {
+    if (camp && !this.leaving) {
       PICKED.clear();
-      music.effect('rest'); const cost=this.area.camps?.[camp]?.cost ?? 0; saved=saveWorld(rest({ ...loadWorld(), coins: Math.max(0, loadWorld().coins-cost), }));
-      const fallen=loadWorld().fallen ?? []; if(fallen.length) this.time.delayedCall(1200, () => this.notice(`${fallen.map(id=>MEMBERS[id].name).join(' and ')} ${fallen.length>1?'do':'does'} not wake. Rest won't raise the fallen: only the church can.`, 5000));
-      const sleep=()=>{ this.leaving=true; this.cameras.main.fadeOut(400,16,27,24); this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.restart({spawn:camp})); };
+      music.effect('rest'); const cost = this.area.camps?.[camp]?.cost ?? 0; saved = saveWorld(rest({ ...loadWorld(), coins: Math.max(0, loadWorld().coins - cost), }));
+      const fallen = loadWorld().fallen ?? []; if (fallen.length) this.time.delayedCall(1200, () => this.notice(`${fallen.map(id => MEMBERS[id].name).join(' and ')} ${fallen.length > 1 ? 'do' : 'does'} not wake. Rest won't raise the fallen: only the church can.`, 5000));
+      const sleep = () => { this.leaving = true; this.cameras.main.fadeOut(400, 16, 27, 24); this.cameras.main.once('camerafadeoutcomplete', () => this.scene.restart({ spawn: camp })); };
       // Once the vulture has shown how, a memory can be written down before sleeping.
-      if(loadWorld().flags.includes('anchors-known')) this.writeDown(sleep); else sleep();
+      if (loadWorld().flags.includes('anchors-known')) this.writeDown(sleep); else sleep();
     }
   }
 
@@ -1135,7 +1135,7 @@ export class AreaScene extends Phaser.Scene {
     element('hud').inert = !enabled;
     element('hud').setAttribute('aria-hidden', String(!enabled));
     document.querySelector<HTMLElement>('.touch-controls')!.inert = !enabled;
-    if(this.input.keyboard) this.input.keyboard.enabled = enabled;
+    if (this.input.keyboard) this.input.keyboard.enabled = enabled;
   }
 
   private beginKrakenTutorial() {
@@ -1162,7 +1162,7 @@ export class AreaScene extends Phaser.Scene {
 
   private beginBattle(foe: Foe, introduced = false) {
     // A foe just fled from gives the party a moment to get clear.
-    if(this.overlay || this.active || this.leaving || !foe.sprite.active || (foe.fledAt !== undefined && this.time.now - foe.fledAt < 2500)) return;
+    if (this.overlay || this.active || this.leaving || !foe.sprite.active || (foe.fledAt !== undefined && this.time.now - foe.fledAt < 2500)) return;
     // A hunt stays an escape sequence: ordinary encounters cannot interrupt it.
     if (hunting(loadPursuit()) && !foe.pursuer) return;
     const introduction = BOSS_STORIES[foe.encounter];
@@ -1179,25 +1179,25 @@ export class AreaScene extends Phaser.Scene {
     music.play(battleTheme(foe.encounter));
     this.overlay = new BattleView(this.textures.getBase64('hero'), (won, battle) => {
       this.overlay = undefined;
-      if(foe.encounter==='human' && battle.recoveredMemories.length) saved=saveMemory(battle.recoveredMemories.reduce((memory,id)=>recall(memory,id),loadMemory())) && saved;
-      if(won) {
+      if (foe.encounter === 'human' && battle.recoveredMemories.length) saved = saveMemory(battle.recoveredMemories.reduce((memory, id) => recall(memory, id), loadMemory())) && saved;
+      if (won) {
         if (foe.pursuer) this.finishHunt('You drove him back. His hunt is over.');
         foe.sprite.disableBody(true, true);
         foe.signature.setVisible(false);
         music.play(this.area.music);
         // The spoils, and whatever supplies were not used up.
-        saved = saveWorld(fell({ ...loadWorld(), coins: loadWorld().coins + (foe.encounter==='human'?0:BOUNTY[foe.encounter]), supplies: battle.supplies, wounds: woundsAfter(battle), drained: drainedAfter(battle) }, downed(battle)));
+        saved = saveWorld(fell({ ...loadWorld(), coins: loadWorld().coins + (foe.encounter === 'human' ? 0 : BOUNTY[foe.encounter]), supplies: battle.supplies, wounds: woundsAfter(battle), drained: drainedAfter(battle) }, downed(battle)));
         this.renderMemory();
-        if(foe.encounter!=='human') this.mourn(battle);
-        if(foe.defeat) {
-          const next=apply(this.context(), foe.defeat);
-          saved=saveWorld(next.world);
+        if (foe.encounter !== 'human') this.mourn(battle);
+        if (foe.defeat) {
+          const next = apply(this.context(), foe.defeat);
+          saved = saveWorld(next.world);
           this.refreshProps();
         }
         // A region's lieutenant down: the brand knows, and the church will have new orders.
         const reportVictory = () => {
-          if(foe.encounter==='human'){this.say(conversation(this.area.dialogue,'stranger',this.context()),'human');return;}
-          if(LIEUTENANTS.includes(foe.encounter)) this.say({ speaker: 'THE BRAND', lines: [
+          if (foe.encounter === 'human') { this.say(conversation(this.area.dialogue, 'stranger', this.context()), 'human'); return; }
+          if (LIEUTENANTS.includes(foe.encounter)) this.say({ speaker: 'THE BRAND', lines: [
             'The brand on your wrist goes warm, the way it does when the church wants you.',
             'It is done here. The priest will have new orders.',
           ], choices: [
@@ -1212,7 +1212,7 @@ export class AreaScene extends Phaser.Scene {
           this.resumeExploration();
           reportVictory();
         }
-      } else if(battle.phase === 'fled') {
+      } else if (battle.phase === 'fled') {
         // A getaway: half the coins dropped, the parting blow's wound kept, and some distance put between them.
         music.play(this.area.music);
         saved = saveWorld(fell({ ...fleeing(loadWorld()), supplies: battle.supplies, wounds: woundsAfter(battle), drained: drainedAfter(battle) }, downed(battle)));
@@ -1242,7 +1242,7 @@ export class AreaScene extends Phaser.Scene {
   // with no rest: wounds and spent mana carry. Losing or yielding walks the party out hurt, but nobody dies in the ring.
   private fightBout(index: number, earned = 0) {
     const bout = BOUTS[index];
-    if(this.overlay || this.leaving || !bout) return;
+    if (this.overlay || this.leaving || !bout) return;
     this.player.setVelocity(0);
     this.held.clear();
     this.physics.pause();
@@ -1274,7 +1274,7 @@ export class AreaScene extends Phaser.Scene {
   // A shop opens after its keeper has spoken, if there is anything left to sell.
   private openShop(shop: ShopId) {
     const world = loadWorld();
-    if(this.overlay || this.leaving || SHOPS[shop].wares.every(ware => 'deed' in ware && world.flags.includes(ware.deed))) return;
+    if (this.overlay || this.leaving || SHOPS[shop].wares.every(ware => 'deed' in ware && world.flags.includes(ware.deed))) return;
     this.player.setVelocity(0);
     this.held.clear();
     this.physics.pause();
@@ -1287,7 +1287,7 @@ export class AreaScene extends Phaser.Scene {
   }
 
   private openFishing(spot: SpotId) {
-    if(this.overlay || this.leaving) return;
+    if (this.overlay || this.leaving) return;
     this.player.setVelocity(0);
     this.held.clear();
     this.physics.pause();
@@ -1299,7 +1299,7 @@ export class AreaScene extends Phaser.Scene {
   }
 
   private openSettings() {
-    if(this.overlay || this.leaving) return;
+    if (this.overlay || this.leaving) return;
     this.closeDialogue();
     if (this.overlay || this.leaving) return;
     this.player.setVelocity(0);
@@ -1315,14 +1315,14 @@ export class AreaScene extends Phaser.Scene {
         close();
         const ids = new Set(seenStories());
         for (const flag of loadWorld().flags) { const id = STORY_FLAGS[flag]; if (id) ids.add(id); }
-        const world=loadWorld();
-        const ending=world.flags.includes('human-spared')?'good':world.flags.includes('human-seated')?'bad':undefined;
-        this.openPanel(() => new MemoriesView([...ids], () => this.closePanel(), ending?endingStory(world,ending,held(loadMemory()).includes('name')):undefined));
+        const world = loadWorld();
+        const ending = world.flags.includes('human-spared') ? 'good' : world.flags.includes('human-seated') ? 'bad' : undefined;
+        this.openPanel(() => new MemoriesView([...ids], () => this.closePanel(), ending ? endingStory(world, ending, held(loadMemory()).includes('name')) : undefined));
       },
       equipment: () => { close(); this.openEquipment(); },
       party: () => { close(); this.openParty(); },
-      journal: () => { close(); this.openPanel(()=>new JournalView(loadJournal(), ()=>this.closePanel(), orders(loadWorld()), leads(loadWorld()))); },
-      bestiary: () => { close(); this.openPanel(()=>new BestiaryView(loadBestiary(), loadGrimoire(), ()=>this.closePanel())); },
+      journal: () => { close(); this.openPanel(() => new JournalView(loadJournal(), () => this.closePanel(), orders(loadWorld()), leads(loadWorld()))); },
+      bestiary: () => { close(); this.openPanel(() => new BestiaryView(loadBestiary(), loadGrimoire(), () => this.closePanel())); },
       // Returning to the cot always restarts the church, which also resets its encounters.
       restart: () => { close(); this.scene.start('church'); },
     });
@@ -1330,7 +1330,7 @@ export class AreaScene extends Phaser.Scene {
 
   // A panel over the map: cooking, the journal, or a game of bones.
   private openPanel(make: () => MemoriesView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView | KeepsakeView) {
-    if(this.overlay || this.leaving) return;
+    if (this.overlay || this.leaving) return;
     this.player.setVelocity(0);
     this.held.clear();
     this.physics.pause();
@@ -1342,7 +1342,7 @@ export class AreaScene extends Phaser.Scene {
 
   // Who goes into the next fight.
   private openParty() {
-    this.openPanel(()=>new PartyView(loadWorld(), this.partyOptions(), this.textures.getBase64('hero'), world=>{ saved=saveWorld(world); }, ()=>this.closePanel()));
+    this.openPanel(() => new PartyView(loadWorld(), this.partyOptions(), this.textures.getBase64('hero'), world => { saved = saveWorld(world); }, () => this.closePanel()));
   }
 
   private closePanel() {
@@ -1361,7 +1361,7 @@ export class AreaScene extends Phaser.Scene {
   private toggleSneak() {
     if (hunting(loadPursuit()) && !this.sneaking) { this.notice('He already knows your trail. Run with your mana showing.'); return; }
     // Hiding needs mana to hold down.
-    if(!this.sneaking && (createBattle('locust', [], this.partyOptions()).party.find(member=>member.id==='chameleon')?.mana ?? 0)<=0) { this.notice('No mana left to hide.'); return; }
+    if (!this.sneaking && (createBattle('locust', [], this.partyOptions()).party.find(member => member.id === 'chameleon')?.mana ?? 0) <= 0) { this.notice('No mana left to hide.'); return; }
     this.sneaking = !this.sneaking;
     this.lastDrain = this.time.now;
     this.player.setAlpha(this.sneaking ? 0.55 : 1);
@@ -1371,7 +1371,7 @@ export class AreaScene extends Phaser.Scene {
   }
 
   private openEquipment() {
-    if(this.overlay || this.leaving) return;
+    if (this.overlay || this.leaving) return;
     this.player.setVelocity(0);
     this.held.clear();
     this.physics.pause();
@@ -1394,8 +1394,8 @@ export class AreaScene extends Phaser.Scene {
     this.overlay = new AnchorView(loadMemory(), friends, (id, reminder) => {
       this.overlay?.destroy();
       this.overlay = undefined;
-      if(reminder) { saved = saveMemory(remind(loadMemory(), reminder.by, reminder.id)); music.effect('find'); }
-      if(id) { saved = saveMemory(anchor(loadMemory(), id)); music.effect('select'); }
+      if (reminder) { saved = saveMemory(remind(loadMemory(), reminder.by, reminder.id)); music.effect('find'); }
+      if (id) { saved = saveMemory(anchor(loadMemory(), id)); music.effect('select'); }
       this.renderMemory();
       this.setExplorationEnabled(true);
       this.physics.resume();
@@ -1434,32 +1434,32 @@ export class AreaScene extends Phaser.Scene {
   }
 
   private locationTitle() {
-    if(this.area.key==='town') return millbrookState(this.context()).name;
-    if(this.area.key==='fort') return fortState(this.context()).name;
-    if(this.area.key==='wickmere') return marshState(this.context()).name;
-    if(this.area.key==='hold') return holdsState(this.context()).name;
-    if(this.area.key==='outlaw-port') return oceanState(this.context()).name;
+    if (this.area.key === 'town') return millbrookState(this.context()).name;
+    if (this.area.key === 'fort') return fortState(this.context()).name;
+    if (this.area.key === 'wickmere') return marshState(this.context()).name;
+    if (this.area.key === 'hold') return holdsState(this.context()).name;
+    if (this.area.key === 'outlaw-port') return oceanState(this.context()).name;
     if (this.area.key === 'square') return 'Capital City';
     if (this.area.key === 'harbour') return 'Harbor';
     return this.area.place;
   }
 
   private showTownEcho(place: 'millbrook' | 'fort' | 'wickmere' | 'hold' | 'port' = 'millbrook') {
-    const key=`${loadWorld().deaths}:${place}`;
-    if(TOWN_ECHOES.has(key)) return;
+    const key = `${loadWorld().deaths}:${place}`;
+    if (TOWN_ECHOES.has(key)) return;
     TOWN_ECHOES.add(key);
-    this.time.delayedCall(2800,()=>{
-      if(this.leaving || hunting(loadPursuit())) return;
-      this.memoryEcho=document.createElement('aside');
-      this.memoryEcho.className='memory-echo';
-      this.memoryEcho.setAttribute('role','status');
-      const title=place==='port'?'A voice beneath the hood':place==='hold'?'A watch you cannot keep':place==='fort'?'A place kept on paper':place==='wickmere'?'A pair of careful hands':'A road you should know';
-      const text=place==='port'?'You listen for a voice that once said your name. The deck ropes creak. You cannot remember who you are waiting to hear.':place==='hold'?'Your hands begin an old guard’s drill, then stop. You know there should be another movement. You cannot remember it.':place==='fort'?'You turn toward the barracks. A long bunk, a folded note. You cannot remember whose handwriting you were looking for.':place==='wickmere'?'You reach for a basin that is not there. Someone used to steady it for you. You cannot remember who.':'Your feet turn toward the mill. You cannot remember who taught them the way.';
-      this.memoryEcho.innerHTML=`<button type="button" aria-label="Dismiss memory echo">×</button><strong>${title}</strong><p>${text}</p>`;
+    this.time.delayedCall(2800, () => {
+      if (this.leaving || hunting(loadPursuit())) return;
+      this.memoryEcho = document.createElement('aside');
+      this.memoryEcho.className = 'memory-echo';
+      this.memoryEcho.setAttribute('role', 'status');
+      const title = place === 'port' ? 'A voice beneath the hood' : place === 'hold' ? 'A watch you cannot keep' : place === 'fort' ? 'A place kept on paper' : place === 'wickmere' ? 'A pair of careful hands' : 'A road you should know';
+      const text = place === 'port' ? 'You listen for a voice that once said your name. The deck ropes creak. You cannot remember who you are waiting to hear.' : place === 'hold' ? 'Your hands begin an old guard’s drill, then stop. You know there should be another movement. You cannot remember it.' : place === 'fort' ? 'You turn toward the barracks. A long bunk, a folded note. You cannot remember whose handwriting you were looking for.' : place === 'wickmere' ? 'You reach for a basin that is not there. Someone used to steady it for you. You cannot remember who.' : 'Your feet turn toward the mill. You cannot remember who taught them the way.';
+      this.memoryEcho.innerHTML = `<button type="button" aria-label="Dismiss memory echo">×</button><strong>${title}</strong><p>${text}</p>`;
       document.querySelector('.game-frame')!.append(this.memoryEcho);
-      this.memoryEcho.querySelector('button')!.addEventListener('click',()=>this.memoryEcho?.remove(),{signal:this.cleanup.signal});
+      this.memoryEcho.querySelector('button')!.addEventListener('click', () => this.memoryEcho?.remove(), { signal: this.cleanup.signal });
       music.effect('memory');
-      this.time.delayedCall(10000,()=>this.memoryEcho?.remove());
+      this.time.delayedCall(10000, () => this.memoryEcho?.remove());
     });
   }
 
@@ -1472,9 +1472,9 @@ export class AreaScene extends Phaser.Scene {
     // The tide chooses: the same memory however often the game is reloaded, until he stands.
     const taken = tideTakesAll(loadMemory(), loadWorld().deaths);
     if (!taken.length) {
-      const written=Boolean(loadMemory().anchors?.length);
-      saved=saveMemory(forgetAll(loadMemory(),[]));this.renderMemory();music.play(this.area.music);this.resumeExploration();
-      if(written)this.notice('Your written memory survived. Write it down again before the next death.',5000);
+      const written = Boolean(loadMemory().anchors?.length);
+      saved = saveMemory(forgetAll(loadMemory(), [])); this.renderMemory(); music.play(this.area.music); this.resumeExploration();
+      if (written) this.notice('Your written memory survived. Write it down again before the next death.', 5000);
       return;
     }
     this.showStory(resurrectionStory(taken.map(id => memories[id].name)), () => {
@@ -1496,7 +1496,7 @@ export class AreaScene extends Phaser.Scene {
   private partyOptions(fighting = false, lieutenant = false): BattleOptions {
     const world = loadWorld();
     const memory = loadMemory();
-    return { hollow: hollow(memory), lostMemories: memory.lost.filter(id=>!held(memory).includes(id)), gear: loadGear(), books: settle(loadBooks(), roster(world)), roster: this.area.solo ? ['chameleon'] : fighting ? lineup(world, lieutenant) : roster(world), tempered: world.tempered ?? [], supplies: world.supplies, wounds: world.wounds, drained: world.drained };
+    return { hollow: hollow(memory), lostMemories: memory.lost.filter(id => !held(memory).includes(id)), gear: loadGear(), books: settle(loadBooks(), roster(world)), roster: this.area.solo ? ['chameleon'] : fighting ? lineup(world, lieutenant) : roster(world), tempered: world.tempered ?? [], supplies: world.supplies, wounds: world.wounds, drained: world.drained };
   }
 
   private toggleHud() {
@@ -1533,7 +1533,7 @@ export class AreaScene extends Phaser.Scene {
     this.setExplorationEnabled(true);
     this.physics.resume();
     if (hunting(loadPursuit())) music.play('boss-inquisitor');
-    element('game').focus({preventScroll:true});
+    element('game').focus({ preventScroll: true });
   }
 
   private prepareHunt() {
@@ -1607,30 +1607,30 @@ export class AreaScene extends Phaser.Scene {
     if (this.following) {
       const entrance = this.point(this.arrival);
       const cell = this.huntCell(entrance.x, entrance.y + 8);
-      if (canWalk(cell.x, cell.y) && (cell.x === target.x && cell.y === target.y || pursuitPath(cell,target,map.width,map.height,canWalk).length)) spawn = cell;
+      if (canWalk(cell.x, cell.y) && (cell.x === target.x && cell.y === target.y || pursuitPath(cell, target, map.width, map.height, canWalk).length)) spawn = cell;
     }
     if (!spawn) {
       const candidates: Cell[] = [];
-      for(let y = Math.max(0,target.y-14); y < Math.min(map.height,target.y+15); y++)
-        for(let x = Math.max(0,target.x-14); x < Math.min(map.width,target.x+15); x++) {
-          const distance = Math.hypot(x-target.x,y-target.y);
-          if(canWalk(x,y) && distance >= 3 && distance <= 14) candidates.push({ x, y });
+      for (let y = Math.max(0, target.y - 14); y < Math.min(map.height, target.y + 15); y++)
+        for (let x = Math.max(0, target.x - 14); x < Math.min(map.width, target.x + 15); x++) {
+          const distance = Math.hypot(x - target.x, y - target.y);
+          if (canWalk(x, y) && distance >= 3 && distance <= 14) candidates.push({ x, y });
         }
       // Try several distant, reachable positions; never spawn on the player's tile.
-      const distant = candidates.filter(cell=>Math.hypot(cell.x-target.x,cell.y-target.y)>=7);
-      const close = candidates.filter(cell=>Math.hypot(cell.x-target.x,cell.y-target.y)<7);
-      for(const cell of [...Phaser.Utils.Array.Shuffle(distant).slice(0,24), ...Phaser.Utils.Array.Shuffle(close).slice(0,12)]) {
-        if(pursuitPath(cell,target,map.width,map.height,canWalk).length) { spawn=cell; break; }
+      const distant = candidates.filter(cell => Math.hypot(cell.x - target.x, cell.y - target.y) >= 7);
+      const close = candidates.filter(cell => Math.hypot(cell.x - target.x, cell.y - target.y) < 7);
+      for (const cell of [...Phaser.Utils.Array.Shuffle(distant).slice(0, 24), ...Phaser.Utils.Array.Shuffle(close).slice(0, 12)]) {
+        if (pursuitPath(cell, target, map.width, map.height, canWalk).length) { spawn = cell; break; }
       }
     }
     if (!spawn) return;
-    this.createFoe({ name: '__hunter', x: (spawn.x+.5)*map.tileWidth, y: (spawn.y+.5)*map.tileHeight-9 }, { point: '__hunter', encounter: 'inquisitor' });
-    this.hunter = this.foes[this.foes.length-1];
+    this.createFoe({ name: '__hunter', x: (spawn.x + .5) * map.tileWidth, y: (spawn.y + .5) * map.tileHeight - 9 }, { point: '__hunter', encounter: 'inquisitor' });
+    this.hunter = this.foes[this.foes.length - 1];
     this.hunter.pursuer = true; this.hunter.ambush = false; this.hunter.hidden = false;
     // Fit the same narrow paths as the hero; his broad robe is only visual.
-    this.hunter.sprite.setSize(10,8).setOffset(11,21).setAlpha(1);
+    this.hunter.sprite.setSize(10, 8).setOffset(11, 21).setAlpha(1);
     this.hunter.signature.setAlpha(1);
-    this.hunter.signature.list.filter(child=>child instanceof Phaser.GameObjects.Text).forEach(child=>(child as Phaser.GameObjects.Text).setColor('#f5b1a0'));
+    this.hunter.signature.list.filter(child => child instanceof Phaser.GameObjects.Text).forEach(child => (child as Phaser.GameObjects.Text).setColor('#f5b1a0'));
     music.play('boss-inquisitor');
   }
 
@@ -1657,121 +1657,121 @@ export class AreaScene extends Phaser.Scene {
     this.renderHunt();
     if (next.phase !== 'chasing') return;
     this.hunterDelay = Math.max(0, this.hunterDelay - delta);
-    if (!this.hunter && this.hunterDelay === 0) { this.spawnHunter(); if(!this.hunter) this.hunterDelay = 1000; }
+    if (!this.hunter && this.hunterDelay === 0) { this.spawnHunter(); if (!this.hunter) this.hunterDelay = 1000; }
     const hunter = this.hunter;
     if (!hunter?.sprite.active) return;
     if (hunter.fledAt !== undefined && time - hunter.fledAt < 2500) { hunter.sprite.setVelocity(0); return; }
     const map = this.floor.tilemap;
-    const from = this.huntCell(hunter.sprite.x, hunter.sprite.y+9);
-    const to = this.huntCell(this.player.x, this.player.y+8);
-    if(time >= this.huntRouteAt) {
-      this.huntRoute = pursuitPath(from,to,map.width,map.height,(x,y)=>this.huntWalkable(x,y));
+    const from = this.huntCell(hunter.sprite.x, hunter.sprite.y + 9);
+    const to = this.huntCell(this.player.x, this.player.y + 8);
+    if (time >= this.huntRouteAt) {
+      this.huntRoute = pursuitPath(from, to, map.width, map.height, (x, y) => this.huntWalkable(x, y));
       this.huntRouteAt = time + 350;
     }
     let waypoint = this.huntRoute[0];
-    if(waypoint && Phaser.Math.Distance.Between(hunter.sprite.x,hunter.sprite.y+9,(waypoint.x+.5)*map.tileWidth,(waypoint.y+.5)*map.tileHeight)<2) { this.huntRoute.shift(); waypoint=this.huntRoute[0]; }
-    if(waypoint) this.physics.moveTo(hunter.sprite,(waypoint.x+.5)*map.tileWidth,(waypoint.y+.5)*map.tileHeight-9,64);
-    else if(from.x===to.x && from.y===to.y) this.physics.moveTo(hunter.sprite,this.player.x,this.player.y-1,64);
+    if (waypoint && Phaser.Math.Distance.Between(hunter.sprite.x, hunter.sprite.y + 9, (waypoint.x + .5) * map.tileWidth, (waypoint.y + .5) * map.tileHeight) < 2) { this.huntRoute.shift(); waypoint = this.huntRoute[0]; }
+    if (waypoint) this.physics.moveTo(hunter.sprite, (waypoint.x + .5) * map.tileWidth, (waypoint.y + .5) * map.tileHeight - 9, 64);
+    else if (from.x === to.x && from.y === to.y) this.physics.moveTo(hunter.sprite, this.player.x, this.player.y - 1, 64);
     else hunter.sprite.setVelocity(0);
-    hunter.sprite.setFlipX(this.player.x<hunter.sprite.x);
-    hunter.signature.setPosition(hunter.sprite.x,hunter.sprite.y);
+    hunter.sprite.setFlipX(this.player.x < hunter.sprite.x);
+    hunter.signature.setPosition(hunter.sprite.x, hunter.sprite.y);
   }
 
   update(time: number, delta: number) {
-    if(!this.player) return;
-    if(this.overlay || this.leaving) { this.player.setVelocity(0); return; }
+    if (!this.player) return;
+    if (this.overlay || this.leaving) { this.player.setVelocity(0); return; }
     this.updateHunt(time, delta);
-    this.millbrook?.update(delta,Boolean(this.active)||hunting(loadPursuit()),this.player);
-    this.fortLife?.update(delta,Boolean(this.active)||hunting(loadPursuit()),this.player);
-    this.marshLife?.update(delta,Boolean(this.active)||hunting(loadPursuit()),this.player);
-    this.holdsLife?.update(delta,Boolean(this.active)||hunting(loadPursuit()),this.player);
-    this.oceanLife?.update(delta,Boolean(this.active)||hunting(loadPursuit()),this.player);
-    if(!this.active) this.passTime(delta, time);
-    const pressed=(direction:Direction,...keys:string[])=>this.held.has(direction)||keys.some(key=>this.keys[key].isDown);
-    let x=Number(pressed('right','D','RIGHT'))-Number(pressed('left','A','LEFT'));
-    let y=Number(pressed('down','S','DOWN'))-Number(pressed('up','W','UP'));
-    if(this.active || this.leaping){x=0;y=0;}
-    if(x||y) this.facing=Math.abs(x)>=Math.abs(y) ? { dx: Math.sign(x), dy: 0 } : { dx: 0, dy: Math.sign(y) };
-    const motion=new Phaser.Math.Vector2(x,y).normalize().scale(this.sneaking ? 42 : 70);
-    if(!this.leaping) { this.player.setVelocity(motion.x,motion.y); this.slideAroundCorners(x,y); this.footing(time); }
+    this.millbrook?.update(delta, Boolean(this.active) || hunting(loadPursuit()), this.player);
+    this.fortLife?.update(delta, Boolean(this.active) || hunting(loadPursuit()), this.player);
+    this.marshLife?.update(delta, Boolean(this.active) || hunting(loadPursuit()), this.player);
+    this.holdsLife?.update(delta, Boolean(this.active) || hunting(loadPursuit()), this.player);
+    this.oceanLife?.update(delta, Boolean(this.active) || hunting(loadPursuit()), this.player);
+    if (!this.active) this.passTime(delta, time);
+    const pressed = (direction: Direction, ...keys: string[]) => this.held.has(direction) || keys.some(key => this.keys[key].isDown);
+    let x = Number(pressed('right', 'D', 'RIGHT')) - Number(pressed('left', 'A', 'LEFT'));
+    let y = Number(pressed('down', 'S', 'DOWN')) - Number(pressed('up', 'W', 'UP'));
+    if (this.active || this.leaping) { x = 0; y = 0; }
+    if (x || y) this.facing = Math.abs(x) >= Math.abs(y) ? { dx: Math.sign(x), dy: 0 } : { dx: 0, dy: Math.sign(y) };
+    const motion = new Phaser.Math.Vector2(x, y).normalize().scale(this.sneaking ? 42 : 70);
+    if (!this.leaping) { this.player.setVelocity(motion.x, motion.y); this.slideAroundCorners(x, y); this.footing(time); }
     // Holding the party's mana down costs mana: a point from everyone every few seconds. When the hero runs dry, it shows again.
-    if(this.sneaking && time-this.lastDrain>HIDE_DRAIN) {
-      this.lastDrain=time;
-      const world=loadWorld();
-      const party=createBattle('locust', [], this.partyOptions()).party;
-      const drained={ ...world.drained };
-      for(const member of party) if(member.mana>0) drained[member.id]=(drained[member.id] ?? 0)+1;
-      saved=saveWorld({ ...world, drained });
+    if (this.sneaking && time - this.lastDrain > HIDE_DRAIN) {
+      this.lastDrain = time;
+      const world = loadWorld();
+      const party = createBattle('locust', [], this.partyOptions()).party;
+      const drained = { ...world.drained };
+      for (const member of party) if (member.mana > 0) drained[member.id] = (drained[member.id] ?? 0) + 1;
+      saved = saveWorld({ ...world, drained });
       this.renderMemory();
-      if((party.find(member=>member.id==='chameleon')?.mana ?? 0)<=1) { this.toggleSneak(); this.notice('Out of mana. It shows again.'); }
+      if ((party.find(member => member.id === 'chameleon')?.mana ?? 0) <= 1) { this.toggleSneak(); this.notice('Out of mana. It shows again.'); }
     }
     // Enemies come alive: they bob where they stand, turn to face the hero, and the ordinary ones give chase.
-    for(const foe of this.foes) {
-      if(!foe.sprite.active) continue;
+    for (const foe of this.foes) {
+      if (!foe.sprite.active) continue;
       foe.sprite.setDepth(characterDepth(foe.sprite));
-      if(foe.pursuer) continue;
-      const toHero=Phaser.Math.Distance.Between(this.player.x,this.player.y,foe.sprite.x,foe.sprite.y);
-      const chase=foe.decoy ? undefined : CHASE[foe.encounter];
-      if(chase) {
-        const fromHome=Phaser.Math.Distance.Between(foe.sprite.x,foe.sprite.y,foe.home.x,foe.home.y);
+      if (foe.pursuer) continue;
+      const toHero = Phaser.Math.Distance.Between(this.player.x, this.player.y, foe.sprite.x, foe.sprite.y);
+      const chase = foe.decoy ? undefined : CHASE[foe.encounter];
+      if (chase) {
+        const fromHome = Phaser.Math.Distance.Between(foe.sprite.x, foe.sprite.y, foe.home.x, foe.home.y);
         // Talking stops the world; a foe just fled from gives the hero a moment and goes home.
-        const resting=this.active || (foe.fledAt!==undefined && this.time.now-foe.fledAt<2500);
+        const resting = this.active || (foe.fledAt !== undefined && this.time.now - foe.fledAt < 2500);
         // A hero with hidden mana is only noticed when he is almost on top of them.
-        const sight=chase.sight*(loadWorld().night ? 1.3 : 1)*(this.area.fog ? 0.6 : 1);
-        const hunting=!resting && toHero<(this.sneaking ? 22 : sight) && fromHome<LEASH;
-        if(hunting) this.physics.moveTo(foe.sprite,this.player.x,this.player.y,chase.speed);
-        else if(!this.active && fromHome>3) this.physics.moveTo(foe.sprite,foe.home.x,foe.home.y,chase.speed*0.6);
+        const sight = chase.sight * (loadWorld().night ? 1.3 : 1) * (this.area.fog ? 0.6 : 1);
+        const hunting = !resting && toHero < (this.sneaking ? 22 : sight) && fromHome < LEASH;
+        if (hunting) this.physics.moveTo(foe.sprite, this.player.x, this.player.y, chase.speed);
+        else if (!this.active && fromHome > 3) this.physics.moveTo(foe.sprite, foe.home.x, foe.home.y, chase.speed * 0.6);
         else foe.sprite.setVelocity(0);
-        foe.signature.setPosition(foe.sprite.x,foe.sprite.y);
+        foe.signature.setPosition(foe.sprite.x, foe.sprite.y);
       }
-      if(toHero<150) foe.sprite.setFlipX(this.player.x<foe.sprite.x);
-      foe.sprite.setOrigin(0.5,0.5+Math.sin(time/320+foe.phase)*0.025);
+      if (toHero < 150) foe.sprite.setFlipX(this.player.x < foe.sprite.x);
+      foe.sprite.setOrigin(0.5, 0.5 + Math.sin(time / 320 + foe.phase) * 0.025);
     }
-    for(const person of this.people) if(person.active && Phaser.Math.Distance.Between(this.player.x,this.player.y,person.x,person.y)<80) person.setFlipX(this.player.x<person.x);
+    for (const person of this.people) if (person.active && Phaser.Math.Distance.Between(this.player.x, this.player.y, person.x, person.y) < 80) person.setFlipX(this.player.x < person.x);
     // A sentry sees anyone whose mana isn't hidden, and they are thrown out.
-    if(!this.active && !this.leaving && this.area.caught && !this.sneaking && this.sentries.some(({ sprite, range }) => Phaser.Math.Distance.Between(this.player.x,this.player.y,sprite.x,sprite.y) < range)) {
+    if (!this.active && !this.leaving && this.area.caught && !this.sneaking && this.sentries.some(({ sprite, range }) => Phaser.Math.Distance.Between(this.player.x, this.player.y, sprite.x, sprite.y) < range)) {
       const { to, spawn, lines } = this.area.caught;
       music.effect('hit');
-      this.leaving=true; this.player.setVelocity(0); this.cameras.main.shake(200, 0.006); this.cameras.main.fadeOut(500,16,27,24);
-      this.cameras.main.once('camerafadeoutcomplete',()=>this.scene.start(to,{ spawn, caught: lines }));
+      this.leaving = true; this.player.setVelocity(0); this.cameras.main.shake(200, 0.006); this.cameras.main.fadeOut(500, 16, 27, 24);
+      this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(to, { spawn, caught: lines }));
       return;
     }
     // At sea, things live under the water: they show only when they come up to breathe, and then go down again.
-    if(this.area.deep) for(const foe of this.foes) if(!foe.ambush && foe.sprite.active) {
-      const up=Math.sin(time/1400+foe.phase*2.3)>0.2;
+    if (this.area.deep) for (const foe of this.foes) if (!foe.ambush && foe.sprite.active) {
+      const up = Math.sin(time / 1400 + foe.phase * 2.3) > 0.2;
       foe.signature.setAlpha(up ? 1 : 0);
       foe.sprite.setAlpha(up ? 1 : 0.18);
     }
     // In fog, an open signature can't be seen from far off.
-    if(this.area.fog) for(const foe of this.foes) if(!foe.ambush && foe.sprite.active) {
-      const seen=Phaser.Math.Distance.Between(this.player.x,this.player.y,foe.sprite.x,foe.sprite.y)<FOG_SIGHT;
+    if (this.area.fog) for (const foe of this.foes) if (!foe.ambush && foe.sprite.active) {
+      const seen = Phaser.Math.Distance.Between(this.player.x, this.player.y, foe.sprite.x, foe.sprite.y) < FOG_SIGHT;
       foe.signature.setAlpha(seen ? 1 : 0);
     }
     // Ambushers' signatures flicker out as the hero comes near, and come back once he is clear.
-    for(const foe of this.foes) {
-      if(!foe.ambush || !foe.sprite.active) continue;
+    for (const foe of this.foes) {
+      if (!foe.ambush || !foe.sprite.active) continue;
       // Hiding his own mana, the hero sees an ambusher before it can vanish.
-      const near=!this.sneaking && Phaser.Math.Distance.Between(this.player.x,this.player.y,foe.sprite.x,foe.sprite.y)<110;
-      if(near===Boolean(foe.hidden)) continue;
-      foe.hidden=near;
+      const near = !this.sneaking && Phaser.Math.Distance.Between(this.player.x, this.player.y, foe.sprite.x, foe.sprite.y) < 110;
+      if (near === Boolean(foe.hidden)) continue;
+      foe.hidden = near;
       this.tweens.killTweensOf([foe.sprite]);
       this.tweens.add({ targets: [foe.sprite, foe.signature], alpha: near ? { from: 0.3, to: 0 } : 1, duration: near ? 500 : 700, ease: near ? 'Stepped' : 'Linear', easeParams: near ? [4] : undefined });
     }
     // Footsteps while walking, alternating feet.
-    if((x||y) && !this.sneaking && time-this.lastStep>290) { this.lastStep=time; this.foot=-this.foot; music.effect(`step-${this.surface()}`, this.foot); }
-    if(x) this.player.setFlipX(x<0);
+    if ((x || y) && !this.sneaking && time - this.lastStep > 290) { this.lastStep = time; this.foot = -this.foot; music.effect(`step-${this.surface()}`, this.foot); }
+    if (x) this.player.setFlipX(x < 0);
     this.player.setDepth(characterDepth(this.player));
-    this.shadow.setPosition(this.player.x,this.player.y+9);
-    this.shading?.carried.setPosition(this.player.x,this.player.y);
+    this.shadow.setPosition(this.player.x, this.player.y + 9);
+    this.shading?.carried.setPosition(this.player.x, this.player.y);
     // A restrained walking bob, or slow breathing when standing still, while the physics body stays steady.
-    this.player.setOrigin(0.5,0.5+(x||y?Math.sin(time/85)*0.025:Math.sin(time/520)*0.012)+this.lift);
-    const context=this.context();
-    this.nearby=this.points.filter(p=>p.name in this.area.exits || p.name in (this.area.climbs ?? {}) || this.climbDown(p.name)!==undefined || p.name in (this.area.fishing ?? {}) || p.name in (this.area.camps ?? {}) || this.forage.some(spot=>spot.point===p.name) || (p.name==='waystone' && Boolean(waystoneIn(this.area.key))) || (p.name in this.area.dialogue
-      && !this.area.dialogue[p.name].hiddenIf?.some(condition=>holds(context, condition))))
+    this.player.setOrigin(0.5, 0.5 + (x || y ? Math.sin(time / 85) * 0.025 : Math.sin(time / 520) * 0.012) + this.lift);
+    const context = this.context();
+    this.nearby = this.points.filter(p => p.name in this.area.exits || p.name in (this.area.climbs ?? {}) || this.climbDown(p.name) !== undefined || p.name in (this.area.fishing ?? {}) || p.name in (this.area.camps ?? {}) || this.forage.some(spot => spot.point === p.name) || (p.name === 'waystone' && Boolean(waystoneIn(this.area.key))) || (p.name in this.area.dialogue
+      && !this.area.dialogue[p.name].hiddenIf?.some(condition => holds(context, condition))))
       // The nearest thing in reach wins, so a door and the person beside it never steal each other's prompt.
-      .map(p=>({ p, distance: Phaser.Math.Distance.Between(this.player.x,this.player.y,p.x,p.y) }))
-      .filter(({ distance })=>distance<29).sort((a,b)=>a.distance-b.distance)[0]?.p;
-    if(!this.active) element('prompt').textContent=this.nearby
-      ? `E · ${this.area.climbs?.[this.nearby.name]?.prompt ?? (this.climbDown(this.nearby.name)!==undefined ? 'Climb back down' : undefined) ?? this.area.exits[this.nearby.name]?.prompt ?? (this.area.camps?.[this.nearby.name] ? `${this.area.camps[this.nearby.name].prompt}${this.area.camps[this.nearby.name].cost ? ` (${this.area.camps[this.nearby.name].cost} coins)` : ''}` : undefined) ?? (this.area.fishing?.[this.nearby.name] ? `Fish ${SPOTS[this.area.fishing[this.nearby.name]].name.replace(/^The /, 'the ')}` : undefined) ?? (this.area.forage?.[this.nearby.name] ? `Pick ${INGREDIENTS[this.area.forage[this.nearby.name]].plural}` : undefined) ?? (this.nearby.name==='waystone' ? 'Touch the waystone' : undefined) ?? this.area.dialogue[this.nearby.name].prompt ?? 'Examine '+this.nearby.name}` : '';
+      .map(p => ({ p, distance: Phaser.Math.Distance.Between(this.player.x, this.player.y, p.x, p.y) }))
+      .filter(({ distance }) => distance < 29).sort((a, b) => a.distance - b.distance)[0]?.p;
+    if (!this.active) element('prompt').textContent = this.nearby
+      ? `E · ${this.area.climbs?.[this.nearby.name]?.prompt ?? (this.climbDown(this.nearby.name) !== undefined ? 'Climb back down' : undefined) ?? this.area.exits[this.nearby.name]?.prompt ?? (this.area.camps?.[this.nearby.name] ? `${this.area.camps[this.nearby.name].prompt}${this.area.camps[this.nearby.name].cost ? ` (${this.area.camps[this.nearby.name].cost} coins)` : ''}` : undefined) ?? (this.area.fishing?.[this.nearby.name] ? `Fish ${SPOTS[this.area.fishing[this.nearby.name]].name.replace(/^The /, 'the ')}` : undefined) ?? (this.area.forage?.[this.nearby.name] ? `Pick ${INGREDIENTS[this.area.forage[this.nearby.name]].plural}` : undefined) ?? (this.nearby.name === 'waystone' ? 'Touch the waystone' : undefined) ?? this.area.dialogue[this.nearby.name].prompt ?? 'Examine ' + this.nearby.name}` : '';
   }
 }

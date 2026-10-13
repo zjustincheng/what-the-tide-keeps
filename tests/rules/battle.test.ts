@@ -84,13 +84,13 @@ test('vulture focus persists between rounds and boosts only the next attack', ()
 
 test('a downed member is skipped; a wipe requires every companion to fall', () => {
   let battle = tough(createBattle());
-  while(member(battle, 'bear').health > 0) { battle = round(battle); assert.ok(battle.round < 12); }
+  while (member(battle, 'bear').health > 0) { battle = round(battle); assert.ok(battle.round < 12); }
   assert.equal(battle.phase, 'player');
   battle = act(act(battle, 'chameleon', 'attack'), 'vulture', 'attack');
   assert.equal(battle.phase, 'enemy', 'no action is required from a downed bear');
   battle = resolveEnemy(battle);
-  while(battle.phase === 'player') {
-    for(const member of battle.party) battle = attackOrGather(battle, member.id);
+  while (battle.phase === 'player') {
+    for (const member of battle.party) battle = attackOrGather(battle, member.id);
     battle = resolveEnemy(battle);
     assert.ok(battle.round < 12);
   }
@@ -101,7 +101,7 @@ test('a downed member is skipped; a wipe requires every companion to fall', () =
 
 test('coordinated guarding wins and victory cancels unused actions and retaliation', () => {
   let battle = createBattle();
-  while(battle.phase === 'player') { battle = round(battle, true); assert.ok(battle.round < 12); }
+  while (battle.phase === 'player') { battle = round(battle, true); assert.ok(battle.round < 12); }
   assert.equal(battle.phase, 'victory');
   assert.ok(battle.party.every(member => member.health === member.maxHealth));
   assert.equal(resolveEnemy(battle), battle);
@@ -111,7 +111,7 @@ test('coordinated guarding wins and victory cancels unused actions and retaliati
 test('health descriptions use words at each threshold', () => {
   const hero = member(createBattle(), 'chameleon');
   const max = hero.maxHealth;
-  for(const [health, label] of [[max, 'Unhurt'], [max - 1, 'Bloodied'], [max / 2, 'Wounded'], [max / 4, 'Barely standing'], [0, 'Downed']] as const) {
+  for (const [health, label] of [[max, 'Unhurt'], [max - 1, 'Bloodied'], [max / 2, 'Wounded'], [max / 4, 'Barely standing'], [0, 'Downed']] as const) {
     assert.equal(condition({ ...hero, health }), label);
   }
 });

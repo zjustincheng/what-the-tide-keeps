@@ -86,17 +86,17 @@ export const wickmere: Dialogue = {
   widow: { speaker: 'A STOAT IN BLACK', prompt: 'Speak to the stoat', lines: [
     'They wouldn\'t let me into the hospice. They said it was catching. They sent his boots back.',
     'He was sick after supper. Not after a cough. Not after a fever. After supper.',
-  ], variants:[{if:{flag:'viper-slain'},lines:[
+  ], variants: [{ if: { flag: 'viper-slain' }, lines: [
     'They let me into the hospice today. To collect the blanket, this time.',
     'I know who put it in the food. It does not give me his boots back with him in them.',
-  ]}] },
+  ] }] },
   child: { speaker: 'A VOLE CHILD', prompt: 'Speak to the child', lines: [
     'We\'re not allowed to go near the hospice. You can hear them at night.',
     'Mum says the sick ones are being punished. I asked what for and she said shush.',
-  ], variants:[{if:{flag:'viper-slain'},lines:[
+  ], variants: [{ if: { flag: 'viper-slain' }, lines: [
     'We are allowed to take flowers to the hospice now. Mum still says not to touch anybody.',
     'The little healer touched everybody. I think Mum should ask her.',
-  ]}] },
+  ] }] },
   mourner: { speaker: 'AN OLD WATER RAT', prompt: 'Speak to the water rat', lines: [
     'They burned his cot on the deck. The sister said that\'s how you stop it spreading.',
     'It didn\'t spread to me. I slept beside him every night. Write that down for the church if you\'re writing things down.',
@@ -115,19 +115,19 @@ export const wickmere: Dialogue = {
   notice: { speaker: 'THE NOTICE BOARD', prompt: 'Read the notice', lines: [
     'BY ORDER OF THE MAGISTRATE, FOR THE SAFETY OF THE TOWN: all venomous persons to present themselves at the cage.',
     'Pinned below it, a church notice: THE HOSPICE IS UNDER THE PROTECTION OF THE COVENANT. Someone has scratched out PROTECTION and written WATCH.',
-  ], variants:[{if:{flag:'viper-slain'},lines:[
+  ], variants: [{ if: { flag: 'viper-slain' }, lines: [
     'The order about venomous persons is still pinned here. Nobody has taken it down.',
     'A smaller note below it reads: THE FOOD WAS POISONED. Below that, in another hand: THEN LET THEM OUT.',
-  ]}] },
+  ] }] },
   barrels: { speaker: 'THE BARRELS', prompt: 'Look at the barrels', lines: [
     'Church fish barrels, stamped with the Covenant seal, waiting to be smoked. The wax on every one of them is newer than the stamp.',
-  ], variants:[{if:{flag:'cuttlefish-slain'},lines:[
+  ], variants: [{ if: { flag: 'cuttlefish-slain' }, lines: [
     'The barrels are empty. Their lids have been taken off and left drying on the deck.',
     'The tide reaches the landing on time. The boats do not.',
-  ]},{if:{flag:'viper-slain'},lines:[
+  ] }, { if: { flag: 'viper-slain' }, lines: [
     'The rejected barrels are marked. The next delivery was opened with the driver watching.',
     'Clean inspection cloths hang beside the church stamps. Neither is trusted alone now.',
-  ]}] },
+  ] }] },
 };
 
 // The hospice: a long ward of cots, the sister who keeps it, and the frog behind the grate.
@@ -172,17 +172,17 @@ export const hospice: Dialogue = {
   ] },
   'patient-1': { speaker: 'A SICK BADGER', prompt: 'Speak to the badger', lines: [
     'I only had the soup. The church soup. I want to say that to someone who\'ll remember it.',
-  ],variants:[{if:{flag:'viper-slain'},lines:[
+  ], variants: [{ if: { flag: 'viper-slain' }, lines: [
     'I kept breakfast down. First time in a week.',
     'Tell the little healer I said that. Tell her I remembered who checked my bowl.',
-  ]}] },
+  ] }] },
   'patient-2': { speaker: 'A SICK HARE', prompt: 'Speak to the hare', lines: [
     'Are you the ones they sentenced? They say you killed the kings. You don\'t look like much.',
     'Nobody in here looks like much.',
-  ],variants:[{if:{flag:'viper-slain'},lines:[
+  ], variants: [{ if: { flag: 'viper-slain' }, lines: [
     'The sister let my daughter come in. She brought a shawl and talked until I fell asleep.',
     'I woke up hungry. I had forgotten that could be a good thing.',
-  ]}] },
+  ] }] },
   'patient-3': { speaker: 'AN EMPTY COT', prompt: 'Look at the cot', lines: [
     'The blanket has been folded with great care. Whoever folded it knew they would not be back to unfold it.',
   ] },
@@ -192,13 +192,13 @@ export const hospice: Dialogue = {
   'ward-book': { speaker: 'THE WARD BOOK', prompt: 'Read the ward book', lines: [
     'Admitted, and the hour of admission. Almost every line says: after supper.',
     'In the margin, in a smaller hand: they don\'t catch it from each other. Under it, crossed out: it\'s the food.',
-  ],variants:[{if:{flag:'viper-slain'},lines:[
+  ], variants: [{ if: { flag: 'viper-slain' }, lines: [
     'No new admissions. Two patients eating. One discharge planned for morning.',
     'The crossed-out words have been written again, without crossing them out this time: IT WAS THE FOOD.',
-  ]},{if:{flag:'frog-free'},lines:[
+  ] }, { if: { flag: 'frog-free' }, lines: [
     'The frog’s note is pinned over the word PLAGUE: trace the meals, not the beds.',
     'Meal stamps and barrel numbers fill a new column. Someone has finally started asking the right question.',
-  ]}] },
+  ] }] },
 };
 
 // The far bank: the spoiled church storehouse, and the flooded apothecary at the water's edge.

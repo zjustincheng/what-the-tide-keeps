@@ -145,24 +145,24 @@ function villager(scene: Phaser.Scene, key: string, v: Villager) {
 
 export function createSprites(scene: Phaser.Scene) {
   if (scene.textures.exists('hero')) return;
-  const hero = scene.make.graphics({ x:0, y:0 });
-  const block=(x:number,y:number,w:number,h:number,c:number)=>hero.fillStyle(c).fillRect(x,y,w,h);
+  const hero = scene.make.graphics({ x: 0, y: 0 });
+  const block = (x: number, y: number, w: number, h: number, c: number) => hero.fillStyle(c).fillRect(x, y, w, h);
   // A curled tail, green crest, pale eye and the branded convict's cloak.
-  block(1,16,7,5,0x688a54);block(0,13,3,6,0x688a54);block(2,13,3,2,0x9bad64);
-  block(7,19,3,5,0x35382d);block(13,19,3,5,0x35382d);
-  block(5,10,12,11,0x6e644b);block(7,11,8,9,0xa19766);block(6,18,10,3,0x827653);
-  block(7,3,10,9,0x88a567);block(9,1,6,3,0x9aaf6e);block(15,6,4,5,0x88a567);
-  block(13,4,4,4,0xd7d1a0);block(15,5,2,2,0x213b2e);block(10,12,3,3,0x513a2b);block(11,12,1,3,0xd1a470);
-  hero.generateTexture('hero',20,26);hero.destroy();
-  const priest=scene.make.graphics({x:0,y:0});
-  priest.fillStyle(0x27382e).fillRect(3,21,14,3);
-  priest.fillStyle(0x889080).fillRect(4,10,12,13);
-  priest.fillStyle(0xb8b69b).fillRect(7,10,6,13);
-  priest.fillStyle(0xc3b28a).fillRect(8,12,4,3);
-  priest.fillStyle(0x978f78).fillRect(5,3,11,9).fillRect(4,0,3,6).fillRect(14,0,3,6);
-  priest.fillStyle(0xd0c3a0).fillRect(7,5,7,7);
-  priest.fillStyle(0x2b3b31).fillRect(8,6,1,2).fillRect(12,6,1,2);
-  priest.generateTexture('priest',20,26);priest.destroy();
+  block(1, 16, 7, 5, 0x688a54); block(0, 13, 3, 6, 0x688a54); block(2, 13, 3, 2, 0x9bad64);
+  block(7, 19, 3, 5, 0x35382d); block(13, 19, 3, 5, 0x35382d);
+  block(5, 10, 12, 11, 0x6e644b); block(7, 11, 8, 9, 0xa19766); block(6, 18, 10, 3, 0x827653);
+  block(7, 3, 10, 9, 0x88a567); block(9, 1, 6, 3, 0x9aaf6e); block(15, 6, 4, 5, 0x88a567);
+  block(13, 4, 4, 4, 0xd7d1a0); block(15, 5, 2, 2, 0x213b2e); block(10, 12, 3, 3, 0x513a2b); block(11, 12, 1, 3, 0xd1a470);
+  hero.generateTexture('hero', 20, 26); hero.destroy();
+  const priest = scene.make.graphics({ x: 0, y: 0 });
+  priest.fillStyle(0x27382e).fillRect(3, 21, 14, 3);
+  priest.fillStyle(0x889080).fillRect(4, 10, 12, 13);
+  priest.fillStyle(0xb8b69b).fillRect(7, 10, 6, 13);
+  priest.fillStyle(0xc3b28a).fillRect(8, 12, 4, 3);
+  priest.fillStyle(0x978f78).fillRect(5, 3, 11, 9).fillRect(4, 0, 3, 6).fillRect(14, 0, 3, 6);
+  priest.fillStyle(0xd0c3a0).fillRect(7, 5, 7, 7);
+  priest.fillStyle(0x2b3b31).fillRect(8, 6, 1, 2).fillRect(12, 6, 1, 2);
+  priest.generateTexture('priest', 20, 26); priest.destroy();
   for (const [key, spec] of Object.entries(VILLAGERS)) villager(scene, key, spec);
   // A gibbet: a post, an arm, and an iron cage that has not been emptied by anyone but the crows.
   const gibbet = scene.make.graphics({ x: 0, y: 0 });
@@ -184,13 +184,13 @@ export function createSprites(scene: Phaser.Scene) {
   stocks.fillStyle(0x161210).fillRect(3, 8, 3, 2).fillRect(9, 7, 3, 3).fillRect(14, 8, 3, 2);
   stocks.fillStyle(0x5a2a22).fillRect(9, 11, 2, 2);
   stocks.generateTexture('stocks', 20, 18); stocks.destroy();
-  const chain=scene.make.graphics({x:0,y:0});
-  for(const [x,y] of [[0,5],[4,3],[8,5],[12,3]]){
-    chain.fillStyle(0x787b68).fillRect(x,y,6,4);
-    chain.fillStyle(0xb6af8e).fillRect(x+1,y,4,1);
-    chain.fillStyle(0x2b3329).fillRect(x+2,y+1,2,2);
+  const chain = scene.make.graphics({ x: 0, y: 0 });
+  for (const [x, y] of [[0, 5], [4, 3], [8, 5], [12, 3]]) {
+    chain.fillStyle(0x787b68).fillRect(x, y, 6, 4);
+    chain.fillStyle(0xb6af8e).fillRect(x + 1, y, 4, 1);
+    chain.fillStyle(0x2b3329).fillRect(x + 2, y + 1, 2, 2);
   }
-  chain.generateTexture('loose-chain',18,11);chain.destroy();
+  chain.generateTexture('loose-chain', 18, 11); chain.destroy();
   // A crow.
   const crow = scene.make.graphics({ x: 0, y: 0 });
   crow.fillStyle(0x0e0f10).fillRect(0, 2, 3, 1).fillRect(2, 1, 4, 3).fillRect(5, 2, 3, 1).fillRect(3, 0, 2, 1);

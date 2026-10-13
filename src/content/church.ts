@@ -99,7 +99,7 @@ const priestReplies: Choice[] = [
   { text: 'I should go.', ends: true, lines: ['Go on, then. Try to come back on your feet.'] },
 ];
 church.priest.choices = priestReplies;
-for (const variant of church.priest.variants!) variant.choices = 'flag' in variant.if && variant.if.flag==='human-spared' ? [
-  {text:'Tend my wounds.',lines:['He brings fresh water and clean bandages. There is no basin and no tithe.'],then:{rest:true}},
-  {text:'I should go.',ends:true,lines:['Go where you choose. You can come back without being carried.']},
+for (const variant of church.priest.variants!) variant.choices = 'flag' in variant.if && variant.if.flag === 'human-spared' ? [
+  { text: 'Tend my wounds.', lines: ['He brings fresh water and clean bandages. There is no basin and no tithe.'], then: { rest: true } },
+  { text: 'I should go.', ends: true, lines: ['Go where you choose. You can come back without being carried.'] },
 ] : priestReplies;
