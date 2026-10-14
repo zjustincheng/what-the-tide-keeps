@@ -50,6 +50,8 @@ export function venom(encounter: Encounter): number {
 // What a spell the party studied hits for when the octopus throws it back, by its name.
 export const SPELL_POWER: Record<string, number> = { 'Salt lance': 14, Judgement: 14, 'Drowning toll': 10, 'Marsh-fire': 9, Souring: 7, 'Talon hex': 13, Verdict: 16 };
 export const MIMIC_COST = 4;
+// What the octopus's Mimic costs it, after its keepsake.
+export const mimicCost = (member: Pick<Member, 'gear'>) => Math.max(1, MIMIC_COST - member.gear.mimicCost);
 // The spell an octopus can throw back: the last one written into the grimoire.
 export function mimicry(battle: Pick<Battle, 'studied'>): string | undefined {
   return battle.studied.at(-1);
@@ -805,7 +807,7 @@ export function canAct(battle: Battle, actor: MemberId, action: Action, target: 
   // A barrier can cover a fallen ally too, which keeps the hyena off the body.
   if (action === 'barrier' && !battle.party.some(ally => ally.id === target)) return false;
   // The octopus throws back the last spell the grimoire studied, at the main enemy.
-  if (action === 'support' && actor === 'octopus') return member.mana >= MIMIC_COST && Boolean(mimicry(battle)) && standing(battle, 0);
+  if (action === 'support' && actor === 'octopus') return member.mana >= mimicCost(member) && Boolean(mimicry(battle)) && standing(battle, 0);
   // Striking an ally is only for the fight with the cuckoo, and never at oneself.
   if (action === 'unmask') return battle.encounter === 'cuckoo' && target !== actor && battle.party.some(member => member.id === target && member.health > 0);
   if (action === 'support') {
@@ -938,6 +940,9 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
   const dart = actor === 'frog' && action === 'attack' && foe === 0 && !blocked && enemy.health > 0;
   const poisons = dart && venom(battle.encounter) > 0;
   const dose = actor === 'frog' && action === 'support';
+  // The vulture's keepsake: what her blow brings down, she takes something back from.
+  const felled = action === 'attack' && (foe > 0 ? battle.followers[foe - 1].health > 0 && followers[foe - 1].health <= 0 : battle.enemy.health > 0 && enemy.health <= 0);
+  const scavenges = actor === 'vulture' && member.gear.scavenge > 0 && felled;
   const party = battle.party.map(current => ({
     ...current,
     ...(current.id === actor ? {
@@ -947,8 +952,8 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
       guardingFor: action === 'support' && (actor === 'chameleon' || actor === 'bear') ? target : current.guardingFor,
     } : {}),
     barrier: (action === 'barrier' && current.id === target) || current.barrier,
-    ...(dose && current.id === target ? { health: mend(current, DOSE, battle.soured), poison: battle.soured ? current.poison : 0 } : {}),
-  }));
+    ...(dose && current.id === target ? { health: mend(current, DOSE + member.gear.mend, battle.soured), poison: battle.soured ? current.poison : 0 } : {}),
+  })).map(current => current.id === actor && scavenges ? { ...current, mana: Math.min(current.maxMana, current.mana + member.gear.scavenge), health: Math.min(current.maxHealth, current.health + member.gear.scavenge) } : current);
   const after = { encounter: battle.encounter, enemy, followers };
   const victory = won(after);
   const allActed = party.every(member => member.health <= 0 || member.acted);
@@ -959,7 +964,7 @@ export function act(battle: Battle, actor: MemberId, action: Action, target: Mem
     : blocked && battle.impostor ? `${definition.name}'s ${definition.attack.toLowerCase()} finds nothing. The lord's chair is empty: he is somewhere among you.`
     : blocked ? `${definition.name}'s ${definition.attack.toLowerCase()} breaks on the candlelight. The warden is untouched while its votives burn.`
     : shielded ? `The boar throws himself in front of the ${battle.followers[foe - 1].name.toLowerCase()}. ${definition.name}'s ${definition.attack.toLowerCase()} strikes him instead, and his fury grows.`
-    : action === 'attack' ? `${definition.name}'s ${definition.attack.toLowerCase()} strikes the ${foe > 0 ? battle.followers[foe - 1].name.toLowerCase() : ENEMIES[battle.encounter].short}${member.suppressed ? ' in a burst of revealed mana' : ''}${member.focused ? ' with focused force' : ''}.${fit > 1 ? ' It lands hard.' : fit < 1 ? ' It barely tells.' : ''}${dart ? (venom(battle.encounter) === 0 ? ' The toxin does nothing to the dead.' : ' The toxin goes in.') : ''}`
+    : action === 'attack' ? `${definition.name}'s ${definition.attack.toLowerCase()} strikes the ${foe > 0 ? battle.followers[foe - 1].name.toLowerCase() : ENEMIES[battle.encounter].short}${member.suppressed ? ' in a burst of revealed mana' : ''}${member.focused ? ' with focused force' : ''}.${fit > 1 ? ' It lands hard.' : fit < 1 ? ' It barely tells.' : ''}${dart ? (venom(battle.encounter) === 0 ? ' The toxin does nothing to the dead.' : ' The toxin goes in.') : ''}${scavenges ? ' She takes something back from what fell.' : ''}`
     : dose ? (battle.soured ? `Frog doses ${target === actor ? 'herself' : MEMBERS[target].name}, and it burns: everything is soured.` : `Frog doses ${target === actor ? 'herself' : MEMBERS[target].name}. A small dose mends.`)
     : actor === 'vulture' ? 'Vulture steadies her aim. Her next attack will strike harder.'
     : actor === 'bear' && member.gear.guardAll > 0 ? 'Bear braces beside the broken link. His guard covers the whole party.'
@@ -1174,7 +1179,7 @@ function enemyTurnEnds(battle: Battle): Battle {
 function mimic(battle: Battle): Battle {
   const spell = mimicry(battle)!;
   const hit = land(battle, SPELL_POWER[spell] ?? 10, 0);
-  const party = battle.party.map(member => member.id === 'octopus' ? { ...member, acted: true, mana: member.mana - MIMIC_COST, flaring: true } : member);
+  const party = battle.party.map(member => member.id === 'octopus' ? { ...member, acted: true, mana: member.mana - mimicCost(member), flaring: true } : member);
   const after = { encounter: battle.encounter, enemy: hit.enemy, followers: hit.followers };
   const victory = won(after);
   const allActed = party.every(member => member.health <= 0 || member.acted);

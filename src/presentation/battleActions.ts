@@ -1,11 +1,11 @@
-import { canAct, cost, ENEMIES, ENEMY_SPELLS, GATHER, intent, MEMBERS, MIMIC_COST } from '../rules/battle.ts';
+import { canAct, cost, ENEMIES, ENEMY_SPELLS, GATHER, intent, MEMBERS, mimicCost } from '../rules/battle.ts';
 import type { Action, Battle, Foe, MemberId } from '../rules/battle';
 
 // Describe the player's choices without exposing hidden enemy stats or spell names.
 export function actionPreview(battle: Battle, actor: MemberId, action: Action, target: MemberId = actor, foe: Foe = 0): string {
   const member = battle.party.find(member => member.id === actor)!;
   const name = MEMBERS[actor].name;
-  const mana = action === 'support' && actor === 'octopus' ? MIMIC_COST : cost(member, action);
+  const mana = action === 'support' && actor === 'octopus' ? mimicCost(member) : cost(member, action);
   const price = `${mana} mana · uses ${name}'s action.`;
   if (member.health <= 0) return `${name} is downed and cannot act.`;
   if (battle.phase !== 'player') return battle.phase === 'enemy' ? 'The enemy is moving. Wait for your turn.' : 'This fight is over.';

@@ -2,7 +2,8 @@ import { MEMBERS } from '../../rules/battle';
 import { forgetAll, held, keepMemory, MEMORY_IDS, recall, tideTakesAll, wipe } from '../../rules/memory';
 import { apply, rest, roster } from '../../rules/world';
 import type { Effect, Flag, ShopId } from '../../rules/world';
-import { equip, SLOTS } from '../../rules/gear';
+import { equip, KEEPSAKE_IDS, KEEPSAKES, SLOTS } from '../../rules/gear';
+import type { KeepsakeId } from '../../rules/gear';
 import { endingStory } from '../../rules/ending';
 import type { Ending } from '../../rules/ending';
 import { reclaim } from '../../rules/spells';
@@ -41,7 +42,7 @@ export class Aftermath {
   private shop?: ShopId;
   private rest?: string;
   private campTalk?: NonNullable<Effect['campTalk']>;
-  private keepsake = false;
+  private keepsake?: KeepsakeId;
   private cook = false;
   private road?: keyof typeof WAYSTONES;
   private church = false;
@@ -74,7 +75,8 @@ export class Aftermath {
     if (then.arm) this.arm = then.arm;
     if (then.dice) this.dice = { stake: then.dice, opponent: (scene.dialogue.active?.speaker ?? 'the house').toLowerCase().replace(/^(a|an|the) /, 'the ') };
     if (then.shop) this.shop = then.shop;
-    if (then.find === 'broken-link' && !loadWorld().found.includes('broken-link')) this.keepsake = true;
+    // A companion's own keepsake comes with a receipt that offers to put it on them.
+    if (then.find && KEEPSAKE_IDS.includes(then.find as KeepsakeId) && KEEPSAKES[then.find as KeepsakeId].keeps && !loadWorld().found.includes(then.find)) this.keepsake = then.find as KeepsakeId;
     if (then.find || then.learn || then.give) music.effect('find');
     if (then.earn || then.pay) music.effect('coins');
     if (then.rest) music.effect('rest');
@@ -118,10 +120,11 @@ export class Aftermath {
       if (moment) { scene.say(moment, companion); return; }
     }
     if (this.keepsake && !scene.leaving) {
-      this.keepsake = false;
-      const slot = loadGear().bear.length < SLOTS ? loadGear().bear.length : -1;
-      scene.openPanel(() => new KeepsakeView(slot >= 0, () => {
-        if (slot >= 0) { save.ok = saveGear(equip(loadGear(), loadWorld().found.filter(id => id === 'broken-link'), 'bear', slot, 'broken-link')) && save.ok; scene.closePanel(); }
+      const id = this.keepsake, holder = KEEPSAKES[id].keeps!;
+      this.keepsake = undefined;
+      const slot = loadGear()[holder].length < SLOTS ? loadGear()[holder].length : -1;
+      scene.openPanel(() => new KeepsakeView(id, slot >= 0, () => {
+        if (slot >= 0) { save.ok = saveGear(equip(loadGear(), loadWorld().found.filter((found): found is KeepsakeId => found === id), holder, slot, id)) && save.ok; scene.closePanel(); }
         else { scene.closePanel(); scene.openEquipment(); }
       }, () => scene.closePanel()));
       return;

@@ -285,6 +285,19 @@ As in the story, the chameleon sets out alone; his companions are scattered acro
 
 **Matchups.** Every enemy is some of: **armoured, flying, caster, insect, dead** (shown under its name in battle, and in the bestiary). Each hero's own blow fares differently against them: the **bear**'s maul hits armour half again as hard and only half-reaches flyers; the **vulture**'s talons are the reverse; the **chameleon** strikes casters half again as hard; the **frog**'s poison is double in insects and does nothing to the dead. Attack buttons say *strong* or *weak* for the enemy in front of you. Spells, supplies, and followers ignore all of it: magic is the equaliser. Simulated, the right three against the armoured deserter captain win almost every time without dodging; three without the bear win 2% of the time, or about three in four with some dodging (`TRAITS` and `MATCHUPS` in `src/rules/battle.ts`).
 
+## Companion quests
+
+Each companion has one quest of their own, as the guideline asks: nothing marks it. Once the lieutenant of their region is dead, and as long as they haven't fallen, they wait where they were kept and ask to go back. Each reads what was written about them there, and then chooses: someone answers for it, or they simply leave. Either way they end by giving the hero something of theirs, and it **holds his memory of them for good**: the tide can never take it, worn or not, and it uses no anchor. Each keepsake also changes what that companion does in a fight, and fits only them (`src/content/bearQuest.ts`, `src/content/companionQuests.ts`).
+
+| Companion | Where | What was written | Answer for it, or leave | Keepsake |
+| --- | --- | --- | --- | --- |
+| Bear | The millstone | The miller's labour book: CONVICT, unable to stand, a full day's flour charged anyway, and a request for another convict | The reeve signs no more chained labour at the mill, or the bear hangs the key on the empty chain and goes | **Broken mill-chain link:** Protect guards the whole party (3 mana and his action) |
+| Vulture | The battlefield's graves | The garrison chaplain's roll: returned to duty sixty-one times, what she had forgotten each time, and REASSIGNED: THE FIELD under every one | He reads it all out at evening roll and writes SENTENCE SERVED, or she cuts her page out to bury it | **The tally stone:** when her blow fells an enemy she takes back 3 mana and 3 health; hits 1 harder; shows 1 more mana |
+| Frog | The hospice grate | The ward book's dose column: VENOMOUS HEALER IN ATTENDANCE beside every death, initialled by the magistrate, who filled Wickmere's cages with it | The magistrate reads it to her on the decks and writes the real cause across his round-up order, or she locks her empty grate and hangs the key outside | **The glass dropper:** her dose mends twice as much; 3 more health; her dart hits 1 softer |
+| Octopus | Under the kraken's ribs | The sea elder's count: a black knot for each of the five on the harbour wall, and nothing for why the kraken rose | It ties the church's net onto the count for every pod to read, or cuts its own knot out and leaves the sea's count | **A knot of church net:** Mimic costs 2 mana instead of 4; 4 more health; shows 2 more mana |
+
+The journal's leads say where each one is waiting, and the ending remembers which quests were finished. The companions' standing points are added to the maps by `scripts/add-quest-points.mjs`, which can be run again safely, like `add-secrets.mjs`.
+
 ## The farmland
 
 South of the church lies the open farmland, a scrolling map about four screens across with no set route. A waymark at the crossroads points the way:

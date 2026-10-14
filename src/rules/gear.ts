@@ -4,25 +4,37 @@ import type { MemberId } from './battle';
 export type KeepsakeId = 'cracked-mirror' | 'crow-feather' | 'covenant-token' | 'yoke-peg' | 'wool-charm' | 'boar-tusk' | 'iron-collar' | 'famine-spoon' | 'weir-hook' | 'frost-ring' | 'tide-shell'
   | 'garrison-buckler' | 'saints-medal' | 'night-cloak' | 'smuggled-blade' | 'raven-quill' | 'viper-fang' | 'hospice-bell' | 'liars-charm' | 'adders-coil' | 'house-signet' | 'courier-bell' | 'wren-feather' | 'champions-torc' | 'elder-pearl' | 'kraken-tooth' | 'sea-glass'
   | 'grafting-knife' | 'cutters-wedge' | 'shepherds-horn' | 'tin-cup' | 'brand-iron' | 'drowned-bell'
-  | 'broken-link' | 'climbers-chalk' | 'falconers-hood' | 'reed-charm' | 'watch-flint' | 'ice-pick' | 'lookouts-glass';
+  | 'broken-link' | 'climbers-chalk' | 'falconers-hood' | 'reed-charm' | 'watch-flint' | 'ice-pick' | 'lookouts-glass'
+  | 'tally-stone' | 'glass-dropper' | 'net-knot';
 // What a keepsake changes about its holder in battle.
 // agility: in hundredths of a hero's dodge windows; +15 makes every window 15% wider.
-export type Mods = Readonly<{ health: number; damage: number; reveal: number; suppressCost: number; shown: number; agility: number; guardAll: number }>;
+// The companions' own keepsakes each change what they do. guardAll: the bear's Protect covers the whole party.
+// scavenge: when the vulture's blow fells an enemy, she takes back this much mana and health.
+// mend: the frog's dose mends this much more. mimicCost: the octopus's Mimic costs this much less mana.
+export type Mods = Readonly<{ health: number; damage: number; reveal: number; suppressCost: number; shown: number; agility: number; guardAll: number; scavenge: number; mend: number; mimicCost: number }>;
 export type Gear = Readonly<Record<MemberId, readonly KeepsakeId[]>>;
 
-export const NO_MODS: Mods = { health: 0, damage: 0, reveal: 0, suppressCost: 0, shown: 0, agility: 0, guardAll: 0 };
+export const NO_MODS: Mods = { health: 0, damage: 0, reveal: 0, suppressCost: 0, shown: 0, agility: 0, guardAll: 0, scavenge: 0, mend: 0, mimicCost: 0 };
 export const SLOTS = 2;
 export const MEMBER_IDS: readonly MemberId[] = ['chameleon', 'bear', 'vulture', 'frog', 'octopus'];
 
 // Each keepsake changes how its holder plays, usually with a drawback. Some fit only one hero.
-export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; effect: string; drawback: string; mods: Partial<Mods> }> = {
+// keeps: a companion's own keepsake, from their quest, holds the hero's memory of them for good, worn or not.
+export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; effect: string; drawback: string; mods: Partial<Mods>; keeps?: MemberId }> = {
   'cracked-mirror': { name: 'Cracked mirror', holder: 'chameleon',
     effect: 'His reveal hits 3 harder.', drawback: 'Hiding costs 2 mana instead of 1.', mods: { reveal: 3, suppressCost: 1 } },
   'crow-feather': { name: "Crow's feather", holder: 'vulture',
     effect: 'Every attack hits 3 harder.', drawback: '4 less health.', mods: { damage: 3, health: -4 } },
   'covenant-token': { name: 'Covenant token',
     effect: '6 more health.', drawback: 'Shows 2 more mana, so enemies watch the holder.', mods: { health: 6, shown: 2 } },
-  'broken-link': { name: 'Broken mill-chain link', holder: 'bear', effect: 'Protect guards both allies as well as himself. Permanently holds the hero’s memory of the bear, even when unequipped.', drawback: 'Protect costs 3 mana and uses his action.', mods: { guardAll: 1 } },
+  'broken-link': { name: 'Broken mill-chain link', holder: 'bear', effect: 'Protect guards both allies as well as himself. Permanently holds the hero’s memory of the bear, even when unequipped.', drawback: 'Protect costs 3 mana and uses his action.', mods: { guardAll: 1 }, keeps: 'bear' },
+  // The companions' own: each from their quest, each changing what they do.
+  'tally-stone': { name: 'The tally stone', holder: 'vulture', keeps: 'vulture',
+    effect: 'When her blow fells an enemy, she takes back 3 mana and 3 health. Attacks hit 1 harder. Permanently holds the hero’s memory of the vulture, even when unequipped.', drawback: 'Shows 1 more mana.', mods: { scavenge: 3, damage: 1, shown: 1 } },
+  'glass-dropper': { name: 'The glass dropper', holder: 'frog', keeps: 'frog',
+    effect: 'Her dose mends 6 more, twice what it did, and 3 more health. Permanently holds the hero’s memory of the frog, even when unequipped.', drawback: 'Her dart hits 1 softer.', mods: { mend: 6, health: 3, damage: -1 } },
+  'net-knot': { name: 'A knot of church net', holder: 'octopus', keeps: 'octopus',
+    effect: 'Mimic costs 2 less mana, and 4 more health. Permanently holds the hero’s memory of the octopus, even when unequipped.', drawback: 'Shows 2 more mana.', mods: { mimicCost: 2, health: 4, shown: 2 } },
   'yoke-peg': { name: 'Yoke peg', holder: 'bear',
     effect: '8 more health.', drawback: 'Attacks hit 2 softer.', mods: { health: 8, damage: -2 } },
   'wool-charm': { name: 'Wool charm',
@@ -102,7 +114,7 @@ export function equip(gear: Gear, owned: readonly KeepsakeId[], member: MemberId
 }
 
 // Which way is better for each modifier: more health is good, more mana shown is not.
-const GOOD: Record<keyof Mods, 1 | -1> = { health: 1, damage: 1, reveal: 1, agility: 1, shown: -1, suppressCost: -1, guardAll: 1 };
+const GOOD: Record<keyof Mods, 1 | -1> = { health: 1, damage: 1, reveal: 1, agility: 1, shown: -1, suppressCost: -1, guardAll: 1, scavenge: 1, mend: 1, mimicCost: 1 };
 
 // A tempered keepsake's benefits grow by half (rounded up); its drawbacks stay as they were.
 export function keepsakeMods(id: KeepsakeId, tempered = false): Partial<Mods> {

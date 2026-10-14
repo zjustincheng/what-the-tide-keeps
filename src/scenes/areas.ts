@@ -13,6 +13,7 @@ import { fortStreet } from '../content/fortLife';
 import { marshStreet, hospiceLife } from '../content/marshLife';
 import { portLife } from '../content/oceanLife';
 import { bearReturn, withBearReplies, withBearLedger } from '../content/bearQuest';
+import { frogReturn, octopusReturn, vultureReturn, withFrogBook, withFrogReplies, withOctopusReplies, withVultureReplies } from '../content/companionQuests';
 import { hall, inn, millInside, tannery } from '../content/interiors';
 import { barrow, downs } from '../content/downs';
 import { fen, weir } from '../content/fen';
@@ -390,7 +391,7 @@ export const PASS: Area = {
   decorate: scene => snowfall(scene, 640, 1024),
 };
 export const FORT: Area = {
-  key: 'fort', map: 'fort', tileset: 'fort', music: 'garrison', region: 'THE HIGHLANDS', place: 'The fort town', dialogue: { ...fort, ...fortLore, ...fortStreet },
+  key: 'fort', map: 'fort', tileset: 'fort', music: 'garrison', region: 'THE HIGHLANDS', place: 'The fort town', dialogue: withVultureReplies({ ...fort, ...fortLore, ...fortStreet }),
   ground: 'dirt', surfaces: { 2: 'stone', 5: 'stone', 20: 'grass', 22: 'water' }, grade: COLD, enemies: [],
   npcs: [...['sergeant', 'quartermaster', 'lynx', 'veteran', 'merchant', 'fence', 'chaplain', 'raven', 'teacher'].map(name => ({ point: name, texture: name })),
     // The schoolmistress's two pupils, sitting for a lesson in the square.
@@ -409,10 +410,12 @@ export const FORT: Area = {
 export const BARRACKS: Area = { ...INDOORS, region: 'THE HIGHLANDS', key: 'barracks', map: 'barracks', place: 'The fort · Barracks', dialogue: barracks,
   npcs: [{ point: 'wrestler', texture: 'wrestler' }], exits: { out: { to: 'fort', spawn: 'from-barracks', prompt: 'Go back outside' } } };
 export const BATTLEFIELD: Area = {
-  ...HIGHLAND_GROUND, key: 'battlefield', map: 'battlefield', music: 'highlands', place: 'The old battlefield', dialogue: battlefield,
+  ...HIGHLAND_GROUND, key: 'battlefield', map: 'battlefield', music: 'highlands', place: 'The old battlefield', dialogue: { ...battlefield, ...vultureReturn },
   grade: { saturation: -0.5, brightness: 0.74, vignette: 0.55 }, assets: ['ghoul'],
   // The vulture takes the hero for a grave thief and fights him once, unless he comes carrying her own note. After that she will talk.
-  npcs: [{ point: 'vulture', texture: 'vulture', hiddenIf: [{ not: { any: [{ flag: 'vulture-met' }, { has: 'note' }] } }, { flag: 'vulture-free' }] }],
+  npcs: [{ point: 'vulture', texture: 'vulture', hiddenIf: [{ not: { any: [{ flag: 'vulture-met' }, { has: 'note' }] } }, { flag: 'vulture-free' }] },
+    // Once the hyena is dead, she asks to come back here, to the graves she dug (src/content/companionQuests.ts).
+    { point: 'vulture-return', texture: 'vulture', hiddenIf: [{ not: { flag: 'vulture-free' } }, { not: { flag: 'hyena-slain' } }, { fallen: 'vulture' }, { flag: 'vulture-quest-complete' }] }],
   enemies: [
     { point: 'vulture', encounter: 'vulture', hiddenIf: [{ flag: 'vulture-met' }, { has: 'note' }, { flag: 'vulture-free' }], defeat: { set: 'vulture-met' } },
     // The hyena raises the dead; with her gone they stay down.
@@ -651,7 +654,7 @@ export const CAUSEWAY: Area = {
 };
 
 export const WICKMERE: Area = {
-  ...MARSH_GROUND, key: 'wickmere', map: 'wickmere', place: 'Wickmere', dialogue: { ...wickmere, ...marshStreet },
+  ...MARSH_GROUND, key: 'wickmere', map: 'wickmere', place: 'Wickmere', dialogue: withFrogReplies({ ...wickmere, ...marshStreet }),
   grade: { saturation: -0.45, brightness: 0.74, vignette: 0.5 },
   npcs: [
     { point: 'magistrate', texture: 'magistrate' }, { point: 'newt', texture: 'newt', hiddenIf: [{ flag: 'newt-freed' }] }, { point: 'ferryman', texture: 'beaver' },
@@ -676,11 +679,12 @@ export const WICKMERE: Area = {
 };
 
 export const HOSPICE: Area = {
-  ...MARSH_GROUND, key: 'hospice', map: 'hospice', music: 'church', place: 'The hospice', dialogue: { ...hospice, ...hospiceLife }, ground: 'wood',
+  ...MARSH_GROUND, key: 'hospice', map: 'hospice', music: 'church', place: 'The hospice', dialogue: { ...withFrogBook({ ...hospice, ...hospiceLife }), ...frogReturn }, ground: 'wood',
   grade: { saturation: -0.5, brightness: 0.68, vignette: 0.6 },
   npcs: [
     { point: 'sister', texture: 'sister' }, { point: 'frog', texture: 'frog', hiddenIf: [{ flag: 'frog-free' }] },
     { point: 'patient-1', texture: 'sick-badger' }, { point: 'patient-2', texture: 'sick-hare' },
+    { point: 'frog-return', texture: 'frog', hiddenIf: [{ not: { flag: 'frog-free' } }, { not: { flag: 'viper-slain' } }, { fallen: 'frog' }, { flag: 'frog-quest-complete' }] },
   ],
   enemies: [],
   exits: { out: { to: 'wickmere', spawn: 'from-hospice', prompt: 'Go back out to the decks' } },
@@ -909,7 +913,7 @@ export const OPEN_WATER: Area = {
 };
 
 export const SEA_PENS: Area = {
-  ...SEA_GROUND, key: 'sea-pens', map: 'sea-pens', place: 'The fleet\'s pens', dialogue: seaPens, ground: 'wood',
+  ...SEA_GROUND, key: 'sea-pens', map: 'sea-pens', place: 'The fleet\'s pens', dialogue: withOctopusReplies(seaPens), ground: 'wood',
   grade: { saturation: -0.45, brightness: 0.72, vignette: 0.6 },
   npcs: [{ point: 'elder', texture: 'elder' }],
   enemies: [],
@@ -917,9 +921,9 @@ export const SEA_PENS: Area = {
 };
 
 export const KRAKEN_GRAVE: Area = {
-  ...SEA_GROUND, key: 'kraken-grave', map: 'kraken-grave', place: 'The kraken\'s grave', dialogue: krakenGrave, ground: 'dirt',
+  ...SEA_GROUND, key: 'kraken-grave', map: 'kraken-grave', place: 'The kraken\'s grave', dialogue: { ...krakenGrave, ...octopusReturn }, ground: 'dirt',
   grade: { saturation: -0.5, brightness: 0.78, vignette: 0.6 },
-  npcs: [], enemies: [],
+  npcs: [{ point: 'octopus-return', texture: 'octopus', hiddenIf: [{ not: { flag: 'octopus-free' } }, { not: { flag: 'cuttlefish-slain' } }, { fallen: 'octopus' }, { flag: 'octopus-quest-complete' }] }], enemies: [],
   exits: { out: { to: 'open-water', spawn: 'from-grave', prompt: 'Wade back into the open water' } },
 };
 

@@ -31,13 +31,19 @@ export function endingStory(world: Pick<World, 'flags'>, ending: Ending, hasName
       ? 'The bear sets the broken link on the table. “It doesn\'t hold me here any more,” he says. “It holds a place for me.”'
       : has('bear-free') ? 'The bear sets a chain link on the table. “I thought I had to remember enough for all of us.” He puts it down. “You can take a turn.”'
       : 'The pardon reaches the mill with the inquisitor\'s seal. The bear\'s chain comes off. There is a place for him at your table.', actors: ['bear'] },
-    { art: 'home-table', caption: 'THE VULTURE', text: has('vulture-free')
+    { art: 'home-table', caption: 'THE VULTURE', text: has('vulture-quest-complete')
+      ? 'The vulture sets her tally stone on the table and counts the marks for the children, all the way to the last one. “That one’s me,” she tells them. “The rest I put back in the ground properly.”'
+      : has('vulture-free')
       ? 'The vulture unfolds her old note: TRUST THE CHAMELEON. “I was right,” she says, and puts a clean sheet beside it.'
       : 'A courier finds the vulture at the battlefield. Her sentence is lifted with yours.', actors: ['vulture'] },
-    { art: 'home-table', caption: 'THE FROG', text: has('frog-free')
+    { art: 'home-table', caption: 'THE FROG', text: has('frog-quest-complete')
+      ? 'The frog measures the wine with a dropper before anyone drinks it. Nobody stops her. “Habit,” she says, and fills your cup properly, all the way.'
+      : has('frog-free')
       ? 'The frog stays on at the hospice. “Because I want to,” she says. It still sounds strange to her.'
       : 'The pardon reaches the hospice. The frog is offered work there, with wages and a door that isn\'t locked.', actors: ['frog'] },
-    { art: 'home-table', caption: 'THE OCTOPUS', text: has('octopus-free')
+    { art: 'home-table', caption: 'THE OCTOPUS', text: has('octopus-quest-complete')
+      ? 'The octopus ties the tablecloth to the table leg with a knot nobody else can undo, so the wind can’t take it. “Some things should stay where they’re put,” it says.'
+      : has('octopus-free')
       ? 'The octopus takes a berth on the first boat with the sea\'s delegates. “I\'m coming back,” it says, before anyone asks.'
       : 'Word reaches Wrecktown that your names are cleared. You leave a message for the octopus. There is a chair for it too.', actors: ['octopus'] },
     { art: 'home-table', caption: 'WEEKS LATER · A TOAST WITHOUT A CUPBEARER', text: hasName
