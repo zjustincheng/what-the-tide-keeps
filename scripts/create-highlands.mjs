@@ -4,6 +4,7 @@
 import { writeFileSync } from 'node:fs';
 import { crumble, ellipse, gap, grain, handholds, rect as krect, scatter as speckle, stairs, tileProps, vary } from './tile-kit.mjs';
 import { blocks, boulder, deadTree, planks, shadow, tuft, water } from './tile-art.mjs';
+import { EDGES, driftEdge } from './drift-edges.mjs';
 const rect = (x,y,w,h,c,o) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"${o===undefined?'':` fill-opacity="${o}"`}/>`;
 const sheet = (name, tiles) => {
   const rows = Math.ceil(tiles.length / 8);
@@ -81,6 +82,18 @@ HIGHLAND.push(rect(0,0,16,16,'#6a6a62')+rect(1,2,14,12,'#9a968a')+rect(1,2,14,1,
 // The frozen falls: a face of ice, chipped into handholds by whoever climbed it last.
 const ICEFACE = HIGHLAND.length + 1;
 HIGHLAND.push(handholds({ face: '#a8bcc4', light: '#e4eef2', hold: '#5a7280', accent: rect(4,0,1,16,'#c8dae0')+rect(11,0,1,16,'#94aab4') }));
+// The borders of drifts and of the frozen tarn, one for each way a cell can sit among its neighbours (scripts/drift-edges.mjs).
+// scripts/fix-drift-edges.mjs places them on the maps.
+export const SNOW_EDGE = HIGHLAND.length + 1;
+HIGHLAND.push(...EDGES.map(bits => driftEdge(bits, { ground: heather('#55573e'), face: '#c4cacb', lit: '#e2e8e8', shaded: '#a0a8aa',
+  marks: [[3,5,'#d4dada'],[4,5,'#d4dada'],[2,6,'#b4bcbe'],[3,6,'#b4bcbe'],[10,10,'#d4dada'],[9,11,'#b4bcbe'],[10,11,'#b4bcbe'],[12,4,'#eef4f4'],[5,13,'#eef4f4']] })));
+export const ICE_EDGE = HIGHLAND.length + 1;
+HIGHLAND.push(...EDGES.map(bits => driftEdge(bits, { ground: heather('#55573e'), face: '#9aaab0', lit: '#c8d6da', shaded: '#6a7c84',
+  marks: [[2,4,'#b8c6ca'],[3,4,'#b8c6ca'],[4,4,'#b8c6ca'],[9,10,'#b8c6ca'],[10,10,'#b8c6ca'],[11,10,'#b8c6ca'],[4,12,'#7a8a90'],[5,12,'#7a8a90'],[12,3,'#e4eef2']] })));
+// A pine, a boulder, a cairn, and a dead tree with no ground of their own, so they stand on whatever is under them: snow, ice, or heather.
+export const STANDING = HIGHLAND.length + 1;
+HIGHLAND.push(pine('none'), boulder(8,9,6,4.5,'#666660','#8e8e84','#4a4a44'),
+  HIGHLAND[8].replace(rect(0,0,16,16,'#55573e'), ''), deadTree('none','#3a3228','#524638'));
 sheet('highland', HIGHLAND);
 const HIGHLAND_SOLID = [3,5,7,8,9,10,11,13,14,16,18,19,21,22,24,26,27,29,30,BLOCK-1];
 const HIGHLAND_GAPS = [CRACK-1], HIGHLAND_CRUMBLES = [LOOSE-1];
