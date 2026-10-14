@@ -52,7 +52,7 @@ npm run test:unit # Pure TypeScript combat and memory rule tests
 
 ## The game today
 
-The whole story is playable, from the church and farmland through the highlands, marsh, mountain holds, ocean, and island finale, with side roads, secrets, and optional fights in every region. The game opens with the hero waking in the church: speak to the priest and inspect the ledger and basin. The church is safe ground: the first fights are out in the farmland, where enemies show their mana signatures and touching one starts a battle. (The automated tests open the game at `/?practice`, which puts a crop locust and a hooded exile in the church to fight.) The priest gives the farmland mission, and the south door opens onto the farmland. The farmland and Millbrook have been redrawn; the other regions' map tiles are still the original placeholders drawn in code.
+The whole story is playable, from the church and farmland through the highlands, marsh, mountain holds, ocean, and island finale, with side roads, secrets, and optional fights in every region. The game opens with the hero waking in the church: speak to the priest and inspect the ledger and basin. The church is safe ground: the first fights are out in the farmland, where enemies show their mana signatures and touching one starts a battle. (The automated tests open the game at `/?practice`, which puts a crop locust and a hooded exile in the church to fight.) The priest gives the farmland mission, and the south door opens onto the farmland. The church, the farmland, Millbrook, and the building interiors have been redrawn; the other regions' map tiles are still the original placeholders drawn in code.
 
 ## Battles
 
