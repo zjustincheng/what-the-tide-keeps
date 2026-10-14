@@ -2,7 +2,7 @@
 
 A 2D open-world web RPG with turn-based combat, set in a medieval world of animals. A hero framed for regicide is sentenced to fight, die, and be resurrected. Every death takes a memory.
 
-The first version is a solo game that runs entirely in the browser.
+It is a single-player game that runs entirely in the browser.
 
 ## Design
 
@@ -14,7 +14,7 @@ The [design guideline](docs/design-guideline.md) contains the story, world, comb
 - **Rendering:** Phaser
 - **Maps:** Tiled
 - **Saves:** Browser local storage
-- **Game rules:** Plain TypeScript, independent of Phaser, so combat and memory systems can be tested without a browser and moved to a server for future co-op.
+- **Game rules:** Plain TypeScript, independent of Phaser, so combat and memory systems can be tested without a browser.
 
 ## Play online
 

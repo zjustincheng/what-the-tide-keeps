@@ -11,7 +11,7 @@ Design pillars:
 - Difficult and vague on purpose. Enemies hide their strength, spells are unknown until studied, and the game explains little.
 - Death costs something real. A wipe never ends the game. It takes a memory and gives power back.
 - Information wins fights. Reading mana and knowing a spell matter more than raw stats.
-- Solo first. One player commands the party. Co-op comes later.
+- Single-player. One player commands the party.
 
 What each inspiration contributes:
 
@@ -232,7 +232,7 @@ This gives one character in the capital, two after the farmland, three after the
 - Magic is the equalizer. Spells do not depend on size, which is why a herbivore can stand beside a carnivore in a fight.
 - Reserve members still matter. Their memories count outside battle, and they can be swapped in between fights.
 
-In solo play the other four heroes are companions the player commands. Each has their own memory track, so a companion can forget the hero or stop believing the party was framed. Each companion slot is a seat a second player can take when co-op is added.
+In solo play the other four heroes are companions the player commands. Each has their own memory track, so a companion can forget the hero or stop believing the party was framed.
 
 ## Memory
 
@@ -478,18 +478,16 @@ The last image: by morning the human is gone. The cell is empty, the door is ope
 
 ## Tech
 
-The first version is a solo web game that runs entirely in the browser, with no server.
+The game is single-player and runs entirely in the browser, with no server.
 
 | Part | Choice | Why |
 | --- | --- | --- |
-| Language | TypeScript | One language for the client now and a server later |
+| Language | TypeScript | Types catch mistakes across a large set of rules and content |
 | Rendering | Phaser | Built for 2D tile maps, sprites, cameras and input |
 | Maps | Tiled | Free editor; Phaser loads its exports directly |
 | Saves | Browser local storage | Enough for one player's memories, anchors and grimoire |
 
-One structural rule: keep the game rules (mana, spells, memory loss) in a plain TypeScript module with no Phaser code. The battle screen calls into it, it can be tested without a browser, and it moves to a server largely unchanged when co-op is added.
-
-For co-op later: a Node server with WebSockets that owns fights and saves, and a small database in place of local storage.
+One structural rule: keep the game rules (mana, spells, memory loss) in a plain TypeScript module with no Phaser code. The battle screen calls into it, and it can be tested without a browser.
 
 ## Build order
 
