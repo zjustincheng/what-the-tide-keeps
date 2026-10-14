@@ -300,3 +300,41 @@ main[hidden] { display: none; }
 }
 #title-soundtracks { display: block; margin: 14px auto 0; padding: 8px 22px; border: 1px solid #c7ba8655; background: none; color: #c9c2a4; font: 13px Georgia, serif; letter-spacing: .1em; cursor: pointer; }
 #title-soundtracks:hover, #title-soundtracks:focus-visible { color: #f0e9ce; border-color: #c7ba86; outline: 2px solid #e4d6a3; outline-offset: 4px; }
+
+/* Short screens (most laptops): the whole frame fits the window. The game keeps its 4:3 shape, so the page narrows
+   until its height fits: about 85px of bar and footer around the map, and the header above it. */
+@media (min-width: 651px) and (max-height: 920px) {
+  main { padding-top: 14px; padding-bottom: 8px; max-width: min(1060px, calc((100vh - 136px) * 4 / 3 + 96px)); }
+  header { padding-bottom: 10px; }
+}
+/* The battle panel is never taller than about 720px, even on a large screen, so a fight is drawn tight enough to fit it
+   without scrolling: every hero's attack and spell in view. */
+@media (min-width: 651px) {
+  .party-battle { padding: 10px 5%; }
+  .party-battle .battle-heading .eyebrow { display: none; }
+  .party-battle h2 { font-size: 21px; margin: 2px 0 4px; }
+  .party-battle .enemy-row { min-height: 92px; padding: 6px 8px; }
+  .enemy-row .fighter { height: 58px; width: 70px; }
+  .enemy-row img { width: 64px; height: 64px; }
+  .enemy-row h3 { font-size: 16px; margin: 3px 0; }
+  .enemy-row p { margin: 3px 0; }
+  .intent { margin: 6px 0; font-size: 12px; }
+  .party-battle .battle-log { height: 40px; font-size: 11px; }
+  .party-roster { margin: 6px 0 8px; gap: 8px; }
+  .member-card { padding: 6px 8px; }
+  .member-card h3 { font-size: 15px; margin: 2px 0; }
+  .member-card p { margin: 2px 0; }
+  .party-fighter { height: 50px; width: 64px; }
+  .party-fighter img { height: 46px; }
+  .member-card .member-mana { min-height: 0; }
+  .protect-label, .target-spacer { height: 26px; }
+  .member-actions button { padding: 5px 2px; }
+}
+
+/* The kraken fight puts all five heroes and the kraken on one screen: a bigger enemy, and five narrow cards that stack
+   each label over its menu, so that row is as tall as it needs. */
+@media (min-width: 651px) {
+  .party-battle[data-encounter="kraken"] .enemy-row { min-height: 150px; }
+  .party-battle[data-encounter="kraken"] .enemy-fighter { height: 130px; }
+  .party-battle[data-encounter="kraken"] .protect-label, .party-battle[data-encounter="kraken"] .target-spacer { height: auto; margin-bottom: 4px; }
+}
