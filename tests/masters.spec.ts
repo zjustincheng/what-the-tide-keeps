@@ -31,6 +31,10 @@ test('the old wolf teaches riposte once the captain is dead, and it goes with th
   await expect(page.locator('#dialogue-text')).toContainText('Learned: Riposte');
   await page.keyboard.press('Escape');
   expect(JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.world.v1')))!).flags).toContain('learned-riposte');
+  // The equipment screen lists it.
+  await page.locator('#game').focus(); await page.keyboard.press('Tab');
+  await expect(page.locator('.equipment .techniques')).toContainText('Riposte');
+  await page.getByRole('button', { name: 'Done', exact: true }).click();
   // A fight in the fields carries it.
   await travel(page, 'fort', 'farmland', 'spawn');
   await page.evaluate(() => {

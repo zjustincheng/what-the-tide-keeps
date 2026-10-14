@@ -1,7 +1,7 @@
 import { MEMBERS } from '../../rules/battle';
 import { anchor, forgetAll, held, hollow, remind, tideTakesAll } from '../../rules/memory';
 import type { Companion } from '../../rules/memory';
-import { roster } from '../../rules/world';
+import { roster, techniques } from '../../rules/world';
 import type { ShopId } from '../../rules/world';
 import { endingStory } from '../../rules/ending';
 import { settle } from '../../rules/spells';
@@ -73,7 +73,7 @@ export function openEquipment(scene: AreaScene) {
   music.effect('open');
   scene.overlay = new EquipmentView(loadGear(), settle(loadBooks(), roster(loadWorld())), loadWorld().found, roster(loadWorld()), hollow(loadMemory()), scene.textures.getBase64('hero'),
     (gear, books) => { save.ok = saveGear(gear) && saveBooks(books); },
-    () => { scene.overlay?.destroy(); scene.overlay = undefined; scene.renderMemory(); scene.resumeExploration(); }, loadWorld().tempered ?? []);
+    () => { scene.overlay?.destroy(); scene.overlay = undefined; scene.renderMemory(); scene.resumeExploration(); }, loadWorld().tempered ?? [], techniques(loadWorld()));
 }
 
 export function openSettings(scene: AreaScene) {

@@ -1,6 +1,6 @@
 import { keepsakeDescription } from '../presentation/equipment';
 import { cost, createBattle, MEMBERS, visibleMana } from '../rules/battle';
-import type { MemberId } from '../rules/battle';
+import type { MemberId, Technique } from '../rules/battle';
 import { canEquip, equip, KEEPSAKES, SLOTS } from '../rules/gear';
 import type { Gear, KeepsakeId } from '../rules/gear';
 import type { Hollow } from '../rules/memory';
@@ -8,6 +8,13 @@ import { BOOK_IDS, BOOKS, carry, SPELLS, STARTING_BOOKS } from '../rules/spells'
 import type { BookId, Books } from '../rules/spells';
 import type { Found } from '../rules/world';
 import { music } from '../audio/music';
+
+// What the old masters taught, kept through every death.
+const TECHNIQUE_TEXT: Record<Technique, string> = {
+  riposte: 'Riposte: a perfect dodge of a blow strikes back',
+  footing: 'Footing: a graze comes from further off',
+  breath: 'Second breath: a perfect dodge gives back a point of mana',
+};
 
 // Between fights: choose each hero's grimoire and put found keepsakes into their slots.
 export class EquipmentView {
@@ -17,7 +24,7 @@ export class EquipmentView {
   private owned: KeepsakeId[];
   private books: BookId[];
 
-  constructor(private gear: Gear, private carried: Books, found: readonly Found[], private party: readonly MemberId[], private hollow: Hollow, heroImage: string, onChange: (gear: Gear, books: Books) => void, onClose: () => void, private tempered: readonly KeepsakeId[] = []) {
+  constructor(private gear: Gear, private carried: Books, found: readonly Found[], private party: readonly MemberId[], private hollow: Hollow, heroImage: string, onChange: (gear: Gear, books: Books) => void, onClose: () => void, private tempered: readonly KeepsakeId[] = [], techniques: readonly Technique[] = []) {
     this.owned = found.filter((id): id is KeepsakeId => id in KEEPSAKES);
     // Each hero's own grimoire is always theirs to carry; others must be found.
     // Only the grimoires of heroes who have joined, and those found along the way.
@@ -39,6 +46,7 @@ export class EquipmentView {
         ${Array.from({ length: SLOTS }, (_, slot) => `<label class="keepsake-slot">Keepsake ${slot + 1}
           <select data-slot="${slot}" aria-label="${MEMBERS[id].name} keepsake ${slot + 1}"></select><small></small></label>`).join('')}
       </section>`).join('')}</div>
+      <p class="memories-lost techniques">${techniques.length ? `Techniques · ${techniques.map(id => TECHNIQUE_TEXT[id]).join(' · ')}` : 'Techniques · none yet.'}</p>
       <p class="memories-lost found-keepsakes"></p>
       <button id="equipment-close" type="button">Done</button>`;
     document.querySelector('.game-frame')!.append(this.root);
