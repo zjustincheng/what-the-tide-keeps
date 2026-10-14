@@ -321,9 +321,35 @@ const fight = (chords: readonly Chord[]) => [
 // The kraken, in memory: the harbour wall, and the five of them on it. B minor.
 const KRAKEN_CHORDS: Chord[] = [[35, 'm'], [35, 'm'], [31, 'M'], [33, 'M'], [35, 'm'], [30, 'M'], [31, 'M'], [30, 'M']];
 
+const KRAKEN_CALL: Line = [
+  [71, 1], [74, .5], [78, .5], [76, 2], [74, 1], [73, 1], [71, 2],
+  [67, 1], [71, 1], [74, 2], [69, 1], [73, .5], [76, .5], [78, 2],
+  [83, 1], [81, 1], [78, 1], [76, 1], [78, 1], [76, 1], [73, 1], [70, 1],
+  [74, 1], [71, 1], [69, 1], [67, 1], [66, 1], [70, 1], [73, 1], [71, 1],
+];
+// The second strain climbs through G and A to the dominant, the way the wave came up the wall, and falls back.
+const KRAKEN_SECOND: Chord[] = [[31, 'M'], [33, 'M'], [30, 'M'], [35, 'm'], [31, 'M'], [33, 'M'], [30, 'M'], [30, 'M']];
+const KRAKEN_CLIMB = tune('D5:1 F#5:1 B5:2 | A5:1.5 G5:0.5 F#5:1 E5:1 | F#5:1 A#5:1 C#6:2 | B5:4 | G5:1 B5:1 D6:2 | C#6:1 B5:1 A5:1 G5:1 | F#5:1.5 E5:0.5 C#5:1 A#4:1 | F#4:2 -:2', 4);
+const harbour = (chords: readonly Chord[]) => [
+  ...perBar(chords, 4, (chord, start) => [
+    ...[0, 1, 2, 3].map(offset => ({ beat: start + offset, voice: 'bass' as const, midi: chord[0], beats: 0.85, velocity: 0.24 })),
+    ...[0, 2].map(offset => ({ beat: start + offset, voice: 'drum' as const, midi: 36, beats: 0.7, velocity: 0.5 })),
+    ...[1, 3].map(offset => ({ beat: start + offset, voice: 'snare' as const, midi: 60, beats: 0.35, velocity: 0.24 })),
+    ...arpeggio('staccato', chord, start, [0, 7, 'third', 7], 1, .09, .45, 12),
+  ]),
+  ...pad('strings', chords, 4, 0.09),
+];
+
 // Waking after a wipe: choir and bells hanging in the air, bright and wrong. C Lydian.
 const WAKE_CHORDS: readonly (readonly number[])[] = [[60, 64, 66, 71], [62, 66, 69, 73], [64, 67, 71, 74], [62, 66, 69, 72]];
 const WAKE_BELLS: Line = [[79, 2], [null, 2], [78, 2], [null, 2], [76, 4], [74, 4]];
+// The second half goes somewhere brighter and stranger still, and comes back to where it began.
+const WAKE_LATER: readonly (readonly number[])[] = [[59, 62, 66, 71], [60, 64, 67, 71], [62, 66, 69, 72], [60, 64, 66, 71]];
+const WAKE_LATER_BELLS: Line = [[74, 4], [76, 2], [null, 2], [72, 4], [71, 4]];
+const waking = (chords: readonly (readonly number[])[]) => chords.flatMap((notes, bar) => [
+  ...notes.map(midi => ({ beat: bar * 4, voice: 'choir' as const, midi, beats: 4, velocity: 0.07 })),
+  { beat: bar * 4, voice: 'bass' as const, midi: 36, beats: 4, velocity: 0.14 },
+]);
 
 export const THEMES: Record<ThemeId, Theme> = {
   ...BOSS_THEMES,
@@ -416,28 +442,15 @@ export const THEMES: Record<ThemeId, Theme> = {
     part(4, 8, fight(BATTLE_SECOND), line('strings', BATTLE_STRAIN, 0.13)),
     part(4, 8, fight(BATTLE_CHORDS), line('strings', BATTLE_LEAD, 0.13)),
   ) },
-  kraken: { name: 'The Kraken', bpm: 118, beatsPerBar: 4, bars: 8, events: [
-    ...perBar(KRAKEN_CHORDS, 4, (chord, start) => [
-      ...[0, 1, 2, 3].map(offset => ({ beat: start + offset, voice: 'bass' as const, midi: chord[0], beats: 0.85, velocity: 0.24 })),
-      ...[0, 2].map(offset => ({ beat: start + offset, voice: 'drum' as const, midi: 36, beats: 0.7, velocity: 0.5 })),
-      ...[1, 3].map(offset => ({ beat: start + offset, voice: 'snare' as const, midi: 60, beats: 0.35, velocity: 0.24 })),
-      ...arpeggio('staccato', chord, start, [0, 7, 'third', 7], 1, .09, .45, 12),
-    ]),
-    ...pad('strings', KRAKEN_CHORDS, 4, 0.09),
-    ...line('brass', [
-      [71, 1], [74, .5], [78, .5], [76, 2], [74, 1], [73, 1], [71, 2],
-      [67, 1], [71, 1], [74, 2], [69, 1], [73, .5], [76, .5], [78, 2],
-      [83, 1], [81, 1], [78, 1], [76, 1], [78, 1], [76, 1], [73, 1], [70, 1],
-      [74, 1], [71, 1], [69, 1], [67, 1], [66, 1], [70, 1], [73, 1], [71, 1],
-    ], .18),
-  ] },
-  wake: { name: 'Waking', bpm: 48, beatsPerBar: 4, bars: 4, events: [
-    ...WAKE_CHORDS.flatMap((notes, bar) => [
-      ...notes.map(midi => ({ beat: bar * 4, voice: 'choir' as const, midi, beats: 4, velocity: 0.07 })),
-      { beat: bar * 4, voice: 'bass' as const, midi: 36, beats: 4, velocity: 0.14 },
-    ]),
-    ...line('bell', WAKE_BELLS, 0.13),
-  ] },
+  kraken: { name: 'The Kraken', bpm: 118, beatsPerBar: 4, ...suite(4,
+    part(4, 8, harbour(KRAKEN_CHORDS), line('brass', KRAKEN_CALL, .18)),
+    part(4, 8, harbour(KRAKEN_SECOND), line('brass', KRAKEN_CLIMB, .17)),
+    part(4, 8, harbour(KRAKEN_CHORDS), line('brass', KRAKEN_CALL, .18), line('flute', KRAKEN_CALL, .07, 0, 12)),
+  ) },
+  wake: { name: 'Waking', bpm: 48, beatsPerBar: 4, ...suite(4,
+    part(4, 4, waking(WAKE_CHORDS), line('bell', WAKE_BELLS, 0.13)),
+    part(4, 4, waking(WAKE_LATER), line('bell', WAKE_LATER_BELLS, 0.11)),
+  ) },
 };
 export const THEME_IDS = Object.keys(THEMES) as ThemeId[];
 
