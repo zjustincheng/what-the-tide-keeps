@@ -64,8 +64,14 @@ test('the octopus stands on the harbor and the kraken-to-feast handoff stays cov
     scene.overlay.state = { ...scene.overlay.state, phase: 'victory', enemy: { ...scene.overlay.state.enemy, health: 0 } }; scene.overlay.render();
   });
   await page.getByRole('button', { name: 'The final blow', exact: true }).click();
-  await expect(page.locator('.cinematic[data-story="krakenSlain"]')).toBeVisible();
-  for (let shot = 0; shot < 5; shot++) await advance(page);
+  const slain = page.locator('.cinematic[data-story="krakenSlain"]'); await expect(slain).toBeVisible();
+  // The kraken is the one who goes under; on the harbour wall, the five are still standing.
+  const sinking = (actor: string) => slain.locator(`[data-actor="${actor}"]`).evaluate(img => getComputedStyle(img).animationName === 'kraken-defeated');
+  await expect(slain).toHaveAttribute('data-shot', '0'); expect(await sinking('kraken')).toBe(true);
+  while (await slain.getAttribute('data-shot') === '0') await advance(page);
+  await expect(slain.locator('[data-actor="hero"]')).toBeVisible();
+  for (const hero of ['hero', 'bear', 'vulture', 'frog', 'octopus']) expect(await sinking(hero), hero).toBe(false);
+  for (let shot = 0; shot < 5 && await slain.count(); shot++) await advance(page);
   await expect(page.locator('.cinematic[data-story="waking"]')).toBeVisible();
   expect(await page.evaluate(() => window.sceneGap)).toBe(false);
 });

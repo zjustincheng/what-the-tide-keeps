@@ -202,13 +202,13 @@ main[hidden] { display: none; }
 .cinematic[data-story="krakenSlain"][data-art="harbor"] .cinema-actors { left: 3%; right: 34%; bottom: 7%; gap: 2px; }
 .cinematic[data-story="krakenSlain"] .cinema-actors img { width: clamp(38px, 9vw, 96px); }
 .cinematic[data-story="krakenSlain"] .cinema-actors img[data-actor="kraken"] { width: min(85%, 440px); max-height: 260px; }
-.cinematic[data-story="krakenSlain"][data-shot="1"] .cinema-actors img { animation: kraken-defeated 3s ease-in forwards; }
-.cinematic[data-story="krakenSlain"][data-shot="1"] .cinema-picture::after { background: #d9f5e4; animation: kraken-impact 1.2s ease-out both; }
-.cinematic[data-story="krakenSlain"][data-shot="2"] .cinema-actors::before { content: ''; position: absolute; inset: -45px -8px -10px; border: 3px solid #bbe9d9; border-radius: 50% 50% 0 0; box-shadow: 0 0 25px #8acbd2aa, inset 0 0 35px #8acbd266; animation: barrier-swell 2s ease-out both; }
+.cinematic[data-story="krakenSlain"][data-shot="0"] .cinema-actors img { animation: kraken-defeated 3s ease-in forwards; }
+.cinematic[data-story="krakenSlain"][data-shot="0"] .cinema-picture::after { background: #d9f5e4; animation: kraken-impact 1.2s ease-out both; }
+.cinematic[data-story="krakenSlain"][data-shot="1"] .cinema-actors::before { content: ''; position: absolute; inset: -45px -8px -10px; border: 3px solid #bbe9d9; border-radius: 50% 50% 0 0; box-shadow: 0 0 25px #8acbd2aa, inset 0 0 35px #8acbd266; animation: barrier-swell 2s ease-out both; }
 @keyframes kraken-defeated { 0% { transform: translateY(0) rotate(0); opacity: 1; } 18% { transform: translateY(-8px) rotate(-4deg); } 40% { transform: translateY(5px) rotate(4deg); opacity: .9; } 100% { transform: translateY(100px) rotate(12deg); opacity: 0; } }
 @keyframes kraken-impact { from { opacity: .85; } to { opacity: 0; } }
 @keyframes barrier-swell { from { opacity: 0; transform: scale(.65); } to { opacity: .8; transform: scale(1); } }
-@media(prefers-reduced-motion:reduce) { .party-battle.kraken-slain .enemy-row::after, .cinematic[data-story="krakenSlain"][data-shot="1"] .cinema-picture::after { display: none; } }
+@media(prefers-reduced-motion:reduce) { .party-battle.kraken-slain .enemy-row::after, .cinematic[data-story="krakenSlain"][data-shot="0"] .cinema-picture::after { display: none; } }
 .party-battle:not([data-encounter="kraken"]) .enemy-fighter[data-defeated="true"] img { animation: enemy-defeated 1.5s ease-in forwards; transform-origin: 50% 90%; }
 @keyframes enemy-defeated { 0% { transform: translateY(0) rotate(0); opacity: 1; } 18% { transform: translateY(-8px) rotate(-5deg); opacity: 1; } 42% { transform: translateY(4px) rotate(6deg); opacity: .85; } 100% { transform: translateY(22px) rotate(16deg); opacity: .18; } }
 @media(prefers-reduced-motion:reduce) { .party-battle:not([data-encounter="kraken"]) .enemy-fighter[data-defeated="true"] img { animation: none; opacity: .18; } }
