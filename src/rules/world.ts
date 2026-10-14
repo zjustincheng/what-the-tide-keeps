@@ -157,11 +157,13 @@ export function lineup(world: World, lieutenant = false): MemberId[] {
 // Send someone to wait, or bring them back to fight. Bringing a fourth back sends the newest fighter to wait in their place.
 // The last one fighting can't be sent to wait.
 export function toggleWaiting(world: World, member: MemberId): World {
-  if (!roster(world).includes(member) || (world.fallen ?? []).includes(member)) return world;
+  const fallen = world.fallen ?? [];
+  if (!roster(world).includes(member) || fallen.includes(member)) return world;
   const waiting = world.waiting ?? [];
   if (!lineup(world).includes(member)) {
     const back = { ...world, waiting: waiting.filter(other => other !== member) };
-    const fighting = roster(back).filter(other => !(back.waiting ?? []).includes(other));
+    // The fallen aren't fighting, so they don't take up a place among the three.
+    const fighting = roster(back).filter(other => !(back.waiting ?? []).includes(other) && !fallen.includes(other));
     const bumped = fighting.length > FIGHTERS ? fighting.filter(other => other !== member).at(-1) : undefined;
     return bumped ? { ...back, waiting: [...(back.waiting ?? []), bumped] } : back;
   }

@@ -33,6 +33,14 @@ test('a hero still down after a fight has fallen: rest doesn\'t raise them, and 
   assert.deepEqual(lineup(down), ['chameleon', 'vulture', 'frog'], 'the frog fights in the bear\'s place');
   assert.deepEqual(rest(down).fallen, ['bear'], 'a fire closes wounds, not death');
   assert.equal(toggleWaiting(down, 'bear'), down, 'the fallen can\'t be sent to fight');
+  // Someone sent to wait can be brought back to fill the gap: the fallen don't count against the three.
+  const benched = fell({ ...world, waiting: ['frog'] } as never, ['bear']);
+  assert.deepEqual(lineup(benched), ['chameleon', 'vulture']);
+  assert.deepEqual(lineup(toggleWaiting(benched, 'frog')), ['chameleon', 'vulture', 'frog'], 'three can fight again');
+  const five = { ...createWorld(), flags: ['bear-free', 'vulture-free', 'frog-free', 'octopus-free'] as const, waiting: ['frog', 'bear'] as const };
+  const octopusDown = fell(five as never, ['octopus']);
+  assert.deepEqual(lineup(toggleWaiting(octopusDown, 'frog')), ['chameleon', 'vulture', 'frog'], 'bringing one back never bumps a fallen hero instead of a fighter');
+  assert.deepEqual(lineup(toggleWaiting(toggleWaiting(octopusDown, 'frog'), 'bear')), ['chameleon', 'bear', 'vulture'], 'a fourth brought back still sends the newest living fighter to wait');
   const context = { world: down, studied: [], lost: createMemory().lost };
   assert.deepEqual(apply(context, { raise: 'bear', pay: 40 }).world.fallen, [], 'the church raises them');
   assert.deepEqual(drop(down).fallen, [], 'a wipe wakes everyone at the cot');
