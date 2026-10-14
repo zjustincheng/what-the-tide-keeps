@@ -1,7 +1,7 @@
 import { memories } from '../content/memories';
 import { ANCHOR_SLOTS, canRemind, held, PERKS, PERK_BONUS } from '../rules/memory';
 import type { Companion, Memory, MemoryId } from '../rules/memory';
-import { canRemindCompanion, COMPANION_MEMORY_IDS, INITIAL_MINDS } from '../rules/companionMemory';
+import { canRemindCompanion, COMPANION_MEMORY_IDS, INITIAL_MINDS, remembers } from '../rules/companionMemory';
 import type { CompanionMemoryId } from '../rules/companionMemory';
 import { companionMemory } from '../content/companionMemories';
 
@@ -19,6 +19,8 @@ export class AnchorView {
     const offers = companions.flatMap(({ id: by, name }) => memory.lost.filter(id => canRemind(memory, by, id)).map(id => ({ by, name, id })));
     // And what he can give back to them: whatever they lost that he still holds himself.
     const minds = memory.companions ?? INITIAL_MINDS;
+    // Friends who don't know him can't remind him of anything: say so, rather than leave them out without a word.
+    const strangers = companions.filter(({ id }) => !remembers(minds, id, 'hero')).map(({ name }) => name.toLowerCase());
     const gifts = joined.flatMap(({ id: to, name }) => COMPANION_MEMORY_IDS.filter(id => canRemindCompanion(held(memory), minds, to, id)).map(id => ({ to, name, id })));
     this.root = document.createElement('section');
     this.root.className = 'battle resurrection anchor';
@@ -38,6 +40,7 @@ export class AnchorView {
           <span><strong>${name}: ${memories[id].name}</strong><small>Yours again until the next time you die.</small></span></label>`).join('')}
         <label class="memory-choice reminder-anchor" hidden><input type="radio" name="anchor" disabled /><span><strong></strong><small>Write this reminder down now. It will remain yours after the next death.</small></span></label>
       </fieldset>` : ''}
+      ${strangers.length ? `<p class="memories-lost strangers">The ${strangers.join(' and the ')} ${strangers.length > 1 ? 'don’t' : 'doesn’t'} know you, and can’t remind you of anything until you remind them who you are.</p>` : ''}
       ${gifts.length ? `<fieldset class="memory-choices reminders gifts"><legend>Remind a friend</legend>${gifts.map(({ to, name, id }) => `
         <label class="memory-choice"><input type="radio" name="give" value="${to}:${id}" />
           <span><strong>${name}: ${companionMemory(to, id).name}</strong><small>Theirs again until the next time the party falls.</small></span></label>`).join('')}

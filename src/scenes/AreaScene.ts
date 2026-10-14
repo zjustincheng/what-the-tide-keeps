@@ -268,7 +268,7 @@ export class AreaScene extends Phaser.Scene {
 
   context(): Context {
     const memory = loadMemory();
-    return { world: loadWorld(), lost: memory.lost, remembered: held(memory), studied: loadGrimoire() };
+    return { world: loadWorld(), lost: memory.lost, remembered: held(memory), studied: loadGrimoire(), minds: memory.companions };
   }
 
   point(name: string): Point {

@@ -1,3 +1,5 @@
+import { forgettingAtCamp } from '../../rules/companionTalk';
+import { INITIAL_MINDS } from '../../rules/companionMemory';
 import type Phaser from 'phaser';
 import type { Choice, Conversation } from '../../content/dialogue';
 import type { Context, Effect } from '../../rules/world';
@@ -105,6 +107,8 @@ export class TownLife {
   }
 
   campMoment(who: CampTalk, context: Context) {
-    return CAMP_TALKS[who].moment(context);
+    // A companion the tide has taken something from talks like it.
+    const usual = CAMP_TALKS[who].moment(context);
+    return who === 'hero' ? usual : forgettingAtCamp(who, context.minds ?? INITIAL_MINDS, usual);
   }
 }

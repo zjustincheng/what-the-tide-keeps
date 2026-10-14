@@ -57,3 +57,19 @@ test('at a fire, the hero can give the frog back the feast, and she believes aga
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('tide-keeps.memory.v1')!));
   expect(saved.companions.frog.reminded).toEqual(['feast']);
 });
+
+test('at a fire, a friend who has forgotten the hero says why they can\'t remind him', async ({ page }) => {
+  await page.addInitScript(() => {
+    if (localStorage.getItem('tide-keeps.memory.v1')) return;
+    localStorage.setItem('tide-keeps.memory.v1', JSON.stringify({ lost: ['home', 'name', 'kraken'], pending: false, companions: { bear: { lost: ['hero'] } } }));
+  });
+  await start(page);
+  await page.evaluate(async () => {
+    const { writeDown } = await import('/src/scenes/area/panels.ts');
+    writeDown(window.mindRun.game!.scene.getScene('church') as never, () => undefined);
+  });
+  await expect(page.locator('.anchor .strangers')).toContainText('The bear doesn’t know you');
+  // He can't remind the hero of the kraken; the hero can remind him who he is.
+  await expect(page.getByRole('group', { name: 'Ask a friend to remind you' }).getByRole('radio', { name: /^Bear:/ })).toHaveCount(0);
+  await expect(page.locator('.gifts input[value="bear:hero"]')).toBeVisible();
+});

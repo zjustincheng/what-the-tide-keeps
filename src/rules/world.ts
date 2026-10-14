@@ -4,6 +4,7 @@ import type { MemoryId } from './memory';
 import type { KeepsakeId } from './gear';
 import type { BookId } from './spells';
 import type { MemberId, Technique } from './battle';
+import type { Minds } from './companionMemory';
 import { NO_SUPPLIES } from './economy.ts';
 import type { Supplies, SupplyId } from './economy';
 import { feed, FISH_IDS, NO_CATCH } from './fishing.ts';
@@ -65,7 +66,8 @@ export const FLAGS: readonly Flag[] = ['learned-riposte', 'learned-footing', 'le
 export const BRAMBLES = "Bramble's leave";
 
 // What a line of dialogue can depend on.
-export type Context = Readonly<{ world: World; lost: readonly MemoryId[]; remembered?: readonly MemoryId[]; studied: readonly string[] }>;
+// minds: what each companion remembers, when the scene knows it.
+export type Context = Readonly<{ world: World; lost: readonly MemoryId[]; remembered?: readonly MemoryId[]; studied: readonly string[]; minds?: Minds }>;
 export type Condition = { forgot: MemoryId } | { remembers: MemoryId } | { has: Item } | { flag: Flag } | { knows: string } | { owns: Found } | { not: Condition } | { all: Condition[] } | { any: Condition[] }
   // coins: carrying at least this many.
   | { coins: number }
