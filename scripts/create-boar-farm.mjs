@@ -2,16 +2,19 @@
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
 import { rect as krect, rows, scatter, sheet, stairs, vary } from './tile-kit.mjs';
-const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
+import { deadTree, shadow } from './tile-art.mjs';
+const rect = (x,y,w,h,c,o) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"${o===undefined?'':` fill-opacity="${o}"`}/>`;
+const scorched = () => rect(0,0,16,16,'#4b4a38')+rect(3,4,3,1,'#2c2b22')+rect(9,10,4,1,'#2c2b22')+rect(6,13,1,1,'#7a6f4a')+rect(12,3,2,2,'#3a3a2e')+rect(1,11,1,2,'#5a5a42');
 const tiles = [
-  rect(0,0,16,16,'#4b4a38')+rect(3,4,3,1,'#2c2b22')+rect(9,10,4,1,'#2c2b22')+rect(6,13,1,1,'#7a6f4a'),                          // 0 scorched grass
-  rect(0,0,16,16,'#3a3833')+rect(2,3,2,2,'#56524a')+rect(10,8,3,2,'#2a2824')+rect(6,12,2,1,'#6a5a48')+rect(12,2,1,1,'#b0603a'),   // 1 ash
-  rect(0,0,16,16,'#6f5c40')+rect(2,3,2,1,'#86704d')+rect(10,9,3,1,'#5a4a33'),                                                     // 2 road
-  rect(0,0,16,16,'#3a3833')+rect(1,0,14,16,'#2a221c')+rect(2,2,12,3,'#3d3027')+rect(2,9,12,3,'#3d3027')+rect(4,6,2,2,'#7a3a22'), // 3 charred wall
-  rect(0,0,16,16,'#3a3833')+rect(0,7,16,3,'#2a221c')+rect(3,8,4,1,'#5a3a2a')+rect(11,5,2,8,'#2a221c'),                            // 4 fallen beam
-  rect(0,0,16,16,'#4b4a38')+rect(7,3,2,13,'#2e2620')+rect(3,4,5,1,'#2e2620')+rect(9,1,4,1,'#2e2620')+rect(4,2,1,3,'#2e2620'),    // 5 dead tree
-  rect(0,0,16,16,'#4b4a38')+rect(7,6,2,10,'#4a3a28')+rect(2,1,12,7,'#5a4630')+rect(3,2,10,5,'#d8d0b4')+rect(4,3,6,1,'#5a5248')+rect(4,5,8,1,'#5a5248'), // 6 gatepost notice
-  rect(0,0,16,16,'#4b4a38')+rect(0,6,16,2,'#2e2620')+rect(2,4,2,9,'#2e2620')+rect(12,4,2,9,'#2e2620'),                          // 7 burned fence
+  scorched(),                                                                                                 // 0 scorched grass
+  rect(0,0,16,16,'#3a3833')+rect(2,3,2,2,'#56524a')+rect(10,8,3,2,'#2a2824')+rect(6,12,2,1,'#6a5a48')+rect(12,2,1,1,'#b0603a')+rect(4,9,1,1,'#d07040')+rect(13,13,2,1,'#4a4640'), // 1 ash
+  rect(0,0,16,16,'#6f5c40')+rect(2,3,2,1,'#86704d')+rect(10,9,3,1,'#5a4a33')+rect(12,4,1,1,'#86704d')+rect(5,12,2,1,'#4a3c2a'), // 2 road
+  rect(0,0,16,16,'#3a3833')+rect(1,0,14,16,'#2a221c')+rect(1,0,1,16,'#3d3027')+rect(2,2,12,3,'#3d3027')+rect(2,2,12,1,'#4e3e32')+rect(2,9,12,3,'#3d3027')+rect(2,9,12,1,'#4e3e32')
+    +rect(4,6,2,2,'#7a3a22')+rect(5,6,1,1,'#b0603a')+rect(10,13,3,1,'#1a1612')+rect(14,0,1,16,'#1a1612'),           // 3 charred wall
+  rect(0,0,16,16,'#3a3833')+shadow(8,11,8,1)+rect(0,7,16,3,'#2a221c')+rect(0,7,16,1,'#4a3a30')+rect(3,8,4,1,'#5a3a2a')+rect(8,8,1,1,'#b0603a')+rect(11,5,2,8,'#2a221c')+rect(11,5,1,8,'#4a3a30'), // 4 fallen beam
+  deadTree('#4b4a38'),                                                                                      // 5 dead tree
+  scorched()+shadow(10,15,3,1)+rect(7,6,2,10,'#4a3a28')+rect(8,6,1,10,'#2e2418')+rect(2,1,12,7,'#5a4630')+rect(2,1,12,1,'#7a6448')+rect(3,2,10,5,'#d8d0b4')+rect(4,3,6,1,'#5a5248')+rect(4,5,8,1,'#5a5248')+rect(11,2,2,2,'#2a2018',0.5), // 6 gatepost notice
+  scorched()+shadow(8,12,8,1)+rect(0,6,16,2,'#2e2620')+rect(0,6,16,1,'#4a3e32')+rect(2,4,2,9,'#2e2620')+rect(2,4,1,9,'#4a3e32')+rect(12,4,2,9,'#2e2620')+rect(12,4,1,9,'#4a3e32')+rect(7,8,2,2,'#1a1612'), // 7 burned fence
 ];
 // Variants of the scorched grass: ash drifted into it, and a little green coming back.
 const SCORCH_VARIANTS = [tiles.length + 1, tiles.length + 2];
@@ -21,6 +24,8 @@ tiles.push(
 );
 const svg = sheet(tiles);
 writeFileSync('public/assets/ash-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
+// TILES_ONLY=1 redraws the tiles and leaves the maps alone: they have been edited by hand since this script made them.
+if (process.env.TILES_ONLY) process.exit(0);
 
 const w=32,h=24, floor=Array(w*h).fill(0), furniture=Array(w*h).fill(0);
 const put=(a,x,y,t)=>a[y*w+x]=t;

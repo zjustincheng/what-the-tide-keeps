@@ -1,19 +1,24 @@
 // Rebuild the placeholder border-road tileset and Tiled JSON map.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
-import { rect as krect, rows, scatter, sheet, stairs, vary } from './tile-kit.mjs';
-const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
+import { ellipse, rect as krect, rows, scatter, sheet, stairs, vary } from './tile-kit.mjs';
+import { shadow, tree, turf } from './tile-art.mjs';
+const rect = (x,y,w,h,c,o) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"${o===undefined?'':` fill-opacity="${o}"`}/>`;
+const verge = () => turf('#5f7442','#7d8f55','#4f6338');
 const tiles = [
-  rect(0,0,16,16,'#5f7442')+rect(3,4,1,2,'#7d8f55')+rect(11,10,1,2,'#7d8f55'),                                 // 0 grass
-  rect(0,0,16,16,'#8a7350')+rect(2,3,2,1,'#a48a60')+rect(10,9,3,1,'#6f5c40')+rect(6,13,1,1,'#a48a60'),          // 1 road
-  rect(0,0,16,16,'#2f4429')+rect(1,1,6,6,'#3e5a33')+rect(8,4,7,7,'#3a5530')+rect(3,9,6,6,'#456438')+rect(5,3,1,1,'#7a4a5a')+rect(11,12,1,1,'#7a4a5a'), // 2 hedgerow
-  rect(0,0,16,16,'#8c8450')+[2,6,10,14].map(x=>rect(x,0,1,16,'#a69c5e')).join(''),                              // 3 stubble field
-  rect(0,0,16,16,'#5f7442')+rect(1,3,15,9,'#6a5236')+rect(2,1,13,4,'#c9b36a')+rect(1,12,1,3,'#3a2e22')+rect(4,10,5,5,'#3a2e22')+rect(5,11,3,3,'#6a5236'), // 4 cart, rear
-  rect(0,0,16,16,'#5f7442')+rect(0,3,12,9,'#6a5236')+rect(0,1,11,4,'#c9b36a')+rect(7,10,5,5,'#3a2e22')+rect(8,11,3,3,'#6a5236')+rect(12,7,4,1,'#5d4630'), // 5 cart, front
-  rect(0,0,16,16,'#5f7442')+rect(3,4,10,11,'#b7a273')+rect(4,2,8,3,'#c9b685')+rect(6,1,4,2,'#8c7049')+rect(5,8,6,2,'#8d7a52'), // 6 grain sack
-  rect(0,0,16,16,'#5f7442')+rect(1,1,14,11,'#2f4a2c')+rect(3,2,9,6,'#3f5f36')+rect(7,11,3,5,'#4a3a28'),         // 7 tree
-  rect(0,0,16,16,'#5f7442')+rect(7,4,2,12,'#5d4630')+rect(2,1,12,5,'#7b3a2e')+rect(3,2,10,3,'#c5b275'),           // 8 border marker
-  rect(0,0,16,16,'#4b4a38')+rect(3,4,3,1,'#2c2b22')+rect(9,10,4,1,'#2c2b22')+rect(6,13,1,1,'#7a6f4a'),          // 9 scorched grass
+  verge(),                                                                                                  // 0 grass
+  rect(0,0,16,16,'#8a7350')+rect(2,3,2,1,'#a48a60')+rect(10,9,3,1,'#6f5c40')+rect(6,13,1,1,'#a48a60')+rect(12,4,1,1,'#b49a6c')+rect(13,5,1,1,'#5f4d36')+rect(4,10,2,1,'#5f4d36',0.6), // 1 road
+  rect(0,0,16,16,'#2a3e26')+ellipse(4,4,4.5,4,'#3a5530')+ellipse(12,5,4.5,4.5,'#3e5a33')+ellipse(6,11.5,5,4.5,'#3a5530')+ellipse(13,13,3.5,3.5,'#3a5530')
+    +ellipse(3,3,2,1.5,'#4e6e40')+ellipse(11,4,2,1.5,'#4e6e40')+ellipse(5,10,2,1.5,'#4e6e40')+rect(5,3,1,1,'#8a4a5a')+rect(11,12,1,1,'#8a4a5a')+rect(14,7,1,1,'#d8d0b8'), // 2 hedgerow
+  rect(0,0,16,16,'#7a7444')+[1,5,9,13].map(x=>rect(x,0,1,16,'#a69c5e')+rect(x+1,0,1,16,'#6a6438')+rect(x,[3,9,5,12][(x-1)/4],1,2,'#c2b878')).join(''), // 3 stubble field
+  verge()+shadow(8,14.5,8,1.5)+rect(1,4,15,8,'#6a5236')+rect(1,4,15,1,'#8c7049')+rect(2,1,13,4,'#c9b36a')+rect(3,1,4,2,'#e2cf86')+rect(1,11,15,1,'#4a3826')
+    +ellipse(6.5,12.5,3,3,'#2a2018')+ellipse(6.5,12.5,2,2,'#6a5236')+rect(6,12,1,1,'#3a2e22')+rect(1,12,1,3,'#3a2e22'), // 4 cart, rear
+  verge()+shadow(7,14.5,7,1.5)+rect(0,4,12,8,'#6a5236')+rect(0,4,12,1,'#8c7049')+rect(0,1,11,4,'#c9b36a')+rect(1,1,4,2,'#e2cf86')+rect(0,11,12,1,'#4a3826')
+    +ellipse(9.5,12.5,3,3,'#2a2018')+ellipse(9.5,12.5,2,2,'#6a5236')+rect(9,12,1,1,'#3a2e22')+rect(12,7,4,1,'#5d4630')+rect(12,6,4,1,'#8c7049'), // 5 cart, front
+  verge()+shadow(9,14.5,6,1.5)+ellipse(8,9,5.5,6,'#9a8862')+ellipse(7.5,8.5,4.5,5,'#b7a273')+rect(6,1,4,3,'#8c7049')+rect(6,1,4,1,'#a88a5a')+rect(5,9,6,2,'#8d7a52')+ellipse(6,6,1.5,2,'#c9b685'), // 6 grain sack
+  tree({ ground:'#5f7442', leaf:'#3f5f36', dark:'#2f4a2c', light:'#56794a' }),                              // 7 tree
+  verge()+shadow(10,15,3,1)+rect(7,5,2,11,'#5d4630')+rect(8,5,1,11,'#3f2f20')+rect(2,1,12,5,'#7b3a2e')+rect(2,1,12,1,'#9a5040')+rect(3,2,10,3,'#c5b275')+rect(3,2,10,1,'#e2d29a')+rect(5,3,6,1,'#7b3a2e'), // 8 border marker
+  rect(0,0,16,16,'#4b4a38')+rect(3,4,3,1,'#2c2b22')+rect(9,10,4,1,'#2c2b22')+rect(6,13,1,1,'#7a6f4a')+rect(12,3,2,2,'#3a3a2e')+rect(1,11,1,2,'#5a5a42'), // 9 scorched grass
 ];
 // Variants of the verge grass: tufts and clover, and a bare patch where the carts pulled over.
 const GRASS_VARIANTS = [tiles.length + 1, tiles.length + 2];
@@ -23,6 +28,8 @@ tiles.push(
 );
 const svg = sheet(tiles);
 writeFileSync('public/assets/border-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
+// TILES_ONLY=1 redraws the tiles and leaves the maps alone: they have been edited by hand since this script made them.
+if (process.env.TILES_ONLY) process.exit(0);
 
 const w=32,h=24, floor=Array(w*h).fill(0), furniture=Array(w*h).fill(0);
 const put=(a,x,y,t)=>a[y*w+x]=t;

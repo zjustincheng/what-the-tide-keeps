@@ -1,38 +1,42 @@
 // Rebuild the placeholder downs tileset, the downs east of the fields, and the barrow under them.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
-import { handholds, rect as krect, rows, scatter, sheet, stairs, tileProps, vary } from './tile-kit.mjs';
-const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
-const turf = (base) => rect(0,0,16,16,base)+rect(3,5,1,2,'#7f8c5a')+rect(11,11,1,2,'#7f8c5a')+rect(8,2,2,1,'#5c6a44');
-const tree = (leaf,dark) => rect(0,0,16,16,'#66754a')+rect(1,1,14,11,dark)+rect(3,2,9,6,leaf)+rect(7,11,3,5,'#3e3226');
-const stone = (a,b) => rect(0,0,16,16,a)+rect(0,5,16,1,b)+rect(0,11,16,1,b)+rect(5,0,1,5,b)+rect(11,6,1,5,b)+rect(3,12,1,4,b);
+import { ellipse, handholds, rect as krect, rows, scatter, sheet, stairs, tileProps, vary } from './tile-kit.mjs';
+import { blocks, boulder, shadow, tree as drawTree, tuft, turf as turfTile, water as waterTile } from './tile-art.mjs';
+const rect = (x,y,w,h,c,o) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"${o===undefined?'':` fill-opacity="${o}"`}/>`;
+// The downs: short turf over chalk, lit from the upper left, the chalk showing white wherever the turf is worn.
+const turf = (base='#66754a') => turfTile(base,'#7f8c5a','#56643e');
+const tree = (leaf,dark,light) => drawTree({ ground:'#66754a', leaf, dark, light, trunk:'#3e3226', trunkDark:'#2a2018' });
+const stone = (mortar,face,light,shade) => blocks(mortar,face,light,shade);
+const chalk = '#dcd6c2', chalkEdge = '#c4bca2';
 const tiles = [
-  turf('#66754a'),                                                                                      // 0 down turf
-  turf('#62714a')+rect(5,8,2,1,'#d8d2bc')+rect(12,3,1,1,'#d8d2bc'),                                      // 1 turf with chalk
-  rect(0,0,16,16,'#c4bca2')+rect(2,4,3,1,'#a89e84')+rect(9,10,4,1,'#a89e84')+rect(6,13,1,1,'#ddd6c0'),    // 2 chalk path
-  rect(0,0,16,16,'#66754a')+rect(1,3,14,12,'#3e5232')+rect(3,4,3,2,'#c8a840')+rect(9,7,2,2,'#c8a840')+rect(5,10,2,2,'#c8a840'), // 3 gorse
-  rect(0,0,16,16,'#66754a')+rect(0,4,16,10,'#7a7a6e')+rect(1,5,5,4,'#8e8e82')+rect(7,9,6,4,'#8e8e82')+rect(0,13,16,1,'#55554c'), // 4 drystone wall
-  stone('#6e6c62','#4e4c44'),                                                                            // 5 tower wall
-  rect(0,0,16,16,'#5a584e')+rect(2,3,4,3,'#6e6c62')+rect(10,9,3,3,'#6e6c62')+rect(7,13,2,1,'#44423a'),   // 6 rubble floor
-  rect(0,0,16,16,'#5c6c42')+rect(0,0,16,4,'#6a7a4c')+rect(2,6,12,1,'#4e5c38')+rect(4,11,8,1,'#4e5c38'),  // 7 barrow mound
-  rect(0,0,16,16,'#5c6c42')+rect(2,2,12,14,'#3a3832')+rect(3,3,10,13,'#55534a')+rect(7,3,2,13,'#3a3832'), // 8 barrow slab
-  rect(0,0,16,16,'#3a5a5a')+rect(2,4,5,1,'#5a7a76')+rect(9,10,5,1,'#5a7a76'),                             // 9 dew pond
-  rect(0,0,16,16,'#66754a')+rect(0,6,16,4,'#dcd6c2'),                                                     // 10 chalk figure, across
-  rect(0,0,16,16,'#9a8a6a')+rect(0,0,1,16,'#6a5a44')+rect(15,0,1,16,'#6a5a44')+rect(5,6,6,10,'#4a3a2a'), // 11 hut wall
-  rect(0,0,16,16,'#8a7a4a')+[2,6,10,14].map(y=>rect(0,y,16,1,'#6a5a34')).join(''),                       // 12 thatch
-  tree('#56683c','#3e4e2e'),                                                                              // 13 hawthorn
-  tree('#3a4a30','#2a3822'),                                                                              // 14 border trees
-  rect(0,0,16,16,'#66754a')+rect(7,6,2,10,'#5d4630')+rect(2,2,12,5,'#8c7049')+rect(3,3,10,1,'#b49863'),   // 15 signpost
-  rect(0,0,16,16,'#66754a')+rect(0,5,16,2,'#7a6040')+rect(0,10,16,2,'#7a6040')+[1,7,13].map(x=>rect(x,3,2,11,'#5d4630')).join(''), // 16 hurdle
-  rect(0,0,16,16,'#3a3a34')+rect(0,0,7,7,'#44443c')+rect(8,8,8,8,'#44443c')+rect(0,15,16,1,'#2a2a26'),   // 17 barrow floor
-  stone('#2e2c28','#1e1c1a'),                                                                            // 18 barrow wall
+  turf(),                                                                                               // 0 down turf
+  turf('#62714a')+rect(5,8,2,1,'#d8d2bc')+rect(12,3,1,1,'#d8d2bc')+rect(6,9,1,1,'#b8b098'),              // 1 turf with chalk
+  rect(0,0,16,16,'#c4bca2')+rect(2,4,3,1,'#a89e84')+rect(9,10,4,1,'#a89e84')+rect(6,13,1,1,'#ddd6c0')+rect(12,3,2,1,'#ddd6c0')+rect(3,11,1,1,'#8e8670'), // 2 chalk path
+  turf()+shadow(9,14.5,7,1.5)+ellipse(8,9,7.5,6,'#2e4228')+ellipse(6,8,4.5,4.5,'#3e5232')+ellipse(11,9,4,4,'#3e5232')+ellipse(5,6.5,2,1.5,'#4e6440')
+    +[[3,4],[9,7],[5,10],[12,5],[8,11]].map(([x,y])=>rect(x,y,2,2,'#c8a840')+rect(x,y,1,1,'#e2c860')).join(''), // 3 gorse
+  turf()+shadow(8,14,8,1)+rect(0,4,16,10,'#5e5e54')+[[0,4,5,5],[6,4,4,5],[11,4,5,5],[0,9,3,5],[4,9,6,5],[11,9,5,5]].map(([x,y,w,h])=>rect(x,y,w-1,h-1,'#7a7a6e')+rect(x,y,w-1,1,'#929286')+rect(x+w-2,y+1,1,h-2,'#5e5e54')).join(''), // 4 drystone wall
+  stone('#4e4c44','#6e6c62','#86847a','#56544c'),                                                        // 5 tower wall
+  rect(0,0,16,16,'#5a584e')+boulder(4,4.5,2.5,2,'#6e6c62','#86847a','#44423a')+boulder(11.5,10.5,2.5,2,'#6e6c62','#86847a','#44423a')+rect(7,13,2,1,'#44423a')+rect(13,3,1,1,'#7a786e'), // 6 rubble floor
+  rect(0,0,16,16,'#5c6c42')+rect(0,0,16,4,'#6a7a4c')+rect(0,0,16,1,'#7a8a5a')+rect(2,6,12,1,'#4e5c38')+rect(4,11,8,1,'#4e5c38')+tuft(3,8,'#7a8a5a','#4e5c38')+tuft(11,13,'#7a8a5a','#4e5c38'), // 7 barrow mound
+  rect(0,0,16,16,'#5c6c42')+rect(2,2,12,14,'#2a2824')+rect(3,3,10,13,'#55534a')+rect(3,3,10,1,'#6e6c62')+rect(3,3,1,13,'#6e6c62')+rect(7,3,2,13,'#3a3832')+rect(12,4,1,12,'#44423a'), // 8 barrow slab
+  waterTile('#3a5a5a','#5a7a76','#8aaaa4','#2e4a4a'),                                                    // 9 dew pond
+  turf()+rect(0,6,16,4,chalk)+rect(0,6,16,1,'#ece6d4')+rect(0,9,16,1,chalkEdge),                         // 10 chalk figure, across
+  rect(0,0,16,16,'#9a8a6a')+rect(0,0,2,16,'#5a4a36')+rect(14,0,2,16,'#5a4a36')+rect(2,0,12,1,'#b0a080')+rect(5,6,6,10,'#3a2e22')+rect(5,6,6,1,'#5a4a36')+rect(6,7,1,9,'#4a3c2c'), // 11 hut wall
+  rect(0,0,16,16,'#8a7a4a')+[1,4,6,9,12,14].map((x,i)=>rect(x,0,1,16,i%2?'#6a5a34':'#a8986a')).join('')+[3,8,13].map(y=>rect(0,y,16,1,'#6a5a34',0.6)).join(''), // 12 thatch
+  tree('#56683c','#3e4e2e','#6e8250'),                                                                   // 13 hawthorn
+  tree('#3a4a30','#2a3822','#4a5e3e'),                                                                   // 14 border trees
+  turf()+shadow(10,15,3,1)+rect(7,6,2,10,'#5d4630')+rect(8,6,1,10,'#3f2f20')+rect(2,2,12,5,'#8c7049')+rect(2,2,12,1,'#b49863')+rect(2,6,12,1,'#6a5236')+rect(4,4,6,1,'#5d4630'), // 15 signpost
+  turf()+shadow(8,13,8,1)+rect(0,5,16,2,'#7a6040')+rect(0,5,16,1,'#94784e')+rect(0,10,16,2,'#7a6040')+rect(0,10,16,1,'#94784e')+[1,7,13].map(x=>rect(x,3,2,11,'#5d4630')+rect(x,3,1,11,'#7a6040')).join(''), // 16 hurdle
+  rect(0,0,16,16,'#2a2a26')+[[0,0,7,7],[8,0,8,7],[0,8,4,8],[5,8,11,8]].map(([x,y,w,h])=>rect(x,y,w-1,h-1,'#3e3e37')+rect(x,y,w-1,1,'#4a4a42')).join(''), // 17 barrow floor
+  stone('#141210','#2e2c28','#3a3833','#221f1c'),                                                        // 18 barrow wall
   rect(0,0,16,16,'#07090a'),                                                                              // 19 void
-  rect(0,0,16,16,'#3a3a34')+rect(1,2,14,12,'#5a5850')+rect(2,3,12,10,'#6a6860')+rect(4,6,8,1,'#4a4842'), // 20 grave slab
-  rect(0,0,16,16,'#3a3a34')+rect(1,3,14,11,'#7a6a3a')+rect(3,5,10,7,'#8a7a46')+rect(5,7,6,3,'#6a5a30'),   // 21 straw nest
-  rect(0,0,16,16,'#3a3a34')+rect(3,5,7,2,'#c8c0a8')+rect(9,10,5,2,'#c8c0a8')+rect(5,11,2,2,'#a8a088'),   // 22 bones
-  rect(0,0,16,16,'#66754a')+rect(3,8,10,7,'#7a7a6e')+rect(5,4,6,5,'#8e8e82')+rect(7,1,3,4,'#7a7a6e'),     // 23 cairn
-  rect(0,0,16,16,'#66754a')+rect(6,0,4,16,'#dcd6c2'),                                                     // 24 chalk figure, down
-  rect(0,0,16,16,'#66754a')+rect(0,6,10,4,'#dcd6c2')+rect(6,0,4,10,'#dcd6c2'),                             // 25 chalk figure, corner
+  rect(0,0,16,16,'#3a3a34')+shadow(9,14,7,1)+rect(1,2,14,12,'#5a5850')+rect(2,3,12,10,'#6a6860')+rect(2,3,12,1,'#7e7c72')+rect(4,6,8,1,'#4a4842')+rect(5,9,6,1,'#4a4842')+rect(13,3,1,10,'#4e4c44'), // 20 grave slab
+  rect(0,0,16,16,'#3a3a34')+ellipse(8,9,7,5.5,'#5a4a2a')+ellipse(8,8.5,6,4.5,'#7a6a3a')+ellipse(8,8.5,3.5,2.5,'#5a4a28')+[[4,6],[11,8],[6,11],[10,5]].map(([x,y])=>rect(x,y,3,1,'#9a8a50')).join(''), // 21 straw nest
+  rect(0,0,16,16,'#3a3a34')+rect(3,5,7,2,'#c8c0a8')+rect(3,5,7,1,'#ddd6c0')+rect(2,4,2,4,'#c8c0a8')+rect(9,4,2,4,'#c8c0a8')+rect(9,10,5,2,'#c8c0a8')+ellipse(6,12,2,1.5,'#b8b098')+rect(5,12,1,1,'#3a3a34'), // 22 bones
+  turf()+shadow(9,15,6,1)+boulder(8,12,5,3,'#7a7a6e','#929286','#55554c')+boulder(8,7.5,3.5,2.5,'#7a7a6e','#929286','#55554c')+boulder(8,3.5,2,2,'#7a7a6e','#929286','#55554c'), // 23 cairn
+  turf()+rect(6,0,4,16,chalk)+rect(6,0,1,16,'#ece6d4')+rect(9,0,1,16,chalkEdge),                         // 24 chalk figure, down
+  turf()+rect(0,6,10,4,chalk)+rect(6,0,4,10,chalk)+rect(0,6,6,1,'#ece6d4')+rect(6,0,1,6,'#ece6d4')+rect(0,9,10,1,chalkEdge)+rect(9,0,1,10,chalkEdge), // 25 chalk figure, corner
 ];
 // Variants of the turf, so the downs roll instead of tiling: tufts, chalk showing through, a few wild flowers.
 const TURF_VARIANTS = [tiles.length + 1, tiles.length + 2];
@@ -43,16 +47,18 @@ tiles.push(
 // The orchard: apple trees heavy and unpicked, windfalls rotting in the grass, the press, and the stakes.
 const ORCHARD_TILES = tiles.length + 1;
 tiles.push(
-  rect(0,0,16,16,'#66754a')+rect(1,1,14,10,'#3e5230')+rect(2,1,11,6,'#4e6638')+rect(4,3,2,2,'#a8402e')+rect(10,5,2,2,'#a8402e')+rect(6,8,2,2,'#8a3424')+rect(7,10,3,6,'#4a3a2a')+rect(3,13,2,1,'#7a3022')+rect(11,14,2,1,'#6a4a2a'), // apple tree
-  scatter(turf('#66754a'), 41, [['#8a3424',2,1],['#a8402e',1,1],['#6a4a2a',2,1],['#5c6a44',1,2]], 7),                                   // windfalls
-  rect(0,0,16,16,'#66754a')+rect(1,3,14,12,'#5a4430')+rect(2,4,12,3,'#7a5e40')+rect(6,1,4,4,'#3e3226')+rect(3,9,10,5,'#4a3622')+rect(4,10,8,1,'#8a3424'), // cider press
-  rect(0,0,16,16,'#66754a')+rect(7,3,2,13,'#7a5e40')+rect(6,2,4,2,'#9a7a50')+rect(4,13,8,2,'#55603c')+rect(9,5,4,1,'#c8c0a8'),        // grafting stake with a tag
+  drawTree({ ground:'#66754a', leaf:'#4e6638', dark:'#3e5230', light:'#66804a', trunk:'#4a3a2a', fruit:'#a8402e' })+rect(3,13,2,1,'#7a3022')+rect(11,14,2,1,'#6a4a2a'), // apple tree
+  scatter(turf(), 41, [['#8a3424',2,1],['#a8402e',1,1],['#6a4a2a',2,1],['#5c6a44',1,2]], 7),                                   // windfalls
+  turf()+shadow(9,15,7,1)+rect(1,3,14,12,'#5a4430')+rect(1,3,14,1,'#7a5e40')+rect(2,4,12,3,'#7a5e40')+rect(6,1,4,4,'#3e3226')+rect(6,1,4,1,'#5a4a3a')+rect(3,9,10,5,'#4a3622')+rect(4,10,8,1,'#8a3424')+rect(14,4,1,11,'#3e3226'), // cider press
+  turf()+shadow(10,15,3,1)+rect(7,3,2,13,'#7a5e40')+rect(7,3,1,13,'#9a7a50')+rect(6,2,4,2,'#9a7a50')+rect(4,13,8,2,'#55603c')+rect(9,5,4,2,'#c8c0a8')+rect(9,5,4,1,'#ddd6c0'),        // grafting stake with a tag
 );
 // The watchtower's face, grown over with ivy thick enough to climb.
 const IVY = tiles.length + 1;
 tiles.push(handholds({ face: '#6e6c62', light: '#8a887c', hold: '#3e3c34', accent: rect(0,0,3,16,'#3e5a32')+rect(1,3,4,3,'#4e6a3a')+rect(11,1,5,5,'#3e5a32')+rect(9,9,4,3,'#4e6a3a')+rect(13,12,3,4,'#3e5a32') }));
 const svg = sheet(tiles);
 writeFileSync('public/assets/downs-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
+// TILES_ONLY=1 redraws the tiles and leaves the maps alone: they have been edited by hand since this script made them.
+if (process.env.TILES_ONLY) process.exit(0);
 const [TURF,CHALKY,PATH,GORSE,WALL,TOWER,RUBBLE,MOUND,SLAB,POND,FIG_A,HUT,THATCH,THORN,BORDER,SIGN,HURDLE,BFLOOR,BWALL,VOID,GRAVE,NEST,BONES,CAIRN,FIG_D,FIG_C]=tiles.map((_,i)=>i+1);
 const [APPLE,WINDFALL,PRESS,STAKE]=[0,1,2,3].map(i=>ORCHARD_TILES+i);
 const solid=[3,4,5,7,8,9,11,12,13,14,15,16,18,19,20,23,APPLE-1,PRESS-1,STAKE-1];
