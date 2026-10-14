@@ -5,7 +5,7 @@ const LYNX_STORIES: Choice[] = [{ text: 'What do they eat when there\'s none?', 
   'The little one has stopped asking for the end.',
 ] }];
 
-// The highlands: the pass, the fort town, the battlefield below it, and the abbey over the ossuary. Names are placeholders.
+// The highlands: the pass, the fort town, the battlefield below it, and the abbey over the ossuary.
 export const pass: Dialogue = {
   'pass-sign': { speaker: 'A SIGN', prompt: 'Read the sign', lines: [
     'THE HIGH PASS. Garrison road. Herbivores travel with an escort or not at all.',

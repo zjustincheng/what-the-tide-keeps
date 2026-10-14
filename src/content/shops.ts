@@ -2,7 +2,7 @@ import type { Ware } from '../rules/economy';
 import type { ShopId } from '../rules/world';
 import { KEEPSAKE_IDS, KEEPSAKES } from '../rules/gear.ts';
 
-// What each shopkeeper offers. Names are placeholders.
+// What each shopkeeper offers.
 export const SHOPS: Record<ShopId, { title: string; note: string; wares: Ware[] }> = {
   stall: {
     title: 'The stallholder',

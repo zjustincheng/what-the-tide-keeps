@@ -2,7 +2,7 @@ import { BOUTS, RING_FEE } from '../rules/ring';
 import type { Choice, Dialogue } from './dialogue';
 
 // The mountain holds: the birds' city, ranked by height, where the messenger birds have stopped flying.
-// People talk about what is in front of them. Names are placeholders.
+// People talk about what is in front of them.
 
 // The climb above the holds' gate.
 export const climb: Dialogue = {

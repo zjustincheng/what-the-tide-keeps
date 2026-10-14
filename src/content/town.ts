@@ -1,6 +1,6 @@
 import type { Choice, Dialogue } from './dialogue';
 
-// Millbrook: a prosperous herbivore market town. Names are placeholders.
+// Millbrook: a prosperous herbivore market town.
 export const town: Dialogue = {
   reeve: { speaker: 'THE REEVE', prompt: 'Speak to the reeve', lines: [
     'The church said it would send someone. I hoped it would not be one of you.',

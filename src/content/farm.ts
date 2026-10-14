@@ -1,6 +1,6 @@
 import type { Dialogue } from './dialogue';
 
-// The boar's burned farm, the farmland lieutenant's lair. Names are placeholders.
+// The boar's burned farm, the farmland lieutenant's lair.
 export const farm: Dialogue = {
   notice: { speaker: 'A NOTICE ON THE GATEPOST', prompt: 'Read the notice', lines: [
     'FOUND: the miller\'s kid, alive and well, in the high pasture, three weeks after going missing.',

@@ -1,6 +1,6 @@
 import type { Dialogue } from './dialogue';
 
-// The border road between the farmland and the highlands. Names are placeholders.
+// The border road between the farmland and the highlands.
 export const border: Dialogue = {
   hedge: { speaker: 'THE HEDGE', prompt: 'Examine the brambles', hiddenIf: [{ flag: 'hedge-open' }], lines: [
     'A wall of brambles has grown straight across the road, thick as a cart is wide.',

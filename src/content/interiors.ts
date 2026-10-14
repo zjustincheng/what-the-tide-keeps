@@ -1,6 +1,6 @@
 import type { Dialogue } from './dialogue';
 
-// Inside Millbrook's buildings and the mill. Names are placeholders.
+// Inside Millbrook's buildings and the mill.
 export const inn: Dialogue = {
   drinker: { speaker: 'A CARTER AT THE TABLE', prompt: 'Speak to the carter', lines: [
     'Six days\' wages sitting on a cart at the border. Six days.',

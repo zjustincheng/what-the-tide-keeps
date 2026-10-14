@@ -1,6 +1,6 @@
 import type { Dialogue } from './dialogue';
 
-// The fen upstream of the mill, over the drowned hamlet of Wetherby. Names are placeholders.
+// The fen upstream of the mill, over the drowned hamlet of Wetherby.
 export const fen: Dialogue = {
   sluice: { speaker: 'THE SLUICE', prompt: 'Examine the sluice', lines: [
     'A sluice gate of black oak across the stream. It holds the fen back so the mill stream runs steady.',
@@ -54,7 +54,7 @@ export const fen: Dialogue = {
   ], then: { find: 'drowned-psalter' } },
 };
 
-// The weir above the fen: the church fishery, the otters' holt, and the smugglers' stair. Names are placeholders.
+// The weir above the fen: the church fishery, the otters' holt, and the smugglers' stair.
 export const weir: Dialogue = {
   'weir-sign': { speaker: 'A NOTICE ON A POST', prompt: 'Read the notice', lines: [
     'CHURCH FISHERY. All fish taken from this river are the property of the Covenant. Poachers will be held until collected.',

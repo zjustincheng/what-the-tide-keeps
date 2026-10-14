@@ -1,7 +1,7 @@
 import type { Dialogue } from './dialogue';
 
 // People who carry the world's history: the Covenant, the nations, the sea, magic, and the church.
-// Each is added to an area's own dialogue. Names are placeholders.
+// Each is added to an area's own dialogue.
 
 // The church: a novice who has read too much.
 export const churchLore: Dialogue = {

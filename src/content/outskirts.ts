@@ -1,7 +1,7 @@
 import type { Dialogue } from './dialogue';
 
 // Places off the roads, one or two in every region: nothing in them is on the church's orders.
-// People talk about what is in front of them. Names are placeholders.
+// People talk about what is in front of them.
 
 // The orchard below the downs.
 export const orchard: Dialogue = {

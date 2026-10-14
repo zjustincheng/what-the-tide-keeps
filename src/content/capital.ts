@@ -1,6 +1,6 @@
 import type { Dialogue } from './dialogue';
 
-// The capital: the square outside the church, the harbour below it, and the hall where the feast was held. Names are placeholders.
+// The capital: the square outside the church, the harbour below it, and the hall where the feast was held.
 export const square: Dialogue = {
   statue: { speaker: 'THE STATUE OF THE FIVE', prompt: 'Examine the statue', lines: [
     'The five who killed the kraken, in bronze: a bear, a vulture, a frog, an octopus, a chameleon. Unveiled a week before the feast.',

@@ -1,6 +1,6 @@
 import type { Dialogue } from './dialogue';
 
-// The downs east of the fields, and the barrow under them. Names are placeholders.
+// The downs east of the fields, and the barrow under them.
 export const downs: Dialogue = {
   'downs-sign': { speaker: 'A SIGN', prompt: 'Read the sign', lines: [
     'THE DOWNS. Common grazing, by license of the Covenant. NO DOGS.',

@@ -1,6 +1,6 @@
 import type { Dialogue } from './dialogue';
 
-// The open farmland south of the church. Names are placeholders.
+// The open farmland south of the church.
 export const fields: Dialogue = {
   sign: { speaker: 'A WAYMARK', prompt: 'Read the waymark', lines: [
     'South: Millbrook. West: the mill, over the stream. East: the hay yard, the downs, and the field track to the border road. North, up the stream: the fen.',

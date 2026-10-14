@@ -1,7 +1,7 @@
 import type { Choice, Dialogue } from './dialogue';
 
 // The rivers and marsh: a sickness in the river towns, the church's stores spoiling, and a healer blamed for it.
-// People talk about what is in front of them. Names are placeholders.
+// People talk about what is in front of them.
 
 // The causeway: boardwalks through the fog from the ferry landing to Wickmere.
 export const causeway: Dialogue = {

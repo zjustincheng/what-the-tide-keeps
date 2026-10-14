@@ -1,7 +1,7 @@
 import type { Choice, Dialogue } from './dialogue';
 
 // The ocean: no church, no orders, and the sea's side of everything the land has been eating.
-// People talk about what is in front of them. Names are placeholders.
+// People talk about what is in front of them.
 
 const portmasterReplies: Choice[] = [
     { text: 'Who runs the water?', lines: [

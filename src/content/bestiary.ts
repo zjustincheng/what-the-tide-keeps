@@ -1,6 +1,6 @@
 import type { Encounter } from '../rules/battle';
 
-// What the hero knows of everything he has fought, written as he might put it. Names are placeholders.
+// What the hero knows of everything he has fought, written as he might put it.
 export const BESTIARY: Record<Encounter, string> = {
   locust: 'Grown fat on church-dosed wheat. It doesn\'t hide its mana; it doesn\'t need to. Its mandibles strike twice.',
   weevil: 'A grain weevil the size of a handcart. Every third turn it tucks in and rolls, and nothing stops that but a guard.',
