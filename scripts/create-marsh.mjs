@@ -2,39 +2,45 @@
 // its church hospice, the far bank with the spoiled stores, and the flooded apothecary.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
-import { rect as krect, rows, scatter, sheet, stairs, vary, crumble, gap, tileProps } from './tile-kit.mjs';
-const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
-const tree = (leaf,dark,ground) => rect(0,0,16,16,ground)+rect(1,1,14,11,dark)+rect(3,2,9,6,leaf)+rect(7,11,3,5,'#3a2e22');
+import { ellipse, rect as krect, rows, scatter, sheet, stairs, vary, crumble, gap, tileProps } from './tile-kit.mjs';
+import { blocks, boulder, planks, shadow, tree as drawTree, turf, water } from './tile-art.mjs';
+const rect = (x,y,w,h,c,o) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"${o===undefined?'':` fill-opacity="${o}"`}/>`;
+// The marsh, lit dimly from the upper left through fog: sodden grass, black water, tarred boards.
+const tree = (leaf,dark,light,ground) => drawTree({ ground, leaf, dark, light, trunk:'#3a2e22', trunkDark:'#261e16' });
+const blackWater = () => water('#101a1c','#1c2a2a','#34484a','#0a1214');
+const marshGrass = () => turf('#3e4a34','#52603a','#323c28');
+const deck = () => rect(0,0,16,16,'#46382a')+[0,4,8,12].map((y,i)=>rect(0,y,16,3,'#5a4832')+rect(0,y,16,1,'#6e5a40')+rect([5,11,3,13][i],y,1,3,'#46382a')).join('');
+const boards = () => rect(0,0,16,16,'#3a3024')+[0,8].map((y,i)=>rect(0,y,16,7,'#4a3e30')+rect(0,y,16,1,'#5e5040')+rect([5,11][i],y,1,7,'#3a3024')).join('');
 const WATER_BG = '#101a1c';
 const tiles = [
-  rect(0,0,16,16,'#3e4a34')+rect(3,4,1,3,'#52603a')+rect(11,10,1,3,'#52603a')+rect(7,13,2,1,'#323c28'),        // 0 marsh grass
-  rect(0,0,16,16,'#3e3426')+rect(2,4,4,1,'#4e4230')+rect(9,11,5,1,'#30281c')+rect(5,13,2,1,'#4e4230'),          // 1 mud
-  rect(0,0,16,16,WATER_BG)+rect(0,2,16,12,'#54422e')+[1,5,9,13].map(x=>rect(x,2,1,12,'#3a2e20')).join(''),     // 2 boardwalk
-  rect(0,0,16,16,WATER_BG)+rect(2,4,5,1,'#1c2a2a')+rect(9,11,5,1,'#1c2a2a'),                                    // 3 black water
-  rect(0,0,16,16,WATER_BG)+[1,4,7,10,13].map((x,i)=>rect(x,1+i%3,2,15-i%3,'#4e5e34')).join('')+rect(4,0,1,3,'#7a6a40'), // 4 reeds
-  tree('#3e5030','#2e3c24','#3e4a34')+rect(1,10,1,5,'#3e5030')+rect(13,10,1,5,'#3e5030'),                    // 5 willow
-  tree('#26342a','#1c281e','#2e3626'),                                                                           // 6 border trees
-  rect(0,0,16,16,'#5a4832')+[0,4,8,12].map(y=>rect(0,y,16,1,'#46382a')).join('')+rect(5,1,1,2,'#6a5840'),     // 7 deck
-  rect(0,0,16,16,'#5e5444')+[3,8,13].map(x=>rect(x,0,1,16,'#4a4234')).join('')+rect(0,14,16,2,'#2e2a22'),     // 8 stilt-house wall
-  rect(0,0,16,16,'#4a3a2c')+[2,6,10,14].map(y=>rect(0,y,16,2,'#3a2c20')).join(''),                             // 9 thatch roof
-  rect(0,0,16,16,'#4a4038')+rect(3,3,10,10,'#2a221c')+rect(5,0,2,4,'#8a8a80')+rect(9,1,2,3,'#6a6a62'),          // 10 smokehouse
-  rect(0,0,16,16,'#8a8a7e')+rect(0,5,16,1,'#6e6e64')+rect(0,11,16,1,'#6e6e64')+rect(7,0,1,5,'#6e6e64')+rect(3,6,1,5,'#6e6e64'), // 11 hospice wall
-  rect(0,0,16,16,'#5a4832')+rect(3,1,10,15,'#3a2a1c')+rect(4,2,8,13,'#4a3624')+rect(10,8,1,1,'#b89a5a'),       // 12 door
-  rect(0,0,16,16,'#3e3a32')+rect(1,3,14,11,'#6a5636')+rect(1,8,14,1,'#4a3c26')+rect(7,3,1,11,'#4a3c26'),        // 13 crates
-  rect(0,0,16,16,'#3e3a32')+rect(1,3,14,11,'#6a5636')+rect(3,6,10,4,'#c8c0a0')+rect(4,7,8,1,'#2a2a2a')+rect(4,9,5,1,'#2a2a2a'), // 14 crate marked for the lighthouse
-  rect(0,0,16,16,'#3e3a32')+rect(2,4,12,10,'#6a6a4a')+rect(4,2,8,3,'#5a5a3e')+rect(5,8,3,2,'#4a5a2a')+rect(9,10,3,2,'#3a4a22'), // 15 spoiled sack
-  rect(0,0,16,16,'#3a3028')+rect(0,2,16,2,'#5a4632')+rect(0,9,16,2,'#5a4632')+[2,6,11].map(x=>rect(x,4,3,5,'#6a8a7a')).join('')+[3,9,13].map(x=>rect(x,11,2,4,'#8a6a4a')).join(''), // 16 jar shelves
-  rect(0,0,16,16,'#2a3436')+rect(0,4,16,10,'#5a4632')+rect(0,4,16,2,'#6e583e'),                                // 17 counter, in water
-  rect(0,0,16,16,'#22343a')+rect(2,4,5,1,'#2e464c')+rect(9,11,5,1,'#2e464c')+rect(5,8,3,1,'#3a3022'),           // 18 flooded floor
-  rect(0,0,16,16,'#4a3e30')+[0,8].map(y=>rect(0,y,16,1,'#3a3024')).join('')+rect(5,0,1,8,'#3a3024')+rect(11,8,1,8,'#3a3024'), // 19 floorboards
-  rect(0,0,16,16,'#4a3e30')+rect(1,3,14,11,'#6a5a46')+rect(2,4,12,4,'#a8a090')+rect(2,8,12,5,'#7a8a8a'),       // 20 cot
-  rect(0,0,16,16,'#4a3e30')+[1,5,9,13].map(x=>rect(x,0,2,16,'#5a5a56')).join('')+rect(0,7,16,2,'#4a4a46'),      // 21 grate
-  rect(0,0,16,16,WATER_BG)+[1,4,7,10,13].map((x,i)=>rect(x,1+i%3,2,15-i%3,'#4e5e34')).join('')+[[3,5],[9,3],[6,10],[11,9]].map(([x,y])=>rect(x,y,3,3,'#b8b48a')).join(''), // 22 egg-laden reeds
-  rect(0,0,16,16,WATER_BG)+rect(6,2,4,14,'#4a3a28')+rect(5,1,6,2,'#5a4a34')+rect(4,9,8,1,'#8a7a5a'),          // 23 mooring post
-  rect(0,0,16,16,WATER_BG)+rect(1,4,14,9,'#4a3a28')+rect(2,5,12,6,'#6a5236')+rect(3,7,10,2,'#3a2e20'),         // 24 boat
-  rect(0,0,16,16,'#3e3a36')+rect(0,5,16,1,'#2e2a26')+rect(0,11,16,1,'#2e2a26')+rect(6,0,1,5,'#2e2a26')+rect(11,6,1,5,'#2e2a26'), // 25 cellar wall
-  rect(0,0,16,16,'#5a4832')+rect(7,2,2,14,'#3a3028')+rect(5,1,6,3,'#2a2420')+rect(6,2,4,1,'#e0a850'),          // 26 lantern post
-  rect(0,0,16,16,'#4a3e30')+rect(2,2,12,12,'#5a5a56')+rect(4,4,8,8,'#2a2a28')+rect(6,6,4,4,'#3a4a4a'),          // 27 hospice basin
+  marshGrass(), // 0 marsh grass
+  rect(0,0,16,16,'#3e3426')+rect(2,4,4,1,'#4e4230')+rect(9,11,5,1,'#30281c')+rect(5,13,2,1,'#4e4230')+ellipse(11,5,2,1,'#262018')+rect(10,4,1,1,'#5e5444'), // 1 mud
+  rect(0,0,16,16,WATER_BG)+planks(0,2,16,12,'#54422e','#6e5a40','#2e2418')+rect(0,2,16,1,'#7a6448')+rect(0,13,16,1,'#2e2418')+rect(0,14,16,2,'#000000',0.35), // 2 boardwalk
+  blackWater(), // 3 black water
+  blackWater()+[1,4,7,10,13].map((x,i)=>rect(x,1+i%3,2,15-i%3,'#3e4e2a')+rect(x,1+i%3,1,15-i%3,'#5a6a3a')).join('')+rect(4,0,1,3,'#7a6040')+rect(10,1,1,3,'#7a6040'), // 4 reeds
+  tree('#3e5030','#2e3c24','#52663e','#3e4a34')+rect(1,9,1,6,'#3e5030')+rect(3,10,1,5,'#33422a')+rect(12,10,1,5,'#33422a')+rect(14,9,1,6,'#3e5030'), // 5 willow
+  tree('#26342a','#1c281e','#34463a','#2e3626'), // 6 border trees
+  deck(), // 7 deck
+  rect(0,0,16,16,'#4a4234')+[0,4,8,12].map(x=>rect(x,0,3,14,'#5e5444')+rect(x,0,1,14,'#726650')).join('')+rect(0,14,16,2,'#2e2a22')+rect(0,13,16,1,'#000000',0.25), // 8 stilt-house wall
+  rect(0,0,16,16,'#4a3a2c')+[1,4,6,9,12,14].map((x,i)=>rect(x,0,1,16,i%2?'#3a2c20':'#5e4a38')).join('')+[3,8,13].map(y=>rect(0,y,16,1,'#3a2c20',0.6)).join(''), // 9 thatch roof
+  rect(0,0,16,16,'#3a3028')+rect(0,0,16,1,'#5a4e42')+rect(3,3,10,10,'#1e1812')+rect(3,3,10,1,'#3a3028')+rect(5,0,2,4,'#7a7a70')+rect(5,0,1,4,'#9a9a90')+rect(9,1,2,3,'#5a5a52')+ellipse(6,0,2,1,'#8a8a80',0.4)+rect(5,9,6,3,'#7a4a2a')+rect(6,10,4,1,'#b06a3a'), // 10 smokehouse
+  blocks('#6e6e64','#8a8a7e','#a2a296','#76766c'), // 11 hospice wall
+  rect(0,0,16,16,'#5a4832')+rect(3,1,10,15,'#2a1e14')+rect(4,2,8,13,'#4a3624')+[6,9].map(x=>rect(x,2,1,13,'#3a2a1c')).join('')+rect(4,2,8,1,'#000000',0.3)+rect(10,8,1,1,'#b89a5a'), // 12 door
+  rect(0,0,16,16,'#3e3a32')+shadow(9,15,7,1)+rect(1,3,14,11,'#6a5636')+rect(1,3,14,1,'#86704a')+rect(1,3,1,11,'#86704a')+rect(14,4,1,10,'#4a3c26')+rect(1,8,14,1,'#4a3c26')+rect(7,3,1,11,'#4a3c26'), // 13 crates
+  rect(0,0,16,16,'#3e3a32')+shadow(9,15,7,1)+rect(1,3,14,11,'#6a5636')+rect(1,3,14,1,'#86704a')+rect(14,4,1,10,'#4a3c26')+rect(3,6,10,4,'#c8c0a0')+rect(3,6,10,1,'#ddd6bc')+rect(4,7,8,1,'#2a2a2a')+rect(4,9,5,1,'#2a2a2a')+rect(11,8,1,1,'#7a3a2a'), // 14 crate marked for the lighthouse
+  rect(0,0,16,16,'#3e3a32')+shadow(9,15,6,1)+ellipse(8,9,6,5.5,'#5a5a3e')+ellipse(7.5,8.5,5,4.5,'#6a6a4a')+rect(5,2,6,3,'#5a5a3e')+rect(5,8,3,2,'#4a5a2a')+rect(9,10,3,2,'#3a4a22')+rect(6,6,1,1,'#7a8a3a'), // 15 spoiled sack
+  rect(0,0,16,16,'#2e261e')+rect(0,2,16,2,'#5a4632')+rect(0,2,16,1,'#76603e')+rect(0,9,16,2,'#5a4632')+rect(0,9,16,1,'#76603e')+[2,6,11].map(x=>rect(x,4,3,5,'#4a6a5a')+rect(x,4,1,5,'#8aaa9a')+rect(x,4,3,1,'#5a4632')).join('')+[3,9,13].map(x=>rect(x,11,2,4,'#7a5a3a')+rect(x,11,1,4,'#9a7a4a')).join(''), // 16 jar shelves
+  rect(0,0,16,16,'#22343a')+rect(0,4,16,10,'#5a4632')+rect(0,4,16,2,'#6e583e')+rect(0,13,16,1,'#2e2418')+rect(0,14,16,2,'#000000',0.3)+rect(3,15,4,1,'#3a5054'), // 17 counter, in water
+  water('#22343a','#2e464c','#5a7478','#1a2a30')+rect(5,8,3,1,'#3a3022')+rect(11,3,2,1,'#3a3022'), // 18 flooded floor
+  boards(), // 19 floorboards
+  boards()+shadow(9,15,7,1)+rect(1,3,14,11,'#5a4a36')+rect(1,3,14,1,'#7a6a52')+rect(2,4,12,4,'#a8a090')+rect(3,5,4,2,'#c0b8a8')+rect(2,8,12,5,'#6a7a7a')+rect(2,8,12,1,'#8a9a9a')+rect(13,9,1,4,'#4a5a5a'), // 20 cot
+  boards()+rect(0,7,16,2,'#3a3a36')+rect(0,7,16,1,'#6a6a64')+[1,5,9,13].map(x=>rect(x,0,2,16,'#4a4a46')+rect(x,0,1,16,'#7a7a74')).join(''), // 21 grate
+  blackWater()+[1,4,7,10,13].map((x,i)=>rect(x,1+i%3,2,15-i%3,'#3e4e2a')+rect(x,1+i%3,1,15-i%3,'#5a6a3a')).join('')+[[3,5],[9,3],[6,10],[11,9]].map(([x,y])=>ellipse(x+1.5,y+1.5,1.8,1.6,'#a8a47a')+rect(x+1,y+1,1,1,'#d8d4aa')).join(''), // 22 egg-laden reeds
+  blackWater()+rect(6,2,4,14,'#4a3a28')+rect(6,2,1,14,'#5e4a34')+rect(5,1,6,2,'#5a4a34')+rect(5,1,6,1,'#6e5a42')+rect(4,9,8,1,'#8a7a5a')+rect(4,10,8,1,'#5a4a34')+rect(5,14,6,2,'#000000',0.3), // 23 mooring post
+  blackWater()+ellipse(8,8.5,7.5,4.5,'#2e2418')+ellipse(8,8,6.5,3.5,'#5a4630')+ellipse(8,8,5,2.5,'#2e2418')+rect(4,8,8,1,'#6a5236')+rect(2,7,2,1,'#7a6040'), // 24 boat
+  blocks('#2a2622','#3e3a36','#4a4642','#322e2a'), // 25 cellar wall
+  deck()+ellipse(8,3,5,5,'#e0a850',0.12)+shadow(9,15,3,1)+rect(7,4,2,12,'#3a3028')+rect(7,4,1,12,'#4e4234')+rect(5,1,6,3,'#2a2420')+rect(6,2,4,1,'#e0a850')+rect(7,2,2,1,'#fff0b2'), // 26 lantern post
+  boards()+shadow(9,14,7,1)+rect(2,2,12,12,'#5a5a56')+rect(2,2,12,1,'#7a7a74')+rect(4,4,8,8,'#2a2a28')+ellipse(8,8,3,3,'#3a4a4a')+rect(7,6,2,1,'#6a8a8a')+rect(13,3,1,11,'#3e3e3a'), // 27 hospice basin
 ];
 // Variants of the marsh grass, and of the town decks: sedge and puddles; a patched board, a coil of rope.
 const GRASS_VARIANTS = [tiles.length + 1, tiles.length + 2], DECK_VARIANTS = [tiles.length + 3];
@@ -46,16 +52,18 @@ tiles.push(
 // The peat cuttings: cut banks of black peat, the floor of a working, stacked turves, and what the bog kept.
 const PEAT_TILES = tiles.length + 1;
 tiles.push(
-  rect(0,0,16,16,'#2a2018')+rect(0,0,16,3,'#3e3a24')+rect(0,3,16,1,'#1a140e')+[5,10,14].map(y=>rect(0,y,16,1,'#22190f')).join('')+rect(4,7,3,1,'#3a2c1e')+rect(10,12,2,1,'#3a2c1e'), // cut bank
-  rect(0,0,16,16,'#3a2c1e')+rect(2,4,4,1,'#2a2016')+rect(9,10,5,1,'#2a2016')+rect(6,13,2,1,'#4a3a28')+rect(12,2,1,3,'#2e3a2a'),        // worked floor
-  rect(0,0,16,16,'#3a2c1e')+[[1,9],[6,9],[11,9],[3,4],[8,4]].map(([x,y])=>rect(x,y,5,5,'#2a1e14')+rect(x,y,5,1,'#4a3826')).join('')+rect(5,1,5,3,'#2a1e14'), // stacked turves
-  rect(0,0,16,16,'#2a2a1e')+rect(1,1,14,14,'#1e2a26')+rect(3,5,10,4,'#6a4e30')+rect(4,4,3,2,'#7a5a38')+rect(11,6,2,1,'#4a3420')+rect(5,9,6,2,'#5a4028'), // a body in a cutting
+  rect(0,0,16,16,'#221a12')+rect(0,0,16,3,'#3e3a24')+rect(0,0,16,1,'#52503a')+rect(0,3,16,1,'#120e0a')+[5,10,14].map(y=>rect(0,y,16,1,'#1a140e')+rect(0,y+1,16,1,'#2e241a')).join('')+rect(4,7,3,1,'#3a2c1e')+rect(10,12,2,1,'#3a2c1e'), // cut bank
+  rect(0,0,16,16,'#3a2c1e')+rect(2,4,4,1,'#2a2016')+rect(9,10,5,1,'#2a2016')+rect(6,13,2,1,'#4a3a28')+rect(12,2,1,3,'#2e3a2a')+rect(13,1,1,2,'#3e4a34'),        // worked floor
+  rect(0,0,16,16,'#3a2c1e')+[[1,9],[6,9],[11,9],[3,4],[8,4]].map(([x,y])=>rect(x,y,5,5,'#2a1e14')+rect(x,y,5,1,'#4a3826')+rect(x,y,1,5,'#3a2c1e')+rect(x+4,y+1,1,4,'#1a120c')).join('')+rect(5,1,5,3,'#2a1e14')+rect(5,1,5,1,'#4a3826'), // stacked turves
+  rect(0,0,16,16,'#2a2a1e')+rect(1,1,14,14,'#1e2a26')+rect(1,1,14,1,'#141e1a')+rect(3,5,10,4,'#6a4e30')+rect(3,5,10,1,'#7a5e3a')+rect(4,4,3,2,'#7a5a38')+rect(11,6,2,1,'#4a3420')+rect(5,9,6,2,'#5a4028'), // a body in a cutting
 );
 // Parkour: a gap narrow enough to leap, and footing that won't hold for long.
 const LEAP_TILES = tiles.length + 1;
 tiles.push(tiles[3] + krect(0,0,16,16,'#000000',0.35) + krect(3,5,4,1,'#3a5a5a',0.6) + krect(9,11,4,1,'#3a5a5a',0.6), crumble({ top: '#6a5a40', crack: '#2a2018', under: '#0e1a1c' }));
 const svg = sheet(tiles);
 writeFileSync('public/assets/marsh-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
+// TILES_ONLY=1 redraws the tiles and leaves the maps alone: they have been edited by hand since this script made them.
+if (process.env.TILES_ONLY) process.exit(0);
 const [GRASS,MUD,WALK,WATER,REEDS,WILLOW,BORDER,DECK,HWALL,ROOF,SMOKE,HOSPICE,DOOR,CRATES,LIGHTHOUSE,SACK,SHELVES,COUNTER,FLOOD,BOARDS,COT,GRATE,EGGS,POST,BOAT,CELLAR,LANTERN,BASIN]=tiles.map((_,i)=>i+1);
 // Collides lists 0-based tile ids.
 const [CUTBANK,PEAT,TURVES,BOGBODY]=[0,1,2,3].map(i=>PEAT_TILES+i);
