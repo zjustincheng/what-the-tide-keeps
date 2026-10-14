@@ -2,34 +2,39 @@
 // the lighthouse tower, and the lamp room at the top.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
-import { rect, rows, scatter, sheet, stairs, tileProps, vary } from './tile-kit.mjs';
+import { ellipse, rect, rows, scatter, sheet, stairs, tileProps, vary } from './tile-kit.mjs';
+import { blocks, boulder, planks, shadow, water } from './tile-art.mjs';
 
-const stone = (a, b) => rect(0,0,16,16,a)+rect(0,5,16,1,b)+rect(0,11,16,1,b)+rect(5,0,1,5,b)+rect(11,6,1,5,b)+rect(3,12,1,4,b);
+// The island, lit hard from the upper left: black wet rock, and buildings whitewashed so they look clean from the sea.
+const stone = (a, b) => blocks(b, a, shade(a, 1.12), shade(a, 0.85));
+function shade(hex, by) { const n = parseInt(hex.slice(1), 16); const c = k => Math.max(0, Math.min(255, Math.round(((n >> k) & 255) * by))); return '#' + [16, 8, 0].map(k => c(k).toString(16).padStart(2, '0')).join(''); }
+const whiteTiles = () => rect(0,0,16,16,'#a8a498')+[[0,0,8,8],[8,0,8,8],[0,8,8,8],[8,8,8,8]].map(([x,y,w,h],i)=>rect(x,y,w-1,h-1,i%3?'#c8c4b8':'#d4d0c4')+rect(x,y,w-1,1,'#e4e0d6')).join('');
+const wetRock = () => rect(0,0,16,16,'#3e3e38')+[[1,2,6,4],[9,7,6,5],[3,11,5,4],[11,1,4,3]].map(([x,y,w,h])=>rect(x,y,w,h,'#52524a')+rect(x,y,w,1,'#6a6a62')+rect(x+w-1,y+1,1,h-1,'#3a3a34')).join('')+rect(5,3,1,1,'#9aa8a8');
 const tiles = [
-  rect(0,0,16,16,'#4a4a44')+rect(2,3,5,3,'#56564e')+rect(9,8,6,4,'#525248')+rect(4,12,3,2,'#3e3e38')+rect(11,2,2,1,'#62625a'),       // 0 wet rock
-  rect(0,0,16,16,'#8a8270')+rect(2,4,2,1,'#a49a84')+rect(9,10,3,1,'#6e6656')+rect(6,13,1,1,'#b4aa94')+rect(12,3,1,1,'#6e6656'),       // 1 shingle
-  rect(0,0,16,16,'#16303a')+rect(2,4,5,1,'#24485a')+rect(9,10,5,1,'#24485a')+rect(5,13,3,1,'#1e3c48'),                                 // 2 sea
-  rect(0,0,16,16,'#2a2a26')+rect(1,1,7,6,'#363630')+rect(8,8,7,7,'#32322c')+rect(0,7,16,1,'#1a1a18')+rect(1,1,7,1,'#44443c'),            // 3 cliff
-  rect(0,0,16,16,'#16303a')+rect(0,2,16,12,'#5a4632')+[1,5,9,13].map(x=>rect(x,2,1,12,'#3e3022')).join('')+rect(0,2,16,1,'#7a6448'), // 4 jetty
-  stone('#d8d4c8','#b4b0a4')+rect(0,0,16,1,'#ecE8dc'),                                                                                 // 5 whitewashed wall
-  rect(0,0,16,16,'#c8c4b8')+rect(0,0,8,8,'#d4d0c4')+rect(8,8,8,8,'#d4d0c4')+rect(0,15,16,1,'#a8a498')+rect(15,0,1,16,'#a8a498'),       // 6 white tiles
-  rect(0,0,16,16,'#2b2a22')+rect(1,0,14,16,'#4a4e56')+rect(3,0,1,16,'#62666e')+rect(12,0,1,16,'#62666e')+rect(10,8,2,2,'#c8a848'),     // 7 iron door
-  rect(0,0,16,16,'#c8c4b8')+[1,5,9,13].map(x=>rect(x,0,2,16,'#3a3c40')).join('')+rect(0,7,16,2,'#3a3c40')+rect(0,0,16,1,'#5a5c62'),    // 8 cage bars
-  rect(0,0,16,16,'#c8c4b8')+rect(1,2,14,13,'#5a5650')+rect(2,3,12,10,'#e8e4dc')+rect(3,5,10,6,'#d8d0c0')+rect(5,7,4,1,'#c8bea8'),      // 9 salt vat
-  rect(0,0,16,16,'#c8c4b8')+rect(3,2,10,13,'#6a5032')+rect(3,5,10,1,'#3a2c20')+rect(3,11,10,1,'#3a2c20')+rect(5,7,6,3,'#d8d0b8'),      // 10 stamped barrel
-  rect(0,0,16,16,'#c8c4b8')+rect(0,1,16,2,'#3a3c40')+[3,8,13].map(x=>rect(x,3,1,4,'#8a8a8a')+rect(x-1,7,3,2,'#6a6a6a')).join(''),   // 11 hook rail
-  stone('#8a867a','#5a564e')+rect(0,0,16,1,'#a8a498'),                                                                                 // 12 tower stone
+  wetRock(), // 0 wet rock
+  rect(0,0,16,16,'#7a7262')+[[2,3,3,2],[9,9,3,2],[5,12,2,2],[12,2,2,2],[1,8,2,2],[7,5,2,2]].map(([x,y,w,h])=>rect(x,y,w,h,'#a49a84')+rect(x,y,w,1,'#b8ae98')+rect(x+w-1,y+h-1,1,1,'#5e5646')).join(''), // 1 shingle
+  water('#16303a','#24485a','#5a8494','#102630'), // 2 sea
+  blocks('#1a1a18','#2e2e2a','#44443c','#242420',[[0,0,8,6],[9,1,7,5],[1,7,6,6],[8,8,8,6],[0,14,5,2],[6,14,10,2]]), // 3 cliff
+  rect(0,0,16,16,'#16303a')+planks(0,2,16,12,'#5a4632','#76603e','#2e2418')+rect(0,2,16,1,'#7a6448')+rect(0,13,16,1,'#2e2418')+rect(0,14,16,2,'#000000',0.35), // 4 jetty
+  stone('#d8d4c8','#b4b0a4'), // 5 whitewashed wall
+  whiteTiles(), // 6 white tiles
+  rect(0,0,16,16,'#2b2a22')+rect(1,0,14,16,'#4a4e56')+rect(1,0,1,16,'#62666e')+rect(14,0,1,16,'#33363c')+[4,8,12].map(y=>rect(1,y,14,1,'#3a3e44')).join('')+[3,12].map(x=>[2,6,10,14].map(y=>rect(x,y,1,1,'#8a8e96')).join('')).join('')+rect(10,7,2,2,'#c8a848'), // 7 iron door
+  whiteTiles()+rect(0,7,16,2,'#3a3c40')+rect(0,7,16,1,'#5a5c62')+[1,5,9,13].map(x=>rect(x,0,2,16,'#3a3c40')+rect(x,0,1,16,'#5a5c62')).join(''), // 8 cage bars
+  whiteTiles()+shadow(9,15,7,1)+rect(1,2,14,13,'#5a5650')+rect(1,2,14,1,'#7a766e')+rect(2,3,12,10,'#e8e4dc')+ellipse(8,8,5,3,'#d8d0c0')+rect(5,7,4,1,'#c8bea8')+rect(14,3,1,12,'#46423c'), // 9 salt vat
+  whiteTiles()+shadow(9,14.5,6,1.5)+rect(4,2,8,13,'#6a5032')+rect(3,4,10,9,'#6a5032')+rect(4,2,2,13,'#86683f')+rect(3,5,10,1,'#3a2c20')+rect(3,11,10,1,'#3a2c20')+rect(5,7,6,3,'#d8d0b8')+rect(6,8,4,1,'#3a2c20'), // 10 stamped barrel
+  whiteTiles()+rect(0,1,16,2,'#3a3c40')+rect(0,1,16,1,'#5a5c62')+[3,8,13].map(x=>rect(x,3,1,4,'#8a8a8a')+rect(x,3,1,1,'#b4b4b4')+rect(x-1,7,3,2,'#6a6a6a')+rect(x+1,8,1,1,'#4a4a4a')).join(''), // 11 hook rail
+  stone('#8a867a','#5a564e'), // 12 tower stone
   stairs({ tread: '#8a867a', riser: '#3a3630', lip: '#a8a498' }),                                                                     // 13 stairs
-  rect(0,0,16,16,'#3a3830')+rect(2,2,12,12,'#e8d8a0')+rect(4,4,8,8,'#fff4c8')+rect(6,6,4,4,'#ffffff')+rect(2,2,12,1,'#c8a848'),       // 14 the lens
-  rect(0,0,16,16,'#1e2a30')+rect(1,1,14,14,'#3a5868')+rect(2,2,5,12,'#5a7a8a')+rect(0,7,16,1,'#2a2c30')+rect(7,0,1,16,'#2a2c30'),      // 15 lamp glass
-  rect(0,0,16,16,'#4a4a44')+rect(2,1,12,14,'#3a3c40')+rect(3,2,10,2,'#5a5c62')+rect(4,6,8,6,'#2a2c30')+rect(6,8,4,2,'#c8a848'),       // 16 oil tank
-  rect(0,0,16,16,'#d8d4cc')+rect(2,3,3,1,'#f0ece4')+rect(9,9,4,1,'#f0ece4')+rect(6,12,2,1,'#b8b4ac')+rect(12,4,1,1,'#b8b4ac'),         // 17 salt floor
-  rect(0,0,16,16,'#c8c4b8')+rect(1,1,14,14,'#6a6a62')+rect(2,2,12,3,'#8a8a82')+rect(2,6,12,3,'#8a8a82')+rect(2,10,12,3,'#8a8a82')+rect(7,3,2,1,'#c8a848')+rect(7,7,2,1,'#c8a848')+rect(7,11,2,1,'#c8a848'), // 18 file cabinet
-  rect(0,0,16,16,'#c8c4b8')+rect(0,3,16,9,'#8a8e94')+rect(0,3,16,1,'#b4b8be')+rect(2,12,2,4,'#5a5e64')+rect(12,12,2,4,'#5a5e64'),      // 19 steel table
-  rect(0,0,16,16,'#4a4a44')+rect(2,8,1,5,'#6a7a4a')+rect(4,6,1,7,'#7a8a52')+rect(7,9,1,4,'#6a7a4a')+rect(11,5,1,8,'#7a8a52')+rect(13,9,1,4,'#6a7a4a'), // 20 sea grass
-  rect(0,0,16,16,'#8a8270')+rect(2,3,12,11,'#7a6040')+rect(2,3,12,1,'#9a7a50')+rect(7,3,1,11,'#5a4430')+rect(3,7,10,2,'#2a2018'),      // 21 crates for the light
-  rect(0,0,16,16,'#c8c4b8')+rect(4,4,8,8,'#3a3c40')+[5,8,11].map(x=>rect(x,4,1,8,'#6a6c72')).join('')+rect(6,10,4,2,'#5a2a26'),       // 22 floor drain
-  rect(0,0,16,16,'#3a3830')+rect(0,0,16,2,'#4a4840')+rect(2,6,12,1,'#2a2824')+rect(4,10,8,1,'#2a2824'),                                 // 23 tower floor
+  rect(0,0,16,16,'#3a3830')+ellipse(8,8,8,8,'#fff4c8',0.15)+rect(2,2,12,12,'#e8d8a0')+rect(4,4,8,8,'#fff4c8')+rect(6,6,4,4,'#ffffff')+rect(2,2,12,1,'#c8a848')+rect(2,2,1,12,'#c8a848')+[4,8,12].map(x=>rect(x,2,1,12,'#d8c070',0.5)).join(''), // 14 the lens
+  rect(0,0,16,16,'#1e2a30')+rect(1,1,14,14,'#3a5868')+rect(2,2,5,12,'#5a7a8a')+rect(2,2,2,5,'#8aa8b8')+rect(0,7,16,1,'#2a2c30')+rect(7,0,1,16,'#2a2c30'), // 15 lamp glass
+  rect(0,0,16,16,'#3a3830')+shadow(9,15,7,1)+rect(2,1,12,14,'#3a3c40')+rect(2,1,2,14,'#5a5c62')+rect(13,1,1,14,'#2a2c30')+rect(3,2,10,2,'#5a5c62')+rect(4,6,8,6,'#2a2c30')+rect(6,8,4,2,'#c8a848')+rect(6,8,1,1,'#e8c868'), // 16 oil tank
+  rect(0,0,16,16,'#d8d4cc')+rect(2,3,3,1,'#f0ece4')+rect(9,9,4,1,'#f0ece4')+rect(6,12,2,1,'#b8b4ac')+rect(12,4,1,1,'#b8b4ac')+rect(3,10,1,1,'#c8c4bc')+rect(13,13,2,1,'#f0ece4'), // 17 salt floor
+  whiteTiles()+shadow(9,15,7,1)+rect(1,1,14,14,'#5a5a52')+rect(1,1,14,1,'#7a7a72')+[2,6,10].map(y=>rect(2,y,12,3,'#8a8a82')+rect(2,y,12,1,'#a2a29a')+rect(7,y+1,2,1,'#c8a848')).join('')+rect(14,2,1,13,'#46463e'), // 18 file cabinet
+  whiteTiles()+shadow(8,14,8,1)+rect(0,3,16,9,'#8a8e94')+rect(0,3,16,1,'#c4c8ce')+rect(0,11,16,1,'#5a5e64')+rect(3,5,4,1,'#b4b8be')+rect(2,12,2,4,'#5a5e64')+rect(12,12,2,4,'#5a5e64'), // 19 steel table
+  wetRock()+[[2,8,5],[4,6,7],[7,9,4],[11,5,8],[13,9,4]].map(([x,y,h])=>rect(x,y,1,h,'#6a7a4a')+rect(x,y,1,2,'#8a9a5a')).join(''), // 20 sea grass
+  rect(0,0,16,16,'#8a8270')+shadow(9,15,7,1)+rect(2,3,12,11,'#7a6040')+rect(2,3,12,1,'#9a7a50')+rect(2,3,1,11,'#9a7a50')+rect(13,4,1,10,'#5a4430')+rect(7,3,1,11,'#5a4430')+rect(3,7,10,2,'#2a2018')+rect(4,7,8,1,'#d8d0b8',0.4), // 21 crates for the light
+  whiteTiles()+rect(4,4,8,8,'#2a2c30')+rect(4,4,8,1,'#1a1c20')+[5,8,11].map(x=>rect(x,4,1,8,'#6a6c72')).join('')+rect(6,10,4,2,'#5a2a26')+rect(11,12,3,2,'#5a2a26',0.5), // 22 floor drain
+  rect(0,0,16,16,'#3a3830')+rect(0,0,16,2,'#4a4840')+rect(0,0,16,1,'#5a5850')+rect(2,6,12,1,'#2a2824')+rect(4,10,8,1,'#2a2824')+rect(7,3,1,1,'#5a5850')+rect(11,12,1,1,'#5a5850'), // 23 tower floor
 ];
 // Variants of the rock and the white tiles: weed and pools on the rock; a stain, a chipped tile.
 const ROCK_VARIANTS = [tiles.length + 1, tiles.length + 2], TILE_VARIANTS = [tiles.length + 3];
@@ -42,6 +47,8 @@ tiles.push(
 const WALLFACE = tiles.length + 1;
 tiles.push(stone('#7a766a','#4a463e')+[[2,2],[10,4],[5,7],[12,10],[3,12],[8,14]].map(([x,y])=>rect(x,y,3,2,'#2a2824')+rect(x,y,3,1,'#a8a498')).join(''));
 writeFileSync('public/assets/island-tiles.svg', `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${sheet(tiles)}</svg>\n`);
+// TILES_ONLY=1 redraws the tiles and leaves the maps alone: they have been edited by hand since this script made them.
+if (process.env.TILES_ONLY) process.exit(0);
 const [ROCK,SHINGLE,SEA,CLIFF,JETTY,WHITE,TILES,DOOR,BARS,VAT,BARREL,HOOKS,TOWER,STAIR,LENS,GLASS,TANK,SALT,FILES,TABLE,GRASS,CRATES,DRAIN,TFLOOR]=tiles.map((_,i)=>i+1);
 // Collides lists 0-based tile ids.
 const solid=[2,3,5,7,8,9,10,11,12,14,15,16,18,19,21,WALLFACE-1];
