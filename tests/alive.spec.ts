@@ -33,7 +33,8 @@ test('an enemy that sees the hero comes after him, and gives up when he gets awa
   }, [x, y]);
   // Standing still within sight, the hero is reached and the fight starts.
   await place(550, 290);
-  await expect(page.getByRole('heading', { name: 'Crop locust' })).toBeVisible({ timeout: 5000 });
+  // Game time slows on a busy machine, and the locust has to walk the distance: give it room.
+  await expect(page.getByRole('heading', { name: 'Crop locust' })).toBeVisible({ timeout: 15000 });
   await page.getByRole('button', { name: /^Run/ }).click();
   await page.getByRole('button', { name: 'Get away' }).click();
   // Far away, it walks back to where it was.

@@ -133,15 +133,23 @@ test('spell dodges work with touch keys and explain a wrong key', async ({ page 
     await expect(page.locator('.dodge-sequence')).toBeVisible();
     return (await page.locator('.dodge-sequence span').allTextContents()).map(Number);
   }
+  // Feedback is replaced by the next blow's as soon as it lands, so record every one as it appears: a busy machine can't miss it.
+  await page.evaluate(() => {
+    const seen: string[] = [];
+    (window as unknown as { feedback: string[] }).feedback = seen;
+    new MutationObserver(() => { const text = document.querySelector('.combat-feedback')?.textContent; if (text) seen.push(text); })
+      .observe(document.querySelector('.battle')!, { subtree: true, childList: true, characterData: true });
+  });
+  const feedback = () => page.evaluate(() => (window as unknown as { feedback: string[] }).feedback.join(' | '));
   const keys = await spellRound();
   for (const key of keys) await page.getByRole('button', { name: `Dodge key ${key}`, exact: true }).click();
-  await expect(page.locator('.combat-feedback')).toContainText('DODGED');
+  await expect.poll(feedback).toContain('DODGED');
   await expect(page.locator('.battle')).toHaveAttribute('data-phase', 'player');
   await expect(page.locator('.dodge-sequence')).toHaveCount(0);
   const again = await spellRound();
   await page.getByRole('button', { name: `Dodge key ${again[0] % 4 + 1}`, exact: true }).click();
   await expect(page.locator('.dodge-call')).toContainText('Wrong key');
-  await expect(page.locator('.combat-feedback')).toContainText('Wrong key');
+  await expect.poll(feedback).toContain('Wrong key');
 });
 
 test('failed spell input shows its cost after the temporary typing panel closes', async ({ page }) => {
