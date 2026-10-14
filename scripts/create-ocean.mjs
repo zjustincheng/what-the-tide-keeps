@@ -2,33 +2,37 @@
 // the open water beyond it; the land's fishing pens; the kraken's grave; and the cuttlefish's reef.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
-import { crumble, gap, rect, rows, scatter, sheet, tileProps, vary } from './tile-kit.mjs';
+import { crumble, ellipse, gap, rect, rows, scatter, sheet, tileProps, vary } from './tile-kit.mjs';
+import { blocks, boulder, planks, shadow, water } from './tile-art.mjs';
+// The sea, lit from the upper left under a grey sky: swell with crests, wrecks with lit edges, bone bleached white.
+const deck = () => rect(0,0,16,16,'#40321f')+[0,4,8,12].map((y,i)=>rect(0,y,16,3,'#5a4632')+rect(0,y,16,1,'#6e5a40')+rect([6,12,3,10][i],y,1,3,'#40321f')).join('');
+const sand = () => rect(0,0,16,16,'#b8a880')+rect(3,4,2,1,'#a8986e')+rect(10,10,3,1,'#c8b890')+rect(6,13,1,1,'#8a7a5a')+rect(12,3,1,1,'#d8ccaa')+rect(2,11,2,1,'#a8986e');
 const SEA = '#16303a';
 const tiles = [
-  rect(0,0,16,16,'#1e3c48')+rect(2,4,6,1,'#2c5260')+rect(9,10,5,1,'#2c5260')+rect(5,13,3,1,'#284a56'),          // 0 swell, walkable on the currents
-  rect(0,0,16,16,'#3a6a6e')+rect(2,3,5,1,'#4e8084')+rect(9,9,4,1,'#4e8084')+rect(4,12,6,1,'#5a8c8a'),             // 1 shallows
-  rect(0,0,16,16,'#b8a880')+rect(3,4,2,1,'#a8986e')+rect(10,10,3,1,'#c8b890')+rect(6,13,1,1,'#8a7a5a'),          // 2 sand
-  rect(0,0,16,16,'#5a4632')+[0,4,8,12].map(y=>rect(0,y,16,1,'#40321f')).join('')+rect(6,1,1,2,'#6a5640')+rect(12,9,1,2,'#6a5640'), // 3 wreck deck
-  rect(0,0,16,16,'#3a2c20')+rect(0,0,16,3,'#4a3828')+[3,9,14].map(x=>rect(x,3,1,13,'#2a2018')).join('')+rect(5,8,2,2,'#1a1410'), // 4 hull
-  rect(0,0,16,16,SEA)+rect(7,0,2,16,'#4a3a28')+rect(0,7,16,1,'#8a7a5a')+rect(3,3,10,1,'#8a7a5a')+rect(5,11,6,1,'#8a7a5a'), // 5 rigging
-  rect(0,0,16,16,'#5a4632')+rect(6,0,4,16,'#4a3828')+rect(7,0,1,16,'#6a5640')+rect(3,4,10,2,'#3a2c20'),         // 6 mast
-  rect(0,0,16,16,SEA)+rect(2,3,6,6,'#8a5a5a')+rect(8,7,6,6,'#a87060')+rect(3,10,4,4,'#c88a70')+rect(10,2,3,3,'#6a4a5a'), // 7 coral reef
-  rect(0,0,16,16,SEA)+[2,6,10,13].map((x,i)=>rect(x,1+i%3,2,14-i%3,'#2e5a3a')).join('')+[3,11].map(x=>rect(x,4,1,6,'#4a7a4a')).join(''), // 8 kelp
-  rect(0,0,16,16,SEA)+rect(1,3,14,11,'#4a5054')+rect(2,3,9,4,'#5e6468')+rect(2,3,9,1,'#70767a')+rect(10,9,4,4,'#3e4448'), // 9 sea rock
-  rect(0,0,16,16,'#5a4632')+rect(7,4,2,12,'#3a2c20')+rect(5,1,6,4,'#2a2420')+rect(6,2,4,2,'#e0a850'),            // 10 lantern
-  rect(0,0,16,16,'#5a4632')+rect(1,3,14,11,'#6a5636')+rect(1,8,14,1,'#4a3c26')+rect(7,3,1,11,'#4a3c26')+rect(3,5,3,2,'#8a3a30'), // 11 crates
-  rect(0,0,16,16,'#a89a80')+[3,8,13].map(y=>rect(0,y,16,1,'#8a7c64')).join('')+rect(0,15,16,1,'#5a4e3e'),         // 12 sailcloth roof
-  rect(0,0,16,16,SEA)+[2,6,10,14].map(x=>rect(x,0,1,16,'#6a6a5a')).join('')+[2,6,10,14].map(y=>rect(0,y,16,1,'#6a6a5a')).join(''), // 13 net
-  rect(0,0,16,16,SEA)+[1,5,9,13].map(x=>rect(x,0,2,16,'#5a4a34')).join('')+rect(0,7,16,2,'#7a7a6a')+rect(4,10,2,2,'#a8b0a8'), // 14 pen netting
-  rect(0,0,16,16,'#b8a880')+rect(2,1,4,15,'#d8d0b8')+rect(3,1,2,15,'#e8e0c8')+rect(10,3,4,13,'#c8c0a8')+rect(11,3,2,13,'#d8d0b8'), // 15 kraken rib
-  rect(0,0,16,16,'#b8a880')+rect(3,6,7,2,'#d8d0b8')+rect(9,10,4,2,'#c8c0a8')+rect(4,12,2,1,'#8a7a5a'),          // 16 small bones
-  rect(0,0,16,16,'#1e3c48')+[3,8,13].map(y=>rect(2,y,9,1,'#3a6a78')+rect(11,y-1,2,3,'#3a6a78')).join(''),       // 17 current
-  rect(0,0,16,16,'#5a4632')+rect(3,2,10,12,'#2a2018')+rect(4,3,8,10,'#3a2c20')+rect(4,7,8,1,'#5a4632'),          // 18 hatch
-  rect(0,0,16,16,'#5a4632')+rect(0,2,16,6,'#2a5a6a')+[0,4,8,12].map(x=>rect(x,2,2,6,'#d8c8a0')).join('')+rect(1,8,2,8,'#3a2c20')+rect(13,8,2,8,'#3a2c20'), // 19 awning
-  rect(0,0,16,16,'#5a4632')+rect(3,2,10,13,'#6a5032')+rect(3,5,10,1,'#3a2c20')+rect(3,11,10,1,'#3a2c20')+rect(5,2,6,1,'#8a6a42'), // 20 barrel
-  rect(0,0,16,16,'#0c1c24')+rect(3,5,4,1,'#142a34')+rect(10,11,3,1,'#142a34'),                                 // 21 deep water
-  rect(0,0,16,16,'#b8a880')+rect(4,2,8,13,'#8a8a80')+rect(5,1,6,3,'#a8a898')+rect(6,6,4,1,'#2a5460')+rect(3,13,10,2,'#6a6a62'), // 22 the sea's shrine
-  rect(0,0,16,16,'#2a3a40')+rect(3,4,2,1,'#3a4e56')+rect(10,10,3,1,'#1e2a30')+rect(6,12,2,1,'#5a3a4a'),         // 23 reef floor
+  water('#1e3c48','#2c5260','#6a9aa8','#18323e')+rect(4,4,2,1,'#a8c8d0',0.4), // 0 swell, walkable on the currents
+  water('#3a6a6e','#4e8084','#a8d0cc','#2e5a5e')+rect(10,12,3,1,'#c8b890',0.3), // 1 shallows
+  sand(), // 2 sand
+  deck(), // 3 wreck deck
+  rect(0,0,16,16,'#2a2018')+rect(0,0,16,3,'#4a3828')+rect(0,0,16,1,'#6a5440')+[3,9,14].map(x=>rect(x,3,1,13,'#1e1610')+rect(x+1,3,1,13,'#4a3828')).join('')+rect(5,8,2,2,'#100c08')+rect(11,12,2,1,'#5a7a6a'), // 4 hull
+  water('#16303a','#24485a','#4a7080','#102630')+rect(7,0,2,16,'#4a3a28')+rect(7,0,1,16,'#5e4a34')+rect(0,7,16,1,'#8a7a5a')+rect(3,3,10,1,'#8a7a5a')+rect(5,11,6,1,'#8a7a5a'), // 5 rigging
+  deck()+shadow(9,15,3,1)+rect(6,0,4,16,'#4a3828')+rect(6,0,1,16,'#6a5640')+rect(9,0,1,16,'#2e2418')+rect(3,4,10,2,'#3a2c20')+rect(3,4,10,1,'#5a4630'), // 6 mast
+  water('#16303a','#24485a','#4a7080','#102630')+ellipse(5,6,3.5,3.5,'#6a4a4a')+ellipse(5,5.5,2.5,2.5,'#8a5a5a')+ellipse(11,10,3.5,3.5,'#8a5a50')+ellipse(10.5,9.5,2.5,2.5,'#a87060')+ellipse(5,12,2.5,2,'#a87060')+ellipse(4.5,11.5,1.5,1,'#c88a70')+ellipse(11.5,3.5,2,1.8,'#6a4a5a')+rect(4,4,1,1,'#d8a090'), // 7 coral reef
+  water('#16303a','#24485a','#4a7080','#102630')+[2,6,10,13].map((x,i)=>rect(x,1+i%3,2,14-i%3,'#2e5a3a')+rect(x,1+i%3,1,14-i%3,'#4a7a4a')).join('')+[3,11].map(x=>ellipse(x+0.5,6,1.5,1,'#5a8a5a')).join(''), // 8 kelp
+  water('#16303a','#24485a','#4a7080','#102630')+boulder(8,8.5,6.5,5,'#4a5054','#6a7074','#2e3438')+rect(4,13,8,1,'#d8e4e0',0.3), // 9 sea rock
+  deck()+ellipse(8,3,5,5,'#e0a850',0.12)+shadow(9,15,3,1)+rect(7,4,2,12,'#3a2c20')+rect(7,4,1,12,'#4e3e2c')+rect(5,1,6,4,'#2a2420')+rect(6,2,4,2,'#e0a850')+rect(7,2,2,1,'#fff0b2'), // 10 lantern
+  deck()+shadow(9,15,7,1)+rect(1,3,14,11,'#6a5636')+rect(1,3,14,1,'#86704a')+rect(1,3,1,11,'#86704a')+rect(14,4,1,10,'#4a3c26')+rect(1,8,14,1,'#4a3c26')+rect(7,3,1,11,'#4a3c26')+rect(3,5,3,2,'#8a3a30'), // 11 crates
+  rect(0,0,16,16,'#a89a80')+[3,8,13].map(y=>rect(0,y,16,1,'#8a7c64')+rect(0,y-1,16,1,'#bcae94')).join('')+rect(5,1,1,15,'#968a72',0.6)+rect(0,15,16,1,'#5a4e3e'), // 12 sailcloth roof
+  water('#16303a','#24485a','#4a7080','#102630')+[2,6,10,14].map(x=>rect(x,0,1,16,'#6a6a5a')).join('')+[2,6,10,14].map(y=>rect(0,y,16,1,'#6a6a5a')).join('')+[[2,2],[10,6],[6,14]].map(([x,y])=>rect(x,y,1,1,'#9a9a88')).join(''), // 13 net
+  water('#16303a','#24485a','#4a7080','#102630')+[1,5,9,13].map(x=>rect(x,0,2,16,'#5a4a34')+rect(x,0,1,16,'#6e5e44')).join('')+rect(0,7,16,2,'#7a7a6a')+rect(0,7,16,1,'#9a9a88')+rect(4,10,2,2,'#a8b0a8'), // 14 pen netting
+  sand()+shadow(9,15,7,1)+rect(2,1,4,15,'#c8c0a8')+rect(2,1,2,15,'#e8e0c8')+rect(10,3,4,13,'#b8b098')+rect(10,3,2,13,'#d8d0b8')+rect(3,5,2,1,'#a8a088')+rect(11,8,2,1,'#a8a088'), // 15 kraken rib
+  sand()+rect(3,6,7,2,'#d8d0b8')+rect(3,6,7,1,'#e8e0c8')+rect(2,5,2,4,'#d8d0b8')+rect(9,5,2,4,'#d8d0b8')+rect(9,10,4,2,'#c8c0a8')+rect(4,12,2,1,'#8a7a5a'), // 16 small bones
+  water('#1e3c48','#2c5260','#6a9aa8','#18323e')+[3,8,13].map(y=>rect(2,y,9,1,'#4a7a88')+rect(2,y,9,1,'#8ab0b8',0.4)+rect(11,y-1,2,3,'#4a7a88')+rect(13,y,1,1,'#4a7a88')).join(''), // 17 current
+  deck()+rect(3,2,10,12,'#1a1410')+rect(4,3,8,10,'#3a2c20')+rect(4,3,8,1,'#5a4632')+rect(4,7,8,1,'#5a4632')+rect(12,3,1,10,'#241a12')+rect(7,5,2,1,'#8a8a7a'), // 18 hatch
+  deck()+rect(0,2,16,6,'#2a5a6a')+[0,4,8,12].map(x=>rect(x,2,2,6,'#d8c8a0')+rect(x,8,2,1,'#d8c8a0')).join('')+rect(0,2,16,1,'#000000',0.15)+rect(1,9,2,7,'#3a2c20')+rect(13,9,2,7,'#3a2c20'), // 19 awning
+  deck()+shadow(9,14.5,6,1.5)+rect(4,2,8,13,'#6a5032')+rect(3,4,10,9,'#6a5032')+[6,9].map(x=>rect(x,3,1,11,'#5a4228')).join('')+rect(4,2,2,13,'#86683f')+rect(3,5,10,1,'#3a2c20')+rect(3,11,10,1,'#3a2c20'), // 20 barrel
+  water('#0c1c24','#142a34','#2a4652','#08141a'), // 21 deep water
+  sand()+shadow(9,15,6,1)+rect(4,2,8,13,'#8a8a80')+rect(4,2,2,13,'#a8a898')+rect(11,2,1,13,'#6a6a62')+rect(5,1,6,3,'#a8a898')+rect(6,6,4,1,'#2a5460')+rect(6,9,4,1,'#6a6a62')+rect(3,13,10,2,'#6a6a62')+rect(3,13,10,1,'#8a8a80'), // 22 the sea's shrine
+  rect(0,0,16,16,'#2a3a40')+rect(3,4,2,1,'#3a4e56')+rect(10,10,3,1,'#1e2a30')+rect(6,12,2,1,'#5a3a4a')+rect(12,3,1,1,'#4a6068')+rect(2,10,1,1,'#6a4a5a')+rect(8,7,1,1,'#3a4e56'), // 23 reef floor
 ];
 const [SWELL,SHALLOWS,SAND,DECK,HULL,RIGGING,MAST,REEF,KELP,ROCK,LANTERN,CRATES,SAIL,NET,PEN,RIB,BONES,CURRENT,HATCH,AWNING,BARREL,DEEP,SHRINE,REEFFLOOR]=tiles.map((_,i)=>i+1);
 // Swell and sand vary: whitecaps and weed; shells and drift.
@@ -42,6 +46,8 @@ tiles.push(
 const SEAGAP = tiles.length + 1, SPAR = tiles.length + 2;
 tiles.push(gap({ lip: '#5a4632', wall: '#2a2018', dark: '#0c1c24' }), crumble({ top: '#6a5638', crack: '#3a2c20', under: '#0c1c24' }));
 writeFileSync('public/assets/sea-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${sheet(tiles)}</svg>\n`);
+// TILES_ONLY=1 redraws the tiles and leaves the maps alone: they have been edited by hand since this script made them.
+if (process.env.TILES_ONLY) process.exit(0);
 // Collides lists 0-based tile ids.
 const solid=[4,5,6,7,8,9,10,11,12,13,14,15,19,20,21,22];
 
