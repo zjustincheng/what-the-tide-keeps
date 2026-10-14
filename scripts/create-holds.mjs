@@ -2,34 +2,37 @@
 // (a city up a cliff face, ranked by height), the noble house's upper tiers, the rookeries' archive, and the lord's hall.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
-import { rect as krect, rows, scatter, sheet, stairs, vary, crumble, gap, tileProps } from './tile-kit.mjs';
-const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
+import { ellipse, rect as krect, rows, scatter, sheet, stairs, vary, crumble, gap, tileProps } from './tile-kit.mjs';
+import { blocks, boulder, planks, shadow, tree as drawTree, turf, water } from './tile-art.mjs';
+const rect = (x,y,w,h,c,o) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"${o===undefined?'':` fill-opacity="${o}"`}/>`;
+// The holds: grey stone in a high, thin light from the upper left; the house's red and gold where the nobles live.
+const flagsTile = () => rect(0,0,16,16,'#4a4640')+[[0,0,8,8],[8,0,8,8],[0,8,8,8],[8,8,8,8]].map(([x,y,w,h],i)=>rect(x,y,w-1,h-1,i%3?'#5e5a54':'#66625a')+rect(x,y,w-1,1,'#7a766c')+rect(x,y,1,h-1,'#706c62')).join('');
 const tiles = [
   rect(0,0,16,16,'#3a3a3e')+rect(1,1,7,6,'#46464a')+rect(8,8,7,7,'#424246')+rect(0,7,16,1,'#2a2a2e')+rect(3,12,4,1,'#2e2e32'), // 0 cliff
-  rect(0,0,16,16,'#6a665c')+rect(2,3,5,1,'#5a564c')+rect(9,10,5,1,'#5a564c')+rect(5,13,3,1,'#7a766a'),                     // 1 ledge
-  rect(0,0,16,16,'#b8bcc0')+rect(3,4,6,1,'#a8acb2')+rect(8,11,5,1,'#c8ccd0'),                                                 // 2 scoured snow
-  rect(0,0,16,16,'#5e5a54')+rect(0,0,8,8,'#66625a')+rect(8,8,8,8,'#66625a')+rect(0,7,16,1,'#4a4640')+rect(7,0,1,16,'#4a4640'),  // 3 terrace flags
-  rect(0,0,16,16,'#7a7468')+rect(0,5,16,1,'#5e5850')+rect(0,11,16,1,'#5e5850')+rect(6,0,1,5,'#5e5850')+rect(11,6,1,5,'#5e5850'), // 4 tier wall
-  rect(0,0,16,16,'#3a4250')+[2,6,10,14].map(y=>rect(0,y,16,2,'#2e3440')).join(''),                                           // 5 slate roof
+  rect(0,0,16,16,'#6a665c')+rect(2,3,5,1,'#5a564c')+rect(9,10,5,1,'#5a564c')+rect(5,13,3,1,'#7a766a')+rect(12,4,2,1,'#7a766a')+rect(3,9,1,1,'#4e4a42')+rect(0,0,16,1,'#7a766a',0.5), // 1 ledge
+  rect(0,0,16,16,'#b8bcc0')+rect(3,4,6,1,'#a8acb2')+rect(4,3,4,1,'#cdd1d4')+rect(8,11,5,1,'#c8ccd0')+rect(9,10,3,1,'#dce0e2')+rect(12,6,1,1,'#eef2f4')+rect(2,12,1,1,'#eef2f4'), // 2 scoured snow
+  flagsTile(), // 3 terrace flags
+  blocks('#5e5850','#7a7468','#928c7e','#66604e'), // 4 tier wall
+  rect(0,0,16,16,'#2e3440')+[0,4,8,12].map((y,i)=>rect(0,y,16,3,'#3a4250')+rect(0,y,16,1,'#4a5464')+[3,7,11,15].map(x=>rect((x+(i%2)*2)%16,y,1,3,'#2e3440')).join('')).join(''), // 5 slate roof
   rect(0,0,16,16,'#6a665c')+[0,4,8,12].map((y,i)=>rect(0,y,16,4,['#8a8678','#7a766a','#6a665c','#5a564c'][i])).join(''),       // 6 stair
   rect(0,0,16,16,'#0e1218')+rect(3,5,2,1,'#1a2028')+rect(10,11,3,1,'#1a2028'),                                               // 7 the drop
-  rect(0,0,16,16,'#7a7468')+rect(4,0,8,14,'#6a2a2a')+rect(5,2,6,4,'#c8a848')+rect(6,9,4,3,'#c8a848'),                          // 8 house banner
-  rect(0,0,16,16,'#7a7468')+rect(1,1,14,15,'#2e2a26')+[3,7,11].map(x=>rect(x,1,2,15,'#5a5650')).join('')+rect(1,7,14,2,'#5a5650'), // 9 gate
-  rect(0,0,16,16,'#5e5a54')+rect(3,1,10,15,'#3a2a1c')+rect(4,2,8,13,'#4a3624')+rect(10,8,1,1,'#b89a5a'),                    // 10 door
-  rect(0,0,16,16,'#6a5a44')+rect(0,3,16,10,'#8a7a5a')+rect(2,5,12,2,'#5a4a34')+rect(4,9,8,2,'#5a4a34'),                      // 11 nest wall (woven)
-  rect(0,0,16,16,'#3a3028')+rect(0,2,16,2,'#5a4632')+rect(0,9,16,2,'#5a4632')+[1,4,7,10,13].map(x=>rect(x,4,2,5,'#d8d0b8')).join('')+[2,6,11].map(x=>rect(x,11,3,4,'#c8c0a0')).join(''), // 12 letter shelves
-  rect(0,0,16,16,'#4a3e30')+[0,8].map(y=>rect(0,y,16,1,'#3a3024')).join('')+rect(5,0,1,8,'#3a3024')+rect(11,8,1,8,'#3a3024'), // 13 archive boards
-  rect(0,0,16,16,'#5a2a2a')+rect(1,1,14,14,'#6a3030')+rect(3,3,10,10,'#7a3a34')+rect(7,0,2,16,'#c8a848'),                    // 14 hall carpet
-  rect(0,0,16,16,'#5a2a2a')+rect(2,1,12,14,'#4a3424')+rect(3,2,10,6,'#c8a848')+rect(4,8,8,5,'#6a3030'),                       // 15 the lord's chair
-  rect(0,0,16,16,'#5e5a54')+rect(4,0,8,16,'#8a8478')+rect(5,0,2,16,'#9a9488')+rect(3,13,10,3,'#6a665c'),                      // 16 pillar
-  rect(0,0,16,16,'#5e5a54')+rect(2,6,12,2,'#5a4632')+rect(3,8,1,8,'#5a4632')+rect(12,8,1,8,'#5a4632')+rect(4,2,3,4,'#3a3a40')+rect(9,3,3,3,'#3a3a40'), // 17 perches, empty
-  rect(0,0,16,16,'#5e5a54')+rect(4,8,8,8,'#3a3430')+rect(5,4,6,5,'#e0a850')+rect(6,2,4,3,'#f0c870'),                          // 18 brazier
-  rect(0,0,16,16,'#5e5a54')+rect(6,4,4,12,'#3a3a40')+rect(7,0,2,8,'#8a8a90')+rect(5,0,6,2,'#c8a848'),                         // 19 lever
-  rect(0,0,16,16,'#3a3a3e')+rect(1,1,14,11,'#26342a')+rect(3,2,9,6,'#3a4a34')+rect(7,11,3,5,'#3a2e22'),                       // 20 cliff pine
-  rect(0,0,16,16,'#6a665c')+rect(2,3,12,11,'#4e4e52')+rect(4,4,6,3,'#626266'),                                                 // 21 boulder
-  rect(0,0,16,16,'#0e1218')+rect(0,4,16,8,'#5a4632')+[1,5,9,13].map(x=>rect(x,4,1,8,'#3a2e20')).join('')+rect(0,3,16,1,'#8a7a5a')+rect(0,12,16,1,'#8a7a5a'), // 22 rope bridge
-  rect(0,0,16,16,'#5e5a54')+rect(4,2,8,12,'#8a8478')+rect(5,0,6,4,'#9a9488')+rect(6,1,4,2,'#3a3a40')+rect(3,13,10,3,'#6a665c'), // 23 statue of a lord
-  rect(0,0,16,16,'#7a7468')+rect(0,5,16,1,'#5e5850')+rect(0,11,16,1,'#5e5850')+rect(6,3,4,9,'#1a1e24')+rect(7,4,2,7,'#2a3a4a'), // 24 wall with a window slit
+  rect(0,0,16,16,'#7a7468')+rect(4,0,8,14,'#6a2a2a')+rect(4,0,1,14,'#8a3a32')+rect(11,0,1,14,'#4a1e1e')+rect(4,14,2,2,'#6a2a2a')+rect(10,14,2,2,'#6a2a2a')+rect(5,2,6,4,'#c8a848')+rect(5,2,6,1,'#e2c868')+rect(6,9,4,3,'#c8a848')+rect(7,3,2,2,'#6a2a2a'), // 8 house banner
+  rect(0,0,16,16,'#7a7468')+rect(1,1,14,15,'#1e1a16')+[3,7,11].map(x=>rect(x,1,2,15,'#5a5650')+rect(x,1,1,15,'#7a766c')).join('')+rect(1,7,14,2,'#5a5650')+rect(1,7,14,1,'#7a766c')+rect(1,1,14,1,'#3a3632'), // 9 gate
+  rect(0,0,16,16,'#5e5a54')+rect(3,1,10,15,'#2a1e14')+rect(4,2,8,13,'#4a3624')+[6,9].map(x=>rect(x,2,1,13,'#3a2a1c')).join('')+rect(4,2,8,1,'#000000',0.3)+rect(3,0,10,1,'#7a766c')+rect(10,8,1,1,'#b89a5a'), // 10 door
+  rect(0,0,16,16,'#5a4a34')+[1,4,7,10,13].map((y,i)=>rect(0,y,16,2,i%2?'#7a6a4a':'#8a7a5a')+[2,6,10,14].map(x=>rect((x+i*2)%16,y,2,2,'#5a4a34')).join('')).join('')+rect(3,8,1,1,'#c8c0a8')+rect(12,5,1,1,'#3a3022'), // 11 nest wall (woven)
+  rect(0,0,16,16,'#2e261e')+rect(0,2,16,2,'#5a4632')+rect(0,2,16,1,'#76603e')+rect(0,9,16,2,'#5a4632')+rect(0,9,16,1,'#76603e')+[1,4,7,10,13].map((x,i)=>rect(x,4,2,5,i%2?'#c8c0a8':'#d8d0b8')+rect(x,4,2,1,'#ece6d4')).join('')+[2,6,11].map(x=>rect(x,11,3,4,'#c8c0a0')+rect(x+1,12,1,1,'#7a3a2a')).join(''), // 12 letter shelves
+  rect(0,0,16,16,'#3a3024')+[0,8].map((y,i)=>rect(0,y,16,7,'#4a3e30')+rect(0,y,16,1,'#5e5040')+rect([5,11][i],y,1,7,'#3a3024')).join(''), // 13 archive boards
+  rect(0,0,16,16,'#4a2222')+rect(1,1,14,14,'#6a3030')+rect(1,1,14,1,'#7a3a36')+rect(3,3,10,10,'#7a3a34')+rect(7,0,2,16,'#c8a848')+rect(7,0,1,16,'#e2c868')+rect(1,7,14,2,'#5a2a2a',0.5), // 14 hall carpet
+  rect(0,0,16,16,'#5a2a2a')+shadow(9,15,7,1)+rect(2,1,12,14,'#3a2a1c')+rect(2,1,12,1,'#5a4630')+rect(3,2,10,6,'#c8a848')+rect(3,2,10,1,'#e2c868')+rect(4,8,8,5,'#6a3030')+rect(4,8,8,1,'#8a4040')+rect(13,2,1,13,'#2a1e14')+rect(2,13,2,3,'#3a2a1c')+rect(12,13,2,3,'#3a2a1c'), // 15 the lord's chair
+  rect(0,0,16,16,'#5e5a54')+shadow(9,15,6,1)+rect(3,0,10,2,'#9a9488')+rect(3,0,10,1,'#aaa498')+rect(4,2,8,11,'#8a8478')+[5,8,10].map(x=>rect(x,2,1,11,'#a49e92')).join('')+rect(11,2,1,11,'#6a665c')+rect(3,13,10,3,'#6a665c')+rect(3,13,10,1,'#8a8478'), // 16 pillar
+  flagsTile()+shadow(8,15,7,1)+rect(2,6,12,2,'#5a4632')+rect(2,6,12,1,'#76603e')+rect(3,8,1,8,'#5a4632')+rect(12,8,1,8,'#5a4632')+ellipse(5.5,4,1.8,2,'#3a3a40')+ellipse(10.5,4.5,1.5,1.8,'#3a3a40')+rect(5,5,1,1,'#c8c0a8'), // 17 perches, empty
+  flagsTile()+ellipse(8,6,6,6,'#e0a850',0.12)+shadow(9,15,5,1)+rect(4,9,8,6,'#3a3430')+rect(4,9,8,1,'#55504a')+ellipse(8,7,3,3,'#d8743a')+ellipse(8,6,2,2.2,'#f0c870')+rect(7,3,2,2,'#f0c870')+rect(8,2,1,1,'#fff0b2'), // 18 brazier
+  flagsTile()+shadow(9,15,3,1)+rect(6,4,4,12,'#3a3a40')+rect(6,4,1,12,'#55555c')+rect(7,0,2,8,'#8a8a90')+rect(7,0,1,8,'#aaaab0')+rect(5,0,6,2,'#c8a848')+rect(5,0,6,1,'#e2c868'), // 19 lever
+  drawTree({ ground:'#3a3a3e', leaf:'#3a4a34', dark:'#26342a', light:'#4e604a', trunk:'#3a2e22', trunkDark:'#261e16' }), // 20 cliff pine
+  rect(0,0,16,16,'#6a665c')+boulder(8,9,6,4.5,'#5a5a5e','#76767a','#3e3e42'), // 21 boulder
+  rect(0,0,16,16,'#0e1218')+planks(0,4,16,8,'#5a4632','#76603e','#2e2418')+rect(0,3,16,1,'#8a7a5a')+rect(0,12,16,1,'#8a7a5a')+rect(0,13,16,2,'#000000',0.4)+[0,8].map(x=>rect(x,2,1,2,'#6a5a3a')+rect(x,12,1,2,'#6a5a3a')).join(''), // 22 rope bridge
+  flagsTile()+shadow(9,15,6,1)+rect(3,13,10,3,'#6a665c')+rect(3,13,10,1,'#8a8478')+rect(4,4,8,10,'#8a8478')+rect(4,4,2,10,'#a49e92')+rect(11,4,1,10,'#6a665c')+rect(5,0,6,4,'#9a9488')+rect(6,1,4,2,'#3a3a40')+rect(6,1,1,1,'#7a766c'), // 23 statue of a lord
+  blocks('#5e5850','#7a7468','#928c7e','#66604e')+rect(6,2,4,11,'#1a1e24')+rect(7,3,2,9,'#2a3a4a')+rect(7,3,1,4,'#4a6070')+rect(5,13,6,1,'#928c7e'), // 24 wall with a window slit
 ];
 // The cliff, lit along its ledges; the drop, falling away into dark rather than a flat black square.
 tiles[0] = rect(0,0,16,16,'#34343a')+rect(1,1,7,5,'#46464c')+rect(9,2,6,4,'#404046')+rect(2,8,5,6,'#3e3e44')+rect(8,9,7,5,'#3a3a40')
@@ -49,6 +52,8 @@ const LEAP_TILES = tiles.length + 1, DROP_INDEX = 7;
 tiles.push(tiles[DROP_INDEX], crumble({ top: '#8a8a82', crack: '#34343a', under: '#0c0e12' }));
 const svg = sheet(tiles);
 writeFileSync('public/assets/holds-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(tiles)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
+// TILES_ONLY=1 redraws the tiles and leaves the maps alone: they have been edited by hand since this script made them.
+if (process.env.TILES_ONLY) process.exit(0);
 const [CLIFF,LEDGE,SNOW,FLAGS,TWALL,ROOF,STAIR,DROP,BANNER,GATE,DOOR,NEST,LETTERS,BOARDS,CARPET,CHAIR,PILLAR,PERCH,BRAZIER,LEVER,PINE,BOULDER,BRIDGE,STATUE,SLIT]=tiles.map((_,i)=>i+1);
 // Collides lists 0-based tile ids.
 const solid=[0,4,5,7,8,9,11,12,15,16,17,18,19,20,21,23,24];
