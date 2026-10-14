@@ -3,13 +3,18 @@ import { PERKS } from '../rules/memory';
 import type { Memory, MemoryId } from '../rules/memory';
 import { KEEPSAKES } from '../rules/gear';
 import type { KeepsakeId } from '../rules/gear';
+import { companionMemory } from '../content/companionMemories';
+import type { CompanionMemoryId } from '../rules/companionMemory';
+import { COMPANION_COSTS } from '../rules/companionMemory';
+import type { Companion } from '../rules/memory';
+import { MEMBERS } from '../rules/battle';
 
 // After a wipe the tide takes one memory: not the hero's choice. Only what he wrote down at a fire is safe.
 export class ResurrectionView {
   private root: HTMLElement;
   private cleanup = new AbortController();
 
-  constructor(memory: Memory, taken: readonly MemoryId[], onStand: () => void, broken: readonly KeepsakeId[] = []) {
+  constructor(memory: Memory, taken: readonly MemoryId[], onStand: () => void, broken: readonly KeepsakeId[] = [], friends: readonly { who: Companion; id: CompanionMemoryId }[] = []) {
     this.root = document.createElement('section');
     this.root.className = 'battle resurrection';
     this.root.setAttribute('role', 'dialog');
@@ -28,7 +33,8 @@ export class ResurrectionView {
         <p class="eyebrow">GONE</p><h3>${memories[id].name}</h3>
         <p>${memories[id].cost}</p><p class="perk">${perks[PERKS[id]]}</p>
       </section>`).join('')}
-      ${broken.length ? `<section class="memory-taken keepsake-broken" aria-label="What broke"><p class="eyebrow">BROKEN</p><h3>${broken.map(id => KEEPSAKES[id].name).join(', ')}</h3><p>It didn't survive the fall. The shop that sold it will sell you another.</p></section>` : ''}
+      ${friends.map(({ who, id }) => `<section class="memory-note companion-forgets" aria-label="What the ${MEMBERS[who].name.toLowerCase()} lost"><p class="eyebrow">THE ${MEMBERS[who].name.toUpperCase()} FORGETS</p><h3>${companionMemory(who, id).name}</h3><p>${companionMemory(who, id).cost}</p><p class="perk">+${COMPANION_COSTS.perk} health: what's forgotten no longer flinches.</p></section>`).join('')}
+      ${broken.length ? `<section class="memory-note keepsake-broken" aria-label="What broke"><p class="eyebrow">BROKEN</p><h3>${broken.map(id => KEEPSAKES[id].name).join(', ')}</h3><p>It didn't survive the fall. The shop that sold it will sell you another.</p></section>` : ''}
       ${written.length ? `<p class="memories-lost">Written down, so the tide left it · ${written.map(id => memories[id].name).join(' · ')}. The page is used up; write it again before the next death.</p>` : '<p class="memories-lost">Nothing was written down. Write down what you can\'t lose, at a fire, before the next time.</p>'}
       ${faded.length ? `<p class="memories-lost">Reminders that faded · ${faded.map(id => memories[id].name).join(' · ')}</p>` : ''}
       ${restored.length ? `<p class="memories-lost">Restored through the written page · ${restored.map(id => memories[id].name).join(' · ')}</p>` : ''}

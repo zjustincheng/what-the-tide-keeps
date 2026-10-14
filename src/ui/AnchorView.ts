@@ -1,6 +1,9 @@
 import { memories } from '../content/memories';
 import { ANCHOR_SLOTS, canRemind, held, PERKS, PERK_BONUS } from '../rules/memory';
 import type { Companion, Memory, MemoryId } from '../rules/memory';
+import { canRemindCompanion, COMPANION_MEMORY_IDS, INITIAL_MINDS } from '../rules/companionMemory';
+import type { CompanionMemoryId } from '../rules/companionMemory';
+import { companionMemory } from '../content/companionMemories';
 
 // At a fire, before sleeping: write down the one memory the tide must not take, and let a companion remind you of something lost.
 // The tide takes a memory at random each time you die, from whatever isn't written down.
@@ -8,12 +11,15 @@ export class AnchorView {
   private root: HTMLElement;
   private cleanup = new AbortController();
 
-  constructor(memory: Memory, companions: readonly { id: Companion; name: string }[], onDone: (anchor: MemoryId | null, reminder: { by: Companion; id: MemoryId } | null) => void) {
+  constructor(memory: Memory, companions: readonly { id: Companion; name: string }[], onDone: (anchor: MemoryId | null, reminder: { by: Companion; id: MemoryId } | null, given?: { to: Companion; id: CompanionMemoryId } | null) => void, joined: readonly { id: Companion; name: string }[] = companions) {
     const written = memory.anchors ?? [];
     const reminded = memory.reminded ?? [];
     const bound = memory.keepsakeMemories ?? [];
     // Who can remind him of what: each companion he still remembers, for each thing he has lost.
     const offers = companions.flatMap(({ id: by, name }) => memory.lost.filter(id => canRemind(memory, by, id)).map(id => ({ by, name, id })));
+    // And what he can give back to them: whatever they lost that he still holds himself.
+    const minds = memory.companions ?? INITIAL_MINDS;
+    const gifts = joined.flatMap(({ id: to, name }) => COMPANION_MEMORY_IDS.filter(id => canRemindCompanion(held(memory), minds, to, id)).map(id => ({ to, name, id })));
     this.root = document.createElement('section');
     this.root.className = 'battle resurrection anchor';
     this.root.setAttribute('role', 'dialog');
@@ -31,6 +37,10 @@ export class AnchorView {
         <label class="memory-choice"><input type="radio" name="remind" value="${by}:${id}" />
           <span><strong>${name}: ${memories[id].name}</strong><small>Yours again until the next time you die.</small></span></label>`).join('')}
         <label class="memory-choice reminder-anchor" hidden><input type="radio" name="anchor" disabled /><span><strong></strong><small>Write this reminder down now. It will remain yours after the next death.</small></span></label>
+      </fieldset>` : ''}
+      ${gifts.length ? `<fieldset class="memory-choices reminders gifts"><legend>Remind a friend</legend>${gifts.map(({ to, name, id }) => `
+        <label class="memory-choice"><input type="radio" name="give" value="${to}:${id}" />
+          <span><strong>${name}: ${companionMemory(to, id).name}</strong><small>Theirs again until the next time the party falls.</small></span></label>`).join('')}
       </fieldset>` : ''}
       <p class="anchor-summary" role="status"></p>
       <div class="anchor-actions"><button id="write" type="button">Done</button><button id="skip" type="button">Not tonight</button></div>`;
@@ -57,12 +67,18 @@ export class AnchorView {
       this.root.querySelector('.anchor-summary')!.textContent = `${protection}${offer ? ` Restoring ${memories[offer.id].name} removes its Hollow bonus (${bonus}).${id !== offer.id ? ' This reminder fades at death unless you write it down.' : ''}` : ''}`;
     };
     this.root.addEventListener('change', update, { signal }); update();
-    write.addEventListener('click', () => onDone((chosen()?.value ?? null) as MemoryId | null, reminder()), { signal });
+    const given = () => {
+      const value = this.root.querySelector<HTMLInputElement>('input[name="give"]:checked')?.value;
+      if (!value) return null;
+      const [to, id] = value.split(':') as [Companion, CompanionMemoryId];
+      return { to, id };
+    };
+    write.addEventListener('click', () => onDone((chosen()?.value ?? null) as MemoryId | null, reminder(), given()), { signal });
     this.root.querySelector('#skip')!.addEventListener('click', () => onDone(null, null), { signal });
     this.root.addEventListener('keydown', event => {
       if (event.key === 'Escape') { event.preventDefault(); onDone(null, null); return; }
       if (event.key !== 'Tab') return;
-      const radios = ['anchor', 'remind'].map(name => this.root.querySelector<HTMLInputElement>(`input[name="${name}"]:checked:not(:disabled)`) ?? this.root.querySelector<HTMLInputElement>(`input[name="${name}"]:not(:disabled)`));
+      const radios = ['anchor', 'remind', 'give'].map(name => this.root.querySelector<HTMLInputElement>(`input[name="${name}"]:checked:not(:disabled)`) ?? this.root.querySelector<HTMLInputElement>(`input[name="${name}"]:not(:disabled)`));
       const controls = [...radios, write, this.root.querySelector<HTMLButtonElement>('#skip')].filter((control): control is HTMLInputElement | HTMLButtonElement => Boolean(control));
       event.preventDefault();
       const index = controls.indexOf(document.activeElement as HTMLInputElement);

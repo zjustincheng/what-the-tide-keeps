@@ -14,6 +14,9 @@ import { loadGrimoire } from '../../storage/grimoire';
 import { loadMemory, saveMemory } from '../../storage/memory';
 import { loadWorld, saveWorld } from '../../storage/world';
 import { KEEPSAKES } from '../../rules/gear';
+import { companionTakes, forgetCompanions, INITIAL_MINDS, remindCompanion } from '../../rules/companionMemory';
+import type { CompanionMemoryId } from '../../rules/companionMemory';
+import { companionMemory } from '../../content/companionMemories';
 import { loadGear, saveGear } from '../../storage/gear';
 import { loadBooks, saveBooks } from '../../storage/books';
 import { loadBestiary } from '../../storage/bestiary';
@@ -107,16 +110,19 @@ export function writeDown(scene: AreaScene, then: () => void) {
   // Companions who joined can remind him of what he lost; the frog won't until she trusts him again.
   const world = loadWorld();
   const friends = roster(world).flatMap(member => member !== 'chameleon' && (member !== 'frog' || world.flags.includes('viper-slain')) ? [{ id: member as Companion, name: MEMBERS[member].name }] : []);
-  scene.overlay = new AnchorView(loadMemory(), friends, (id, reminder) => {
+  // He can remind any of them who have joined.
+  const joined = roster(world).flatMap(member => member !== 'chameleon' ? [{ id: member as Companion, name: MEMBERS[member].name }] : []);
+  scene.overlay = new AnchorView(loadMemory(), friends, (id, reminder, given) => {
     scene.overlay?.destroy();
     scene.overlay = undefined;
     if (reminder) { save.ok = saveMemory(remind(loadMemory(), reminder.by, reminder.id)); music.effect('find'); }
     if (id) { save.ok = saveMemory(anchor(loadMemory(), id)); music.effect('select'); }
+    if (given) { const memory = loadMemory(); save.ok = saveMemory({ ...memory, companions: remindCompanion(held(memory), memory.companions ?? INITIAL_MINDS, given.to, given.id) }); music.effect('find'); }
     scene.renderMemory();
     scene.setExplorationEnabled(true);
     scene.physics.resume();
     then();
-  });
+  }, joined);
 }
 
 // Waking at the church after a death, and finding out what the tide took.
@@ -125,13 +131,19 @@ export function wake(scene: AreaScene) {
   music.play('wake');
   // The tide chooses: the same memory however often the game is reloaded, until he stands.
   const taken = tideTakesAll(loadMemory(), loadWorld().deaths);
+  // Each companion who fought loses one memory too, chosen the same way; every reminder the hero gave them fades.
+  const minds = loadMemory().companions ?? INITIAL_MINDS;
+  const lostBy = companionTakes(minds, loadMemory().fought ?? [], loadWorld().deaths);
+  const settle = () => { save.ok = saveMemory({ ...loadMemory(), companions: forgetCompanions(minds, lostBy), fought: [] }) && save.ok; };
+  const friends = (Object.entries(lostBy) as [Companion, CompanionMemoryId][]).map(([who, id]) => ({ who, id }));
   // Fragile keepsakes that broke in the fall: told once, on waking.
   const broken = loadWorld().broke ?? [];
   const told = () => { if (broken.length) save.ok = saveWorld({ ...loadWorld(), broke: [] }) && save.ok; };
   if (!taken.length) {
     const written = Boolean(loadMemory().anchors?.length);
-    save.ok = saveMemory(forgetAll(loadMemory(), [])); told(); scene.renderMemory(); music.play(scene.area.music); scene.resumeExploration();
-    if (broken.length) scene.notice(`${broken.map(id => KEEPSAKES[id].name).join(' and ')} broke in the fall.`, 5000);
+    save.ok = saveMemory(forgetAll(loadMemory(), [])); told(); settle(); scene.renderMemory(); music.play(scene.area.music); scene.resumeExploration();
+    if (friends.length) scene.notice(friends.map(({ who, id }) => `The ${who} forgets ${companionMemory(who, id).name.toLowerCase()}.`).join(' '), 6000);
+    else if (broken.length) scene.notice(`${broken.map(id => KEEPSAKES[id].name).join(' and ')} broke in the fall.`, 5000);
     else if (written) scene.notice('Your written memory survived. Write it down again before the next death.', 5000);
     return;
   }
@@ -141,11 +153,11 @@ export function wake(scene: AreaScene) {
       scene.overlay?.destroy();
       scene.overlay = undefined;
       save.ok = saveMemory(forgetAll(loadMemory(), taken));
-      told();
+      told(); settle();
       scene.renderMemory();
       scene.cameras.main.fadeIn(900, 16, 27, 24);
       music.play(scene.area.music);
       scene.resumeExploration();
-    }, broken);
+    }, broken, friends);
   });
 }

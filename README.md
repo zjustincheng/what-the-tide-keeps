@@ -597,6 +597,19 @@ What each memory is worth:
 | The bear, the vulture, the frog, the octopus | **That companion can't remind him of anything** (see below) |
 | His training | His attacks out of hiding hit 2 softer |
 
+### What the companions remember
+
+Each companion has four memories, and every wipe takes one from each companion who was in the fight, chosen by the tide like the hero's (`src/rules/companionMemory.ts`). Each memory gone gives them 3 more health, the Hollow trade.
+
+| Memory | Forgetting it |
+| --- | --- |
+| You, who the chameleon is | You're a stranger to them, and they can't remind you of anything |
+| The feast | They no longer believe the party was framed |
+| The kraken | Their own dodging is 10% tighter |
+| Their craft: the bear's line, the vulture's eye, the frog's measures, the octopus's copying | Their attacks hit 2 softer |
+
+They start where the story finds them: the bear and the octopus remember everything; the vulture, who has died most, doesn't know you, the feast, or the kraken; the frog has lost the feast. At a fire you can **remind a friend** of something they lost, if you still hold it yourself (the feast, the kraken, or who you are, if you remember them); it lasts until the party next falls. Nobody can give back a craft. A finished companion quest holds the bond both ways: their keepsake keeps their memory of you, for good. The wake screen shows what each one lost, and **Who fights** shows what each still remembers.
+
 When no memories remain, a wipe takes nothing. Memories are saved in browser local storage (`tide-keeps.memory.v1`). A wipe is saved before the screen is shown, so reloading brings it back instead of skipping it. The footer shows how many memories remain (and the laboratory, once found).
 
 ## Tiles
@@ -632,6 +645,3 @@ Combat rules have no Phaser or DOM imports. Future party and memory rules should
 
 Phaser's [tilemap documentation](https://docs.phaser.io/api-documentation/class/tilemaps-tilemap) describes the Tiled map loading used here.
 
-## Open question
-
-- What are each companion's memories?

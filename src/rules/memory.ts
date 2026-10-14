@@ -1,10 +1,13 @@
 // Pure memory rules: no Phaser, DOM, or storage.
+import { bond, INITIAL_MINDS, remembers } from './companionMemory.ts';
+import type { Minds } from './companionMemory';
 export type MemoryId = 'feast' | 'trial' | 'kraken' | 'bear' | 'vulture' | 'frog' | 'octopus' | 'training' | 'home' | 'name';
 export type Perk = 'mana' | 'force';
 // anchors: memories written down at a fire. Each survives the next death, then has to be written again.
 // reminded: lost memories a companion has reminded the hero of. They are his again until the next death, which takes them back.
 // owed: how many memories this wipe takes, when it is more than one: at sea, the church can't fetch you back cleanly.
-export type Memory = Readonly<{ lost: readonly MemoryId[]; pending: boolean; anchors?: readonly MemoryId[]; reminded?: readonly MemoryId[]; owed?: number; keepsakeMemories?: readonly MemoryId[] }>;
+// companions: what each companion remembers (src/rules/companionMemory.ts). fought: the companions in the fight that wiped, who each owe the tide a memory too.
+export type Memory = Readonly<{ lost: readonly MemoryId[]; pending: boolean; anchors?: readonly MemoryId[]; reminded?: readonly MemoryId[]; owed?: number; keepsakeMemories?: readonly MemoryId[]; companions?: Minds; fought?: readonly Companion[] }>;
 // kraken: whether he still has the party's technique from the kraken fight, which keeps everyone's dodging sharp.
 export type Hollow = Readonly<{ mana: number; damage: number; trained: boolean; kraken: boolean }>;
 
@@ -21,7 +24,7 @@ export const INITIAL_LOST: readonly MemoryId[] = ['home', 'name'];
 export const ANCHOR_SLOTS = 1;
 
 export function createMemory(): Memory {
-  return { lost: INITIAL_LOST, pending: false };
+  return { lost: INITIAL_LOST, pending: false, companions: INITIAL_MINDS };
 }
 
 export function held(memory: Memory): MemoryId[] {
@@ -69,7 +72,8 @@ export function tideTakes(memory: Memory, deaths: number): MemoryId | undefined 
 export function forget(memory: Memory, id: MemoryId): Memory {
   if (!memory.pending || !forgettable(memory).includes(id)) return memory;
   const restored = (memory.reminded ?? []).filter(other => (memory.anchors ?? []).includes(other));
-  return { lost: [...memory.lost.filter(other => !restored.includes(other)), id], pending: false, anchors: [], reminded: [], owed: undefined, ...(memory.keepsakeMemories?.length ? { keepsakeMemories: memory.keepsakeMemories } : {}) };
+  return { lost: [...memory.lost.filter(other => !restored.includes(other)), id], pending: false, anchors: [], reminded: [], owed: undefined, ...(memory.keepsakeMemories?.length ? { keepsakeMemories: memory.keepsakeMemories } : {}),
+    ...(memory.companions ? { companions: memory.companions } : {}), ...(memory.fought ? { fought: memory.fought } : {}) };
 }
 
 // Pay a whole wipe's debt at once.
@@ -83,10 +87,11 @@ export function forgetAll(memory: Memory, ids: readonly MemoryId[]): Memory {
   return ids.reduce<Memory>((paid, id, index) => index === 0 ? forget(paid, id) : forget({ ...paid, pending: true }, id), memory);
 }
 
-// A companion the hero still remembers can remind him of something he lost, until his next death. They can't remind him of themselves.
+// A companion the hero still remembers, and who still remembers him, can remind him of something he lost, until his next death.
+// They can't remind him of themselves.
 export type Companion = 'bear' | 'vulture' | 'frog' | 'octopus';
 export function canRemind(memory: Memory, by: Companion, id: MemoryId): boolean {
-  return held(memory).includes(by) && memory.lost.includes(id) && !(memory.reminded ?? []).includes(id) && id !== by && !INITIAL_LOST.includes(id);
+  return held(memory).includes(by) && remembers(memory.companions ?? INITIAL_MINDS, by, 'hero') && memory.lost.includes(id) && !(memory.reminded ?? []).includes(id) && id !== by && !INITIAL_LOST.includes(id);
 }
 export function remind(memory: Memory, by: Companion, id: MemoryId): Memory {
   return canRemind(memory, by, id) ? { ...memory, reminded: [...(memory.reminded ?? []), id] } : memory;
@@ -117,7 +122,9 @@ export function recall(memory: Memory, id: MemoryId): Memory {
 }
 
 // Companion keepsakes hold a memory forever, whether or not the equipment is worn.
+// A companion's own keepsake holds the bond both ways: they remember the hero again, for good, too.
 export function keepMemory(memory: Memory, id: MemoryId): Memory {
-  return { ...recall(memory, id), keepsakeMemories: [...new Set([...(memory.keepsakeMemories ?? []), id])],
+  const companions = (['bear', 'vulture', 'frog', 'octopus'] as const).includes(id as Companion) ? bond(memory.companions ?? INITIAL_MINDS, id as Companion) : memory.companions;
+  return { ...recall(memory, id), ...(companions ? { companions } : {}), keepsakeMemories: [...new Set([...(memory.keepsakeMemories ?? []), id])],
     anchors: (memory.anchors ?? []).filter(other => other !== id), reminded: (memory.reminded ?? []).filter(other => other !== id) };
 }

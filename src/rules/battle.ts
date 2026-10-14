@@ -1,5 +1,7 @@
 // Pure game rules: no Phaser, DOM, timers, or random state.
 // Rule modules import each other with .ts extensions so Node can run their tests directly.
+import { companionMods } from './companionMemory.ts';
+import type { Minds } from './companionMemory';
 import { INITIAL_LOST, PERKS, PERK_BONUS } from './memory.ts';
 import type { Hollow } from './memory';
 import { mods, NO_MODS } from './gear.ts';
@@ -474,15 +476,19 @@ export type BattleOptions = Readonly<{
   arena?: boolean;
   lostMemories?: readonly MemoryId[];
   techniques?: readonly Technique[];
+  // What each companion remembers: what they have forgotten changes how they fight.
+  minds?: Minds;
 }>;
 // A fight's party when none is given: the three who fought together first.
 const TRIO: readonly MemberId[] = ['chameleon', 'bear', 'vulture'];
 export function createBattle(encounter: Encounter = 'locust', studied: readonly string[] = [], options: BattleOptions = {}): Battle {
-  const { hollow = UNHOLLOWED, gear, books = STARTING_BOOKS, roster = TRIO, supplies = NO_SUPPLIES, wounds = {}, drained = {}, ambush = false, surprise = false, tempered = [], waves = 1, company = [], herald, lostMemories = [] } = options;
+  const { hollow = UNHOLLOWED, gear, books = STARTING_BOOKS, roster = TRIO, supplies = NO_SUPPLIES, wounds = {}, drained = {}, ambush = false, surprise = false, tempered = [], waves = 1, company = [], herald, lostMemories = [], minds = {} } = options;
   const member = (id: MemberId, base: number, mana: number): Member => {
     const kept = gear ? mods(gear, id, tempered) : NO_MODS;
-    const worn = hollow.kraken === false ? { ...kept, agility: kept.agility - NO_KRAKEN } : kept;
-    const maxHealth = Math.max(1, base + worn.health);
+    // A companion's forgotten craft hits softer and a forgotten kraken dodges worse; each memory gone leaves them harder to hurt.
+    const mind = id === 'chameleon' ? { health: 0, damage: 0, agility: 0 } : companionMods(minds, id);
+    const worn = { ...kept, damage: kept.damage + mind.damage, agility: kept.agility + mind.agility - (hollow.kraken === false ? NO_KRAKEN : 0) };
+    const maxHealth = Math.max(1, base + worn.health + mind.health);
     // Heroes enter hurt if they were hurt before; a hero who fell stays down.
     const health = Math.max(0, maxHealth - (wounds[id] ?? 0));
     return { id, health, maxHealth, mana: Math.max(0, mana - (drained[id] ?? 0)), maxMana: mana, acted: false, guardingFor: null, focused: false, suppressed: false, barrier: false, gear: worn, cooldown: 0, flaring: false,

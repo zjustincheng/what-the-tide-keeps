@@ -572,7 +572,7 @@ export class AreaScene extends Phaser.Scene {
   partyOptions(fighting = false, lieutenant = false): BattleOptions {
     const world = loadWorld();
     const memory = loadMemory();
-    return { hollow: hollow(memory), lostMemories: memory.lost.filter(id => !held(memory).includes(id)), gear: loadGear(), books: settle(loadBooks(), roster(world)), roster: this.area.solo ? ['chameleon'] : fighting ? lineup(world, lieutenant) : roster(world), tempered: world.tempered ?? [], supplies: world.supplies, wounds: world.wounds, drained: world.drained, techniques: techniques(world) };
+    return { hollow: hollow(memory), lostMemories: memory.lost.filter(id => !held(memory).includes(id)), gear: loadGear(), books: settle(loadBooks(), roster(world)), roster: this.area.solo ? ['chameleon'] : fighting ? lineup(world, lieutenant) : roster(world), tempered: world.tempered ?? [], supplies: world.supplies, wounds: world.wounds, drained: world.drained, techniques: techniques(world), minds: memory.companions };
   }
 
   private toggleHud() {

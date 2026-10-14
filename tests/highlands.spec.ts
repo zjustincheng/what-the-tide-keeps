@@ -134,7 +134,7 @@ test('the vulture duel, her note, and writing a memory down', async ({ page }) =
   await go(page, 'fort', 456, 296, 'Rest by the garrison fire');
   await talk(page, 'Rest');
   await expect(page.getByRole('heading', { name: 'Write something down.' })).toBeVisible();
-  await page.getByRole('radio', { name: /The feast/ }).check();
+  await page.getByRole('group', { name: 'Memories you still hold' }).getByRole('radio', { name: /The feast/ }).check();
   await page.getByRole('button', { name: 'Done' }).click();
   expect(JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.memory.v1')))!).anchors).toEqual(['feast']);
 });
@@ -226,9 +226,10 @@ test('by the fire, a companion reminds the hero of what he lost, and writing it 
   await talk(page, 'Rest');
   await expect(page.getByRole('heading', { name: 'Write something down.' })).toBeVisible();
   // The bear can remind him of the kraken; the vulture can't, because he has forgotten her.
-  await expect(page.getByRole('radio', { name: /Bear: The kraken/ })).toBeVisible();
-  await expect(page.getByRole('radio', { name: /Vulture:/ })).toHaveCount(0);
-  await page.getByRole('radio', { name: /Bear: The kraken/ }).check();
+  const asking = page.getByRole('group', { name: 'Ask a friend to remind you' });
+  await expect(asking.getByRole('radio', { name: /Bear: The kraken/ })).toBeVisible();
+  await expect(asking.getByRole('radio', { name: /Vulture:/ })).toHaveCount(0);
+  await asking.getByRole('radio', { name: /Bear: The kraken/ }).check();
   await page.getByRole('button', { name: 'Done' }).click();
   let memory = JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.memory.v1')))!);
   expect(memory.reminded).toEqual(['kraken']);

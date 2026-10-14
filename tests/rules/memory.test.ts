@@ -77,7 +77,9 @@ test('a friend the hero remembers can remind him of something lost, until his ne
   // Forgetting the bear means he can't remind you of anything.
   const noBear = forget(wipe(forget(wipe(createMemory()), 'kraken')), 'bear');
   assert.equal(canRemind(noBear, 'bear', 'kraken'), false);
-  assert.equal(canRemind(noBear, 'vulture', 'kraken'), true);
+  assert.equal(canRemind(noBear, 'octopus', 'kraken'), true);
+  // And a friend who has forgotten the hero can't remind him either: the vulture starts not knowing who he is.
+  assert.equal(canRemind(noBear, 'vulture', 'kraken'), false);
 });
 
 test('forgetting the kraken tightens everyone\'s dodging', async () => {

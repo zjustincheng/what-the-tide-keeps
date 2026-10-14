@@ -4,6 +4,7 @@ import type { Battle } from '../../rules/battle';
 import { recall, wipe } from '../../rules/memory';
 import { apply, breakFragile, conversation, drop, fell, fleeing } from '../../rules/world';
 import { shatter } from '../../rules/gear';
+import type { Companion } from '../../rules/memory';
 import { loadGear, saveGear } from '../../storage/gear';
 import { boutAfter, boutWon, BOUTS } from '../../rules/ring';
 import { BOUNTY } from '../../rules/economy';
@@ -103,7 +104,9 @@ export function beginBattle(scene: AreaScene, foe: Foe, introduced = false) {
       scene.hunt.finish();
       // Fragile keepsakes worn in the fight break.
       const { gear, broken } = shatter(loadGear(), battle.party.map(member => member.id));
-      save.ok = saveMemory(wipe(loadMemory(), scene.area.region === 'THE OCEAN' ? 2 : 1)) && saveWorld(breakFragile(drop(loadWorld()), broken)) && saveGear(gear);
+      // Every companion who fought owes the tide a memory too.
+      const fought = battle.party.map(member => member.id).filter((id): id is Companion => id !== 'chameleon');
+      save.ok = saveMemory({ ...wipe(loadMemory(), scene.area.region === 'THE OCEAN' ? 2 : 1), fought }) && saveWorld(breakFragile(drop(loadWorld()), broken)) && saveGear(gear);
       scene.scene.start('church');
     }
   }, foe.encounter, { ...scene.partyOptions(true, LIEUTENANTS.includes(foe.encounter) || foe.encounter === 'human'), ambush: Boolean(foe.ambush && foe.hidden), surprise: scene.sneaking, waves: foe.waves, company: foe.company });

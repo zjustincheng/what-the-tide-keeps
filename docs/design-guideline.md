@@ -508,4 +508,4 @@ The first build starts with the hero waking in the church, because that is where
 
 ## Open questions
 
-- [ ] What are each companion's memories?
+- [x] What are each companion's memories? Four each: the hero, the feast, the kraken, and their own craft (see the README and `src/rules/companionMemory.ts`).

@@ -3,6 +3,9 @@ import type { BattleOptions, MemberId } from '../rules/battle';
 import { FIGHTERS, lineup, roster, toggleWaiting } from '../rules/world';
 import type { World } from '../rules/world';
 import { music } from '../audio/music';
+import { COMPANION_MEMORY_IDS, INITIAL_MINDS, remembers } from '../rules/companionMemory';
+import { companionMemory } from '../content/companionMemories';
+import type { Companion } from '../rules/memory';
 
 // Who goes into the next fight: any three who have joined. The hero always fights a region's lieutenant, whatever is chosen here.
 // Each hero's blow is good against some kinds of enemy and poor against others.
@@ -31,7 +34,7 @@ export class PartyView {
       <div class="party-roster" data-size="${joined.length}">${joined.map(id => `<section class="member-card" data-member="${id}" aria-label="${MEMBERS[id].name}">
         <div class="fighter"><img alt="" src="${id === 'chameleon' ? heroImage : `${import.meta.env.BASE_URL}assets/${id}.svg`}" /></div>
         <h3>${MEMBERS[id].name}</h3><p class="equipment-stats"></p>
-        <p class="party-always">${LEANINGS(id)}</p>
+        <p class="party-always">${LEANINGS(id)}</p>${id === 'chameleon' ? '' : `<p class="party-memory"></p>`}
         <button class="bench-toggle" type="button" data-toggle="${id}"></button>
       </section>`).join('')}</div>
       <p class="memories-lost party-note" aria-live="polite"></p>
@@ -66,6 +69,14 @@ export class PartyView {
       card.dataset.waiting = String(!fights);
       const fallen = (this.world.fallen ?? []).includes(member.id);
       card.dataset.fallen = String(fallen);
+      // What a companion still remembers, and what the tide has taken from them.
+      const recollection = card.querySelector('.party-memory');
+      if (recollection) {
+        const who = member.id as Companion, minds = this.options.minds ?? INITIAL_MINDS;
+        const kept = COMPANION_MEMORY_IDS.filter(id => remembers(minds, who, id)).map(id => companionMemory(who, id).name);
+        const gone = COMPANION_MEMORY_IDS.filter(id => !remembers(minds, who, id)).map(id => companionMemory(who, id).name.toLowerCase());
+        recollection.textContent = `Remembers ${kept.length ? kept.join(', ').replace(/^You/, 'you') : 'nothing'}.${gone.length ? ` Forgot ${gone.join(', ')}.` : ''}`;
+      }
       card.querySelector('.equipment-stats')!.textContent = fallen ? 'Fallen · rest won\'t raise them; only the church can'
         : `Health ${member.health} / ${member.maxHealth} · Mana ${member.mana} / ${member.maxMana}`;
       const toggle = card.querySelector<HTMLButtonElement>('[data-toggle]');
