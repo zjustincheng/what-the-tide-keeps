@@ -2,63 +2,67 @@
 // the battlefield, the ruined abbey, and the ossuary under it.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
-import { crumble, gap, grain, handholds, rect as krect, scatter as speckle, stairs, tileProps, vary } from './tile-kit.mjs';
-const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
+import { crumble, ellipse, gap, grain, handholds, rect as krect, scatter as speckle, stairs, tileProps, vary } from './tile-kit.mjs';
+import { blocks, boulder, deadTree, planks, shadow, tuft, water } from './tile-art.mjs';
+const rect = (x,y,w,h,c,o) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"${o===undefined?'':` fill-opacity="${o}"`}/>`;
 const sheet = (name, tiles) => {
   const rows = Math.ceil(tiles.length / 8);
   const svg = tiles.map((s,i)=>`<g transform="translate(${i%8*16} ${Math.floor(i/8)*16})">${s}${grain(i)}</g>`).join('');
   writeFileSync(`public/assets/${name}-tiles.svg`,`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
   return rows;
 };
-const heather = (base) => rect(0,0,16,16,base)+rect(3,4,1,2,'#7a5a6a')+rect(11,10,2,1,'#6a6a48')+rect(7,13,1,2,'#5a4a52');
-const stone = (a,b) => rect(0,0,16,16,a)+rect(0,5,16,1,b)+rect(0,11,16,1,b)+rect(5,0,1,5,b)+rect(11,6,1,5,b)+rect(3,12,1,4,b);
-const pine = (ground) => rect(0,0,16,16,ground)+rect(6,1,4,3,'#2a3a30')+rect(4,4,8,4,'#24342a')+rect(2,8,12,5,'#1e2e24')+rect(7,13,2,3,'#3a2e22');
+const heather = (base) => rect(0,0,16,16,base)+tuft(3,4,'#7a6a5a','#3e4030')+tuft(11,10,'#6a6a48','#3e4030')+rect(7,13,2,1,'#7a5a6a')+rect(8,12,1,1,'#9a7a8a')+rect(12,3,1,1,'#8a6a7a')+rect(2,10,1,1,'#6a5a62');
+const stone = (a,b) => blocks(b, a, shade(a,1.15), shade(a,0.82));
+// A pine: three tiers, each lit on its left and shadowed beneath, on a dark trunk, with its shadow on the ground.
+const pine = (ground) => rect(0,0,16,16,ground)+shadow(9,15,5,1)+rect(7,12,2,4,'#3a2e22')+rect(8,12,1,4,'#261e16')
+  +[[6,1,4,3],[4,4,8,4],[2,8,12,4]].map(([x,y,w,h],i)=>rect(x,y,w,h,['#2a3a30','#24342a','#1e2e24'][i])+rect(x,y+h-1,w,1,'#14201a')+rect(x,y,Math.ceil(w/2),1,'#3a4e40')).join('')+rect(7,0,2,1,'#2a3a30');
+function shade(hex, by) { const n = parseInt(hex.slice(1), 16); const c = k => Math.max(0, Math.min(255, Math.round(((n >> k) & 255) * by))); return '#' + [16, 8, 0].map(k => c(k).toString(16).padStart(2, '0')).join(''); }
+const snowTile = () => rect(0,0,16,16,'#c4cacb')+rect(2,6,5,1,'#b4bcbe')+rect(3,5,3,1,'#d4dada')+rect(9,11,4,1,'#b4bcbe')+rect(10,10,2,1,'#d4dada')+rect(12,4,1,1,'#eef4f4')+rect(5,13,1,1,'#eef4f4')+rect(14,9,1,1,'#a8b0b2');
+const iceTile = () => rect(0,0,16,16,'#9aaab0')+rect(2,4,6,1,'#b8c6ca')+rect(9,10,5,1,'#b8c6ca')+rect(4,12,3,1,'#7a8a90')+rect(6,5,1,4,'#7a8a90',0.6)+rect(7,8,3,1,'#7a8a90',0.6)+rect(12,3,1,1,'#e4eef2');
 
 // The highland tileset: the pass, the battlefield, the abbey, and the ossuary.
 const HIGHLAND = [
-  heather('#55573e'),                                                                                     // 0 heather
-  heather('#525540')+rect(4,6,3,2,'#7a7a6e')+rect(10,11,2,2,'#6e6e64'),                                   // 1 heather with stones
-  rect(0,0,16,16,'#6a5a44')+rect(2,4,3,1,'#7e6c52')+rect(9,10,4,1,'#544634')+rect(6,13,1,1,'#7e6c52'),    // 2 road
+  heather('#55573e'), // 0 heather
+  heather('#525540')+boulder(5,6,2.5,2,'#7a7a6e','#929286','#56564e')+boulder(11,11.5,2,1.5,'#6e6e64','#86867c','#4e4e48'), // 1 heather with stones
+  rect(0,0,16,16,'#6a5a44')+rect(2,4,3,1,'#7e6c52')+rect(9,10,4,1,'#544634')+rect(6,13,1,1,'#7e6c52')+rect(12,3,1,1,'#8a785c')+rect(4,9,2,1,'#544634',0.6)+rect(13,12,1,1,'#3e3428'), // 2 road
   rect(0,0,16,16,'#4a4a46')+rect(1,1,7,6,'#5a5a54')+rect(8,8,7,7,'#56564e')+rect(0,7,16,1,'#36362f')+rect(7,0,1,16,'#3e3e38'), // 3 rock face
-  rect(0,0,16,16,'#6a6a62')+rect(2,3,2,2,'#86867c')+rect(9,6,3,2,'#56564e')+rect(5,11,2,2,'#86867c')+rect(12,12,2,2,'#4e4e48'), // 4 scree
-  pine('#55573e'),                                                                                        // 5 pine
-  rect(0,0,16,16,'#c4cacb')+rect(0,0,16,3,'#ccd2d3')+rect(2,6,5,1,'#b4bcbe')+rect(9,11,4,1,'#b4bcbe')+rect(12,4,1,1,'#e4eaea')+rect(5,13,1,1,'#e4eaea'), // 6 deep snow
+  rect(0,0,16,16,'#5a5a52')+[[1,2,4,3],[8,5,4,3],[4,10,3,3],[11,11,4,3],[13,1,2,2],[1,13,2,2]].map(([x,y,w,h])=>rect(x,y,w,h,'#7a7a70')+rect(x,y,w,1,'#929288')+rect(x+w-1,y+1,1,h-1,'#4e4e48')).join(''), // 4 scree
+  pine('#55573e'), // 5 pine
+  snowTile(), // 6 deep snow
   rect(0,0,16,16,'#55573e')+rect(2,4,12,11,'#6a6a62')+rect(4,3,7,4,'#7e7e74')+rect(2,13,12,2,'#4a4a44'),   // 7 boulder
-  rect(0,0,16,16,'#55573e')+rect(3,8,10,7,'#6e6e64')+rect(5,4,6,5,'#828276')+rect(7,1,3,4,'#6e6e64'),      // 8 cairn
-  rect(0,0,16,16,'#55573e')+rect(7,6,2,10,'#5d4630')+rect(2,2,12,5,'#8c7049')+rect(3,3,10,1,'#b49863'),    // 9 signpost
-  rect(0,0,16,16,'#55573e')+rect(7,4,2,12,'#3a3228')+rect(3,3,5,1,'#3a3228')+rect(9,6,5,1,'#3a3228')+rect(4,1,1,3,'#3a3228'), // 10 dead tree
-  rect(0,0,16,16,'#55573e')+rect(1,5,14,10,'#5a4a36')+rect(2,4,12,3,'#6a5a42')+rect(7,0,2,6,'#8a7a5a')+rect(5,2,6,1,'#8a7a5a'), // 11 grave mound
-  rect(0,0,16,16,'#55573e')+rect(3,5,7,2,'#c8c0a8')+rect(9,10,5,2,'#c8c0a8')+rect(4,11,3,1,'#7a7a6e')+rect(11,3,1,5,'#6a6a62'), // 12 bones and blades
-  rect(0,0,16,16,'#2a2420')+rect(1,1,14,14,'#3a3028')+rect(3,4,5,2,'#c8c0a8')+rect(8,9,4,2,'#a8a088'),     // 13 grave pit
+  rect(0,0,16,16,'#55573e')+shadow(9,15,6,1)+boulder(8,12,5,3,'#6e6e64','#86867c','#4e4e48')+boulder(8,7.5,3.5,2.5,'#7a7a6e','#929286','#56564e')+boulder(8.5,3.5,2,2,'#6e6e64','#86867c','#4e4e48'), // 8 cairn
+  heather('#55573e')+shadow(10,15,3,1)+rect(7,6,2,10,'#5d4630')+rect(8,6,1,10,'#3f2f20')+rect(2,2,12,5,'#8c7049')+rect(2,2,12,1,'#b49863')+rect(2,6,12,1,'#6a5236')+rect(4,4,6,1,'#5d4630'), // 9 signpost
+  deadTree('#55573e','#3a3228','#524638'), // 10 dead tree
+  heather('#55573e')+shadow(9,15,7,1)+ellipse(8,10.5,7,4.5,'#4a3c2c')+ellipse(7.5,10,6,3.5,'#5a4a36')+ellipse(6,9,3,1.5,'#6a5a42')+rect(7,1,2,9,'#8a7a5a')+rect(7,1,1,9,'#a8987a')+rect(4,3,8,2,'#8a7a5a')+rect(4,3,8,1,'#a8987a'), // 11 grave mound
+  heather('#55573e')+rect(3,5,7,2,'#c8c0a8')+rect(3,5,7,1,'#ddd6c0')+rect(9,10,5,2,'#c8c0a8')+ellipse(6,11.5,2,1.5,'#b8b098')+rect(5,11,1,1,'#3a3a2e')+rect(11,2,1,7,'#8a8a82')+rect(11,2,1,1,'#b4b4aa')+rect(10,8,3,1,'#5d4630'), // 12 bones and blades
+  rect(0,0,16,16,'#2a2420')+rect(1,1,14,14,'#3a3028')+rect(1,1,14,1,'#1e1a16')+rect(1,1,1,14,'#1e1a16')+rect(3,4,5,2,'#c8c0a8')+rect(3,4,5,1,'#ddd6c0')+rect(8,9,4,2,'#a8a088')+ellipse(11,5,1.5,1.2,'#b8b098'), // 13 grave pit
   rect(0,0,16,16,'#08090a')+rect(0,0,16,2,'#1a1a18'),                                                     // 14 chasm
-  rect(0,0,16,16,'#08090a')+rect(0,2,16,12,'#5a4630')+[1,5,9,13].map(x=>rect(x,2,1,12,'#3e3022')).join(''), // 15 bridge
-  stone('#6a665c','#4e4a42'),                                                                             // 16 abbey wall
-  rect(0,0,16,16,'#5a564e')+rect(0,0,7,7,'#625e56')+rect(8,8,8,8,'#625e56')+rect(0,15,16,1,'#46423c'),     // 17 flagstones
-  rect(0,0,16,16,'#5a564e')+rect(4,0,8,16,'#7a766c')+rect(5,0,2,16,'#8a867a')+rect(3,13,10,3,'#6a665c'),   // 18 broken pillar
-  rect(0,0,16,16,'#3a342c')+[2,6,10].map(y=>rect(1,y,14,3,'#c8bea4')).join('')+[3,8,12].map(x=>rect(x,3,2,2,'#2a241e')).join(''), // 19 bone wall
-  rect(0,0,16,16,'#4a443a')+rect(3,4,2,1,'#6a6252')+rect(10,10,3,1,'#6a6252')+rect(6,13,1,1,'#8a8270'),    // 20 ossuary floor
+  rect(0,0,16,16,'#08090a')+planks(0,2,16,12,'#5a4630','#7a6040','#2e2418')+rect(0,2,16,1,'#8a7048')+rect(0,13,16,1,'#2e2418')+rect(0,14,16,2,'#000000',0.4), // 15 bridge
+  stone('#6a665c','#4e4a42'), // 16 abbey wall
+  rect(0,0,16,16,'#46423c')+[[0,0,7,7],[8,0,8,7],[0,8,4,8],[5,8,11,8]].map(([x,y,w,h])=>rect(x,y,w-1,h-1,'#5e5a52')+rect(x,y,w-1,1,'#6e6a60')+rect(x,y,1,h-1,'#66625a')).join(''), // 17 flagstones
+  rect(0,0,16,16,'#5a564e')+shadow(9,15,6,1)+rect(4,2,8,14,'#7a766c')+rect(5,2,1,14,'#9a968a')+rect(8,2,1,14,'#8a867a')+rect(11,2,1,14,'#5a564e')+rect(4,1,3,1,'#7a766c')+rect(8,0,3,2,'#7a766c')+rect(3,13,10,3,'#6a665c')+rect(3,13,10,1,'#8a867a'), // 18 broken pillar
+  rect(0,0,16,16,'#2a241e')+[1,6,11].map(y=>rect(0,y,16,4,'#3a342c')+[0,4,8,12].map(x=>rect(x+(y%2),y+1,3,2,'#c8bea4')+rect(x+(y%2),y+1,3,1,'#ddd4bc')).join('')).join('')+[[3,7],[11,2],[7,12]].map(([x,y])=>ellipse(x,y,2,1.8,'#c8bea4')+rect(x-1,y-0.5,1,1,'#2a241e')+rect(x,y-0.5,1,1,'#2a241e')).join(''), // 19 bone wall
+  rect(0,0,16,16,'#4a443a')+rect(3,4,2,1,'#6a6252')+rect(10,10,3,1,'#6a6252')+rect(6,13,1,1,'#8a8270')+rect(12,3,2,1,'#3a342c')+rect(2,11,1,1,'#3a342c'), // 20 ossuary floor
   rect(0,0,16,16,'#07090a'),                                                                               // 21 void
-  rect(0,0,16,16,'#3a342c')+rect(1,2,14,12,'#2a241e')+rect(3,4,4,4,'#c8bea4')+rect(9,4,4,4,'#c8bea4')+rect(4,5,1,1,'#2a241e')+rect(10,5,1,1,'#2a241e'), // 22 skull niche
+  rect(0,0,16,16,'#3a342c')+rect(1,2,14,12,'#1e1a16')+rect(1,2,14,1,'#4a443a')+ellipse(5,7,2.5,2.5,'#c8bea4')+ellipse(11,7,2.5,2.5,'#c8bea4')+rect(4,6,1,1,'#2a241e')+rect(6,6,1,1,'#2a241e')+rect(10,6,1,1,'#2a241e')+rect(12,6,1,1,'#2a241e')+rect(4,10,3,1,'#a8a088')+rect(10,10,3,1,'#a8a088'), // 22 skull niche
   rect(0,0,16,16,'#5a564e')+[0,4,8,12].map((y,i)=>rect(0,y,16,4,['#4a463e','#3e3a34','#322e2a','#26231f'][i])).join(''), // 23 stair down
-  rect(0,0,16,16,'#55573e')+rect(7,0,2,16,'#5d4630')+rect(2,1,10,8,'#6a3a30')+rect(3,2,8,6,'#7a4a3a'),     // 24 torn banner
-  rect(0,0,16,16,'#4a3e2c')+rect(0,0,16,2,'#3a3022')+rect(0,14,16,2,'#3a3022')+rect(4,6,4,1,'#5a4c36'),    // 25 trench
-  rect(0,0,16,16,'#3a5058')+rect(2,4,5,1,'#5a7078')+rect(9,10,5,1,'#5a7078'),                              // 26 icy stream
-  rect(0,0,16,16,'#55573e')+rect(1,6,14,9,'#7a7058')+rect(3,3,10,4,'#8a8068')+rect(6,1,4,3,'#9a9078')+rect(7,9,2,6,'#3a2e22'), // 27 tent
-  rect(0,0,16,16,'#9aaab0')+rect(2,4,6,1,'#b8c6ca')+rect(9,10,5,1,'#b8c6ca')+rect(4,12,3,1,'#7a8a90'),     // 28 ice
-  rect(0,0,16,16,'#9aaab0')+rect(3,3,10,10,'#2a3a40')+rect(4,4,8,8,'#1a2a30')+rect(3,3,10,1,'#c8d6da'),    // 29 hole in the ice
-  rect(0,0,16,16,'#4a3a2c')+[1,5,9,13].map(y=>rect(0,y,16,3,'#5d4630')).join('')+rect(0,0,16,1,'#c8ccc8'), // 30 log hut
-  rect(0,0,16,16,'#9aaab0')+rect(3,5,10,6,'#7a8288')+rect(4,6,4,3,'#a89878')+rect(10,7,2,2,'#6a5a48')+rect(2,4,1,1,'#b8c6ca'), // 31 a body under the ice
+  heather('#55573e')+rect(7,0,2,16,'#5d4630')+rect(7,0,1,16,'#7a6040')+rect(2,1,6,8,'#6a3a30')+rect(2,1,6,1,'#8a4a3a')+rect(3,9,1,2,'#6a3a30')+rect(5,9,2,3,'#6a3a30')+rect(3,3,3,3,'#8a5a3a'), // 24 torn banner
+  rect(0,0,16,16,'#4a3e2c')+rect(0,0,16,2,'#3a3022')+rect(0,2,16,1,'#2a2218')+rect(0,14,16,2,'#5a4c36')+rect(4,6,4,1,'#5a4c36')+rect(10,10,3,1,'#3a3022')+rect(2,9,1,1,'#6a5a42'), // 25 trench
+  water('#3a5058','#5a7078','#a8c0c8','#2e4048'), // 26 icy stream
+  heather('#55573e')+shadow(9,15,7,1)+rect(1,8,14,8,'#7a7058')+rect(2,6,12,2,'#7a7058')+rect(4,4,8,2,'#8a8068')+rect(6,2,4,2,'#9a9078')+rect(7,0,2,2,'#5d4630')+rect(2,6,5,2,'#9a9078')+rect(9,8,6,8,'#6a604a')+rect(6,9,4,7,'#1e1812')+rect(6,9,1,7,'#3a2e22'), // 27 tent
+  iceTile(), // 28 ice
+  iceTile()+ellipse(8,8,5.5,5,'#2a3a40')+ellipse(8,8.5,4.5,4,'#1a2a30')+rect(4,4,8,1,'#c8d6da')+rect(6,7,2,1,'#3a5a64'), // 29 hole in the ice
+  rect(0,0,16,16,'#3a2c20')+[1,5,9,13].map(y=>rect(0,y,16,3,'#5d4630')+rect(0,y,16,1,'#7a6040')+ellipse(1,y+1.5,1,1.3,'#8a7050')).join('')+rect(0,0,16,1,'#c8ccc8'), // 30 log hut
+  iceTile()+rect(3,5,10,6,'#7a8288',0.8)+rect(4,6,4,3,'#a89878',0.8)+rect(10,7,2,2,'#6a5a48',0.8)+rect(3,5,10,1,'#c8d6da'), // 31 a body under the ice
   heather('#55573e')+rect(0,0,16,6,'#c4cacb')+rect(0,6,11,2,'#c4cacb')+rect(0,8,7,2,'#c4cacb')+rect(0,10,4,2,'#c4cacb')+rect(0,12,2,2,'#c4cacb')+rect(12,6,2,1,'#bcc2c3')+rect(8,9,2,1,'#bcc2c3')+rect(5,11,1,1,'#bcc2c3')+rect(3,2,1,2,'#7a5a6a')+rect(10,3,1,2,'#6a6a48'), // 32 drift edge
 ];
 const H = Object.fromEntries(['HEATHER','STONES','ROAD','ROCK','SCREE','PINE','SNOW','BOULDER','CAIRN','SIGN','DEAD','MOUND','BONES','PIT','CHASM','BRIDGE','AWALL','FLAG','PILLAR','BONEWALL','OFLOOR','VOID','NICHE','STAIR','BANNER','TRENCH','STREAM','TENT','ICE','HOLE','HUT','FROZEN','DUST'].map((n,i)=>[n,i+1]));
 // Rock with light on it: lit facets above, cracks and shadow below, so outcrops read as stone and not holes.
-HIGHLAND[3] = rect(0,0,16,16,'#62625a')+rect(1,1,7,5,'#7c7c72')+rect(9,2,6,4,'#74746a')+rect(2,8,5,6,'#6e6e66')+rect(8,9,7,5,'#6a6a62')
-  +rect(1,1,7,1,'#94948a')+rect(9,2,6,1,'#8a8a80')+rect(2,8,5,1,'#86867c')+rect(8,9,7,1,'#7e7e76')+rect(0,7,16,1,'#44443e')+rect(8,0,1,7,'#4c4c46')+rect(7,8,1,8,'#4c4c46')
-  +rect(12,12,2,1,'#5a6a44')+rect(3,4,1,1,'#5a6a44');
+HIGHLAND[3] = blocks('#3a3a34','#62625a','#7c7c72','#4c4c46',[[0,0,8,6],[9,1,7,5],[1,7,6,6],[8,8,8,6],[0,14,5,2],[6,14,10,2]])+rect(12,12,2,1,'#5a6a44')+rect(3,4,1,1,'#5a6a44');
 // The chasm: not a black square but a drop, its far wall falling away into dark, a little mist in the bottom.
 HIGHLAND[14] = rect(0,0,16,16,'#121418')+rect(0,0,16,3,'#1e2024')+[2,6,11,14].map(x=>rect(x,3,1,6+(x%3)*2,'#1a1c20')).join('')+rect(3,12,5,1,'#24282c')+rect(10,14,4,1,'#24282c');
 // A boulder sitting on the heather, lit from above, with its shadow under it.
-HIGHLAND[7] = rect(0,0,16,16,'#55573e')+rect(2,13,13,2,'#3a3c2a')+rect(2,4,12,10,'#666660')+rect(3,3,9,4,'#7a7a72')+rect(4,3,5,1,'#8e8e84')+rect(11,8,3,5,'#56564f')+rect(5,8,2,1,'#56564f');
+HIGHLAND[7] = heather('#55573e')+boulder(8,9,6,4.5,'#666660','#8e8e84','#4a4a44');
 // The abbey's stair down to the ossuary, as real steps going down into the dark.
 HIGHLAND[23] = stairs({ tread: '#4a463e', riser: '#1e1c18', lip: '#625e54', side: '#3a3630', sideDark: '#26231f' });
 // Variants of the heather, the snow, and the flagstones, scattered so the highlands don't tile.
@@ -83,30 +87,30 @@ const HIGHLAND_GAPS = [CRACK-1], HIGHLAND_CRUMBLES = [LOOSE-1];
 
 // The fort town: a carnivore garrison behind stone walls.
 const FORT = [
-  rect(0,0,16,16,'#6a6258')+rect(2,4,3,1,'#7e766a')+rect(9,10,4,1,'#544e46')+rect(6,13,2,1,'#d8dcd8'),     // 0 street
-  rect(0,0,16,16,'#5e5a52')+rect(0,0,7,7,'#68645a')+rect(8,8,8,8,'#68645a')+rect(0,15,16,1,'#46423c'),     // 1 flagstones
-  stone('#4e4c48','#36342f'),                                                                              // 2 fort wall
-  rect(0,0,16,16,'#36342f')+[0,6,12].map(x=>rect(x,0,4,5,'#4e4c48')).join('')+rect(0,5,16,11,'#3e3c38'),   // 3 battlement
-  rect(0,0,16,16,'#6a6258')+rect(0,0,2,16,'#4e4c48')+rect(14,0,2,16,'#4e4c48'),                            // 4 gateway
-  rect(0,0,16,16,'#4a3a2c')+[2,6,10,14].map(y=>rect(0,y,16,1,'#3a2c20')).join(''),                         // 5 timber roof
-  stone('#7a7468','#5a564c'),                                                                              // 6 house wall
-  rect(0,0,16,16,'#2b2a22')+rect(1,0,14,16,'#5a4430')+rect(3,0,1,16,'#7a5e40')+rect(12,0,1,16,'#7a5e40')+rect(10,8,2,2,'#a89060'), // 7 door
-  rect(0,0,16,16,'#5a5248')+rect(0,13,16,3,'#3a342e')+rect(0,4,16,1,'#4a443c')+rect(0,9,16,1,'#4a443c'),   // 8 barracks wall
-  rect(0,0,16,16,'#6a6258')+rect(0,4,16,8,'#6a5036')+rect(0,4,16,2,'#8a6a46')+rect(3,6,3,2,'#9ab0b8')+rect(9,6,4,2,'#9ab0b8'), // 9 ration table
-  rect(0,0,16,16,'#6a6258')+rect(3,2,10,13,'#6a5236')+rect(3,4,10,1,'#3c3326')+rect(3,11,10,1,'#3c3326'),  // 10 barrel
-  rect(0,0,16,16,'#6a6258')+rect(2,3,12,11,'#7a6040')+rect(2,3,12,1,'#9a7a50')+rect(2,8,12,1,'#5a4430')+rect(7,3,1,11,'#5a4430'), // 11 crate
-  rect(0,0,16,16,'#6a6258')+rect(4,8,8,7,'#3a3632')+rect(5,4,6,5,'#d8743a')+rect(6,2,4,4,'#f0b34a'),       // 12 brazier
-  rect(0,0,16,16,'#6a6258')+rect(7,0,2,16,'#3a2e22')+rect(2,1,10,9,'#5a2a26')+rect(4,3,6,5,'#8a3a30'),     // 13 banner
-  stone('#a8a090','#888070'),                                                                              // 14 compound wall
-  rect(0,0,16,16,'#6a6258')+[1,5,9,13].map(x=>rect(x,0,2,16,'#3a3632')).join('')+rect(0,7,16,2,'#3a3632'),  // 15 gate bars
-  rect(0,0,16,16,'#6a6258')+rect(0,2,16,6,'#7a5a3a')+[0,4,8,12].map(x=>rect(x,2,2,6,'#a8a088')).join('')+rect(1,8,2,8,'#4a3828')+rect(13,8,2,8,'#4a3828'), // 16 awning
-  rect(0,0,16,16,'#6a6258')+rect(2,3,12,11,'#4e4c48')+rect(4,5,8,7,'#1e2a2e')+rect(3,1,10,3,'#5a4630'),    // 17 well
-  rect(0,0,16,16,'#6a6258')+rect(2,3,12,9,'#6a5036')+rect(3,4,10,7,'#c8c0a8')+rect(4,6,7,1,'#6a6258')+rect(4,8,5,1,'#6a6258')+rect(7,12,2,4,'#4a3828'), // 18 notice board
-  rect(0,0,16,16,'#5a5c48')+rect(3,4,1,2,'#7a7a5a')+rect(11,10,1,2,'#c8ccc8'),                             // 19 frozen grass
-  pine('#5a5c48'),                                                                                         // 20 pine
-  rect(0,0,16,16,'#4a4034')+rect(2,4,4,1,'#5a4e40')+rect(9,11,5,1,'#3a3228'),                               // 21 alley mud
-  rect(0,0,16,16,'#7a7468')+rect(0,13,16,3,'#5a564c')+rect(4,3,8,8,'#2a3a40')+rect(7,3,2,8,'#7a7468'),     // 22 window
-  rect(0,0,16,16,'#4a4034')+rect(0,1,16,2,'#3a3632')+[3,8,13].map(x=>rect(x,3,1,4,'#8a8a8a')+rect(x-1,7,3,6,'#7a3a34')).join(''), // 23 meat hooks
+  rect(0,0,16,16,'#6a6258')+rect(2,4,3,1,'#7e766a')+rect(9,10,4,1,'#544e46')+rect(6,13,2,1,'#d8dcd8')+rect(12,3,1,1,'#7e766a')+rect(3,11,1,1,'#544e46'), // 0 street
+  rect(0,0,16,16,'#46423c')+[[0,0,7,7],[8,0,8,7],[0,8,4,8],[5,8,11,8]].map(([x,y,w,h])=>rect(x,y,w-1,h-1,'#64605a')+rect(x,y,w-1,1,'#74706a')+rect(x,y,1,h-1,'#6a665e')).join(''), // 1 flagstones
+  stone('#4e4c48','#36342f'), // 2 fort wall
+  rect(0,0,16,16,'#2a2824')+[0,6,12].map(x=>rect(x,0,4,5,'#4e4c48')+rect(x,0,4,1,'#64625c')+rect(x+3,1,1,4,'#3a3834')).join('')+rect(0,5,16,11,'#3e3c38')+rect(0,5,16,1,'#55534e')+rect(0,10,16,1,'#2e2c28'), // 3 battlement
+  rect(0,0,16,16,'#6a6258')+rect(0,0,2,16,'#4e4c48')+rect(0,0,1,16,'#64625c')+rect(14,0,2,16,'#3a3834')+rect(2,0,12,1,'#000000',0.3)+rect(6,9,2,1,'#7e766a'), // 4 gateway
+  rect(0,0,16,16,'#3a2c20')+[0,4,8,12].map((y,i)=>rect(0,y,16,3,'#4a3a2c')+rect(0,y,16,1,'#5e4a38')+[3,7,11,15].map(x=>rect((x+(i%2)*2)%16,y,1,3,'#3a2c20')).join('')).join(''), // 5 timber roof
+  stone('#7a7468','#5a564c'), // 6 house wall
+  rect(0,0,16,16,'#2b2a22')+rect(1,0,14,16,'#5a4430')+[4,8,12].map(x=>rect(x,0,1,16,'#46352a')).join('')+rect(1,0,14,1,'#7a5e40')+rect(1,4,14,1,'#3a2c20')+rect(1,11,14,1,'#3a2c20')+[3,7,11].map(x=>rect(x,4,1,1,'#8a8a7a')+rect(x,11,1,1,'#8a8a7a')).join('')+rect(10,8,2,2,'#a89060')+rect(10,8,1,1,'#c8b080'), // 7 door
+  rect(0,0,16,16,'#5a5248')+rect(0,0,16,1,'#6e665a')+rect(0,4,16,1,'#4a443c')+rect(0,9,16,1,'#4a443c')+rect(6,0,1,4,'#4a443c')+rect(11,5,1,4,'#4a443c')+rect(0,13,16,3,'#3a342e')+rect(0,13,16,1,'#4a443c'), // 8 barracks wall
+  rect(0,0,16,16,'#6a6258')+shadow(8,13.5,8,1)+rect(0,4,16,8,'#6a5036')+rect(0,4,16,2,'#8a6a46')+rect(0,11,16,1,'#4a3826')+[[3,6],[9,6]].map(([x,y])=>ellipse(x+1.5,y+1,1.8,1,'#9ab0b8')+rect(x+1,y,1,1,'#c8d8dc')).join(''), // 9 ration table
+  rect(0,0,16,16,'#6a6258')+shadow(9,14.5,6,1.5)+rect(4,2,8,13,'#6a5236')+rect(3,4,10,9,'#6a5236')+[6,9].map(x=>rect(x,3,1,11,'#5a4430')).join('')+rect(4,2,2,13,'#86683f')+rect(3,5,10,1,'#3c3326')+rect(3,11,10,1,'#3c3326'), // 10 barrel
+  rect(0,0,16,16,'#6a6258')+shadow(9,15,7,1)+rect(2,3,12,11,'#7a6040')+rect(2,3,12,1,'#9a7a50')+rect(2,3,1,11,'#9a7a50')+rect(13,4,1,10,'#5a4430')+rect(2,8,12,1,'#5a4430')+rect(7,3,1,11,'#5a4430'), // 11 crate
+  rect(0,0,16,16,'#6a6258')+ellipse(8,6,6,6,'#f0a040',0.12)+shadow(9,15,5,1)+rect(4,9,8,6,'#3a3632')+rect(4,9,8,1,'#55524c')+rect(5,15,1,1,'#2a2622')+rect(10,15,1,1,'#2a2622')+ellipse(8,7.5,3,3,'#d8743a')+ellipse(8,6.5,2,2.2,'#f0b34a')+rect(7,4,2,2,'#f0b34a')+rect(8,3,1,1,'#fff0b2'), // 12 brazier
+  rect(0,0,16,16,'#6a6258')+rect(7,0,2,16,'#3a2e22')+rect(7,0,1,16,'#5a4630')+rect(2,1,10,9,'#5a2a26')+rect(2,1,10,1,'#7a3a32')+rect(2,10,2,2,'#5a2a26')+rect(6,10,2,3,'#5a2a26')+rect(10,10,2,2,'#5a2a26')+rect(4,3,6,5,'#8a3a30')+rect(5,4,4,1,'#c8a85a'), // 13 banner
+  stone('#a8a090','#888070'), // 14 compound wall
+  rect(0,0,16,16,'#6a6258')+rect(0,7,16,2,'#3a3632')+rect(0,7,16,1,'#5a5852')+[1,5,9,13].map(x=>rect(x,0,2,16,'#3a3632')+rect(x,0,1,16,'#5a5852')).join(''), // 15 gate bars
+  rect(0,0,16,16,'#6a6258')+rect(0,2,16,6,'#7a5a3a')+[0,4,8,12].map(x=>rect(x,2,2,6,'#a8a088')+rect(x,8,2,1,'#a8a088')).join('')+rect(0,2,16,1,'#000000',0.15)+rect(1,9,2,7,'#4a3828')+rect(1,9,1,7,'#6a5036')+rect(13,9,2,7,'#4a3828')+rect(13,9,1,7,'#6a5036'), // 16 awning
+  rect(0,0,16,16,'#6a6258')+shadow(9,14,7,2)+ellipse(8,9,7,5.5,'#3e3c38')+ellipse(8,8.5,6.5,5,'#4e4c48')+ellipse(8,9,4,3,'#1a2428')+rect(6,8,2,1,'#3a5054')+rect(2,0,2,8,'#5a4630')+rect(12,0,2,8,'#5a4630')+rect(2,0,12,2,'#5a4630')+rect(2,0,12,1,'#7a6040'), // 17 well
+  rect(0,0,16,16,'#6a6258')+shadow(9,15,5,1)+rect(7,12,2,4,'#4a3828')+rect(2,3,12,9,'#6a5036')+rect(2,3,12,1,'#8a6a46')+rect(3,4,10,7,'#c8c0a8')+rect(4,6,7,1,'#6a6258')+rect(4,8,5,1,'#6a6258')+rect(9,4,3,3,'#e0d8c0')+rect(5,4,1,1,'#7a3a34'), // 18 notice board
+  rect(0,0,16,16,'#5a5c48')+tuft(3,4,'#7a7a5a','#3e4030')+tuft(11,10,'#7a7a5a','#3e4030')+rect(11,10,1,1,'#c8ccc8')+rect(4,12,2,1,'#d8dcd8')+rect(13,3,1,1,'#d8dcd8'), // 19 frozen grass
+  pine('#5a5c48'), // 20 pine
+  rect(0,0,16,16,'#4a4034')+rect(2,4,4,1,'#5a4e40')+rect(9,11,5,1,'#3a3228')+ellipse(11,5,2,1,'#2e2820')+rect(10,4,1,1,'#6a6050')+rect(4,13,1,1,'#3a3228'), // 21 alley mud
+  rect(0,0,16,16,'#7a7468')+rect(3,2,10,10,'#4a443c')+rect(4,3,8,8,'#2a3a40')+rect(4,3,8,3,'#3a5058')+rect(7,3,2,8,'#7a7468')+rect(5,4,1,1,'#8aa8b0')+rect(2,12,12,1,'#8a8478')+rect(0,13,16,3,'#5a564c')+rect(0,13,16,1,'#6e6a60'), // 22 window
+  rect(0,0,16,16,'#4a4034')+rect(0,1,16,2,'#3a3632')+rect(0,1,16,1,'#5a5852')+[3,8,13].map(x=>rect(x,3,1,4,'#8a8a8a')+rect(x-1,7,3,6,'#7a3a34')+rect(x-1,7,1,6,'#9a4a40')+rect(x-1,12,3,1,'#5a2a26')).join(''), // 23 meat hooks
 ];
 const F = Object.fromEntries(['STREET','FLAG','WALL','TOP','GATE','ROOF','HOUSE','DOOR','BARRACKS','TABLE','BARREL','CRATE','BRAZIER','BANNER','COMPOUND','BARS','AWNING','WELL','BOARD','GRASS','PINE','ALLEY','WINDOW','HOOKS'].map((n,i)=>[n,i+1]));
 // Variants of the fort's street: a puddle frozen over, a scatter of straw from the line.
@@ -117,6 +121,8 @@ FORT.push(
 );
 sheet('fort', FORT);
 const FORT_SOLID = [2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20,22,23];
+// TILES_ONLY=1 redraws the tiles and leaves the maps alone: they have been edited by hand since this script made them.
+if (process.env.TILES_ONLY) process.exit(0);
 
 function grid(w,h,base){
   const floor=Array(w*h).fill(base), furniture=Array(w*h).fill(0);
