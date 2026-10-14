@@ -393,7 +393,7 @@ export const drove: Dialogue = {
 // The old border fort above the fort town, held by deserters, with the border war's archive and the signal lantern.
 export const keep: Dialogue = {
   'keep-gate': { speaker: 'THE OLD BORDER FORT', prompt: 'Examine the gate', lines: [
-    'The fort the fort town was built to feed, back when the border ran here. The gate has been barred from inside with a cart.',
+    'The fort Fellgarth was built to feed, back when the border ran here. The gate has been barred from inside with a cart.',
   ] },
   archive: { speaker: 'THE ARCHIVE', prompt: 'Search the archive', lines: [
     'Shelves of garrison rolls from the border war. The farmland\'s dead have names. The highland dead have numbers.',

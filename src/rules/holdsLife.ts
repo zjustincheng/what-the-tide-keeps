@@ -4,7 +4,7 @@ import type { Conversation } from '../content/dialogue';
 export function holdsState(context: Context) {
   const familiar = context.remembered?.includes('training') ?? !context.lost.includes('training');
   return { open: context.world.flags.includes('cuckoo-slain'), familiar,
-    name: familiar ? 'The hold' : 'Terraces you cannot place' };
+    name: familiar ? 'Scarrow' : 'Terraces you cannot place' };
 }
 
 export function heroAtCamp(context: Context): Conversation {

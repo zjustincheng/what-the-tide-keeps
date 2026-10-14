@@ -36,7 +36,7 @@ test('the hero reflects on recovered memories without granting them at camp', as
   await page.evaluate(() => (window.holdsRun.game!.scene.getScene('hold') as unknown as { closeDialogue: () => void }).closeDialogue());
   await page.locator('.cinema-skip').click();
   await expect(page.locator('.cinematic')).toHaveCount(0);
-  await expect(page.locator('#location-place')).toContainText('The hold');
+  await expect(page.locator('#location-place')).toContainText('Scarrow');
   await page.keyboard.press('e'); await page.getByRole('button', { name: /Sit quietly by the fire/ }).click();
   await page.locator('#continue').click(); await expect(page.locator('#dialogue-text')).toContainText('The order named you');
 });

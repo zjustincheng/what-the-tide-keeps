@@ -6,7 +6,7 @@ export function fortState(context: Context) {
   const familiar = context.remembered?.includes('vulture') ?? !context.lost.includes('vulture');
   const fish = flags.includes('cuttlefish-slain') ? 'stopped' : flags.includes('frog-free') && !flags.includes('viper-slain') ? 'spoiled' : 'cut';
   return { quiet: flags.includes('hyena-slain'), grain: flags.includes('boar-defeated'), fish, familiar,
-    name: familiar ? 'The fort town' : 'A garrison without a name' };
+    name: familiar ? 'Fellgarth' : 'A garrison without a name' };
 }
 
 export function vultureAtCamp(context: Context): Conversation | undefined {

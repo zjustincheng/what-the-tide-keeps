@@ -10,7 +10,7 @@ const context = (flags: Flag[] = [], lost: Context['lost'] = []): Context => ({ 
 test('the Hyena quiets the graves without restoring fish, and region victories persist through death', () => {
   assert.equal(fortState(context(['boar-defeated'])).quiet, false);
   const world = context(['boar-defeated', 'hyena-slain']);
-  assert.deepEqual(fortState(world), { quiet: true, grain: true, fish: 'cut', familiar: true, name: 'The fort town' });
+  assert.deepEqual(fortState(world), { quiet: true, grain: true, fish: 'cut', familiar: true, name: 'Fellgarth' });
   assert.equal(fortState({ ...world, world: drop(world.world) }).quiet, true);
   assert.equal(fortState(context(['hyena-slain', 'frog-free'])).fish, 'spoiled');
   assert.equal(fortState(context(['hyena-slain', 'frog-free', 'viper-slain'])).fish, 'cut');
@@ -21,7 +21,7 @@ test('the memorial and town recognition respond to the Vulture memory and remind
   assert.equal(fortState(forgotten).name, 'A garrison without a name');
   assert.match(conversation(fortStreet, 'mourning-wall', forgotten).lines.join(' '), /do not know whose/);
   const reminded = { ...forgotten, remembered: ['vulture'] as const };
-  assert.equal(fortState(reminded).name, 'The fort town');
+  assert.equal(fortState(reminded).name, 'Fellgarth');
   assert.match(conversation(fortStreet, 'mourning-wall', reminded).lines.join(' '), /uneven handwriting/);
 });
 test('ration dialogue respects later shortages and does not swallow quest rewards', () => {

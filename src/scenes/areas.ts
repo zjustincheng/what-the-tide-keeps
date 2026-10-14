@@ -392,7 +392,7 @@ export const PASS: Area = {
   decorate: scene => snowfall(scene, 640, 1024),
 };
 export const FORT: Area = {
-  key: 'fort', map: 'fort', tileset: 'fort', music: 'garrison', region: 'THE HIGHLANDS', place: 'The fort town', dialogue: withWolf(withVultureReplies({ ...fort, ...fortLore, ...fortStreet })),
+  key: 'fort', map: 'fort', tileset: 'fort', music: 'garrison', region: 'THE HIGHLANDS', place: 'Fellgarth', dialogue: withWolf(withVultureReplies({ ...fort, ...fortLore, ...fortStreet })),
   ground: 'dirt', surfaces: { 2: 'stone', 5: 'stone', 20: 'grass', 22: 'water' }, grade: COLD, enemies: [],
   npcs: [...['sergeant', 'quartermaster', 'lynx', 'veteran', 'merchant', 'fence', 'chaplain', 'raven', 'teacher'].map(name => ({ point: name, texture: name })),
     // The schoolmistress's two pupils, sitting for a lesson in the square.
@@ -408,7 +408,7 @@ export const FORT: Area = {
   },
   decorate: scene => snowfall(scene, 768, 576),
 };
-export const BARRACKS: Area = { ...INDOORS, region: 'THE HIGHLANDS', key: 'barracks', map: 'barracks', place: 'The fort · Barracks', dialogue: barracks,
+export const BARRACKS: Area = { ...INDOORS, region: 'THE HIGHLANDS', key: 'barracks', map: 'barracks', place: 'Fellgarth · Barracks', dialogue: barracks,
   npcs: [{ point: 'wrestler', texture: 'wrestler' }], exits: { out: { to: 'fort', spawn: 'from-barracks', prompt: 'Go back outside' } } };
 export const BATTLEFIELD: Area = {
   ...HIGHLAND_GROUND, key: 'battlefield', map: 'battlefield', music: 'highlands', place: 'The old battlefield', dialogue: { ...battlefield, ...vultureReturn },
@@ -591,7 +591,7 @@ export const BORDER_KEEP: Area = {
   ],
   props: [{ point: 'lantern', texture: 'cache', hiddenIf: [{ not: { flag: 'captain-slain' } }, { flag: 'lantern' }] }],
   exits: {
-    south: { to: 'fort', spawn: 'from-keep', prompt: 'Go back down to the fort town' },
+    south: { to: 'fort', spawn: 'from-keep', prompt: 'Go back down to Fellgarth' },
     north: { to: 'rookery-road', spawn: 'from-keep', prompt: 'Climb the rookery road' },
   },
   decorate: scene => snowfall(scene, 640, 544),
@@ -757,7 +757,7 @@ export const CLIMB: Area = {
 };
 
 export const HOLD: Area = {
-  ...HOLDS_GROUND, key: 'hold', map: 'hold', place: 'The hold', dialogue: hold,
+  ...HOLDS_GROUND, key: 'hold', map: 'hold', place: 'Scarrow', dialogue: hold,
   grade: { saturation: -0.4, brightness: 0.8, vignette: 0.45 }, assets: ['falcon-lord'],
   npcs: [
     { point: 'goshawk', texture: 'goshawk' }, { point: 'magpie', texture: 'magpie' }, { point: 'pigeon', texture: 'pigeon' }, { point: 'wren', texture: 'wren' },

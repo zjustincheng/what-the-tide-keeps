@@ -18,7 +18,7 @@ export const square: Dialogue = {
     'The wax is fresh. Somebody seals it again every week.',
   ] },
   crier: { speaker: 'THE CRIER', prompt: 'Speak to the crier', lines: [
-    'Hear the regency council! Bread prices fixed until the harvest. The fish ration is under review. The five condemned serve the church until their sentences are spent!',
+    'Hear the regency council of Covenhithe! Bread prices fixed until the harvest. The fish ration is under review. The five condemned serve the church until their sentences are spent!',
     'He sees your brand and keeps reading, louder.',
   ], variants: [{ if: { flag: 'human-spared' }, lines: [
     'By the seals of the nations: the five heroes are cleared of the feast murders. Their sentences are lifted. The island records are open to public examination.',

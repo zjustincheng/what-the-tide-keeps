@@ -22,7 +22,7 @@ export function orders(world: World): Orders {
       : !has('pair-slain') ? 'Two deserters hold the abbey gate past the battlefield.'
       : !(has('dead-1') && has('dead-2') && has('dead-3')) ? 'The monk at the abbey keeps the ossuary key until his dead are buried. Three lie unburied in the abbey yard.'
       : !has('ossuary-key') ? 'The dead are buried. The monk owes you the ossuary key.'
-      : !has('lantern') ? 'The ossuary is too dark for a candle. The garrison\'s signal lantern is in the old border fort, north of the fort town.'
+      : !has('lantern') ? 'The ossuary is too dark for a candle. The garrison\'s signal lantern is in the old border fort, north of Fellgarth.'
       : 'Go down into the ossuary, with the key and the lantern.',
   };
   if (!has('viper-slain')) return {
@@ -35,7 +35,7 @@ export function orders(world: World): Orders {
   };
   if (!has('cuckoo-slain')) return {
     title: 'The mountain holds', given: 'The messenger birds have stopped flying and the holds have shut their gate. Reopen the routes.',
-    next: !has('duellist-beaten') ? 'Through the holds\' gate at the top of the rookery road, and up the climb to the hold. Only the old climbers\' path goes higher, and the house\'s duellist guards it.'
+    next: !has('duellist-beaten') ? 'Through the holds\' gate at the top of the rookery road, and up the climb to Scarrow, the hold. Only the old climbers\' path goes higher, and the house\'s duellist guards it.'
       : !has('stair-open') ? 'Climb the cliff alone. Hide your mana past the falcons (Q). Somewhere above is the lever for the great stair.'
       : !has('lab-remembered') ? 'The great stair is open. The rookeries\' archive is on the upper tiers, by the cliff: the lord read something there before he closed the rookery.'
       : 'Climb the great stair to the lord\'s hall.',
@@ -72,13 +72,13 @@ export function leads(world: World): string[] {
     ...(has('octopus-grave-returned') && !has('octopus-quest-complete') ? [has('octopus-count-mended') || has('octopus-knot-cut') ? 'The octopus wants one more piece of the church’s net. It is waiting under the kraken’s ribs.' : 'The octopus wants to see where the elder put it in her count, at the fleet’s pens.'] : []),
     ...(carrying('bell') ? ['A small brass bell. The lamb in Millbrook lost one.'] : []),
     ...(has('barrel-bought') && !has('squid-freed') ? ['The fishmonger\'s barrel has a live squid in it. The mill stream runs to the sea.'] : []),
-    ...(carrying('crate') ? ['A crate from the weir\'s smuggler, for the weasel in the fort town\'s alley.'] : []),
-    ...(carrying('letter') ? ['A courier\'s letter with a church seal, for the quartermaster in the fort town.'] : []),
+    ...(carrying('crate') ? ['A crate from the weir\'s smuggler, for the weasel in Fellgarth\'s alley.'] : []),
+    ...(carrying('letter') ? ['A courier\'s letter with a church seal, for the quartermaster in Fellgarth.'] : []),
     ...(carrying('note') ? ['The vulture\'s own note, from the barracks. Give it to her.'] : []),
     ...(carrying('ring') ? ['A ring from under the ice. The trapper at the tarn.'] : []),
     ...(carrying('shrine-stone') ? ['A stone from the last shrine, for the pilgrim in the fields.'] : []),
     ...(carrying('raven-letter') ? ['The raven\'s letter, for under the holds\' gate at the top of the rookery road.'] : []),
-    ...(carrying('sealed-order') ? ['An unsigned order sealed with a cuckoo\'s egg. The raven in the fort town should see it.'] : []),
+    ...(carrying('sealed-order') ? ['An unsigned order sealed with a cuckoo\'s egg. The raven in Fellgarth should see it.'] : []),
     ...(carrying('venom-vial') ? ['The apprentice\'s vial of venom. The frog in the hospice.'] : []),
     ...(has('stood-count') && !has('salt-cut') ? ['The fox\'s word for the night market: the salt cut.'] : []),
     ...(has('newt-freed') && !has('pens-freed') ? ['The newt\'s little brother was taken to wherever the magistrate keeps the caught. East along the far bank.'] : []),

@@ -14,7 +14,7 @@ test('the rookery remains open across death, independently of the recovered labo
 test('lost training changes recognition and a reminder restores it', () => {
   const lost = context([], ['training']);
   assert.equal(holdsState(lost).name, 'Terraces you cannot place');
-  assert.equal(holdsState({ ...lost, remembered: ['training'] }).name, 'The hold');
+  assert.equal(holdsState({ ...lost, remembered: ['training'] }).name, 'Scarrow');
 });
 test('camp reflection reveals the laboratory only after the archive, even when training is lost', () => {
   const before = context([], ['training']);

@@ -36,6 +36,6 @@ test('waystones sleep until the hero knows the old roads, then wake, and carry h
   await expect(page.locator('#dialogue-text')).toContainText('It is awake.');
   await page.keyboard.press('Escape');
   await touch(page, 'farmland', 568, 440);
-  await page.getByRole('button', { name: /Walk the old road to the fort town/ }).click();
+  await page.getByRole('button', { name: /Walk the old road to Fellgarth/ }).click();
   await expect.poll(() => at(page, 'fort'), { timeout: 5000 }).not.toBeNull();
 });

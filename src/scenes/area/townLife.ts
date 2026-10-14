@@ -29,7 +29,7 @@ const TOWNS: Record<string, { state: (context: Context) => { name: string; famil
   'outlaw-port': { state: oceanState, echo: { title: 'A voice beneath the hood', text: 'You listen for a voice that once said your name. The deck ropes creak. You cannot remember who you are waiting to hear.' } },
 };
 // Places named outright, whatever happens in them.
-const NAMES: Record<string, string> = { square: 'Capital City', harbour: 'Harbor' };
+const NAMES: Record<string, string> = { square: 'Covenhithe', harbour: 'Covenhithe harbour' };
 // Who sits with the hero at a fire, region by region, once they will.
 const CAMP_TALKS: Record<CampTalk, { region: string; text: string; moment: (context: Context) => Conversation | undefined }> = {
   bear: { region: 'THE FARMLAND', text: 'Sit with the bear.', moment: bearAtCamp },
