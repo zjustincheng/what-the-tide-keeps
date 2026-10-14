@@ -1,6 +1,6 @@
 import type { Ware } from '../rules/economy';
 import type { ShopId } from '../rules/world';
-import { KEEPSAKE_IDS, KEEPSAKES } from '../rules/gear';
+import { KEEPSAKE_IDS, KEEPSAKES } from '../rules/gear.ts';
 
 // What each shopkeeper offers. Names are placeholders.
 export const SHOPS: Record<ShopId, { title: string; note: string; wares: Ware[] }> = {
@@ -41,7 +41,7 @@ export const SHOPS: Record<ShopId, { title: string; note: string; wares: Ware[] 
   magpie: {
     title: 'The magpie',
     note: 'Bright things, mostly. Nothing has come up the mountain in a year, and it shows in the prices.',
-    wares: [{ supply: 'trail-cake' }, { supply: 'herb-salve' }, { supply: 'smelling-salts' }, { supply: 'antivenom' }, { supply: 'firepot' }],
+    wares: [{ supply: 'trail-cake' }, { supply: 'herb-salve' }, { supply: 'smelling-salts' }, { supply: 'antivenom' }, { supply: 'firepot' }, { gear: 'eggshell-charm', price: 55 }],
   },
   // The seal at the smugglers' creek: sea goods, never stamped.
   smuggler: {
@@ -53,13 +53,13 @@ export const SHOPS: Record<ShopId, { title: string; note: string; wares: Ware[] 
   chandler: {
     title: 'Under the counter',
     note: 'Oilcloth bundles, ship\'s stores, and books with the church\'s seal scratched off. Prices in coin, no questions in any language.',
-    wares: [{ gear: 'riptide-codex', price: 70 }, { gear: 'sea-glass', price: 45 }, { supply: 'fish-stew', fair: true }, { supply: 'herb-salve', fair: true }, { supply: 'antivenom', fair: true }, { supply: 'firepot', fair: true }],
+    wares: [{ gear: 'riptide-codex', price: 70 }, { gear: 'sea-glass', price: 45 }, { gear: 'dried-star', price: 65 }, { supply: 'fish-stew', fair: true }, { supply: 'herb-salve', fair: true }, { supply: 'antivenom', fair: true }, { supply: 'firepot', fair: true }],
   },
   // After dark, behind the tannery: things the church would rather nobody owned.
   'night-market': {
     title: 'The shuttered stall, open',
     note: 'Lamplight through the slats. No prices chalked anywhere. She tells you, and you pay.',
-    wares: [{ gear: 'night-cloak', price: 30 }, { gear: 'smuggled-blade', price: 35 }, { gear: 'banned-hymnal', price: 60 }, { supply: 'smelling-salts', fair: true }],
+    wares: [{ gear: 'night-cloak', price: 30 }, { gear: 'smuggled-blade', price: 35 }, { gear: 'glass-bead', price: 40 }, { gear: 'banned-hymnal', price: 60 }, { supply: 'smelling-salts', fair: true }],
   },
   // The fort's smith tempers a keepsake once: its benefits grow by half, its drawbacks don't change.
   smith: {

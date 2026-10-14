@@ -1,13 +1,15 @@
 import { memories, perks } from '../content/memories';
 import { PERKS } from '../rules/memory';
 import type { Memory, MemoryId } from '../rules/memory';
+import { KEEPSAKES } from '../rules/gear';
+import type { KeepsakeId } from '../rules/gear';
 
 // After a wipe the tide takes one memory: not the hero's choice. Only what he wrote down at a fire is safe.
 export class ResurrectionView {
   private root: HTMLElement;
   private cleanup = new AbortController();
 
-  constructor(memory: Memory, taken: readonly MemoryId[], onStand: () => void) {
+  constructor(memory: Memory, taken: readonly MemoryId[], onStand: () => void, broken: readonly KeepsakeId[] = []) {
     this.root = document.createElement('section');
     this.root.className = 'battle resurrection';
     this.root.setAttribute('role', 'dialog');
@@ -26,6 +28,7 @@ export class ResurrectionView {
         <p class="eyebrow">GONE</p><h3>${memories[id].name}</h3>
         <p>${memories[id].cost}</p><p class="perk">${perks[PERKS[id]]}</p>
       </section>`).join('')}
+      ${broken.length ? `<section class="memory-taken keepsake-broken" aria-label="What broke"><p class="eyebrow">BROKEN</p><h3>${broken.map(id => KEEPSAKES[id].name).join(', ')}</h3><p>It didn't survive the fall. The shop that sold it will sell you another.</p></section>` : ''}
       ${written.length ? `<p class="memories-lost">Written down, so the tide left it · ${written.map(id => memories[id].name).join(' · ')}. The page is used up; write it again before the next death.</p>` : '<p class="memories-lost">Nothing was written down. Write down what you can\'t lose, at a fire, before the next time.</p>'}
       ${faded.length ? `<p class="memories-lost">Reminders that faded · ${faded.map(id => memories[id].name).join(' · ')}</p>` : ''}
       ${restored.length ? `<p class="memories-lost">Restored through the written page · ${restored.map(id => memories[id].name).join(' · ')}</p>` : ''}

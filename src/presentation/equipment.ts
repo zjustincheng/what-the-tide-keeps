@@ -19,5 +19,6 @@ export function keepsakeDescription(id: KeepsakeId, tempered = false) {
       : `Dodge timing windows are ${n}% ${value > 0 ? 'wider' : 'narrower'}.`;
     (positive ? benefits : drawbacks).push(text);
   }
+  if (KEEPSAKES[id].fragile) drawbacks.push('Fragile: it breaks if worn when the party falls.');
   return { benefit: benefits.join(' '), drawback: drawbacks.join(' '), memory: KEEPSAKES[id].keeps ? `Permanently holds the hero’s memory of the ${KEEPSAKES[id].keeps}, even when kept in the pack.` : '' };
 }

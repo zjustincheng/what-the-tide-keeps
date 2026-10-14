@@ -13,6 +13,7 @@ import { memories } from '../../content/memories';
 import { loadGrimoire } from '../../storage/grimoire';
 import { loadMemory, saveMemory } from '../../storage/memory';
 import { loadWorld, saveWorld } from '../../storage/world';
+import { KEEPSAKES } from '../../rules/gear';
 import { loadGear, saveGear } from '../../storage/gear';
 import { loadBooks, saveBooks } from '../../storage/books';
 import { loadBestiary } from '../../storage/bestiary';
@@ -124,10 +125,14 @@ export function wake(scene: AreaScene) {
   music.play('wake');
   // The tide chooses: the same memory however often the game is reloaded, until he stands.
   const taken = tideTakesAll(loadMemory(), loadWorld().deaths);
+  // Fragile keepsakes that broke in the fall: told once, on waking.
+  const broken = loadWorld().broke ?? [];
+  const told = () => { if (broken.length) save.ok = saveWorld({ ...loadWorld(), broke: [] }) && save.ok; };
   if (!taken.length) {
     const written = Boolean(loadMemory().anchors?.length);
-    save.ok = saveMemory(forgetAll(loadMemory(), [])); scene.renderMemory(); music.play(scene.area.music); scene.resumeExploration();
-    if (written) scene.notice('Your written memory survived. Write it down again before the next death.', 5000);
+    save.ok = saveMemory(forgetAll(loadMemory(), [])); told(); scene.renderMemory(); music.play(scene.area.music); scene.resumeExploration();
+    if (broken.length) scene.notice(`${broken.map(id => KEEPSAKES[id].name).join(' and ')} broke in the fall.`, 5000);
+    else if (written) scene.notice('Your written memory survived. Write it down again before the next death.', 5000);
     return;
   }
   scene.showStory(resurrectionStory(taken.map(id => memories[id].name)), () => {
@@ -136,10 +141,11 @@ export function wake(scene: AreaScene) {
       scene.overlay?.destroy();
       scene.overlay = undefined;
       save.ok = saveMemory(forgetAll(loadMemory(), taken));
+      told();
       scene.renderMemory();
       scene.cameras.main.fadeIn(900, 16, 27, 24);
       music.play(scene.area.music);
       scene.resumeExploration();
-    });
+    }, broken);
   });
 }

@@ -5,7 +5,7 @@ export type KeepsakeId = 'cracked-mirror' | 'crow-feather' | 'covenant-token' | 
   | 'garrison-buckler' | 'saints-medal' | 'night-cloak' | 'smuggled-blade' | 'raven-quill' | 'viper-fang' | 'hospice-bell' | 'liars-charm' | 'adders-coil' | 'house-signet' | 'courier-bell' | 'wren-feather' | 'champions-torc' | 'elder-pearl' | 'kraken-tooth' | 'sea-glass'
   | 'grafting-knife' | 'cutters-wedge' | 'shepherds-horn' | 'tin-cup' | 'brand-iron' | 'drowned-bell'
   | 'broken-link' | 'climbers-chalk' | 'falconers-hood' | 'reed-charm' | 'watch-flint' | 'ice-pick' | 'lookouts-glass'
-  | 'tally-stone' | 'glass-dropper' | 'net-knot';
+  | 'tally-stone' | 'glass-dropper' | 'net-knot' | 'glass-bead' | 'eggshell-charm' | 'dried-star';
 // What a keepsake changes about its holder in battle.
 // agility: in hundredths of a hero's dodge windows; +15 makes every window 15% wider.
 // The companions' own keepsakes each change what they do. guardAll: the bear's Protect covers the whole party.
@@ -20,7 +20,8 @@ export const MEMBER_IDS: readonly MemberId[] = ['chameleon', 'bear', 'vulture', 
 
 // Each keepsake changes how its holder plays, usually with a drawback. Some fit only one hero.
 // keeps: a companion's own keepsake, from their quest, holds the hero's memory of them for good, worn or not.
-export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; effect: string; drawback: string; mods: Partial<Mods>; keeps?: MemberId }> = {
+// fragile: stronger than most, but it breaks if it is worn when the party falls.
+export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; effect: string; drawback: string; mods: Partial<Mods>; keeps?: MemberId; fragile?: true }> = {
   'cracked-mirror': { name: 'Cracked mirror', holder: 'chameleon',
     effect: 'His reveal hits 3 harder.', drawback: 'Hiding costs 2 mana instead of 1.', mods: { reveal: 3, suppressCost: 1 } },
   'crow-feather': { name: "Crow's feather", holder: 'vulture',
@@ -28,6 +29,10 @@ export const KEEPSAKES: Record<KeepsakeId, { name: string; holder?: MemberId; ef
   'covenant-token': { name: 'Covenant token',
     effect: '6 more health.', drawback: 'Shows 2 more mana, so enemies watch the holder.', mods: { health: 6, shown: 2 } },
   'broken-link': { name: 'Broken mill-chain link', holder: 'bear', effect: 'Protect guards both allies as well as himself. Permanently holds the hero’s memory of the bear, even when unequipped.', drawback: 'Protect costs 3 mana and uses his action.', mods: { guardAll: 1 }, keeps: 'bear' },
+  // Fragile: the strongest things money buys, and they don't survive a death.
+  'glass-bead': { name: 'A blown-glass bead', fragile: true, effect: 'Attacks hit 4 harder, and 4 more health.', drawback: 'Fragile: it breaks if worn when the party falls.', mods: { damage: 4, health: 4 } },
+  'eggshell-charm': { name: 'An eggshell charm', fragile: true, effect: 'Dodges come much easier (+30% timing), and shows 2 less mana.', drawback: 'Fragile: it breaks if worn when the party falls.', mods: { agility: 30, shown: -2 } },
+  'dried-star': { name: 'A dried sea-star', fragile: true, effect: '10 more health, and attacks hit 2 harder.', drawback: 'Fragile: it breaks if worn when the party falls.', mods: { health: 10, damage: 2 } },
   // The companions' own: each from their quest, each changing what they do.
   'tally-stone': { name: 'The tally stone', holder: 'vulture', keeps: 'vulture',
     effect: 'When her blow fells an enemy, she takes back 3 mana and 3 health. Attacks hit 1 harder. Permanently holds the hero’s memory of the vulture, even when unequipped.', drawback: 'Shows 1 more mana.', mods: { scavenge: 3, damage: 1, shown: 1 } },
@@ -129,4 +134,13 @@ export function mods(gear: Gear, member: MemberId, tempered: readonly KeepsakeId
     const add = keepsakeMods(id, tempered.includes(id));
     return Object.fromEntries(Object.entries(total).map(([key, value]) => [key, value + (add[key as keyof Mods] ?? 0)])) as Mods;
   }, NO_MODS);
+}
+
+// When the party falls, whatever fragile keepsake someone in the fight was wearing breaks. Those who waited it out keep theirs.
+export function shatter(gear: Gear, fighters: readonly MemberId[]): { gear: Gear; broken: KeepsakeId[] } {
+  const broken = fighters.flatMap(member => (gear[member] ?? []).filter(id => KEEPSAKES[id].fragile));
+  if (!broken.length) return { gear, broken };
+  const kept: Record<MemberId, readonly KeepsakeId[]> = { ...gear };
+  for (const member of fighters) kept[member] = (gear[member] ?? []).filter(id => !KEEPSAKES[id].fragile);
+  return { gear: kept, broken };
 }

@@ -2,7 +2,9 @@ import Phaser from 'phaser';
 import { downed, drainedAfter, LIEUTENANTS, MEMBERS, woundsAfter } from '../../rules/battle';
 import type { Battle } from '../../rules/battle';
 import { recall, wipe } from '../../rules/memory';
-import { apply, conversation, drop, fell, fleeing } from '../../rules/world';
+import { apply, breakFragile, conversation, drop, fell, fleeing } from '../../rules/world';
+import { shatter } from '../../rules/gear';
+import { loadGear, saveGear } from '../../storage/gear';
 import { boutAfter, boutWon, BOUTS } from '../../rules/ring';
 import { BOUNTY } from '../../rules/economy';
 import { hunting } from '../../rules/pursuit';
@@ -99,7 +101,9 @@ export function beginBattle(scene: AreaScene, foe: Foe, introduced = false) {
       // Every wipe wakes the party at the church, wherever it fell.
       // At sea the church can't fetch you back cleanly: the tide takes two.
       scene.hunt.finish();
-      save.ok = saveMemory(wipe(loadMemory(), scene.area.region === 'THE OCEAN' ? 2 : 1)) && saveWorld(drop(loadWorld()));
+      // Fragile keepsakes worn in the fight break.
+      const { gear, broken } = shatter(loadGear(), battle.party.map(member => member.id));
+      save.ok = saveMemory(wipe(loadMemory(), scene.area.region === 'THE OCEAN' ? 2 : 1)) && saveWorld(breakFragile(drop(loadWorld()), broken)) && saveGear(gear);
       scene.scene.start('church');
     }
   }, foe.encounter, { ...scene.partyOptions(true, LIEUTENANTS.includes(foe.encounter) || foe.encounter === 'human'), ambush: Boolean(foe.ambush && foe.hidden), surprise: scene.sneaking, waves: foe.waves, company: foe.company });

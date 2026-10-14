@@ -47,7 +47,8 @@ export type Drained = Readonly<Partial<Record<MemberId, number>>>;
 // tempered: keepsakes the fort's smith has tempered; kept for good, like the keepsakes themselves.
 // waiting: companions the player has sent to wait out fights.
 // fallen: heroes who went down in a fight and stayed down. Rest doesn't raise them; only the church can.
-export type World = Readonly<{ fallen?: readonly MemberId[]; night?: boolean; clock?: number; waiting?: readonly MemberId[]; tempered?: readonly KeepsakeId[]; flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number; pantry?: Pantry }>;
+// broke: fragile keepsakes that broke at the last death, for the wake screen to tell; cleared when he stands up.
+export type World = Readonly<{ broke?: readonly KeepsakeId[]; fallen?: readonly MemberId[]; night?: boolean; clock?: number; waiting?: readonly MemberId[]; tempered?: readonly KeepsakeId[]; flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number; pantry?: Pantry }>;
 export const ITEMS: readonly Item[] = ['bell', 'letter', 'note', 'crate', 'ring', 'shrine-stone', 'raven-letter', 'sealed-order', 'venom-vial'];
 export const FLAGS: readonly Flag[] = ['learned-riposte', 'learned-footing', 'learned-breath', 'bear-mill-returned', 'bear-mill-record', 'bear-miller-witnessed', 'bear-reeve-accountable', 'bear-mill-left', 'bear-quest-complete', 'vulture-field-returned', 'vulture-roll-read', 'vulture-roll-read-out', 'vulture-roll-taken', 'vulture-quest-complete', 'frog-ward-returned', 'frog-book-read', 'frog-book-taken', 'frog-ward-left', 'frog-magistrate-accountable', 'frog-quest-complete', 'octopus-grave-returned', 'octopus-count-read', 'octopus-count-mended', 'octopus-knot-cut', 'octopus-quest-complete', 'island-landed', 'works-seen', 'cages-opened', 'name-read', 'house-seen', 'human-challenged', 'human-beaten', 'human-seated', 'human-spared', 'orchard-cleared', 'overseer-slain', 'quarrymen-freed', 'collie-told', 'cistern-asked', 'cistern-cleared', 'ratling-home', 'lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
   'sheep-woods', 'sheep-orchard', 'sheep-yard', 'sheep-reward', 'barrel-bought', 'squid-freed', 'swarm-slain', 'bounty-paid',
@@ -122,7 +123,7 @@ export function apply(context: Context, effect: Effect): Context {
       flags: [...world.flags, ...[effect.set ?? []].flat().filter((flag, i, all) => !world.flags.includes(flag) && all.indexOf(flag) === i)],
       found: effect.find && !world.found.includes(effect.find) ? [...world.found, effect.find] : world.found,
       coins: Math.max(0, world.coins + (effect.earn ?? 0) - (effect.pay ?? 0)),
-      supplies: effect.supply ? { ...world.supplies, [effect.supply]: world.supplies[effect.supply] + 1 } : world.supplies, fish: effect.feed ? feed(world.fish, effect.feed) : world.fish, deaths: world.deaths, pantry: world.pantry, night: world.night, clock: world.clock, waiting: world.waiting, tempered: world.tempered, fallen: effect.raise ? (world.fallen ?? []).filter(member => member !== effect.raise) : world.fallen, wounds: effect.rest ? {} : world.wounds, drained: effect.rest ? {} : world.drained,
+      supplies: effect.supply ? { ...world.supplies, [effect.supply]: world.supplies[effect.supply] + 1 } : world.supplies, fish: effect.feed ? feed(world.fish, effect.feed) : world.fish, deaths: world.deaths, pantry: world.pantry, night: world.night, clock: world.clock, waiting: world.waiting, tempered: world.tempered, fallen: effect.raise ? (world.fallen ?? []).filter(member => member !== effect.raise) : world.fallen, broke: world.broke, wounds: effect.rest ? {} : world.wounds, drained: effect.rest ? {} : world.drained,
     },
     studied: effect.learn && !studied.includes(effect.learn) ? [...studied, effect.learn] : studied,
   };
@@ -225,4 +226,9 @@ export function replies(choices: readonly Choice[] | undefined, context: Context
 // What the old masters have taught: kept in the story, so no death takes them.
 export function techniques(world: World): Technique[] {
   return (['riposte', 'footing', 'breath'] as const).filter(technique => world.flags.includes(`learned-${technique}`));
+}
+
+// What breaks when the party falls: fragile keepsakes worn in the fight are gone, tempering and all, and the shop sells them again.
+export function breakFragile(world: World, broken: readonly KeepsakeId[]): World {
+  return { ...world, found: world.found.filter(id => !broken.includes(id as KeepsakeId)), tempered: (world.tempered ?? []).filter(id => !broken.includes(id)), broke: [...broken] };
 }

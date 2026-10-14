@@ -205,6 +205,14 @@ Two keepsakes are guarded, and their caches appear only once the guardian is dea
 
 Both are beyond the chameleon alone; with the bear they are hard but winnable, and each stays dead once beaten.
 
+**Fragile keepsakes** are the strongest things money buys, and anyone can wear them, but one worn in a fight the party loses breaks: it is gone, tempering and all, and the wake screen says what broke. One left in the pack, or worn by someone who waited the fight out, is safe. The shop that sold it will sell another (`fragile` and `shatter` in `src/rules/gear.ts`).
+
+| Fragile keepsake | Where | Price | Effect |
+| --- | --- | --- | --- |
+| A blown-glass bead | The night market, Millbrook | 40 | Attacks hit 4 harder, and 4 more health |
+| An eggshell charm | The magpie, in the holds | 55 | Dodges come much easier (+30% timing), and shows 2 less mana |
+| A dried sea-star | The chandler, Wrecktown | 65 | 10 more health, and attacks hit 2 harder |
+
 Equipping a keepsake another hero holds moves it. The screen previews each hero's health, mana, and damage as the next fight will build them. Found keepsakes and grimoires are saved in `tide-keeps.world.v1` and equipped ones in `tide-keeps.gear.v1`.
 
 ## Grimoires and sequence spells

@@ -23,7 +23,7 @@ function parse(raw: string | null): World | undefined {
   if (raw === null) return undefined;
   const saved: unknown = JSON.parse(raw);
   if (typeof saved !== 'object' || saved === null) return undefined;
-  const { flags, carried, found = [], coins = 0, supplies = {}, fish = {}, wounds = {}, drained = {}, deaths = 0, pantry = {}, night = false, clock, waiting, bench, tempered = [], fallen = [] } = saved as Record<string, unknown>;
+  const { flags, carried, found = [], coins = 0, supplies = {}, fish = {}, wounds = {}, drained = {}, deaths = 0, pantry = {}, night = false, clock, waiting, bench, tempered = [], fallen = [], broke = [] } = saved as Record<string, unknown>;
   if (!Array.isArray(flags) || !Array.isArray(carried) || !Array.isArray(found)) return undefined;
   return {
     flags: FLAGS.filter((flag): flag is Flag => flags.includes(flag)), carried: ITEMS.filter((item): item is Item => carried.includes(item)),
@@ -47,6 +47,7 @@ function parse(raw: string | null): World | undefined {
     waiting: MEMBER_IDS.filter(id => (Array.isArray(waiting) && waiting.includes(id)) || bench === id),
     tempered: Array.isArray(tempered) ? KEEPSAKE_IDS.filter(id => tempered.includes(id)) : [],
     fallen: Array.isArray(fallen) ? MEMBER_IDS.filter(id => fallen.includes(id)) : [],
+    broke: Array.isArray(broke) ? KEEPSAKE_IDS.filter(id => broke.includes(id)) : [],
     pantry: Object.fromEntries(INGREDIENT_IDS.map(id => {
       const count = (pantry as Record<string, unknown>)?.[id];
       return [id, typeof count === 'number' && count > 0 ? Math.floor(count) : 0];
