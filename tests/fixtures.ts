@@ -3,7 +3,7 @@ export { expect, type Page } from '@playwright/test';
 
 // Every illustrated story that plays only once. Checks that aren't about the stories start with them already seen.
 const ONE_TIME_STORIES = ['prologue', 'krakenSlain', 'waking', 'bear', 'vulture', 'transfer', 'boar', 'hyena', 'viper', 'cuckoo', 'cuttlefish',
-  'boarAfter', 'hyenaAfter', 'viperAfter', 'cuckooAfter', 'cuttlefishAfter', 'laboratory', 'kraken', 'bearChain', 'humanChallenge', 'human'];
+  'boarAfter', 'hyenaAfter', 'viperAfter', 'cuckooAfter', 'cuttlefishAfter', 'laboratory', 'kraken', 'bearChain', 'vultureStone', 'frogDropper', 'octopusKnot', 'humanChallenge', 'human'];
 
 // The game opens on a title screen and starts when Play is pressed. Checks written before the title screen go straight
 // to the game: after every load, this presses Play for them, and waits for the game to exist.

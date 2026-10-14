@@ -35,6 +35,10 @@ async function choose(page: Page, choice: RegExp) {
 }
 async function close(page: Page) { await page.keyboard.press('Escape'); await expect(page.locator('#dialogue')).toBeHidden(); }
 async function receipt(page: Page, who: string, name: string, equip: boolean) {
+  // The quest's ending plays first, as the bear's does.
+  const story = page.locator('.cinematic');
+  await expect(story).toHaveAttribute('data-story', ({ vulture: 'vultureStone', frog: 'frogDropper', octopus: 'octopusKnot' } as Record<string, string>)[who]);
+  await story.locator('.cinema-skip').click(); await expect(story).toHaveCount(0);
   const award = page.locator('.keepsake-award');
   await expect(award).toContainText(`A KEEPSAKE FROM THE ${who.toUpperCase()}`);
   await expect(award).toContainText(name); await expect(award).toContainText(`You will always remember the ${who}`);

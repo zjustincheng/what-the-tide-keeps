@@ -314,7 +314,7 @@ Each companion has one quest of their own, as the guideline asks: nothing marks 
 | Frog | The hospice grate | The ward book's dose column: VENOMOUS HEALER IN ATTENDANCE beside every death, initialled by the magistrate, who filled Wickmere's cages with it | The magistrate reads it to her on the decks and writes the real cause across his round-up order, or she locks her empty grate and hangs the key outside | **The glass dropper:** her dose mends twice as much; 3 more health; her dart hits 1 softer |
 | Octopus | Under the kraken's ribs | The sea elder's count: a black knot for each of the five on the harbour wall, and nothing for why the kraken rose | It ties the church's net onto the count for every pod to read, or cuts its own knot out and leaves the sea's count | **A knot of church net:** Mimic costs 2 mana instead of 4; 4 more health; shows 2 more mana |
 
-The journal's leads say where each one is waiting, and the ending remembers which quests were finished. The companions' standing points are added to the maps by `scripts/add-quest-points.mjs`, which can be run again safely, like `add-secrets.mjs`.
+Each ending plays as an illustrated scene, with a memory from before the feast in the middle of it (`bearChain`, `vultureStone`, `frogDropper`, `octopusKnot` in `src/presentation/stories.ts`), and can be watched again from **Revisit memories**. The journal's leads say where each one is waiting, and the ending remembers which quests were finished. The companions' standing points are added to the maps by `scripts/add-quest-points.mjs`, which can be run again safely, like `add-secrets.mjs`.
 
 ## The farmland
 

@@ -169,6 +169,27 @@ export const STORIES = {
       { art: 'mill', caption: 'THE ROAD IS STILL THERE', text: 'You wrap the link in a scrap of paper and slip it beside the grimoire. At the road, the bear waits for you. “Same way?” he asks. You nod. The mill turns behind you.', actors: ['hero', 'bear'], sound: 'memory' },
     ],
   },
+  vultureStone: {
+    id: 'vultureStone', title: 'The count', subtitle: 'The old battlefield', music: 'highlands', finalAction: 'Keep the stone', shots: [
+      { art: 'battlefield', caption: 'THE LAST MARK', text: 'She scratches the last line a little apart from the others and blows the dust off it. “Sixty-one of mine. One of me.” She puts it in your hand before she can change her mind.', actors: ['vulture'], sound: 'wind' },
+      { art: 'harbor', caption: 'COUNTING WAVES', text: 'On the harbour wall she counts the waves out loud so the rest of you can brace: one, two, three, and on three you all hold. Afterward she tells you she was counting to keep from screaming.', actors: ['vulture'], flashback: true, sound: 'surf' },
+      { art: 'battlefield', caption: 'TWO OF YOU COUNTING', text: 'You turn the stone over and count the marks. She counts with you, under her breath, and you reach the end together.', actors: ['hero', 'vulture'] },
+    ],
+  },
+  frogDropper: {
+    id: 'frogDropper', title: 'Tenths of a drop', subtitle: 'The hospice', music: 'church', finalAction: 'Keep the dropper', shots: [
+      { art: 'hospice', caption: 'THE FIRST DROPPER', text: 'She wipes the glass on her sleeve, though it is already clean. “They gave it back to me so I could work. I am giving it to you so I can stop.”', actors: ['frog'], sound: 'glass' },
+      { art: 'harbor', caption: 'AFTER THE KRAKEN', text: 'You are shaking too hard to hold the cup. She holds it for you and counts your breaths, and does not let go until the count is even. “There,” she says. “All five.”', actors: ['hero', 'frog'], flashback: true, sound: 'heartbeat' },
+      { art: 'hospice', caption: 'AN EMPTY GRATE', text: 'On the way out she does not look at the grate. At the door she does, once. Then she holds the door open for you.', actors: ['frog'], sound: 'door' },
+    ],
+  },
+  octopusKnot: {
+    id: 'octopusKnot', title: 'A line that holds', subtitle: 'The kraken’s grave', music: 'deep', finalAction: 'Keep the knot', shots: [
+      { art: 'sea', caption: 'THE LAST OF THE NET', text: 'It cuts the last of the church’s net from the rib and lets the tide take it. The kraken’s bones stand clean for the first time since they fell.', actors: ['octopus'], sound: 'surf' },
+      { art: 'harbor', caption: 'BEFORE THE KRAKEN', text: 'At the end of the pier, waiting for the sea to rise, it teaches you a knot: over, under, back through. “When everything else lets go,” it says, “this won’t.”', actors: ['hero', 'octopus'], flashback: true, sound: 'surf' },
+      { art: 'sea', caption: 'OVER, UNDER, BACK THROUGH', text: 'Your hands remember the knot before you do. The octopus watches you tie it, and says nothing, and its colour goes warm.', actors: ['hero', 'octopus'], sound: 'memory' },
+    ],
+  },
   humanChallenge: {
     id: 'humanChallenge', title: 'The lives he carries', subtitle: 'The lamp room · Before the last fight', music: 'wake', finalAction: 'Stand together', shots: [
       { art: 'lamp-room', caption: 'YOU REFUSE THE CUP', text: 'You move the chair aside. “I came to clear our names. I came for the others. I am not staying here to watch you finish this.” The cup stays untouched.', actors: ['hero'], staging: { hero: { x: 360, ground: 405 } }, sound: 'glass' },
@@ -187,7 +208,7 @@ export const STORIES = {
 } satisfies Record<string, Story>;
 export type StoryId = keyof typeof STORIES;
 export const STORY_FLAGS: Partial<Record<Flag, StoryId>> = {
-  'bear-quest-complete': 'bearChain', 'bear-free': 'bear', 'vulture-free': 'vulture', 'lab-remembered': 'transfer', 'house-seen': 'laboratory', 'grave-seen': 'kraken',
+  'bear-quest-complete': 'bearChain', 'vulture-quest-complete': 'vultureStone', 'frog-quest-complete': 'frogDropper', 'octopus-quest-complete': 'octopusKnot', 'bear-free': 'bear', 'vulture-free': 'vulture', 'lab-remembered': 'transfer', 'house-seen': 'laboratory', 'grave-seen': 'kraken',
 };
 
 export function resurrectionStory(names: readonly string[]): Story {
