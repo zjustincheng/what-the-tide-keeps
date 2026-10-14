@@ -99,3 +99,17 @@ export function crumble({ top, crack, under }) {
     + rect(2, 3, 5, 1, crack) + rect(6, 4, 1, 3, crack) + rect(7, 6, 4, 1, crack) + rect(10, 7, 1, 4, crack) + rect(11, 10, 3, 1, crack)
     + rect(1, 10, 3, 1, crack) + rect(3, 11, 1, 2, crack) + rect(12, 2, 2, 2, under) + rect(4, 13, 2, 1, under) + rect(1, 1, 3, 1, '#ffffff', 0.1);
 }
+
+// A filled ellipse, drawn as one rect per pixel row, for canopies, stones, and anything round. Centres can sit
+// between pixels (8 is the middle of a 16-pixel tile's ninth column; 7.5 is the true middle).
+export function ellipse(cx, cy, rx, ry, c, o) {
+  let out = '';
+  for (let y = Math.ceil(cy - ry); y < cy + ry; y++) {
+    const dy = (y + 0.5 - cy) / ry;
+    if (Math.abs(dy) > 1) continue;
+    const half = rx * Math.sqrt(1 - dy * dy);
+    const x0 = Math.round(cx - half), x1 = Math.round(cx + half);
+    if (x1 > x0) out += rect(x0, y, x1 - x0, 1, c, o);
+  }
+  return out;
+}
