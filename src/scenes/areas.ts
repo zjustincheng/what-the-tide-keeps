@@ -13,6 +13,7 @@ import { fortStreet } from '../content/fortLife';
 import { marshStreet, hospiceLife } from '../content/marshLife';
 import { portLife } from '../content/oceanLife';
 import { bearReturn, withBearReplies, withBearLedger } from '../content/bearQuest';
+import { withMarine, withShark, withWolf } from '../content/masters';
 import { frogReturn, octopusReturn, vultureReturn, withFrogBook, withFrogReplies, withOctopusReplies, withVultureReplies } from '../content/companionQuests';
 import { hall, inn, millInside, tannery } from '../content/interiors';
 import { barrow, downs } from '../content/downs';
@@ -272,7 +273,7 @@ export const BOAR_FARM: Area = {
 // Building interiors: small rooms in the dark, lit warmer than the fields outside.
 const INDOORS: Pick<Area, 'region' | 'tileset' | 'grade' | 'enemies' | 'music' | 'ground' | 'surfaces'> = { region: 'THE FARMLAND', tileset: 'interior', music: 'hearth', grade: { saturation: -0.3, brightness: 0.74, vignette: 0.55 }, enemies: [],
   ground: 'wood', surfaces: { 3: 'stone', 19: 'straw', 23: 'straw', 27: 'stone' } };
-export const INN: Area = { ...INDOORS, key: 'inn', map: 'inn', place: 'Millbrook · The inn', dialogue: { ...inn, ...innLore },
+export const INN: Area = { ...INDOORS, key: 'inn', map: 'inn', place: 'Millbrook · The inn', dialogue: withMarine({ ...inn, ...innLore }),
   npcs: [{ point: 'drinker', texture: 'drinker' }, { point: 'patron', texture: 'patron' }, { point: 'marine', texture: 'marine' }],
   camps: { bed: { prompt: 'Sleep in the bed', noCooking: true, lines: ['You lie down in a real bed for the first time you can remember. Your wounds close and your mana returns.'] } },
   exits: { out: { to: 'town', spawn: 'from-inn', prompt: 'Go back outside' } } };
@@ -391,7 +392,7 @@ export const PASS: Area = {
   decorate: scene => snowfall(scene, 640, 1024),
 };
 export const FORT: Area = {
-  key: 'fort', map: 'fort', tileset: 'fort', music: 'garrison', region: 'THE HIGHLANDS', place: 'The fort town', dialogue: withVultureReplies({ ...fort, ...fortLore, ...fortStreet }),
+  key: 'fort', map: 'fort', tileset: 'fort', music: 'garrison', region: 'THE HIGHLANDS', place: 'The fort town', dialogue: withWolf(withVultureReplies({ ...fort, ...fortLore, ...fortStreet })),
   ground: 'dirt', surfaces: { 2: 'stone', 5: 'stone', 20: 'grass', 22: 'water' }, grade: COLD, enemies: [],
   npcs: [...['sergeant', 'quartermaster', 'lynx', 'veteran', 'merchant', 'fence', 'chaplain', 'raven', 'teacher'].map(name => ({ point: name, texture: name })),
     // The schoolmistress's two pupils, sitting for a lesson in the square.
@@ -873,7 +874,7 @@ const SEA_GROUND: Pick<Area, 'region' | 'tileset' | 'ground' | 'surfaces' | 'mus
 };
 
 export const OUTLAW_PORT: Area = {
-  ...SEA_GROUND, key: 'outlaw-port', map: 'outlaw-port', place: 'Wrecktown', dialogue: { ...port, ...portLife }, ground: 'wood', music: 'shanty',
+  ...SEA_GROUND, key: 'outlaw-port', map: 'outlaw-port', place: 'Wrecktown', dialogue: withShark({ ...port, ...portLife }), ground: 'wood', music: 'shanty',
   grade: { saturation: -0.4, brightness: 0.76, vignette: 0.5 }, assets: ['octopus'],
   npcs: [
     { point: 'portmaster', texture: 'gull' }, { point: 'stranger', texture: 'hooded', hiddenIf: [{ flag: 'octopus-free' }] }, { point: 'chandler', texture: 'chandler' },

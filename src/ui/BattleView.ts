@@ -594,7 +594,7 @@ export class BattleView {
     const error = performance.now() - this.prompt.impact;
     // Pressing far too early commits the dodge too soon; it cannot be retried.
     const next = nextStrike(this.state)!;
-    const dodge = grade(error, next.move, agility(next.target));
+    const dodge = grade(error, next.move, agility(next.target), this.state.techniques.includes('footing'));
     // Pressed while a feint held the ring: taken in by it.
     this.prompt.answer(dodge, error < 0, dodge === 'miss' && error < 0 && next.move.feint ? 'Taken in by the feint · hit.' : undefined);
   }

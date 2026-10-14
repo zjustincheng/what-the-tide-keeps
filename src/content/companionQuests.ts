@@ -14,7 +14,7 @@ const octopus: DialogueVoice = { speaker: 'THE OCTOPUS', portrait: 'octopus' };
 const elder: DialogueVoice = { speaker: 'THE ELDER', portrait: 'elder' };
 
 // Add replies to a conversation and every one of its variants, so whatever else it offers stays available.
-function withReplies(dialogue: Dialogue, point: string, extra: Choice[], aftermath: NonNullable<Dialogue[string]['variants']> = []): Dialogue {
+export function withReplies(dialogue: Dialogue, point: string, extra: Choice[], aftermath: NonNullable<Dialogue[string]['variants']> = []): Dialogue {
   const original = dialogue[point];
   return { ...dialogue, [point]: { ...original, choices: [...(original.choices ?? []), ...extra],
     variants: [...aftermath, ...(original.variants ?? [])].map(variant => ({ ...variant, choices: [...(variant.choices ?? original.choices ?? []), ...extra] })) } };

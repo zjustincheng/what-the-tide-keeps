@@ -3,7 +3,7 @@ import type { Choice, Conversation, Dialogue } from '../content/dialogue';
 import type { MemoryId } from './memory';
 import type { KeepsakeId } from './gear';
 import type { BookId } from './spells';
-import type { MemberId } from './battle';
+import type { MemberId, Technique } from './battle';
 import { NO_SUPPLIES } from './economy.ts';
 import type { Supplies, SupplyId } from './economy';
 import { feed, FISH_IDS, NO_CATCH } from './fishing.ts';
@@ -15,6 +15,7 @@ import type { Catch } from './fishing';
 // Carried items are lost on a wipe and go back to where they were found.
 export type Item = 'bell' | 'letter' | 'note' | 'crate' | 'ring' | 'shrine-stone' | 'raven-letter' | 'sealed-order' | 'venom-vial';
 export type Flag = 'lamb-thanked' | 'hedge-open' | 'boar-defeated' | 'pests-field' | 'pests-yard' | 'writ-given' | 'bear-free' | 'vulture-free'
+  | 'learned-riposte' | 'learned-footing' | 'learned-breath'
   | 'bear-mill-returned' | 'bear-mill-record' | 'bear-miller-witnessed' | 'bear-reeve-accountable' | 'bear-mill-left' | 'bear-quest-complete'
   | 'vulture-field-returned' | 'vulture-roll-read' | 'vulture-roll-read-out' | 'vulture-roll-taken' | 'vulture-quest-complete' | 'frog-ward-returned' | 'frog-book-read' | 'frog-book-taken' | 'frog-ward-left' | 'frog-magistrate-accountable' | 'frog-quest-complete' | 'octopus-grave-returned' | 'octopus-count-read' | 'octopus-count-mended' | 'octopus-knot-cut' | 'octopus-quest-complete'
   | 'sheep-woods' | 'sheep-orchard' | 'sheep-yard' | 'sheep-reward' | 'barrel-bought' | 'squid-freed' | 'swarm-slain' | 'bounty-paid'
@@ -48,7 +49,7 @@ export type Drained = Readonly<Partial<Record<MemberId, number>>>;
 // fallen: heroes who went down in a fight and stayed down. Rest doesn't raise them; only the church can.
 export type World = Readonly<{ fallen?: readonly MemberId[]; night?: boolean; clock?: number; waiting?: readonly MemberId[]; tempered?: readonly KeepsakeId[]; flags: readonly Flag[]; carried: readonly Item[]; found: readonly Found[]; coins: number; supplies: Supplies; fish: Catch; wounds: Wounds; drained: Drained; deaths: number; pantry?: Pantry }>;
 export const ITEMS: readonly Item[] = ['bell', 'letter', 'note', 'crate', 'ring', 'shrine-stone', 'raven-letter', 'sealed-order', 'venom-vial'];
-export const FLAGS: readonly Flag[] = ['bear-mill-returned', 'bear-mill-record', 'bear-miller-witnessed', 'bear-reeve-accountable', 'bear-mill-left', 'bear-quest-complete', 'vulture-field-returned', 'vulture-roll-read', 'vulture-roll-read-out', 'vulture-roll-taken', 'vulture-quest-complete', 'frog-ward-returned', 'frog-book-read', 'frog-book-taken', 'frog-ward-left', 'frog-magistrate-accountable', 'frog-quest-complete', 'octopus-grave-returned', 'octopus-count-read', 'octopus-count-mended', 'octopus-knot-cut', 'octopus-quest-complete', 'island-landed', 'works-seen', 'cages-opened', 'name-read', 'house-seen', 'human-challenged', 'human-beaten', 'human-seated', 'human-spared', 'orchard-cleared', 'overseer-slain', 'quarrymen-freed', 'collie-told', 'cistern-asked', 'cistern-cleared', 'ratling-home', 'lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
+export const FLAGS: readonly Flag[] = ['learned-riposte', 'learned-footing', 'learned-breath', 'bear-mill-returned', 'bear-mill-record', 'bear-miller-witnessed', 'bear-reeve-accountable', 'bear-mill-left', 'bear-quest-complete', 'vulture-field-returned', 'vulture-roll-read', 'vulture-roll-read-out', 'vulture-roll-taken', 'vulture-quest-complete', 'frog-ward-returned', 'frog-book-read', 'frog-book-taken', 'frog-ward-left', 'frog-magistrate-accountable', 'frog-quest-complete', 'octopus-grave-returned', 'octopus-count-read', 'octopus-count-mended', 'octopus-knot-cut', 'octopus-quest-complete', 'island-landed', 'works-seen', 'cages-opened', 'name-read', 'house-seen', 'human-challenged', 'human-beaten', 'human-seated', 'human-spared', 'orchard-cleared', 'overseer-slain', 'quarrymen-freed', 'collie-told', 'cistern-asked', 'cistern-cleared', 'ratling-home', 'lamb-thanked', 'hedge-open', 'boar-defeated', 'pests-field', 'pests-yard', 'writ-given', 'bear-free', 'vulture-free',
   'sheep-woods', 'sheep-orchard', 'sheep-yard', 'sheep-reward', 'barrel-bought', 'squid-freed', 'swarm-slain', 'bounty-paid',
   'warden-slain', 'leech-slain',
   'followers-spared', 'followers-reported', 'followers-paid', 'fishmonger-angry', 'stall-cowed', 'stood-count', 'inn-room', 'reeve-pardon',
@@ -219,4 +220,9 @@ export function conversation(dialogue: Dialogue, name: string, context: Context)
 // The replies the hero can give right now. What he has forgotten, he cannot say.
 export function replies(choices: readonly Choice[] | undefined, context: Context): Choice[] {
   return (choices ?? []).filter(choice => !choice.if || holds(context, choice.if));
+}
+
+// What the old masters have taught: kept in the story, so no death takes them.
+export function techniques(world: World): Technique[] {
+  return (['riposte', 'footing', 'breath'] as const).filter(technique => world.flags.includes(`learned-${technique}`));
 }

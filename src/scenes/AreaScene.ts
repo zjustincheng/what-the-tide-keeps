@@ -3,7 +3,7 @@ import { characterDepth, characterFootprint } from '../presentation/townsfolk';
 import { createBattle, MEMBERS } from '../rules/battle';
 import type { BattleOptions } from '../rules/battle';
 import { held, hollow, MEMORY_IDS } from '../rules/memory';
-import { conversation, holds, lineup, replies, roster } from '../rules/world';
+import { conversation, holds, lineup, replies, roster, techniques } from '../rules/world';
 import type { Condition, Context, Effect } from '../rules/world';
 import type { Conversation } from '../content/dialogue';
 import { loadGrimoire } from '../storage/grimoire';
@@ -572,7 +572,7 @@ export class AreaScene extends Phaser.Scene {
   partyOptions(fighting = false, lieutenant = false): BattleOptions {
     const world = loadWorld();
     const memory = loadMemory();
-    return { hollow: hollow(memory), lostMemories: memory.lost.filter(id => !held(memory).includes(id)), gear: loadGear(), books: settle(loadBooks(), roster(world)), roster: this.area.solo ? ['chameleon'] : fighting ? lineup(world, lieutenant) : roster(world), tempered: world.tempered ?? [], supplies: world.supplies, wounds: world.wounds, drained: world.drained };
+    return { hollow: hollow(memory), lostMemories: memory.lost.filter(id => !held(memory).includes(id)), gear: loadGear(), books: settle(loadBooks(), roster(world)), roster: this.area.solo ? ['chameleon'] : fighting ? lineup(world, lieutenant) : roster(world), tempered: world.tempered ?? [], supplies: world.supplies, wounds: world.wounds, drained: world.drained, techniques: techniques(world) };
   }
 
   private toggleHud() {

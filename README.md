@@ -267,6 +267,16 @@ Bosses also keep their own time, so a dodge can't be learned once and repeated (
 
 Each blow in a turn, including each of the boar's followers, is its own dodge. Blows already stopped by a guard or barrier skip the prompt. A spell the party has not studied cannot be dodged. The timing windows live in `DODGE` in `src/rules/battle.ts`.
 
+### The old masters
+
+Three fighters who stopped, one in each of three regions, can each teach a way of dodging. Nothing marks them; each one mentions the next. What they teach is kept like the grimoire, through every death (`Technique` in `src/rules/battle.ts`, `src/content/masters.ts`).
+
+| Master | Where | Teaches once | Technique |
+| --- | --- | --- | --- |
+| An old wolf, who fought the border war | The fort town | The deserter captain is dead: he taught him | **Riposte:** a perfect dodge of a physical blow strikes the main enemy back for 3. Never the last blow, never through the warden's candles, never at a cuckoo hiding in the party |
+| An old hare marine, who stood on the harbour wall | The Millbrook inn | You still remember the kraken: "It only works if you know what it was for" | **Footing:** the graze window is a quarter wider; the perfect window is unchanged |
+| A shark with one fin cut short, out of the clan pits | Wrecktown | The shark enforcer, his sister's boy, is dead | **Second breath:** a perfect dodge gives the dodger back a point of mana |
+
 ## Magic and the shared grimoire
 
 Open a companion's **Spellcraft** menu for these actions. Each spends that companion's turn:

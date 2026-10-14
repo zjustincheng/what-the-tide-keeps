@@ -50,6 +50,12 @@ export function venom(encounter: Encounter): number {
 // What a spell the party studied hits for when the octopus throws it back, by its name.
 export const SPELL_POWER: Record<string, number> = { 'Salt lance': 14, Judgement: 14, 'Drowning toll': 10, 'Marsh-fire': 9, Souring: 7, 'Talon hex': 13, Verdict: 16 };
 export const MIMIC_COST = 4;
+// What the old masters teach: ways to dodge, kept like the grimoire, through every death.
+// riposte: a perfect dodge of a physical blow strikes the main enemy back. footing: a graze comes from further off.
+// breath: a perfect dodge gives the dodger back a point of mana.
+export type Technique = 'riposte' | 'footing' | 'breath';
+export const RIPOSTE = 3;
+export const FOOTING = 1.25;
 // What the octopus's Mimic costs it, after its keepsake.
 export const mimicCost = (member: Pick<Member, 'gear'>) => Math.max(1, MIMIC_COST - member.gear.mimicCost);
 // The spell an octopus can throw back: the last one written into the grimoire.
@@ -145,6 +151,8 @@ export type Battle = Readonly<{
   lastSpell: SpellId | null; enemyWard: number; stunned: MemberId | null;
   // While soured, every heal burns for as much as it would have mended.
   soured: number;
+  // The old masters' techniques the party has learned.
+  techniques: readonly Technique[];
   log: readonly string[];
 }>;
 export type Dodge = 'perfect' | 'graze' | 'miss';
@@ -465,6 +473,7 @@ export type BattleOptions = Readonly<{
   // arena: a bout in the Talon Ring, where losing isn't dying.
   arena?: boolean;
   lostMemories?: readonly MemoryId[];
+  techniques?: readonly Technique[];
 }>;
 // A fight's party when none is given: the three who fought together first.
 const TRIO: readonly MemberId[] = ['chameleon', 'bear', 'vulture'];
@@ -490,7 +499,7 @@ export function createBattle(encounter: Encounter = 'locust', studied: readonly 
       ...(FOLLOWERS[encounter] ?? []).map(({ name, health }) => ({ name, health: scaled(health), maxHealth: scaled(health), mana: 4, maxMana: 4 })),
       ...company.map(({ name, art, health, weapon, damage }) => ({ name, art, weapon, damage, health: scaled(health), maxHealth: scaled(health), mana: 4, maxMana: 4 })),
     ],
-    fury: 0, step: 0, snared: surprise && !ambush, stage: 1, wave: 1, waves, supplies, enemyPoison: 0, soured: 0, impostor: null, lastSpell: null, enemyWard: 0, stunned: null,
+    fury: 0, step: 0, snared: surprise && !ambush, stage: 1, wave: 1, waves, supplies, enemyPoison: 0, soured: 0, impostor: null, lastSpell: null, enemyWard: 0, stunned: null, techniques: options.techniques ?? [],
     log: [...(herald ? [herald] : []), ENEMIES[encounter].opening, ...(STARTS_POISONED[encounter] ? ['The air in here is thick with venom. Everyone is poisoned already.'] : []), ...(ambush ? ['Ambush! It moves before you can.'] : surprise ? ['It never saw you coming. It loses its first move.'] : [])],
   };
 }
@@ -992,11 +1001,11 @@ export function timing(move: Pick<Move, 'lead' | 'feint'>): { lead: number; fein
 // Early or late by errorMs; heavy, telegraphed blows leave a narrower perfect window.
 // A move may set its own window: stronger enemies leave less room.
 // agility scales the windows: a nimble hero has more room, a heavy one less.
-export function grade(errorMs: number, move: Move, agility = 1): Dodge {
+export function grade(errorMs: number, move: Move, agility = 1, footing = false): Dodge {
   const off = Math.abs(errorMs);
   const window = move.window ?? { perfect: move.damage >= 10 ? DODGE.heavyPerfect : DODGE.perfect, graze: DODGE.graze };
   if (off <= window.perfect * agility) return 'perfect';
-  return off <= window.graze * agility ? 'graze' : 'miss';
+  return off <= window.graze * agility * (footing ? FOOTING : 1) ? 'graze' : 'miss';
 }
 
 // A hero's agility: innate, plus anything their keepsakes add.
@@ -1098,18 +1107,23 @@ export function strike(battle: Battle, dodge: Dodge = 'miss'): Battle {
   const { move, target, guarded, blocked } = next;
   const avoided = next.dodgeable ? dodge : 'miss';
   const damage = avoided === 'perfect' ? 0 : avoided === 'graze' ? Math.ceil(next.damage / 2) : next.damage;
+  // The old masters: a clean dodge of a blow strikes back, though never the last blow, and never through the warden's
+  // candles or at a cuckoo hiding in the party; and a clean dodge of anything gives the dodger their breath back.
+  const riposte = avoided === 'perfect' && move.type === 'physical' && battle.techniques.includes('riposte') && battle.enemy.health > 1 && !warded(battle) && !battle.impostor;
+  const breath = avoided === 'perfect' && battle.techniques.includes('breath');
   // A poisoned blow that lands at all leaves its poison.
-  const party = battle.party.map(member => member.id === target.id ? { ...member, health: Math.max(0, member.health - damage), poison: damage > 0 && move.poison ? Math.max(member.poison, move.poison) : member.poison } : member);
+  const party = battle.party.map(member => member.id === target.id ? { ...member, health: Math.max(0, member.health - damage), mana: breath ? Math.min(member.maxMana, member.mana + 1) : member.mana, poison: damage > 0 && move.poison ? Math.max(member.poison, move.poison) : member.poison } : member);
   // A draining blow feeds the attacker by whatever it actually took.
   const taken = target.health - party.find(member => member.id === target.id)!.health;
-  const enemy = move.drain && taken > 0 ? { ...battle.enemy, health: Math.min(battle.enemy.maxHealth, battle.enemy.health + taken) } : battle.enemy;
+  const fed = move.drain && taken > 0 ? { ...battle.enemy, health: Math.min(battle.enemy.maxHealth, battle.enemy.health + taken) } : battle.enemy;
+  const enemy = riposte ? { ...fed, health: Math.max(1, fed.health - RIPOSTE) } : fed;
   const downed = party.find(member => member.id === target.id)!.health === 0;
   const name = MEMBERS[target.id].name;
   // A blow's name in a sentence: "the mandible strike", but a memory he casts already carries its own, "the feast", "his training".
   const blow = /^(the|his) /i.test(move.name) ? move.name.toLowerCase() : `the ${move.name.toLowerCase()}`;
   const Blow = blow[0].toUpperCase() + blow.slice(1);
   const message = blocked ? `${name}'s barrier stops ${move.spell}.`
-    : avoided === 'perfect' ? `${name} slips aside. ${Blow} finds only air.`
+    : avoided === 'perfect' ? `${name} slips aside. ${Blow} finds only air.${riposte ? ` ${name} strikes back as it passes.` : ''}${breath ? ` ${name} gets their breath back.` : ''}`
     : guarded ? `${MEMBERS[guarded.id].name} turns aside ${blow}${guarded.id !== target.id ? ` aimed at ${name}` : ''}.${damage ? ` His fury drives through anyway${avoided === 'graze' ? ', though only just' : ''}${downed ? `, and ${name} falls` : ''}.` : ''}`
     : avoided === 'graze' ? `${name} half twists away. ${Blow} only grazes them.${downed ? ' They fall.' : ''}`
     : `${Blow} catches ${name}.${downed ? ' They fall.' : ''}`;
