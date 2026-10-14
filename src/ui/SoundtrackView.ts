@@ -2,7 +2,7 @@ import { music } from '../audio/music';
 import { THEMES, THEME_IDS, loopBeats } from '../audio/themes';
 import type { ThemeId } from '../audio/themes';
 
-const group = (id: ThemeId) => id.startsWith('boss-') || id === 'kraken' || id === 'boss' ? 'Bosses' : id === 'battle' || id === 'arena' ? 'Battle' : 'Places & memories';
+const group = (id: ThemeId) => id.startsWith('boss-') || id === 'kraken' ? 'Bosses' : id === 'battle' || id === 'arena' ? 'Battle' : 'Places & memories';
 const tracks = [...THEME_IDS].sort((a, b) => group(a).localeCompare(group(b)) || THEMES[a].name.localeCompare(THEMES[b].name));
 
 export class SoundtrackView {

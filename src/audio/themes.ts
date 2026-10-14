@@ -7,7 +7,7 @@ import { smooth } from './voicing.ts';
 
 export type Voice = 'harp' | 'pluck' | 'flute' | 'brass' | 'strings' | 'staccato' | 'organ' | 'bell' | 'celesta' | 'bass' | 'choir' | 'drum' | 'snare';
 export type NoteEvent = Readonly<{ beat: number; voice: Voice; midi: number; beats: number; velocity: number }>;
-export type ThemeId = 'church' | 'fields' | 'town' | 'wilds' | 'hearth' | 'battle' | 'boss' | 'kraken' | 'wake' | 'highlands' | 'marsh'
+export type ThemeId = 'church' | 'fields' | 'town' | 'wilds' | 'hearth' | 'battle' | 'kraken' | 'wake' | 'highlands' | 'marsh'
   | 'capital' | 'garrison' | 'holds' | 'downs' | 'crypt' | 'shanty' | 'sea' | 'deep' | 'arena' | BossThemeId;
 export type Theme = Readonly<{ name: string; bpm: number; beatsPerBar: number; bars: number; events: readonly NoteEvent[] }>;
 
@@ -318,10 +318,6 @@ const fight = (chords: readonly Chord[]) => [
   ...pad('strings', chords, 4, 0.05, 24),
 ];
 
-// Bosses and elites: faster, darker, a flattened second, and a choir over it all. D Phrygian.
-const BOSS_CHORDS: Chord[] = [[38, 'm'], [38, 'm'], [39, 'M'], [38, 'm'], [34, 'M'], [43, 'm'], [39, 'M'], [45, 'M']];
-const BOSS_CHOIR: Line = [[62, 4], [63, 4], [62, 4], [65, 4], [62, 4], [67, 4], [63, 4], [61, 4]];
-
 // The kraken, in memory: the harbour wall, and the five of them on it. B minor.
 const KRAKEN_CHORDS: Chord[] = [[35, 'm'], [35, 'm'], [31, 'M'], [33, 'M'], [35, 'm'], [30, 'M'], [31, 'M'], [30, 'M']];
 
@@ -420,16 +416,6 @@ export const THEMES: Record<ThemeId, Theme> = {
     part(4, 8, fight(BATTLE_SECOND), line('strings', BATTLE_STRAIN, 0.13)),
     part(4, 8, fight(BATTLE_CHORDS), line('strings', BATTLE_LEAD, 0.13)),
   ) },
-  boss: { name: 'A stronger foe', bpm: 144, beatsPerBar: 4, bars: 8, events: [
-    ...perBar(BOSS_CHORDS, 4, (_, start) => [
-      ...[0, 0, 1, 0, 12, 0, 1, 0].map((step, index) => ({ beat: start + index * 0.5, voice: 'staccato' as const, midi: 50 + step, beats: 0.4, velocity: 0.15 })),
-      ...[0, 0.75, 2, 2.5].map(offset => ({ beat: start + offset, voice: 'drum' as const, midi: 36, beats: 0.5, velocity: 0.36 })),
-      ...[1, 3].map(offset => ({ beat: start + offset, voice: 'snare' as const, midi: 60, beats: 0.25, velocity: 0.2 })),
-    ]),
-    ...perBar(BOSS_CHORDS, 4, (chord, start) => [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5].map(offset => ({ beat: start + offset, voice: 'bass' as const, midi: chord[0], beats: 0.4, velocity: 0.22 }))),
-    ...pad('strings', BOSS_CHORDS, 4, 0.05, 24),
-    ...line('choir', BOSS_CHOIR, 0.12),
-  ] },
   kraken: { name: 'The Kraken', bpm: 118, beatsPerBar: 4, bars: 8, events: [
     ...perBar(KRAKEN_CHORDS, 4, (chord, start) => [
       ...[0, 1, 2, 3].map(offset => ({ beat: start + offset, voice: 'bass' as const, midi: chord[0], beats: 0.85, velocity: 0.24 })),
