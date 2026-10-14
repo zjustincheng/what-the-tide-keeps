@@ -492,15 +492,17 @@ export class BattleView {
     const { lead, feint, impact: delay } = timing(next.move);
     ring.className = 'dodge-ring'; ring.style.setProperty('--lead', `${lead}ms`);
     if (feint) {
+      // The feint: the ring closes as usual, stops dead and shakes in place, then closes at the usual pace.
+      // Driven on a real element rather than ::after, which some browsers can't animate from script.
       ring.dataset.feint = 'true';
+      const closing = document.createElement('div'); closing.className = 'dodge-ring-close'; ring.append(closing);
       const at = lead * FEINT_AT / delay, held = (lead * FEINT_AT + feint) / delay;
-      ring.animate([
-        { transform: 'scale(3)', opacity: .25, offset: 0 },
-        { transform: 'scale(1.8)', opacity: .7, offset: at },
-        { transform: 'scale(2.05)', opacity: .85, offset: at + (held - at) * .3 },
-        { transform: 'scale(1.9)', opacity: .85, offset: held },
-        { transform: 'scale(1)', opacity: 1, offset: 1 },
-      ], { duration: delay, easing: 'linear', fill: 'forwards', pseudoElement: '::after' });
+      const shake = (x: number, t: number) => ({ transform: `translateX(${x}px) scale(1.8)`, opacity: .85, offset: at + (held - at) * t });
+      closing.animate([
+        { transform: 'translateX(0px) scale(3)', opacity: .25, offset: 0 },
+        shake(0, 0), shake(-2, .12), shake(2, .24), shake(-2, .36), shake(2, .48), shake(0, .6), shake(0, 1),
+        { transform: 'translateX(0px) scale(1)', opacity: 1, offset: 1 },
+      ], { duration: delay, easing: 'linear', fill: 'forwards' });
     }
     const impact = performance.now() + delay;
     const bar = this.get('.dodge-bar'), button = this.get<HTMLButtonElement>('#dodge');
@@ -508,7 +510,7 @@ export class BattleView {
     bar.dataset.kind = kind;
     const call = `${next.move.name} → ${MEMBERS[next.target.id].name}.`;
     const pieces: HTMLElement[] = [ring];
-    let hint = feint ? 'Space or tap · it stops before it closes' : 'Space or tap · as the ring closes';
+    let hint = feint ? 'It stops, then strikes · wait for it to move again' : 'Space or tap · as the ring closes';
     if (kind === 'ring') { bar.insertBefore(ring, button); this.root.dataset.impact = String(impact); }
     let keys: number[] = [];
     let sequence: HTMLElement | undefined;

@@ -110,6 +110,25 @@ test('a feint holds the ring: pressing on the usual beat is taken in, waiting fo
   await saw('Taken in by the feint · hit.');
 });
 
+test('a feint\'s ring stops dead and shakes in place, then closes at the usual pace', async ({ page }) => {
+  await faceTheCuckoo(page);
+  const sizes = await page.evaluate(async () => {
+    const { createBattle, intent, timing, FEINT_AT } = await import('/src/rules/battle.ts');
+    const { lead, feint, impact: delay } = timing(intent({ ...createBattle('cuckoo'), round: 1 }));
+    const battle = document.querySelector<HTMLElement>('.battle')!;
+    const start = Number(battle.dataset.impact) - delay;
+    const size = () => new DOMMatrix(getComputedStyle(document.querySelector('.dodge-ring-close')!).transform).a;
+    const at = (t: number) => new Promise<number>(resolve => setTimeout(() => resolve(size()), start + t - performance.now()));
+    const stop = lead * FEINT_AT;
+    return { early: await at(stop * 0.5), held: await at(stop + feint * 0.15), stillHeld: await at(stop + feint * 0.85), closing: await at(delay - 120) };
+  });
+  expect(sizes.early).toBeGreaterThan(1.9);
+  expect(sizes.held).toBeCloseTo(1.8, 1);
+  expect(sizes.stillHeld).toBeCloseTo(1.8, 1);
+  expect(sizes.closing).toBeGreaterThan(1); expect(sizes.closing).toBeLessThan(1.6);
+  await expect(page.locator('.dodge-hint, .dodge-bar')).toContainText('wait for it to move again');
+});
+
 test('waiting out the feint dodges the cut', async ({ page }) => {
   await faceTheCuckoo(page);
   const saw = await recordDodgeCalls(page);
