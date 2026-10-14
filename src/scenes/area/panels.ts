@@ -35,6 +35,9 @@ import { SoundtrackView } from '../../ui/SoundtrackView';
 import { hunting } from '../../rules/pursuit';
 import { loadPursuit } from '../../storage/pursuit';
 import { AnchorView } from '../../ui/AnchorView';
+import { PieceView } from '../../ui/PieceView';
+import { FRAGMENTS } from '../../content/piecing';
+import type { Remindable } from '../../content/piecing';
 import { ResurrectionView } from '../../ui/ResurrectionView';
 import { music } from '../../audio/music';
 import type { AreaScene } from '../AreaScene';
@@ -115,13 +118,18 @@ export function writeDown(scene: AreaScene, then: () => void) {
   scene.overlay = new AnchorView(loadMemory(), friends, (id, reminder, given) => {
     scene.overlay?.destroy();
     scene.overlay = undefined;
-    if (reminder) { save.ok = saveMemory(remind(loadMemory(), reminder.by, reminder.id)); music.effect('find'); }
-    if (id) { save.ok = saveMemory(anchor(loadMemory(), id)); music.effect('select'); }
-    if (given) { const memory = loadMemory(); save.ok = saveMemory({ ...memory, companions: remindCompanion(held(memory), memory.companions ?? INITIAL_MINDS, given.to, given.id) }); music.effect('find'); }
-    scene.renderMemory();
-    scene.setExplorationEnabled(true);
-    scene.physics.resume();
-    then();
+    const settle = () => {
+      if (reminder) { save.ok = saveMemory(remind(loadMemory(), reminder.by, reminder.id)); music.effect('find'); }
+      if (id) { save.ok = saveMemory(anchor(loadMemory(), id)); music.effect('select'); }
+      if (given) { const memory = loadMemory(); save.ok = saveMemory({ ...memory, companions: remindCompanion(held(memory), memory.companions ?? INITIAL_MINDS, given.to, given.id) }); music.effect('find'); }
+      scene.renderMemory();
+      scene.setExplorationEnabled(true);
+      scene.physics.resume();
+      then();
+    };
+    // A friend's reminder isn't handed over: they tell it in pieces, and he puts it back together.
+    if (reminder && reminder.id in FRAGMENTS) scene.overlay = new PieceView(reminder.by, reminder.id as Remindable, () => { scene.overlay?.destroy(); scene.overlay = undefined; settle(); });
+    else settle();
   }, joined);
 }
 

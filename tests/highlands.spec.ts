@@ -231,6 +231,19 @@ test('by the fire, a companion reminds the hero of what he lost, and writing it 
   await expect(asking.getByRole('radio', { name: /Vulture:/ })).toHaveCount(0);
   await asking.getByRole('radio', { name: /Bear: The kraken/ }).check();
   await page.getByRole('button', { name: 'Done' }).click();
+  // He tells it in pieces, out of order. Put back in the order told, nothing is in place, and he says so; nothing is lost by it.
+  const piecing = page.getByRole('dialog', { name: 'The bear tells you about the kraken.' });
+  await expect(piecing).toBeVisible();
+  for (let i = 0; i < 4; i++) await piecing.locator('.piecing-piece:visible').first().click();
+  await expect(piecing.locator('.piecing-says')).toContainText('Go back a little');
+  await expect(piecing.locator('.piecing-piece:visible')).toHaveCount(4);
+  expect(JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.memory.v1')))!).reminded ?? []).toEqual([]);
+  // In the order it happened: the bell, the orders, the count, the blow.
+  for (const piece of [0, 1, 2, 3]) await piecing.locator(`.piecing-piece[data-piece="${piece}"]`).click();
+  await expect(piecing.locator('.piecing-says')).toContainText('That’s how it went.');
+  await expect(piecing.locator('.piecing-place[data-right="true"]')).toHaveCount(4);
+  await piecing.getByRole('button', { name: 'Keep it' }).click();
+  await expect(piecing).toHaveCount(0);
   let memory = JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.memory.v1')))!);
   expect(memory.reminded).toEqual(['kraken']);
   // Six held, and the kraken back for now.
@@ -242,4 +255,18 @@ test('by the fire, a companion reminds the hero of what he lost, and writing it 
   await page.getByRole('button', { name: 'Done' }).click();
   memory = JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.memory.v1')))!);
   expect(memory.anchors).toEqual(['kraken']);
+});
+
+test('a place stirs a memory he has lost, once, and says nothing once he holds it again', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => localStorage.setItem('tide-keeps.memory.v1', JSON.stringify({ lost: ['home', 'name', 'vulture'], pending: false })));
+  await start(page, { ...BEAR, flags: ['bear-free', 'boar-defeated', 'vulture-free'] }, 'battlefield', 'from-fort');
+  await expect(page.locator('#sneaking')).toContainText('Sixty-one', { timeout: 6000 });
+  // Back again in the same sitting, it has already been said.
+  await page.evaluate(async () => { const { game } = await import('/src/main.ts'); game.scene.getScene('battlefield').scene.start('fort', { spawn: 'from-pass' }); });
+  await expect.poll(() => at(page, 'fort')).not.toBeNull();
+  await page.evaluate(async () => { const { game } = await import('/src/main.ts'); game.scene.getScene('fort').scene.start('battlefield', { spawn: 'from-fort' }); });
+  await expect.poll(() => at(page, 'battlefield')).not.toBeNull();
+  await page.waitForTimeout(3200);
+  await expect(page.locator('#sneaking')).not.toContainText('Sixty-one');
 });

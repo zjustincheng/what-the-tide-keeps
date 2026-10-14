@@ -416,6 +416,9 @@ The vulture's note teaches the hero to **write things down**. Once she has joine
 - **Write one memory down.** The tide can't take it at the next death. After that death it has to be written again. There is one slot, so the question at every fire is which loss you can least afford: the kraken's dodging before a hard fight, a companion before a long trip, the feast before the end.
 - **Ask a friend to remind you.** A companion who has joined, and whom the hero still remembers, can remind him of one thing he has lost (not his home or name). It is his again, perk and all, **until his next death**, when the tide takes it back as well as whatever it chooses. **Write a reminded memory down** and it stays his for good. Forget a companion and they can't remind you of anything; the frog won't remind you of anything until the viper is dead and she trusts you again.
 
+- **Putting it back together.** A friend's reminder isn't handed over: they tell it in four pieces, out of order, and the hero puts them back in the order it happened (`src/ui/PieceView.ts`, rules in `src/rules/piecing.ts`, the pieces and each friend's voice in `src/content/piecing.ts`). Wrong is never a failure: the friend corrects him, the pieces he had right stay with a tick, and the rest come back. Each memory is always told in the same scrambled order, and *Just tell me* hands it over whole.
+- **Places that stir what he lost.** Arriving somewhere tied to a memory he no longer holds (the feast hall, the harbour wall, the battlefield, the hospice) gives a line he can't place, once a session: "Sixty-one. The number comes to you here, and won't leave."
+
 Anchors and reminders are saved with the memories in `tide-keeps.memory.v1`.
 
 ## Orders

@@ -8,10 +8,13 @@ import type { Condition, Context, Effect } from '../rules/world';
 import type { Conversation } from '../content/dialogue';
 import { loadGrimoire } from '../storage/grimoire';
 import { loadMemory } from '../storage/memory';
+import { STIRS } from '../content/piecing';
+import type { Remindable } from '../content/piecing';
 import { loadWorld, saveWorld } from '../storage/world';
 import type { BattleView } from '../ui/BattleView';
 import type { ResurrectionView } from '../ui/ResurrectionView';
 import type { AnchorView } from '../ui/AnchorView';
+import type { PieceView } from '../ui/PieceView';
 import type { CookView } from '../ui/CookView';
 import type { JournalView } from '../ui/JournalView';
 import type { BestiaryView } from '../ui/BestiaryView';
@@ -63,13 +66,15 @@ import { beginBattle, beginKrakenTutorial } from './area/battles';
 import { openBestiary, openEquipment, openFishing, openJournal, openParty, openSettings, wake } from './area/panels';
 
 type Prop = { sprite: Phaser.Physics.Arcade.Sprite; hiddenIf: Condition[]; shadow?: Phaser.GameObjects.Ellipse; transition?: Phaser.Tweens.Tween };
-type Overlay = CinematicView | MemoriesView | BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView | KeepsakeView | SoundtrackView;
+type Overlay = CinematicView | MemoriesView | BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView | KeepsakeView | SoundtrackView | PieceView;
 type Panel = MemoriesView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView | KeepsakeView | SoundtrackView;
 
 // Creatures that breathe on the map even though they are only props.
 const BREATHING = new Set(['sheep', 'badger', 'rat', 'hyena']);
 // Places where the hero has been told how to leap, this session.
 const HINTED = new Set<string>();
+// Places that have stirred a lost memory this session: said once, not on every return.
+const STIRRED = new Set<string>();
 // How often hiding costs every hero a point of mana, in milliseconds.
 const HIDE_DRAIN = 2500;
 
@@ -253,6 +258,15 @@ export class AreaScene extends Phaser.Scene {
     else if (this.area.key === 'church') this.showAreaTitle('The Church');
     else this.showAreaTitle(this.town.title(this.context()));
     this.town.remember(this.context());
+    // A place tied to something he has lost stirs it: a line he can't place, when nothing else is being said.
+    this.time.delayedCall(2600, () => {
+      if (this.overlay || this.talking || this.leaving || loadMemory().pending || !element('sneaking').hidden) return;
+      const holds = held(loadMemory());
+      const id = (Object.keys(STIRS) as Remindable[]).find(memory => STIRS[memory].places.includes(this.area.key) && !holds.includes(memory) && !STIRRED.has(`${this.area.key}:${memory}`));
+      if (!id) return;
+      STIRRED.add(`${this.area.key}:${id}`);
+      this.notice(STIRS[id].line, 6500);
+    });
     this.events.once('shutdown', () => {
       this.leaving = true; this.aftermath.drop();
       // Leaving an area keeps the time it is.

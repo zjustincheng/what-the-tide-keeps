@@ -1076,3 +1076,19 @@ button.die[aria-pressed="true"] { border-color: #bc755e; color: #d8a890; }
   .party-roster[data-size="5"] .member-actions button { padding-left: 2px; padding-right: 2px; font-size: 12px; }
 }
 .party-memory { margin: 4px 0 0; font: 11px/1.4 Georgia, serif; color: #a9b6a6; font-style: italic; }
+
+/* Putting a memory back together at a fire: the friend's voice, four places in order, and the pieces they told. */
+.piecing { justify-content: flex-start; gap: 10px; }
+.piecing > * { flex-shrink: 0; width: min(560px, 100%); }
+.piecing-voice { display: flex; gap: 10px; align-items: center; }
+.piecing-voice img { width: 40px; height: 40px; image-rendering: pixelated; flex-shrink: 0; }
+.piecing-says { margin: 0; font-style: italic; color: #e6dcc0; font-size: 13px; line-height: 1.5; }
+.piecing-places { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.piecing-place { width: 100%; min-height: 40px; text-align: left; padding: 8px 10px; border: 1px dashed #6b7c58; background: #10201b; color: #6b7c58; font: 12px/1.45 Georgia, serif; cursor: pointer; }
+.piecing-place[data-filled="true"] { border-style: solid; color: #d8d0b4; background: #17271e; }
+.piecing .piecing-place[data-right="true"], .piecing .piecing-place[data-right="true"]:disabled { border: 1px solid #9bad72; color: #eef2dc; background: #1e3324; cursor: default; box-shadow: inset 3px 0 0 #9bad72; opacity: 1; }
+.piecing .piecing-place[data-right="true"]::before { content: '✓ '; color: #b8cc88; }
+.piecing-pool { display: grid; gap: 6px; }
+.piecing-piece { text-align: left; padding: 8px 10px; border: 1px solid #c2ac7388; background: #1d2a22; color: #e6dcc0; font: 12px/1.45 Georgia, serif; cursor: pointer; }
+.piecing-piece:hover, .piecing-piece:focus-visible { border-color: #e6cf94; background: #26362b; }
+.piecing-whole p:first-child { margin: 0 0 6px; padding: 10px 12px; border-left: 2px solid #9bad72; background: #10201b; color: #e6ecd2; font: 13px/1.6 Georgia, serif; }

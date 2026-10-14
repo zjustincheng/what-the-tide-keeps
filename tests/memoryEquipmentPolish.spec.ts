@@ -31,6 +31,9 @@ test('a friend’s reminder can be written down in the same visit and survives d
   await expect(page.locator('.anchor-summary')).toContainText('The trial will be protected');
   await expect(page.locator('.anchor-summary')).toContainText('replaces the page for The feast');
   await page.getByRole('button', { name: 'Done', exact: true }).click();
+  // The bear tells it; asked to just tell it, he does, and the page is written once it's whole.
+  await page.getByRole('button', { name: 'Just tell me', exact: true }).click();
+  await page.getByRole('button', { name: 'Keep it', exact: true }).click();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('tide-keeps.memory.v1')!).anchors)).toEqual(['trial']);
   await die(page); await page.locator('.cinema-skip').click();
   await expect(page.locator('.resurrection')).toContainText('Restored through the written page · The trial');
