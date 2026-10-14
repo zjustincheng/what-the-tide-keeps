@@ -1,36 +1,40 @@
 // Rebuild the placeholder city tileset and the capital's maps: the church square and the harbour below it.
 // Edit the JSON in Tiled for content work; this script resets it to the prototype.
 import { writeFileSync } from 'node:fs';
-import { rect as krect, rows, scatter, sheet, stairs, vary } from './tile-kit.mjs';
-const rect = (x,y,w,h,c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
-const cobbles = (a,b) => rect(0,0,16,16,a)+[[0,0,7,5],[8,0,8,5],[0,6,5,5],[6,6,10,5],[0,12,9,4],[10,12,6,4]].map(([x,y,w,h])=>rect(x+1,y+1,w-2,h-2,b)).join('');
-const wall = (a,b) => rect(0,0,16,16,a)+rect(0,5,16,1,b)+rect(0,11,16,1,b)+rect(5,0,1,5,b)+rect(11,6,1,5,b)+rect(3,12,1,4,b);
-const water = (a,b) => rect(0,0,16,16,a)+rect(2,4,5,1,b)+rect(9,10,5,1,b)+rect(5,13,3,1,b);
+import { ellipse, rect as krect, rows, scatter, sheet, stairs, vary } from './tile-kit.mjs';
+import { blocks, boulder, planks, shadow, water as seaWater } from './tile-art.mjs';
+const rect = (x,y,w,h,c,o) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"${o===undefined?'':` fill-opacity="${o}"`}/>`;
+// The capital: old grey stone under a low sky, lit from the upper left; the harbour green-black below the quay.
+const COURSES = [[0,0,7,5],[8,0,8,5],[0,6,5,5],[6,6,10,5],[0,12,9,4],[10,12,6,4]];
+const cobbles = (a,b) => rect(0,0,16,16,'#36342e')+COURSES.map(([x,y,w,h])=>rect(x,y,w-1,h-1,a)+rect(x,y,w-1,1,b)+rect(x,y,1,h-1,b)+rect(x+w-2,y+1,1,h-2,'#403e38')).join('');
+const wall = (a,b) => blocks(b, a, '#8a867a', '#5a564e');
+const water = (a,b) => seaWater(a, b, '#6a8a94', '#16303a');
+const flags = () => rect(0,0,16,16,'#46423c')+[[0,0,7,7],[8,0,8,7],[0,8,4,8],[5,8,11,8]].map(([x,y,w,h])=>rect(x,y,w-1,h-1,'#66625a')+rect(x,y,w-1,1,'#78746a')+rect(x,y,1,h-1,'#6e6a62')).join('');
 const TILES = [
   cobbles('#4e4c46','#5c5a52'),                                                                            // 0 cobbles
-  rect(0,0,16,16,'#5e5a52')+rect(0,0,7,7,'#68645a')+rect(8,8,8,8,'#68645a')+rect(0,15,16,1,'#46423c'),     // 1 flagstones
+  flags(), // 1 flagstones
   wall('#6a665c','#4e4a42'),                                                                               // 2 stone wall
-  rect(0,0,16,16,'#3a2e2a')+[2,6,10,14].map(y=>rect(0,y,16,1,'#2a201c')).join('')+rect(0,0,16,1,'#5a4a40'), // 3 slate roof
-  rect(0,0,16,16,'#2b2a22')+rect(1,0,14,16,'#5a4430')+rect(3,0,1,16,'#7a5e40')+rect(12,0,1,16,'#7a5e40')+rect(10,8,2,2,'#a89060'), // 4 door
-  rect(0,0,16,16,'#6a665c')+rect(0,13,16,3,'#4e4a42')+rect(4,3,8,8,'#2a3a40')+rect(7,3,2,8,'#6a665c')+rect(4,6,8,1,'#6a665c'), // 5 window
-  rect(0,0,16,16,'#4e4c46')+rect(1,1,14,14,'#6a6a62')+rect(3,3,10,10,'#2e4a50')+rect(5,5,6,6,'#3e6068')+rect(7,2,2,4,'#8a8a80'), // 6 fountain
-  rect(0,0,16,16,'#4e4c46')+rect(3,12,10,4,'#6a6a62')+rect(5,2,6,11,'#8a8a80')+rect(6,1,4,3,'#9a9a90')+rect(6,4,2,2,'#5a5a52'), // 7 statue
-  rect(0,0,16,16,'#4e4c46')+rect(0,2,16,6,'#6a3a30')+[0,4,8,12].map(x=>rect(x,2,2,6,'#c8b878')).join('')+rect(1,8,2,8,'#4a3828')+rect(13,8,2,8,'#4a3828'), // 8 market awning
-  rect(0,0,16,16,'#4e4c46')+rect(7,4,2,12,'#2a2a2a')+rect(5,1,6,4,'#3a3a36')+rect(6,2,4,2,'#e8c870'),       // 9 lamp post
+  rect(0,0,16,16,'#2a201c')+[0,4,8,12].map((y,i)=>rect(0,y,16,3,'#3a2e2a')+rect(0,y,16,1,'#4e403a')+[3,7,11,15].map(x=>rect((x+(i%2)*2)%16,y,1,3,'#2a201c')).join('')).join(''), // 3 slate roof
+  rect(0,0,16,16,'#2b2a22')+rect(1,0,14,16,'#5a4430')+[4,8,12].map(x=>rect(x,0,1,16,'#46352a')).join('')+rect(1,0,14,1,'#7a5e40')+rect(1,4,14,1,'#3a2c20')+rect(1,11,14,1,'#3a2c20')+[3,7,11].map(x=>rect(x,4,1,1,'#8a8a7a')+rect(x,11,1,1,'#8a8a7a')).join('')+rect(10,8,2,2,'#a89060')+rect(10,8,1,1,'#c8b080'), // 4 door
+  wall('#6a665c','#4e4a42')+rect(3,2,10,10,'#4e4a42')+rect(4,3,8,8,'#2a3a40')+rect(4,3,8,3,'#3a5058')+rect(7,3,2,8,'#6a665c')+rect(4,6,8,1,'#6a665c')+rect(5,4,1,1,'#8aa8b0')+rect(2,12,12,1,'#8a867a')+rect(2,13,12,1,'#000000',0.25), // 5 window
+  cobbles('#4e4c46','#5c5a52')+shadow(9,14,7,2)+ellipse(8,9,7,5.5,'#55554e')+ellipse(8,8.5,6.5,5,'#7a7a72')+ellipse(8,9,5,3.5,'#1e3a44')+ellipse(8,9,3.5,2.5,'#2e5460')+rect(7,2,2,6,'#8a8a80')+rect(7,2,1,6,'#a8a8a0')+rect(6,1,4,2,'#9a9a90')+rect(5,8,1,1,'#a8c8d0')+rect(10,10,1,1,'#a8c8d0'), // 6 fountain
+  cobbles('#4e4c46','#5c5a52')+shadow(9,15,6,1)+rect(3,12,10,4,'#6a6a62')+rect(3,12,10,1,'#8a8a80')+rect(5,3,6,10,'#8a8a80')+rect(5,3,2,10,'#a4a49a')+rect(10,3,1,10,'#6a6a62')+rect(6,0,4,4,'#9a9a90')+rect(6,1,4,2,'#5a5a52')+rect(6,1,1,1,'#7a7a72'), // 7 statue
+  rect(0,0,16,16,'#4e4c46')+rect(0,2,16,6,'#6a3a30')+[0,4,8,12].map(x=>rect(x,2,2,6,'#c8b878')+rect(x,8,2,1,'#c8b878')).join('')+rect(0,2,16,1,'#000000',0.15)+rect(1,9,2,7,'#4a3828')+rect(1,9,1,7,'#6a5036')+rect(13,9,2,7,'#4a3828')+rect(13,9,1,7,'#6a5036'), // 8 market awning
+  cobbles('#4e4c46','#5c5a52')+ellipse(8,3,5,5,'#e8c870',0.13)+shadow(9,15,3,1)+rect(7,4,2,12,'#2a2a2a')+rect(7,4,1,12,'#4a4a48')+rect(5,1,6,4,'#3a3a36')+rect(6,2,4,2,'#e8c870')+rect(7,2,2,1,'#fff0b2')+rect(5,0,6,1,'#2a2a2a'), // 9 lamp post
   rect(0,0,16,16,'#5a564e')+[0,4,8,12].map((y,i)=>rect(0,y,16,4,['#6e6a62','#625e56','#56524a','#4a463e'][i])).join(''), // 10 steps
-  rect(0,0,16,16,'#4e4c46')+[1,5,9,13].map(x=>rect(x,0,2,16,'#2a2a2e')).join('')+rect(0,7,16,2,'#2a2a2e')+rect(6,6,4,4,'#c8a858'), // 11 sealed gate
-  water('#1e3a44','#2e5460'),                                                                              // 12 harbour water
-  rect(0,0,16,16,'#5e5a52')+rect(0,12,16,4,'#3a3630')+rect(0,11,16,1,'#7a766c'),                            // 13 quay edge
-  rect(0,0,16,16,'#1e3a44')+rect(0,2,16,12,'#5a4630')+[1,5,9,13].map(x=>rect(x,2,1,12,'#3e3022')).join(''), // 14 pier planks
-  rect(0,0,16,16,'#5e5a52')+rect(5,6,6,8,'#2a2a2a')+rect(4,5,8,2,'#3a3a3a'),                                 // 15 bollard
-  rect(0,0,16,16,'#5e5a52')+rect(2,3,12,11,'#7a6040')+rect(2,3,12,1,'#9a7a50')+rect(7,3,1,11,'#5a4430'),      // 16 crates
-  rect(0,0,16,16,'#5e5a52')+rect(1,2,14,12,'#6a6a5a')+[3,7,11].map(x=>rect(x,2,1,12,'#4a4a3a')).join('')+[5,9].map(y=>rect(1,y,14,1,'#4a4a3a')).join(''), // 17 nets
-  rect(0,0,16,16,'#1e3a44')+rect(1,4,14,9,'#4a3a28')+rect(2,5,12,6,'#6a5236')+rect(7,0,2,6,'#8a7a5a'),        // 18 moored boat
-  water('#1e3a44','#2e5460')+rect(2,11,2,4,'#c8c0a8')+rect(3,8,2,3,'#d8d0b8')+rect(5,5,2,3,'#d8d0b8')+rect(7,3,3,2,'#e0d8c0')+rect(10,4,2,2,'#d8d0b8')+rect(12,6,2,3,'#c8c0a8')+rect(13,9,1,3,'#b8b098'), // 19 a kraken rib out of the water
-  rect(0,0,16,16,'#5e5a52')+rect(3,1,10,14,'#8a8b7d')+rect(4,2,8,2,'#a8a998')+rect(5,6,6,2,'#2e5460')+rect(2,14,12,2,'#6d6e63'), // 20 sea shrine
-  rect(0,0,16,16,'#5e5a52')+rect(1,3,14,12,'#4a5a5a')+rect(2,4,12,10,'#2e5460')+rect(1,3,14,1,'#8aa0a8'),      // 21 market tank
-  rect(0,0,16,16,'#3a3a36')+rect(0,0,16,3,'#4a4a46'),                                                        // 22 wall top
-  rect(0,0,16,16,'#5e5a52')+rect(2,4,12,10,'#5a4630')+rect(3,5,10,2,'#7a5e40')+rect(4,9,8,1,'#3a2e20'),        // 23 bench
+  rect(0,0,16,16,'#4e4c46')+rect(0,7,16,2,'#2a2a2e')+rect(0,7,16,1,'#4a4a4e')+[1,5,9,13].map(x=>rect(x,0,2,16,'#2a2a2e')+rect(x,0,1,16,'#4a4a4e')).join('')+rect(6,6,4,4,'#c8a858')+rect(6,6,4,1,'#e2c878')+rect(7,7,2,2,'#7a3a2a'), // 11 sealed gate
+  water('#1e3a44','#2e5460'), // 12 harbour water
+  flags()+rect(0,11,16,1,'#8a867a')+rect(0,12,16,4,'#3a3630')+rect(0,12,16,1,'#2a2622')+rect(3,14,3,1,'#2e5460',0.6), // 13 quay edge
+  rect(0,0,16,16,'#1e3a44')+planks(0,2,16,12,'#5a4630','#76603e','#2e2418')+rect(0,2,16,1,'#8a7048')+rect(0,13,16,1,'#2e2418')+rect(0,14,16,2,'#000000',0.35), // 14 pier planks
+  flags()+shadow(9,14,4,1.2)+rect(5,6,6,8,'#2a2a2a')+rect(5,6,2,8,'#4a4a48')+ellipse(8,5.5,4,1.5,'#3a3a3a')+ellipse(7.5,5,2.5,0.8,'#5a5a58'), // 15 bollard
+  flags()+shadow(9,15,7,1)+rect(2,3,12,11,'#7a6040')+rect(2,3,12,1,'#9a7a50')+rect(2,3,1,11,'#9a7a50')+rect(13,4,1,10,'#5a4430')+rect(2,8,12,1,'#5a4430')+rect(7,3,1,11,'#5a4430'), // 16 crates
+  flags()+rect(1,2,14,12,'#5a5a4a')+[3,7,11].map(x=>rect(x,2,1,12,'#3a3a2e')).join('')+[5,9].map(y=>rect(1,y,14,1,'#3a3a2e')).join('')+rect(1,2,14,1,'#7a7a68')+rect(4,6,2,2,'#c8b878')+rect(12,11,1,1,'#a8b0b0'), // 17 nets
+  water('#1e3a44','#2e5460')+ellipse(8,8.5,7.5,4.5,'#2e2418')+ellipse(8,8,6.5,3.5,'#5a4630')+ellipse(8,8,5,2.5,'#2e2418')+rect(4,8,8,1,'#6a5236')+rect(7,0,2,6,'#8a7a5a')+rect(7,0,1,6,'#a8987a'), // 18 moored boat
+  water('#1e3a44','#2e5460')+[[2,11,2,4],[3,8,2,3],[5,5,2,3],[7,3,3,2],[10,4,2,2],[12,6,2,3],[13,9,1,3]].map(([x,y,w,h])=>rect(x,y,w,h,'#c8c0a8')+rect(x,y,1,h,'#e0d8c0')).join('')+rect(1,15,4,1,'#000000',0.3), // 19 a kraken rib out of the water
+  flags()+shadow(9,15,6,1)+rect(3,1,10,14,'#8a8b7d')+rect(3,1,10,1,'#a8a998')+rect(3,1,1,13,'#a8a998')+rect(12,2,1,12,'#6a6b5e')+rect(5,6,6,2,'#2e5460')+rect(5,6,6,1,'#4a7480')+rect(6,10,4,1,'#6a6b5e')+rect(2,14,12,2,'#6d6e63'), // 20 sea shrine
+  flags()+rect(1,3,14,12,'#3a4a4a')+rect(2,4,12,10,'#1e3a44')+ellipse(8,9,4,3,'#2e5460')+rect(1,3,14,1,'#8aa0a8')+rect(3,5,2,1,'#6a8a94')+rect(14,4,1,11,'#2a3636'), // 21 market tank
+  rect(0,0,16,16,'#3a3a36')+rect(0,0,16,3,'#4a4a46')+rect(0,0,16,1,'#5e5e58')+rect(0,3,16,1,'#000000',0.3), // 22 wall top
+  flags()+shadow(8,14,7,1)+rect(2,4,12,10,'#5a4630')+rect(3,5,10,2,'#7a5e40')+rect(3,5,10,1,'#94784e')+rect(4,9,8,1,'#3a2e20')+rect(2,12,2,2,'#3a2e20')+rect(12,12,2,2,'#3a2e20'), // 23 bench
 ];
 // The city's steps, down to the harbour: steps that read as steps.
 TILES[10] = stairs({ tread: '#6e6a62', riser: '#3a3630', lip: '#8a867a', side: '#4e4a42', sideDark: '#36322c' });
@@ -51,6 +55,8 @@ TILES.push(
 );
 const svg = sheet(TILES);
 writeFileSync('public/assets/city-tiles.svg',`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="${rows(TILES)*16}" shape-rendering="crispEdges">${svg}</svg>\n`);
+// TILES_ONLY=1 redraws the tiles and leaves the maps alone: they have been edited by hand since this script made them.
+if (process.env.TILES_ONLY) process.exit(0);
 const T = Object.fromEntries(['COBBLE','FLAG','WALL','ROOF','DOOR','WINDOW','FOUNTAIN','STATUE','AWNING','LAMP','STEPS','GATE','SEA','QUAY','PIER','BOLLARD','CRATES','NETS','BOAT','BONE','SHRINE','TANK','TOP','BENCH'].map((n,i)=>[n,i+1]));
 const [GRATE,WASHING,PUMP,VAULT]=[0,1,2,3].map(i=>LANE_TILES+i);
 const SOLID = [2,3,4,5,6,7,8,9,11,12,15,16,17,18,19,20,21,22,23,GRATE-1,PUMP-1,VAULT-1];
