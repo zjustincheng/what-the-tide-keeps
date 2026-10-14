@@ -160,17 +160,26 @@ function villager(scene: Phaser.Scene, key: string, v: Villager) {
   const g = scene.make.graphics({ x: 0, y: 0 });
   if (v.child) { child(g, v); g.generateTexture(key, 20, 26); g.destroy(); return; }
   const block = (x: number, y: number, w: number, h: number, c: number) => g.fillStyle(c).fillRect(x, y, w, h);
-  block(3, 21, 14, 3, 0x27382e);
-  block(4, 10, 12, 13, v.cloth);
-  block(8, 10, 4, 13, v.trim);
-  block(5, 3, 11, 9, v.fur);
-  block(7, 6, 7, 5, v.muzzle);
-  block(8, 6, 1, 2, 0x1e2a24); block(12, 6, 1, 2, 0x1e2a24);
-  if (v.ears === 'long') { block(6, 0, 3, 6, v.fur); block(12, 0, 3, 6, v.fur); block(7, 1, 1, 4, 0xd9a6a0); block(13, 1, 1, 4, 0xd9a6a0); }
-  if (v.ears === 'wool') { block(4, 2, 13, 4, v.fur); block(3, 5, 2, 3, v.muzzle); block(16, 5, 2, 3, v.muzzle); }
-  if (v.ears === 'horns') { block(5, 0, 2, 4, 0xcfc6a5); block(14, 0, 2, 4, 0xcfc6a5); block(9, 11, 3, 3, v.muzzle); }
-  if (v.ears === 'antlers') { block(4, 0, 1, 4, 0xcbb68a); block(3, 1, 3, 1, 0xcbb68a); block(16, 0, 1, 4, 0xcbb68a); block(15, 1, 3, 1, 0xcbb68a); }
-  if (v.ears === 'pointed') { block(5, 1, 3, 3, v.fur); block(13, 1, 3, 3, v.fur); block(6, 2, 1, 1, 0x2b2420); block(14, 2, 1, 1, 0x2b2420); }
+  // Grown-ups: a head smaller than a child's on a longer body, standing on the same ground line.
+  const ink = 0x1e2a24, dark = shade(v.cloth, 0.72), hand = shade(v.fur, 0.85);
+  block(4, 22, 12, 2, 0x27382e);
+  // Legs under a long coat, the coat shaded down its right side, a darker hem, and the trim down the front.
+  block(7, 20, 2, 3, shade(v.cloth, 0.55)); block(11, 20, 2, 3, shade(v.cloth, 0.55));
+  block(5, 12, 10, 9, v.cloth); block(13, 12, 2, 9, dark); block(5, 20, 10, 1, dark);
+  block(9, 13, 2, 7, v.trim); block(7, 12, 6, 1, v.trim);
+  // Arms at the sides, with hands.
+  block(4, 13, 1, 5, dark); block(15, 13, 1, 5, shade(v.cloth, 0.6));
+  block(4, 18, 1, 1, hand); block(15, 18, 1, 1, hand);
+  // The head: rounded, eyes above the muzzle, and the muzzle's shadow for a nose.
+  block(7, 3, 6, 1, v.fur); block(6, 4, 8, 6, v.fur); block(7, 10, 6, 1, v.fur); block(12, 4, 2, 6, shade(v.fur, 0.88));
+  block(8, 7, 4, 4, v.muzzle);
+  block(7, 6, 1, 2, ink); block(12, 6, 1, 2, ink);
+  block(9, 7, 2, 1, shade(v.muzzle, 0.6));
+  if (v.ears === 'long') { block(7, 0, 2, 4, v.fur); block(11, 0, 2, 4, v.fur); block(7, 0, 1, 3, 0xd9a6a0); block(12, 0, 1, 3, 0xd9a6a0); }
+  if (v.ears === 'wool') { block(5, 2, 10, 3, v.fur); block(5, 5, 1, 3, v.fur); block(14, 5, 1, 3, v.fur); block(5, 8, 1, 1, v.muzzle); block(14, 8, 1, 1, v.muzzle); }
+  if (v.ears === 'horns') { block(6, 1, 2, 3, 0xcfc6a5); block(5, 0, 1, 2, 0xcfc6a5); block(12, 1, 2, 3, 0xcfc6a5); block(14, 0, 1, 2, 0xcfc6a5); block(9, 11, 2, 2, v.muzzle); }
+  if (v.ears === 'antlers') { block(6, 0, 1, 3, 0xcbb68a); block(5, 1, 1, 1, 0xcbb68a); block(7, 0, 1, 1, 0xcbb68a); block(13, 0, 1, 3, 0xcbb68a); block(14, 1, 1, 1, 0xcbb68a); block(12, 0, 1, 1, 0xcbb68a); }
+  if (v.ears === 'pointed') { block(6, 1, 2, 3, v.fur); block(12, 1, 2, 3, v.fur); block(6, 2, 1, 1, 0x2b2420); block(13, 2, 1, 1, 0x2b2420); }
   g.generateTexture(key, 20, 26); g.destroy();
 }
 
@@ -185,15 +194,8 @@ export function createSprites(scene: Phaser.Scene) {
   block(7, 3, 10, 9, 0x88a567); block(9, 1, 6, 3, 0x9aaf6e); block(15, 6, 4, 5, 0x88a567);
   block(13, 4, 4, 4, 0xd7d1a0); block(15, 5, 2, 2, 0x213b2e); block(10, 12, 3, 3, 0x513a2b); block(11, 12, 1, 3, 0xd1a470);
   hero.generateTexture('hero', 20, 26); hero.destroy();
-  const priest = scene.make.graphics({ x: 0, y: 0 });
-  priest.fillStyle(0x27382e).fillRect(3, 21, 14, 3);
-  priest.fillStyle(0x889080).fillRect(4, 10, 12, 13);
-  priest.fillStyle(0xb8b69b).fillRect(7, 10, 6, 13);
-  priest.fillStyle(0xc3b28a).fillRect(8, 12, 4, 3);
-  priest.fillStyle(0x978f78).fillRect(5, 3, 11, 9).fillRect(4, 0, 3, 6).fillRect(14, 0, 3, 6);
-  priest.fillStyle(0xd0c3a0).fillRect(7, 5, 7, 7);
-  priest.fillStyle(0x2b3b31).fillRect(8, 6, 1, 2).fillRect(12, 6, 1, 2);
-  priest.generateTexture('priest', 20, 26); priest.destroy();
+  // The priest: drawn like everyone else now, in the church's grey and pale vestment.
+  villager(scene, 'priest', { fur: 0x978f78, muzzle: 0xd0c3a0, cloth: 0x889080, trim: 0xb8b69b, ears: 'long' });
   for (const [key, spec] of Object.entries(VILLAGERS)) villager(scene, key, spec);
   // A gibbet: a post, an arm, and an iron cage that has not been emptied by anyone but the crows.
   const gibbet = scene.make.graphics({ x: 0, y: 0 });
