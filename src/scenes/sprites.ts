@@ -124,22 +124,53 @@ const VILLAGERS: Record<string, Villager> = {
   fence: { fur: 0x7a5a3a, muzzle: 0xe0d0b0, cloth: 0x2e2a28, trim: 0x5a4a3a, ears: 'pointed' },
 };
 
+// A shade of a colour, darker below 1 and lighter above it.
+function shade(colour: number, by: number) {
+  const channel = (shift: number) => Math.max(0, Math.min(255, Math.round(((colour >> shift) & 0xff) * by)));
+  return (channel(16) << 16) | (channel(8) << 8) | channel(0);
+}
+
+// Children are drawn as children, not as shrunken adults: a head big for the body, wide-set eyes, short arms and legs,
+// and a scarf in their trim colour. They stand on the same ground line as everyone else, and the head sits in the top
+// rows of the frame, where the dialogue portrait is cut from.
+function child(g: Phaser.GameObjects.Graphics, v: Villager) {
+  const block = (x: number, y: number, w: number, h: number, c: number) => g.fillStyle(c).fillRect(x, y, w, h);
+  const ink = 0x1e2a24, skin = shade(v.fur, 0.82);
+  block(5, 22, 10, 2, 0x27382e);
+  // Legs and feet, then a short tunic with a darker hem, and arms with a hand at the end of each.
+  block(7, 20, 2, 3, shade(v.cloth, 0.6)); block(11, 20, 2, 3, shade(v.cloth, 0.6));
+  block(6, 17, 8, 4, v.cloth); block(6, 20, 8, 1, shade(v.cloth, 0.75));
+  block(5, 17, 1, 3, shade(v.cloth, 0.85)); block(14, 17, 1, 3, shade(v.cloth, 0.85));
+  block(5, 20, 1, 1, skin); block(14, 20, 1, 1, skin);
+  block(7, 16, 6, 2, v.trim); block(11, 18, 1, 2, v.trim);
+  // A round head: the corners left out. Wide-set eyes with a glint, and a muzzle below them.
+  block(6, 7, 8, 1, v.fur); block(5, 8, 10, 7, v.fur); block(6, 15, 8, 1, v.fur);
+  block(7, 12, 6, 4, v.muzzle);
+  block(6, 10, 2, 2, ink); block(12, 10, 2, 2, ink); block(6, 10, 1, 1, 0xd8dcd0); block(12, 10, 1, 1, 0xd8dcd0);
+  block(9, 12, 2, 1, shade(v.muzzle, 0.55));
+  if (v.ears === 'long') { block(6, 2, 2, 6, v.fur); block(12, 2, 2, 6, v.fur); block(7, 3, 1, 4, 0xd9a6a0); block(12, 3, 1, 4, 0xd9a6a0); }
+  if (v.ears === 'wool') { block(5, 6, 10, 3, v.fur); block(4, 7, 1, 2, v.fur); block(15, 7, 1, 2, v.fur); block(4, 10, 1, 2, skin); block(15, 10, 1, 2, skin); }
+  // Horns come in as buds; a fawn's antlers haven't come in at all.
+  if (v.ears === 'horns') { block(6, 5, 2, 2, 0xcfc6a5); block(12, 5, 2, 2, 0xcfc6a5); block(4, 10, 1, 2, v.fur); block(15, 10, 1, 2, v.fur); }
+  if (v.ears === 'antlers') { block(6, 6, 1, 1, 0xcbb68a); block(13, 6, 1, 1, 0xcbb68a); }
+  if (v.ears === 'pointed') { block(5, 5, 3, 3, v.fur); block(12, 5, 3, 3, v.fur); block(6, 6, 1, 1, 0x2b2420); block(13, 6, 1, 1, 0x2b2420); }
+}
+
 function villager(scene: Phaser.Scene, key: string, v: Villager) {
   const g = scene.make.graphics({ x: 0, y: 0 });
+  if (v.child) { child(g, v); g.generateTexture(key, 20, 26); g.destroy(); return; }
   const block = (x: number, y: number, w: number, h: number, c: number) => g.fillStyle(c).fillRect(x, y, w, h);
-  // Children stand lower and narrower in the same frame.
-  const dy = v.child ? 6 : 0, inset = v.child ? 2 : 0;
-  block(3 + inset, 21, 14 - inset * 2, 3, 0x27382e);
-  block(4 + inset, 10 + dy, 12 - inset * 2, 13 - dy, v.cloth);
-  block(8, 10 + dy, 4, 13 - dy, v.trim);
-  block(5 + inset, 3 + dy, 11 - inset * 2, 9 - (v.child ? 1 : 0), v.fur);
-  block(7 + inset, 6 + dy, 7 - inset * 2, 5, v.muzzle);
-  block(8 + inset, 6 + dy, 1, 2, 0x1e2a24); block(12 - inset, 6 + dy, 1, 2, 0x1e2a24);
-  if (v.ears === 'long') { block(6, 0 + dy, 3, 6, v.fur); block(12, 0 + dy, 3, 6, v.fur); block(7, 1 + dy, 1, 4, 0xd9a6a0); block(13, 1 + dy, 1, 4, 0xd9a6a0); }
-  if (v.ears === 'wool') { block(4 + inset, 2 + dy, 13 - inset * 2, 4, v.fur); block(3 + inset, 5 + dy, 2, 3, v.muzzle); block(16 - inset, 5 + dy, 2, 3, v.muzzle); }
-  if (v.ears === 'horns') { block(5, 0 + dy, 2, 4, 0xcfc6a5); block(14, 0 + dy, 2, 4, 0xcfc6a5); block(9, 11 + dy, 3, 3, v.muzzle); }
+  block(3, 21, 14, 3, 0x27382e);
+  block(4, 10, 12, 13, v.cloth);
+  block(8, 10, 4, 13, v.trim);
+  block(5, 3, 11, 9, v.fur);
+  block(7, 6, 7, 5, v.muzzle);
+  block(8, 6, 1, 2, 0x1e2a24); block(12, 6, 1, 2, 0x1e2a24);
+  if (v.ears === 'long') { block(6, 0, 3, 6, v.fur); block(12, 0, 3, 6, v.fur); block(7, 1, 1, 4, 0xd9a6a0); block(13, 1, 1, 4, 0xd9a6a0); }
+  if (v.ears === 'wool') { block(4, 2, 13, 4, v.fur); block(3, 5, 2, 3, v.muzzle); block(16, 5, 2, 3, v.muzzle); }
+  if (v.ears === 'horns') { block(5, 0, 2, 4, 0xcfc6a5); block(14, 0, 2, 4, 0xcfc6a5); block(9, 11, 3, 3, v.muzzle); }
   if (v.ears === 'antlers') { block(4, 0, 1, 4, 0xcbb68a); block(3, 1, 3, 1, 0xcbb68a); block(16, 0, 1, 4, 0xcbb68a); block(15, 1, 3, 1, 0xcbb68a); }
-  if (v.ears === 'pointed') { block(5, 1 + dy, 3, 3, v.fur); block(13, 1 + dy, 3, 3, v.fur); block(6, 2 + dy, 1, 1, 0x2b2420); block(14, 2 + dy, 1, 1, 0x2b2420); }
+  if (v.ears === 'pointed') { block(5, 1, 3, 3, v.fur); block(13, 1, 3, 3, v.fur); block(6, 2, 1, 1, 0x2b2420); block(14, 2, 1, 1, 0x2b2420); }
   g.generateTexture(key, 20, 26); g.destroy();
 }
 
