@@ -193,3 +193,25 @@ test('a dodge answers on the ring itself: a burst and the word', async ({ page }
   await pressAt(page, 0);
   await expect.poll(() => page.evaluate(() => (window as unknown as { dodgeWords: string[] }).dodgeWords)).toContainEqual(expect.stringMatching(/DODGED|GRAZED/));
 });
+
+test('the first heavy blow ever is taught and forgiving; after that, a parry is the real thing', async ({ page }) => {
+  // Late by more than a heavy blow allows, but within what an ordinary dodge does: from the rules, for whoever is targeted.
+  const lateBy = () => page.evaluate(async () => {
+    const { agility, nextStrike, DODGE, HEAVY } = await import('/src/rules/battle.ts');
+    const { game } = await import('/src/main.ts');
+    const quick = agility(nextStrike(game.scene.getScene('church').overlay.state)!.target);
+    return Math.round((DODGE.perfect * HEAVY.window + DODGE.perfect) / 2 * quick);
+  });
+  await faceAHeavyBlow(page);
+  await expect(page.locator('.parry-lesson')).toContainText('has to be met');
+  let saw = await recordDodgeCalls(page);
+  await strike(page, [0, 1, 2], await lateBy());
+  await saw('Parried!');
+  expect(await page.evaluate(() => localStorage.getItem('tide-keeps.parried.v1'))).toBe('true');
+  // Taught once: the next heavy blow comes straight away, and the same lateness only grazes.
+  await faceAHeavyBlow(page);
+  await expect(page.locator('.parry-lesson')).toHaveCount(0);
+  saw = await recordDodgeCalls(page);
+  await strike(page, [0, 1, 2], await lateBy());
+  await saw('Grazed · partial parry.');
+});

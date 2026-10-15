@@ -21,7 +21,7 @@ export function enter(screen: HTMLElement, heading: HTMLElement, field: HTMLElem
     .finished.then(() => slash.remove(), () => slash.remove());
 }
 
-// The path from 1 to 2 to 3, drawn a stretch at a time as each next circle appears.
+// The path from 1 to 2 to 3, a stretch at a time as each next circle appears.
 export function trace(field: HTMLElement, layout: readonly (readonly [number, number])[], appear: readonly number[]) {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('class', 'parry-path'); svg.setAttribute('viewBox', '0 0 100 100'); svg.setAttribute('preserveAspectRatio', 'none');
@@ -30,9 +30,9 @@ export function trace(field: HTMLElement, layout: readonly (readonly [number, nu
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.setAttribute('x1', String(fx * 100)); line.setAttribute('y1', String(fy * 100));
     line.setAttribute('x2', String(x * 100)); line.setAttribute('y2', String(y * 100));
-    line.setAttribute('pathLength', '1'); line.setAttribute('vector-effect', 'non-scaling-stroke');
+    line.setAttribute('vector-effect', 'non-scaling-stroke');
     svg.append(line);
-    line.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 260, delay: appear[i + 1], easing: 'ease-out', fill: 'both' });
+    line.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: appear[i + 1], easing: 'ease-out', fill: 'both' });
   });
   field.prepend(svg);
 }

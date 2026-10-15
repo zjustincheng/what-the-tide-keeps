@@ -11,6 +11,7 @@ import type { Supplies, SupplyId } from '../rules/economy';
 
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
 import { burst, dodgeBurst, enter, finish, OUTRO, popIn, trace } from './parryFx';
+import { parried, rememberParry } from '../storage/parry';
 import { music } from '../audio/music';
 import { beaten, sighted } from '../storage/bestiary';
 import type { Effect as Sound } from '../audio/effects';
@@ -20,6 +21,8 @@ import type { Tableau } from '../presentation/stories';
 import { reclaimedMemories } from '../content/reclaimedMemories';
 import type { MemoryId } from '../rules/memory';
 
+// How long the first parry ever waits before its circles come, so what to do can be read.
+const TEACH = 1600;
 const PHASE_SETS: Partial<Record<Encounter, Tableau>> = {
   boar: 'farmhouse', hyena: 'ossuary', viper: 'apothecary', cuckoo: 'house-hall',
   cuttlefish: 'sea', human: 'laboratory', warden: 'church',
@@ -550,8 +553,11 @@ export class BattleView {
       hint = 'Space or tap · inside the gold';
     }
     // A heavy blow is parried: numbered circles, each landing a beat after the last. Strike them in order as each ring closes.
-    const times = circleTimes(lead), struck: Dodge[] = [];
-    const late = (next.move.window?.graze ?? DODGE.graze) * quick * (this.state.techniques.includes('footing') ? FOOTING : 1);
+    // The first one ever is taught: a moment to read what to do before the circles come, and an ordinary dodge's windows.
+    const teaching = kind === 'circles' && !parried();
+    const parrying = teaching ? { ...next.move, window: { perfect: DODGE.perfect, graze: DODGE.graze } } : next.move;
+    const times = circleTimes(lead).map(at => at + (teaching ? TEACH : 0)), struck: Dodge[] = [];
+    const late = (parrying.window?.graze ?? DODGE.graze) * quick * (this.state.techniques.includes('footing') ? FOOTING : 1);
     let circles: HTMLButtonElement[] = [];
     let parryScreen: HTMLElement | undefined, parryField: HTMLElement | undefined;
     if (kind === 'circles') {
@@ -580,7 +586,16 @@ export class BattleView {
       const heading = document.createElement('p'); heading.className = 'parry-call'; heading.textContent = `${call} Parry!`;
       const instruction = document.createElement('p'); instruction.className = 'dodge-instruction';
       instruction.textContent = 'Strike 1, 2, 3 in order, each as its ring closes. Space strikes the next.';
-      screen.append(heading, field, instruction);
+      let lessonText: HTMLElement | undefined;
+      if (teaching) {
+        // Said once, plainly, before the first circle comes.
+        const lesson = document.createElement('p'); lesson.className = 'parry-lesson';
+        lesson.textContent = 'A heavy blow can’t be stepped out of: it has to be met. When each ring closes on its circle, strike it, 1, then 2, then 3. This first one is gentler.';
+        screen.dataset.teaching = 'true';
+        lessonText = lesson;
+        this.later(() => lesson.classList.add('parry-lesson-done'), TEACH);
+      }
+      screen.append(heading, ...(lessonText ? [lessonText] : []), field, instruction);
       trace(field, layout, times.map(at => at - lead));
       this.root.append(screen); enter(screen, heading, field);
       // The screen outlives the prompt by a moment, to play its end, then goes.
@@ -598,7 +613,7 @@ export class BattleView {
       impact, kind,
       answer: (dodge, early = false, reason) => {
         clearTimeout(this.timer); cancelAnimationFrame(sweep); this.prompt = undefined;
-        if (parryScreen) { const screen = parryScreen; finish(screen, dodge); this.later(() => screen.remove(), OUTRO); }
+        if (parryScreen) { const screen = parryScreen; finish(screen, dodge); this.later(() => screen.remove(), OUTRO); if (teaching) rememberParry(); }
         // Every other dodge answers where the eye was: the ring, the keys, or the bar.
         else dodgeBurst(bar, kind === 'ring' ? ring : kind === 'keys' ? sequence ?? null : bar.querySelector('.dodge-meter'), dodge);
         // The ring stays up in its result's colour while the panel does, so the burst sits on it; the next prompt clears it.
@@ -630,7 +645,7 @@ export class BattleView {
         // Out of order, the parry breaks.
         if (index !== struck.length) { circles[index]?.setAttribute('data-result', 'miss'); if (parryField && circles[index]) burst(parryField, circles[index], 'miss'); this.prompt?.answer('miss', false, 'Out of order · hit.'); return; }
         const error = performance.now() - (started + times[index]);
-        const dodge = grade(error, next.move, quick, this.state.techniques.includes('footing'));
+        const dodge = grade(error, parrying, quick, this.state.techniques.includes('footing'));
         circles[index].dataset.result = dodge;
         if (parryField) burst(parryField, circles[index], dodge);
         if (dodge === 'miss') { this.prompt?.answer('miss', error < 0, error < 0 ? 'Too soon · hit.' : 'Too slow · hit.'); return; }

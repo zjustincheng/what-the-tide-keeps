@@ -21,12 +21,6 @@ button:focus-visible { outline: 2px solid #dace9c; outline-offset: 3px; }
 .cinematic[data-art="kraken"] .cinema-set { animation: kraken-heave 8s ease-in-out infinite alternate; transform-origin: 65% 100%; }
 .cinematic[data-art="kraken"] .cinema-actors { left: 4%; right: 4%; bottom: 1%; justify-content: space-around; gap: 2px; }
 .cinematic[data-art="kraken"] .cinema-actors img { width: clamp(38px, 9vw, 90px); max-height: 155px; filter: drop-shadow(0 0 8px #9bd2d277) drop-shadow(0 12px 10px #000c); }
-.cinematic[data-story="waking"][data-art="kraken"][data-shot="0"] .cinema-actors img { animation: heroes-brace .85s ease-in-out infinite alternate; }
-.cinematic[data-story="waking"][data-art="kraken"][data-shot="1"] .cinema-actors img:nth-child(2) { animation: hero-lunge .8s ease-in-out infinite alternate; }
-.cinematic[data-story="waking"][data-art="kraken"][data-shot="1"] .cinema-actors img:nth-child(3) { animation: hero-dive .9s ease-in-out infinite alternate; }
-.cinematic[data-story="waking"][data-art="kraken"][data-shot="1"] .cinema-actors img:nth-child(4) { animation: hero-cast .9s ease-in-out infinite alternate; }
-.cinematic[data-story="waking"][data-art="kraken"][data-shot="1"] .cinema-actors img:nth-child(5) { animation: hero-cast .8s ease-in-out infinite alternate-reverse; }
-.cinematic[data-story="waking"][data-art="kraken"][data-shot="2"] .cinema-actors img:first-child { animation: hero-lunge .48s ease-in-out infinite alternate; }
 .cinematic[data-art="kraken"] .cinema-dust { opacity: .6; background-size: 53px 43px, 81px 67px; }
 .cinematic.cinema-blackout .cinema-picture { animation: feast-blackout 1.4s ease-in both; }
 .cinematic.cinema-sentence .cinema-picture::before { content: ''; position: absolute; z-index: 3; inset: 0; background: #a71923; opacity: 0; pointer-events: none; animation: brand-red 1.6s ease-out both; }
@@ -35,7 +29,7 @@ button:focus-visible { outline: 2px solid #dace9c; outline-offset: 3px; }
 .cinematic.cinema-trial .cinema-actors { bottom: 7%; }
 .cinematic.cinema-trial .cinema-actors img[data-actor="hero"] { width: clamp(48px, 8vw, 76px); }
 .cinematic.cinema-sentence .court-gavel { transform-box: view-box; transform-origin: 493px 232px; animation: gavel-strike .65s ease-in both; }
-.cinematic.cinema-trial[data-shot="10"] .cinema-picture { animation: judge-impact .45s .48s ease-in-out 2; }
+.cinematic.cinema-sentence .cinema-picture { animation: judge-impact .45s .48s ease-in-out 2; }
 .cinematic.cinematic-reveal { pointer-events: none; border-color: transparent; background: transparent; transition: background 1s ease, border-color 1s ease; }
 .cinematic.cinematic-reveal .cinema-letterbox, .cinematic.cinematic-reveal .cinema-picture, .cinematic.cinematic-reveal .cinema-copy { opacity: 0; transition: opacity .85s ease; }
 .cinema-actors { position: absolute; bottom: 7%; left: 16%; right: 16%; display: flex; justify-content: space-evenly; gap: 18px; align-items: end; }
@@ -56,9 +50,6 @@ button:focus-visible { outline: 2px solid #dace9c; outline-offset: 3px; }
 .cinematic[data-art^="feast"] .cinema-actors img { max-width: 100%; }
 .cinematic[data-art^="feast"] .cinema-actors img:nth-child(3) { grid-column: 4; }
 .cinematic[data-art^="feast"] .cinema-actors img:nth-child(4), .cinematic[data-art^="feast"] .cinema-actors img:nth-child(2):last-child { grid-column: 5; }
-.cinematic[data-story="waking"][data-shot="4"] .cinema-actors { bottom: 18%; left: 8%; right: 8%; grid-template-columns: 1fr 1fr .8fr 1fr 1fr; }
-.cinematic[data-story="waking"][data-shot="4"] .cinema-actors img:first-child { grid-column: 2; }
-.cinematic[data-story="waking"][data-shot="4"] .cinema-actors img:last-child { grid-column: 4; }
 .cinematic[data-art="lighthouse"] .cinema-actors { justify-content: flex-end; right: 25%; }
 .cinema-dust { position: absolute; inset: -40px; pointer-events: none; opacity: .25; background-image: radial-gradient(circle, #e5d6a8 0 1px, transparent 1.5px), radial-gradient(circle, #b4e3e4 0 1px, transparent 1.5px); background-size: 117px 79px, 173px 127px; background-position: 22px 18px, 91px 61px; animation: cinema-dust 20s linear infinite; }
 .cinema-copy { position: relative; padding: 22px clamp(20px, 7vw, 72px) 24px; background: radial-gradient(ellipse at 50% 0, #1a2e35, #071014 75%); flex-shrink: 0; }
@@ -119,10 +110,6 @@ button:focus-visible { outline: 2px solid #dace9c; outline-offset: 3px; }
 @keyframes cinema-breathe { to { transform: translateY(-5px); } }
 @keyframes cinema-dust { to { transform: translate(32px, -40px); } }
 @keyframes kraken-heave { from { transform: scale(1.02) translateY(1%); } to { transform: scale(1.12) translateY(-2%); } }
-@keyframes heroes-brace { from { transform: translateY(0); } to { transform: translateY(-3px); } }
-@keyframes hero-lunge { from { transform: translate(0, 0) rotate(0); } to { transform: translate(12px, -18px) rotate(-8deg); } }
-@keyframes hero-dive { from { transform: translateY(0) rotate(0); } to { transform: translate(8px, -26px) rotate(13deg); } }
-@keyframes hero-cast { from { transform: translateY(0) scale(1); filter: brightness(1); } to { transform: translateY(-6px) scale(1.08); filter: brightness(1.8) drop-shadow(0 0 10px #a9e9e2); } }
 @keyframes area-title-arrive { 0% { opacity: 0; translate: 0 8px; } 18%, 72% { opacity: 1; translate: 0 0; } 100% { opacity: 0; translate: 0 -4px; } }
 @keyframes feast-blackout { 0% { filter: none; } 40% { filter: blur(2px) saturate(.65); } 100% { filter: blur(8px) saturate(.2) brightness(.25); } }
 @keyframes brand-red { 0%, 25% { opacity: 0; } 42% { opacity: .88; } 55% { opacity: .55; } 68% { opacity: .82; } 100% { opacity: 0; } }
