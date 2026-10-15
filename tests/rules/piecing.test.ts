@@ -24,3 +24,12 @@ test('each friend has a voice for it, and each memory a place that stirs it', ()
   // A memory of a friend never needs that friend to tell it.
   for (const id of Object.keys(FRAGMENTS)) assert.equal(FRAGMENTS[id as keyof typeof FRAGMENTS].length, 4);
 });
+
+test('a friend asks two things only someone who was there would know, with the true answer in a different place each time', async () => {
+  const { ASKING, HEARING } = await import('../../src/content/piecing.ts');
+  const { answerOrder } = await import('../../src/rules/piecing.ts');
+  const all = [...ASKING.feast, ...ASKING.kraken, ...Object.values(ASKING.hero).flat()];
+  for (const question of all) assert.equal(new Set(question.answers).size, 3, question.ask);
+  for (const who of ['bear', 'vulture', 'frog', 'octopus'] as const) { assert.equal(ASKING.hero[who].length, 2); assert.ok(HEARING[who].wrong && HEARING[who].right); }
+  assert.deepEqual([0, 1, 2].map(q => answerOrder(q).indexOf(0)), [1, 2, 0]);
+});

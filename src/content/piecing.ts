@@ -73,3 +73,43 @@ export const STIRS: Record<Remindable, { places: readonly string[]; line: string
   octopus: { places: ['open-water', 'sea-pens'], line: 'The colour of the water against the stones. You have seen something take that colour.' },
   training: { places: ['ring'], line: 'They circle, and your weight shifts before theirs does. You don’t know where you learned that.' },
 };
+
+// The other way round: a friend who has lost something asks the hero about it, and he has to know.
+// Each question has the true answer first; the screen mixes them. Their craft can't be given back, so it is never asked.
+export type Question = { ask: string; answers: readonly [string, string, string] };
+export const ASKING: { feast: readonly Question[]; kraken: readonly Question[]; hero: Record<Companion, readonly Question[]> } = {
+  feast: [
+    { ask: 'You say we didn’t do it. Then tell me: what did the rulers swear, at the feast?', answers: ['No nation above another. No citizen hunted for what they are.', 'That the five of us would sit on the regency.', 'That the sea envoys would be sent home.'] },
+    { ask: 'And who filled the cups?', answers: ['A hooded servant.', 'The church official.', 'The bear, for everyone.'] },
+  ],
+  kraken: [
+    { ask: 'On the harbour wall. Who held the front?', answers: ['The bear.', 'The octopus.', 'Nobody. We all ran at it.'] },
+    { ask: 'How did we know when to brace?', answers: ['The vulture counted the waves out loud.', 'The harbour bell stopped.', 'The frog shouted.'] },
+  ],
+  hero: {
+    bear: [
+      { ask: 'You talk like we know each other. What do I drink to?', answers: ['To coming back.', 'To the regency.', 'To the ones we lost.'] },
+      { ask: 'Which piece of the bread do I take?', answers: ['The burnt crust nobody else wants.', 'The first piece.', 'None. I give mine away.'] },
+    ],
+    vulture: [
+      { ask: 'If you know me, tell me how many I buried.', answers: ['Sixty-one.', 'Forty.', 'None. You never stayed to bury anyone.'] },
+      { ask: 'Where do I sit?', answers: ['Never with my back to a door.', 'Closest to the fire.', 'Wherever I’m told.'] },
+    ],
+    frog: [
+      { ask: 'What do I measure a dose in?', answers: ['Tenths of a drop.', 'Spoonfuls.', 'By eye.'] },
+      { ask: 'What do I keep in the small book?', answers: ['Every wound the five of us took.', 'Recipes.', 'The names of the dead.'] },
+    ],
+    octopus: [
+      { ask: 'If I taught you something, show me. The knot.', answers: ['Over, under, back through.', 'Under, over, and pull.', 'A bowline, twice.'] },
+      { ask: 'What colour was I, the first time?', answers: ['The colour of the stones.', 'Red, like now.', 'No colour at all.'] },
+    ],
+  },
+};
+
+// How each friend takes an answer: one that isn't true, and the one that is.
+export const HEARING: Record<Companion, { wrong: string; right: string }> = {
+  bear: { wrong: 'He frowns. “No. I don’t think so.”', right: 'He goes still. “…Yes. It was.”' },
+  vulture: { wrong: '“No.” She doesn’t look away.', right: 'She looks at you properly. “…You were there.”' },
+  frog: { wrong: '“That’s not right.” She writes something down anyway.', right: '“That’s right. How do you—” Then, quietly: “Oh.”' },
+  octopus: { wrong: 'Its colour doesn’t change.', right: 'Its colour goes warm.' },
+};

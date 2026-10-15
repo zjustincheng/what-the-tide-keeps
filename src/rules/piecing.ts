@@ -15,3 +15,8 @@ export function settle(placed: readonly number[]): { right: boolean[]; whole: bo
   const right = placed.map((piece, place) => piece === place);
   return { right, whole: placed.length === 4 && right.every(Boolean) };
 }
+
+// Where each answer sits when a friend asks: the true one (0) moves from question to question, so it can't be learned by place.
+export function answerOrder(question: number): readonly number[] {
+  return [[1, 0, 2], [2, 1, 0], [0, 2, 1]][question % 3];
+}

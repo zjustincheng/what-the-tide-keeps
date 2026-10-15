@@ -1092,3 +1092,5 @@ button.die[aria-pressed="true"] { border-color: #bc755e; color: #d8a890; }
 .piecing-piece { text-align: left; padding: 8px 10px; border: 1px solid #c2ac7388; background: #1d2a22; color: #e6dcc0; font: 12px/1.45 Georgia, serif; cursor: pointer; }
 .piecing-piece:hover, .piecing-piece:focus-visible { border-color: #e6cf94; background: #26362b; }
 .piecing-whole p:first-child { margin: 0 0 6px; padding: 10px 12px; border-left: 2px solid #9bad72; background: #10201b; color: #e6ecd2; font: 13px/1.6 Georgia, serif; }
+.giving .piecing-piece[data-wrong="true"] { text-decoration: line-through; opacity: .45; cursor: default; }
+.giving-heard { margin: 0; min-height: 1.5em; font-size: 12px; font-style: italic; color: #b9c3ad; padding-left: 50px; }

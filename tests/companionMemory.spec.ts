@@ -54,6 +54,20 @@ test('at a fire, the hero can give the frog back the feast, and she believes aga
   await expect(gift).toBeVisible();
   await gift.check();
   await page.getByRole('button', { name: 'Done', exact: true }).click();
+  // She asks him about it. A wrong answer is struck, and nothing is given until he knows.
+  const asking = page.getByRole('dialog', { name: 'You tell the frog about the feast.' });
+  await expect(asking.locator('.piecing-says')).toContainText('what did the rulers swear');
+  await asking.getByRole('button', { name: 'That the five of us would sit on the regency.' }).click();
+  await expect(asking.locator('.giving-heard')).toContainText('She writes something down anyway');
+  await expect(asking.locator('.piecing-says')).toContainText('what did the rulers swear');
+  await expect(asking.locator('[data-wrong="true"]')).toBeDisabled();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('tide-keeps.memory.v1') ?? '{}').companions?.frog?.reminded)).toBeUndefined();
+  await asking.getByRole('button', { name: /No nation above another/ }).click();
+  await expect(asking.locator('.piecing-says')).toContainText('who filled the cups');
+  await asking.getByRole('button', { name: 'A hooded servant.' }).click();
+  await expect(asking.locator('.giving-heard')).toContainText('Oh.');
+  await asking.getByRole('button', { name: 'Sit with them' }).click();
+  await expect(asking).toHaveCount(0);
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('tide-keeps.memory.v1')!));
   expect(saved.companions.frog.reminded).toEqual(['feast']);
 });

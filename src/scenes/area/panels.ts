@@ -36,6 +36,7 @@ import { hunting } from '../../rules/pursuit';
 import { loadPursuit } from '../../storage/pursuit';
 import { AnchorView } from '../../ui/AnchorView';
 import { PieceView } from '../../ui/PieceView';
+import { GiveView } from '../../ui/GiveView';
 import { FRAGMENTS } from '../../content/piecing';
 import type { Remindable } from '../../content/piecing';
 import { ResurrectionView } from '../../ui/ResurrectionView';
@@ -127,9 +128,14 @@ export function writeDown(scene: AreaScene, then: () => void) {
       scene.physics.resume();
       then();
     };
+    // Giving a friend something back: they ask him about it, and he has to know.
+    const give = () => {
+      if (given && given.id !== 'craft') scene.overlay = new GiveView(given.to, given.id, () => { scene.overlay?.destroy(); scene.overlay = undefined; settle(); });
+      else settle();
+    };
     // A friend's reminder isn't handed over: they tell it in pieces, and he puts it back together.
-    if (reminder && reminder.id in FRAGMENTS) scene.overlay = new PieceView(reminder.by, reminder.id as Remindable, () => { scene.overlay?.destroy(); scene.overlay = undefined; settle(); });
-    else settle();
+    if (reminder && reminder.id in FRAGMENTS) scene.overlay = new PieceView(reminder.by, reminder.id as Remindable, () => { scene.overlay?.destroy(); scene.overlay = undefined; give(); });
+    else give();
   }, joined);
 }
 
