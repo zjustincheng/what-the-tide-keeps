@@ -180,3 +180,16 @@ test('struck out of order, the parry breaks and the blow lands', async ({ page }
   await strike(page, [1]);
   await saw('Out of order · hit.');
 });
+
+test('a dodge answers on the ring itself: a burst and the word', async ({ page }) => {
+  await enterLocust(page);
+  await page.evaluate(() => {
+    const words: string[] = (window as unknown as { dodgeWords: string[] }).dodgeWords = [];
+    new MutationObserver(records => { for (const record of records) for (const node of record.addedNodes) if (node instanceof HTMLElement && node.classList.contains('dodge-word')) words.push(node.textContent ?? ''); })
+      .observe(document.body, { childList: true, subtree: true });
+  });
+  await attackAll(page);
+  await expect(page.locator('.dodge-ring')).toHaveCount(1);
+  await pressAt(page, 0);
+  await expect.poll(() => page.evaluate(() => (window as unknown as { dodgeWords: string[] }).dodgeWords)).toContainEqual(expect.stringMatching(/DODGED|GRAZED/));
+});

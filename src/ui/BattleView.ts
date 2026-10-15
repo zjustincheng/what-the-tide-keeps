@@ -10,7 +10,7 @@ import { BOUNTY, SUPPLIES, SUPPLY_IDS } from '../rules/economy';
 import type { Supplies, SupplyId } from '../rules/economy';
 
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
-import { burst, enter, finish, OUTRO, popIn, trace } from './parryFx';
+import { burst, dodgeBurst, enter, finish, OUTRO, popIn, trace } from './parryFx';
 import { music } from '../audio/music';
 import { beaten, sighted } from '../storage/bestiary';
 import type { Effect as Sound } from '../audio/effects';
@@ -514,6 +514,8 @@ export class BattleView {
     const call = `${next.move.heavy ? 'Heavy · ' : ''}${next.move.name} → ${MEMBERS[next.target.id].name}.`;
     const pieces: HTMLElement[] = [ring];
     let hint = feint ? 'It stops, then strikes · wait for it to move again' : next.move.heavy ? 'A heavy blow · the moment is short: press right as it closes' : 'Space or tap · as the ring closes';
+    // A ring left showing the last result gives way to the new one.
+    bar.querySelectorAll('.dodge-ring').forEach(old => old.remove());
     if (kind === 'ring') { bar.insertBefore(ring, button); this.root.dataset.impact = String(impact); }
     let keys: number[] = [];
     let sequence: HTMLElement | undefined;
@@ -597,6 +599,10 @@ export class BattleView {
       answer: (dodge, early = false, reason) => {
         clearTimeout(this.timer); cancelAnimationFrame(sweep); this.prompt = undefined;
         if (parryScreen) { const screen = parryScreen; finish(screen, dodge); this.later(() => screen.remove(), OUTRO); }
+        // Every other dodge answers where the eye was: the ring, the keys, or the bar.
+        else dodgeBurst(bar, kind === 'ring' ? ring : kind === 'keys' ? sequence ?? null : bar.querySelector('.dodge-meter'), dodge);
+        // The ring stays up in its result's colour while the panel does, so the burst sits on it; the next prompt clears it.
+        if (kind === 'ring') { pieces.splice(pieces.indexOf(ring), 1); this.later(() => ring.remove(), 700); }
         card.dataset.targeted = 'false';
         delete this.root.dataset.impact;
         pieces.forEach(piece => piece.querySelectorAll<HTMLButtonElement>('button').forEach(key => key.disabled = true));

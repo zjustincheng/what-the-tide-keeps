@@ -1138,3 +1138,5 @@ button.die[aria-pressed="true"] { border-color: #bc755e; color: #d8a890; }
 .parry-verdict { position: absolute; left: 0; right: 0; top: 50%; margin: -0.6em 0 0; text-align: center; pointer-events: none; font: 700 clamp(34px, 7vw, 64px) Georgia, serif; letter-spacing: .14em; color: #eef6d0; text-shadow: 0 0 24px #9bad72, 0 2px 0 #1e3324; }
 .parry-verdict[data-result="graze"] { color: #f2dca0; text-shadow: 0 0 20px #c1a05f; }
 .parry-verdict[data-result="miss"] { color: #f2a08a; text-shadow: 0 0 24px #bc755e, 0 2px 0 #3a1a14; }
+.dodge-bar .dodge-wave { width: 56px; height: 56px; }
+.dodge-bar .parry-word { font-size: 11px; z-index: 3; }

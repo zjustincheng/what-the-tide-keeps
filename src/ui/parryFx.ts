@@ -89,3 +89,36 @@ export function finish(screen: HTMLElement, result: Dodge) {
   }
   screen.animate([{ opacity: 1 }, { opacity: 1, offset: .6 }, { opacity: 0 }], { duration: OUTRO, fill: 'forwards' });
 }
+
+// An ordinary dodge's answer, where the player was looking: on the ring, the keys, or the bar.
+// A smaller cousin of the parry's burst. It goes on the dodge panel itself, which stays up a moment after the prompt clears.
+export function dodgeBurst(panel: HTMLElement, from: Element | null, result: Dodge) {
+  const box = panel.getBoundingClientRect(), at = (from ?? panel).getBoundingClientRect();
+  const x = at.left + at.width / 2 - box.left, y = at.top + at.height / 2 - box.top;
+  const place = (className: string) => {
+    const element = document.createElement('span'); element.className = className; element.dataset.result = result;
+    element.style.left = `${x}px`; element.style.top = `${y}px`; panel.append(element); return element;
+  };
+  const gone = (animation: Animation, element: Element) => animation.finished.then(() => element.remove(), () => element.remove());
+  const word = place('parry-word dodge-word');
+  word.textContent = result === 'perfect' ? 'DODGED' : result === 'graze' ? 'GRAZED' : 'HIT';
+  gone(word.animate([{ transform: 'translate(-50%, -18px) scale(.8)', opacity: 0 }, { transform: 'translate(-50%, -30px) scale(1.1)', opacity: 1, offset: .25 }, { transform: 'translate(-50%, -48px) scale(1)', opacity: 0 }], { duration: 620, easing: 'ease-out' }), word);
+  if (!moving()) return;
+  if (result === 'miss') {
+    panel.animate([{ transform: 'translateX(-50%)' }, { transform: 'translateX(calc(-50% - 7px))' }, { transform: 'translateX(calc(-50% + 6px))' }, { transform: 'translateX(calc(-50% - 3px))' }, { transform: 'translateX(-50%)' }], { duration: 280 });
+    panel.animate([{ boxShadow: '0 0 0 2px #bc755e, 0 0 26px #bc755e' }, { boxShadow: '0 6px 24px #000a' }], { duration: 420, easing: 'ease-out' });
+    return;
+  }
+  panel.animate([{ boxShadow: `0 0 0 2px ${result === 'perfect' ? '#9bad72' : '#c1a05f'}, 0 0 24px ${result === 'perfect' ? '#9bad72' : '#c1a05f'}` }, { boxShadow: '0 6px 24px #000a' }], { duration: 420, easing: 'ease-out' });
+  const wave = place('parry-wave dodge-wave');
+  gone(wave.animate([{ transform: 'translate(-50%,-50%) scale(.5)', opacity: 1 }, { transform: 'translate(-50%,-50%) scale(1.9)', opacity: 0 }], { duration: 380, easing: 'ease-out' }), wave);
+  const sparks = result === 'perfect' ? 8 : 4;
+  for (let i = 0; i < sparks; i++) {
+    const spark = place('parry-spark');
+    const angle = (i / sparks) * Math.PI * 2 + 0.4, reach = 34 + (i % 2) * 12;
+    gone(spark.animate([
+      { transform: 'translate(-50%,-50%) translate(0,0) scale(1)', opacity: 1 },
+      { transform: `translate(-50%,-50%) translate(${Math.cos(angle) * reach}px, ${Math.sin(angle) * reach}px) scale(.2)`, opacity: 0 },
+    ], { duration: 340 + (i % 3) * 40, easing: 'cubic-bezier(.1,.8,.3,1)' }), spark);
+  }
+}
