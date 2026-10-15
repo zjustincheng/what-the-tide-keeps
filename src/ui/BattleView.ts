@@ -3,7 +3,7 @@ import { BOAR_PHASE_SHOTS } from '../presentation/bossScenes';
 import { strikeFeedback } from '../presentation/battleFeedback';
 import type { BattleFeedback } from '../presentation/battleFeedback';
 import { actionPreview } from '../presentation/battleActions';
-import { act, agility, circleLayout, circleTimes, FEINT_AT, FOOTING, parry, LEAD, timing, canAct, canCast, canFlee, canUse, cast, condition, cost, createBattle, DODGE, dodgeKind, ENEMIES, enemyMana, enemyTarget, flee, GATHER, grade, hesitate, intent, matchup, MEMORY_NAMES, MEMBERS, nextStrike, PATIENCE, SPELL, STAGES, strike, SURVIVE, TRAITS, useSupply, venom, visibleMana, warded } from '../rules/battle';
+import { act, agility, circleLayout, KRAKEN_PARRY, circleTimes, FEINT_AT, FOOTING, parry, LEAD, timing, canAct, canCast, canFlee, canUse, cast, condition, cost, createBattle, DODGE, dodgeKind, ENEMIES, enemyMana, enemyTarget, flee, GATHER, grade, hesitate, intent, matchup, MEMORY_NAMES, MEMBERS, nextStrike, PATIENCE, SPELL, STAGES, strike, SURVIVE, TRAITS, useSupply, venom, visibleMana, warded } from '../rules/battle';
 import type { Action, Battle, BattleOptions, Dodge, DodgeKind, Fighter, Foe, MemberId, Encounter } from '../rules/battle';
 import { checkSequence, SPELLS } from '../rules/spells';
 import { BOUNTY, SUPPLIES, SUPPLY_IDS } from '../rules/economy';
@@ -122,7 +122,7 @@ export class BattleView {
       <div class="spell-bar" hidden><p class="spell-name"></p><div class="spell-keys" aria-live="polite"></div><div class="spell-timer"><span></span></div>
         <div class="spell-pad">${[1, 2, 3, 4].map(key => `<button type="button" data-key="${key}">${key}</button>`).join('')}</div></div>
       <div class="dodge-bar" hidden><p class="dodge-call" aria-live="assertive"></p><button id="dodge" type="button">Dodge <small>Space or tap · as the ring closes</small></button></div>
-      <details class="battle-help"><summary>Battle controls</summary><p>Each living companion acts once. Spellcraft uses that action too.<br />Guard physical blows. Analyze spells before blocking them. Attack while hidden to reveal.<br />Mana returns slowly: 1 a round, or Gather to draw back more. Spent mana stays spent until you rest.<br />A spell needs time to settle before it can be cast again, and casting floods the caster's mana into view.<br />When a blow comes, press Space as the ring closes to dodge. Unknown spells cannot be dodged.</p></details>
+      <details class="battle-help"><summary>Battle controls</summary><p>Each living companion acts once. Spellcraft uses that action too.<br />Guard physical blows. Analyze spells before blocking them. Attack while hidden to reveal.<br />Mana returns slowly: 1 a round, or Gather to draw back more. Spent mana stays spent until you rest.<br />A spell needs time to settle before it can be cast again, and casting floods the caster's mana into view.<br />When a blow comes, press Space as the ring closes to dodge. A heavy blow is parried instead: strike its circles 1, 2, 3, each as its ring closes. Unknown spells cannot be dodged.</p></details>
       `;
     const details = document.createElement('details'); details.className = 'battle-details';
     const summary = document.createElement('summary'); summary.textContent = 'Battle details'; details.append(summary);
@@ -285,6 +285,10 @@ export class BattleView {
         : 'THE TIDE TAKES YOU · The five pull one another back to the surface. Try the fight again.';
       return;
     }
+    if (state.phase === 'enemy' && state.round === KRAKEN_PARRY) {
+      hint.textContent = 'PARRY · A heavy blow can’t be stepped out of. Strike the circles 1, 2, 3, each as its ring closes.';
+      return;
+    }
     if (state.phase === 'enemy') {
       hint.textContent = 'DODGE · Watch the warning. Press Space or tap Dodge as the ring closes.';
       this.get<HTMLButtonElement>('#dodge').classList.add('tutorial-pulse');
@@ -296,8 +300,11 @@ export class BattleView {
     } else if (state.round === 2) {
       hint.textContent = 'STEP 2 · Protect with Bear. Heal with Frog.';
       for (const id of ['bear', 'frog'] as const) if (state.party.some(member => member.id === id && member.health > 0 && !member.acted)) this.card(id).querySelector('[data-action="support"]')!.classList.add('tutorial-pulse');
+    } else if (state.round === KRAKEN_PARRY) {
+      hint.textContent = 'STEP 3 · Its biggest arm is rising. Attack, then get ready to parry.';
+      for (const member of state.party.filter(hero => hero.health > 0 && !hero.acted)) this.card(member.id).querySelector('[data-action="attack"]')!.classList.add('tutorial-pulse');
     } else {
-      hint.textContent = 'STEP 3 · Fight together. Watch for the dodge warning.';
+      hint.textContent = 'STEP 4 · Fight together. Watch for the dodge warning.';
       for (const member of state.party.filter(hero => hero.health > 0 && !hero.acted)) this.card(member.id).querySelector('[data-action="attack"]')!.classList.add('tutorial-pulse');
     }
   }

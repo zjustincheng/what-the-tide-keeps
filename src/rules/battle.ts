@@ -576,6 +576,8 @@ export function enemyMana(battle: Battle): number {
 // Now and then an ordinary foe puts its whole weight behind a blow: on the third round, and every fourth after, it hits half
 // again as hard and the window to dodge it closes in. A rhythm, not a roll, so it can be learned. Bosses keep their own heavy blows.
 export const HEAVY = { every: 4, from: 3, damage: 1.5, window: 0.7 } as const;
+// The round of the kraken fight, before the feast, that teaches the parry.
+export const KRAKEN_PARRY = 3;
 // Parrying it: three circles, each landing a beat after the last, each ring closing over the usual lead.
 export const CIRCLES = { count: 3, gap: 450 } as const;
 // When each circle must be struck, after the first appears.
@@ -610,6 +612,9 @@ export function intent(battle: Battle): Move & { tell: string } {
 }
 
 function plainIntent(battle: Battle): Move & { tell: string } {
+  // The third round of the first fight teaches the parry: its biggest arm, with everything behind it.
+  if (battle.encounter === 'kraken' && battle.round === KRAKEN_PARRY)
+    return { name: 'Crushing arm', type: 'physical', heavy: true, tell: 'Its biggest arm rises over the seawall and hangs there. It is coming down with everything behind it. Parry it: strike each circle in order as its ring closes.', damage: 9, window: { perfect: 55, graze: 140 } };
   if (battle.encounter === 'kraken') return battle.round % 2 === 0
     ? { name: 'Undertow', type: 'physical', tell: 'The water draws back beneath your feet. An undertow is about to drag one hero under.', damage: 8, window: { perfect: 55, graze: 140 } }
     : { name: 'Arm sweep', type: 'physical', tell: 'A huge arm draws back over the harbour. It is coming down on one hero; dodge as it lands.', damage: 6, window: { perfect: 65, graze: 160 } };

@@ -139,3 +139,11 @@ test('a heavy blow is parried with circles struck in order: all well is a parry,
   assert.notDeepEqual(circleLayout(HEAVY.from), circleLayout(HEAVY.from + HEAVY.every));
   assert.equal(circleLayout(HEAVY.from).length, CIRCLES.count);
 });
+
+test('the kraken fight before the feast teaches the parry on its third round, and only there', async () => {
+  const { createBattle, intent, dodgeKind, KRAKEN_PARRY } = await import('../../src/rules/battle.ts');
+  const at = (round: number) => intent({ ...createBattle('kraken'), round });
+  assert.equal(dodgeKind(at(KRAKEN_PARRY)), 'circles');
+  assert.equal(at(KRAKEN_PARRY).name, 'Crushing arm');
+  for (const round of [1, 2, KRAKEN_PARRY + 1, KRAKEN_PARRY + 2]) assert.equal(dodgeKind(at(round)), 'ring', `round ${round}`);
+});
