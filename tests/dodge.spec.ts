@@ -135,3 +135,18 @@ test('waiting out the feint dodges the cut', async ({ page }) => {
   await pressAt(page, 0);
   await saw('Dodged!');
 });
+
+test('a heavy blow shows itself: a red ring, and the call says so', async ({ page }) => {
+  await enterLocust(page);
+  await page.evaluate(async () => {
+    const { game } = await import('/src/main.ts');
+    const { createBattle, HEAVY } = await import('/src/rules/battle.ts');
+    const view = game.scene.getScene('church').overlay;
+    view.state = { ...createBattle('hound', [], { roster: ['chameleon', 'bear', 'vulture'] }), round: HEAVY.from };
+    view.render();
+  });
+  await attackAll(page);
+  await expect(page.locator('.dodge-ring[data-heavy]')).toHaveCount(1);
+  await expect(page.locator('.dodge-call')).toContainText('Heavy · Snap');
+  await page.screenshot({ path: test.info().outputPath('heavy.png') });
+});

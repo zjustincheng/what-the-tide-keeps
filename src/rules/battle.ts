@@ -98,10 +98,11 @@ export type Foe = number;
 // dodge: how this blow is dodged, when it differs from what dodgeKind would choose.
 // lead: how long the dodge ring takes to close, when it isn't the usual LEAD: a jab comes quicker, a telegraphed charge slower.
 // feint: the ring stops part-way and holds this long before it closes, to catch anyone pressing on the usual beat.
+// heavy: an ordinary foe's blow with its whole weight behind it (HEAVY): harder, with a narrower window.
 // tempo: for a blow that lands several times, each hit's own lead, so a combo can't be dodged on one rhythm.
 type Move = { name: string; type: 'physical' | 'spell'; spell?: string; dodge?: DodgeKind; damage: number; piercing?: number; revive?: boolean; drain?: boolean; feed?: boolean; hits?: number; unblockable?: boolean;
   poison?: number; sour?: true; mirror?: SpellId;
-  window?: { perfect: number; graze: number }; undodgeable?: boolean; lead?: number; feint?: number; tempo?: readonly number[] };
+  window?: { perfect: number; graze: number }; undodgeable?: boolean; lead?: number; feint?: number; tempo?: readonly number[]; heavy?: true };
 export type Member = Fighter & Readonly<{
   id: MemberId;
   acted: boolean;
@@ -570,8 +571,26 @@ export function enemyMana(battle: Battle): number {
   return ENEMIES[battle.encounter].veiled && !battle.enemyRevealed ? Math.min(2, battle.enemy.mana) : battle.enemy.mana;
 }
 
+// Now and then an ordinary foe puts its whole weight behind a blow: on the third round, and every fourth after, it hits half
+// again as hard and the window to dodge it closes in. A rhythm, not a roll, so it can be learned. Bosses keep their own heavy blows.
+export const HEAVY = { every: 4, from: 3, damage: 1.5, window: 0.7 } as const;
+const OWN_HEAVY: readonly Encounter[] = ['kraken', 'boar', 'hyena', 'viper', 'cuckoo', 'cuttlefish', 'human'];
+export function heavyRound(battle: Pick<Battle, 'encounter' | 'round'>): boolean {
+  return !OWN_HEAVY.includes(battle.encounter) && battle.round >= HEAVY.from && (battle.round - HEAVY.from) % HEAVY.every === 0;
+}
+// Only a single, ringed, damaging blow can be thrown this way: never a spell, a combo, a feint, or anything that can't be dodged.
+function weigh(battle: Battle, move: Move & { tell: string }): Move & { tell: string } {
+  if (!heavyRound(battle) || move.type !== 'physical' || dodgeKind(move) !== 'ring' || move.damage <= 0 || move.hits || move.feint || move.undodgeable || move.revive || move.feed) return move;
+  const window = move.window ?? { perfect: move.damage >= 10 ? DODGE.heavyPerfect : DODGE.perfect, graze: DODGE.graze };
+  return {
+    ...move, heavy: true, damage: Math.ceil(move.damage * HEAVY.damage),
+    window: { perfect: Math.round(window.perfect * HEAVY.window), graze: Math.round(window.graze * HEAVY.window) },
+    tell: `${move.tell} It sets its whole weight behind this one: it will hit hard, and the moment to dodge is short.`,
+  };
+}
+
 export function intent(battle: Battle): Move & { tell: string } {
-  const move = plainIntent(battle);
+  const move = weigh(battle, plainIntent(battle));
   if (!move.spell || battle.studied.includes(move.spell)) return move;
   // An unstudied spell keeps its name even while it is still gathering.
   return { ...move, name: move.type === 'spell' ? '???' : move.name, tell: move.tell.replaceAll(move.spell, '???') };

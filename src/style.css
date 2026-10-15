@@ -1103,3 +1103,6 @@ button.die[aria-pressed="true"] { border-color: #bc755e; color: #d8a890; }
 .journal-page .journal-page-note { font-style: normal; font-size: 11px; color: #b9a2a0; }
 .writing .writing-lines .memory-choice span { font: 12px/1.45 Georgia, serif; color: #e6dcc0; }
 .writing .writing-lines { grid-template-columns: 1fr; }
+/* A heavy blow: the foe's whole weight behind it. A thicker, redder ring, and a narrower moment to dodge. */
+.dodge-ring[data-heavy]::before { border: 3px solid #c8664e; box-shadow: 0 0 14px #c8664e88, inset 0 0 8px #c8664e55; }
+.dodge-ring[data-heavy]::after { border-width: 3px; border-color: #f2b49a; }

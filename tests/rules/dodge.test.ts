@@ -106,3 +106,22 @@ test('a combo keeps its uneven rhythm hit by hit, so it cannot be dodged on one 
   assert.ok(leads[1] < leads[0], 'the second thrust comes quicker');
   assert.match(intent({ ...createBattle('duellist'), round: 1 }).tell, /quick one after/);
 });
+
+test('now and then an ordinary foe throws its whole weight: harder, with a narrower window, on a rhythm that can be learned', async () => {
+  const { createBattle, intent, grade, HEAVY, DODGE, heavyRound } = await import('../../src/rules/battle.ts');
+  const at = (round: number) => intent({ ...createBattle('hound'), round });
+  // The hound snaps on odd rounds; the third and every fourth after it come with its weight behind them.
+  const snap = at(1), heavy = at(HEAVY.from), again = at(HEAVY.from + 2), later = at(HEAVY.from + HEAVY.every);
+  assert.equal(snap.name, heavy.name);
+  assert.equal(snap.heavy, undefined); assert.equal(again.heavy, undefined);
+  assert.equal(heavy.heavy, true); assert.equal(later.heavy, true);
+  assert.equal(heavy.damage, Math.ceil(snap.damage * HEAVY.damage));
+  assert.deepEqual(heavy.window, { perfect: Math.round(DODGE.perfect * HEAVY.window), graze: Math.round(DODGE.graze * HEAVY.window) });
+  assert.match(heavy.tell, /whole weight/);
+  // A press that would have dodged the ordinary snap only grazes the heavy one.
+  const off = Math.round(DODGE.perfect * HEAVY.window) + 5;
+  assert.equal(grade(off, snap), 'perfect'); assert.equal(grade(off, heavy), 'graze');
+  // Bosses keep their own heavy blows.
+  assert.equal(heavyRound({ encounter: 'boar', round: HEAVY.from }), false);
+  assert.equal(intent({ ...createBattle('boar'), round: HEAVY.from }).heavy, undefined);
+});

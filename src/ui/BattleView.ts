@@ -491,6 +491,8 @@ export class BattleView {
     // Most rings close at the usual pace; some bosses come quicker or slower, and some stop part-way and hold, to catch a press on the usual beat.
     const { lead, feint, impact: delay } = timing(next.move);
     ring.className = 'dodge-ring'; ring.style.setProperty('--lead', `${lead}ms`);
+    // A blow with the foe's whole weight behind it: a heavier ring, and less time to read it.
+    if (next.move.heavy) ring.dataset.heavy = 'true';
     if (feint) {
       // The feint: the ring closes as usual, stops dead and shakes in place, then closes at the usual pace.
       // Driven on a real element rather than ::after, which some browsers can't animate from script.
@@ -508,9 +510,9 @@ export class BattleView {
     const bar = this.get('.dodge-bar'), button = this.get<HTMLButtonElement>('#dodge');
     const shown = ++this.prompts;
     bar.dataset.kind = kind;
-    const call = `${next.move.name} → ${MEMBERS[next.target.id].name}.`;
+    const call = `${next.move.heavy ? 'Heavy · ' : ''}${next.move.name} → ${MEMBERS[next.target.id].name}.`;
     const pieces: HTMLElement[] = [ring];
-    let hint = feint ? 'It stops, then strikes · wait for it to move again' : 'Space or tap · as the ring closes';
+    let hint = feint ? 'It stops, then strikes · wait for it to move again' : next.move.heavy ? 'A heavy blow · the moment is short: press right as it closes' : 'Space or tap · as the ring closes';
     if (kind === 'ring') { bar.insertBefore(ring, button); this.root.dataset.impact = String(impact); }
     let keys: number[] = [];
     let sequence: HTMLElement | undefined;
