@@ -1,3 +1,4 @@
+import { stride } from './stride';
 import Phaser from 'phaser';
 import { characterDepth } from '../../presentation/townsfolk';
 import { createBattle, enemyMana, ENEMIES } from '../../rules/battle';
@@ -11,7 +12,7 @@ import type { AreaScene } from '../AreaScene';
 import type { Point } from './shared';
 
 export type Foe = { encounter: Encounter; defeat?: Effect; fledAt?: number; ambush?: boolean; lurks?: boolean; hidden?: boolean; decoy?: boolean; sprite: Phaser.Physics.Arcade.Sprite; signature: Phaser.GameObjects.Container;
-  home: { x: number; y: number }; phase: number; point: string; waves?: number; company?: readonly Escort[]; pursuer?: boolean };
+  home: { x: number; y: number }; feet: { x: number; y: number }; phase: number; point: string; waves?: number; company?: readonly Escort[]; pursuer?: boolean };
 // Ordinary enemies come after the hero once he is in sight, a little slower than he walks; bosses and guardians hold their ground.
 // sight and speed are in pixels and pixels per second. The hero walks at 70.
 const CHASE: Partial<Record<Encounter, { sight: number; speed: number }>> = {
@@ -41,7 +42,7 @@ export function createFoe(scene: AreaScene, at: Point, { encounter, defeat, ambu
   const mana = scene.add.text(0, veiled ? -24 : -23, `◇ ${shows ?? enemyMana(createBattle(encounter))}${company?.length ? ` ×${company.length + 1}` : ''}`, { fontFamily: 'monospace', fontSize: '8px', color: veiled ? '#b7d3c7' : '#dbc58b' }).setOrigin(0.5);
   const signature = scene.add.container(at.x, at.y, [ring, mana]).setDepth(5);
   scene.tweens.add({ targets: ring, alpha: veiled ? 0.15 : 0.35, duration: veiled ? 1400 : 1000, yoyo: true, repeat: -1 });
-  const foe: Foe = { encounter, sprite, signature, defeat, ambush, lurks, decoy, home: { x: at.x, y: at.y }, phase: scene.foes.length * 1.7, point, waves, company };
+  const foe: Foe = { encounter, sprite, signature, defeat, ambush, lurks, decoy, home: { x: at.x, y: at.y }, feet: { x, y }, phase: scene.foes.length * 1.7, point, waves, company };
   scene.foes.push(foe);
   // A decoy is a signature and nothing else: walk into it and it comes apart.
   if (decoy) {
@@ -102,7 +103,10 @@ export function moveFoes(scene: AreaScene, time: number) {
       foe.signature.setPosition(foe.sprite.x, foe.sprite.y);
     }
     if (toHero < 150) foe.sprite.setFlipX(player.x < foe.sprite.x);
-    foe.sprite.setOrigin(0.5, 0.5 + Math.sin(time / 320 + foe.phase) * 0.025);
+    // It walks when it moves, with its own gait; standing, it breathes.
+    const body = foe.sprite.body as Phaser.Physics.Arcade.Body | Phaser.Physics.Arcade.StaticBody;
+    const vx = 'velocity' in body ? body.velocity.x : 0, vy = 'velocity' in body ? body.velocity.y : 0;
+    stride(foe.sprite, foe.feet, time, { moving: Math.hypot(vx, vy) > 2, step: 240, lean: Math.sign(vx), phase: foe.phase });
   }
 }
 

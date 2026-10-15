@@ -8,6 +8,7 @@ import type { Condition, Context, Effect } from '../rules/world';
 import type { Conversation } from '../content/dialogue';
 import { loadGrimoire } from '../storage/grimoire';
 import { loadMemory } from '../storage/memory';
+import { HERO_BODY, place, STEP, stride } from './area/stride';
 import { STIRS } from '../content/piecing';
 import type { Remindable } from '../content/piecing';
 import { loadWorld, saveWorld } from '../storage/world';
@@ -165,7 +166,7 @@ export class AreaScene extends Phaser.Scene {
     this.shadow = this.add.ellipse(spawn.x, spawn.y + 9, 14, 6, 0x122b22, 0.6).setDepth(3.5);
     this.player = this.physics.add.sprite(spawn.x, spawn.y, 'hero');
     this.player.setDepth(characterDepth(this.player));
-    this.player.setSize(9, 7).setOffset(5, 17).setCollideWorldBounds(true);
+    this.player.setSize(9, 7).setOffset(HERO_BODY.x, HERO_BODY.y).setCollideWorldBounds(true);
     this.traversal = new Traversal(this, gapTile, spawn);
     this.hollows = new Hollows(this);
     this.physics.world.setBounds(...this.area.bounds ?? [0, 0, map.widthInPixels, map.heightInPixels]);
@@ -683,13 +684,14 @@ export class AreaScene extends Phaser.Scene {
     }
     revealFoes(this, time);
     // Footsteps while walking, alternating feet.
-    if ((x || y) && !this.sneaking && time - this.lastStep > 290) { this.lastStep = time; this.foot = -this.foot; music.effect(`step-${this.surface()}`, this.foot); }
+    if ((x || y) && !this.sneaking && time - this.lastStep > STEP) { this.lastStep = time; this.foot = -this.foot; music.effect(`step-${this.surface()}`, this.foot); }
     if (x) this.player.setFlipX(x < 0);
     this.player.setDepth(characterDepth(this.player));
     this.shadow.setPosition(this.player.x, this.player.y + 9);
     this.dayNight.follow(this.player.x, this.player.y);
-    // A restrained walking bob, or slow breathing when standing still, while the physics body stays steady.
-    this.player.setOrigin(0.5, 0.5 + (x || y ? Math.sin(time / 85) * 0.025 : Math.sin(time / 520) * 0.012) + traversal.lift);
+    // A hop with each step, a sway from foot to foot, a lean into the way he's going; breathing when still. The body stays put.
+    if (traversal.leaping) place(this.player, HERO_BODY, traversal.lift);
+    else stride(this.player, HERO_BODY, time, { moving: Boolean(x || y), quiet: this.sneaking, lean: this.player.flipX ? -Math.abs(x) : Math.abs(x) });
     const context = this.context();
     // The nearest thing in reach wins, so a door and the person beside it never steal each other's prompt.
     this.nearby = this.points.filter(p => this.reachable(p.name, context))

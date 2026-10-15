@@ -4,6 +4,7 @@ import { roster } from '../../rules/world';
 import { landing } from '../../rules/leap';
 import type { Ground } from '../../rules/leap';
 import { loadWorld, saveWorld } from '../../storage/world';
+import { HERO_BODY, place } from './stride';
 import { ClimbView } from '../../ui/ClimbView';
 import { music } from '../../audio/music';
 import type { AreaScene } from '../AreaScene';
@@ -98,7 +99,7 @@ export class Traversal {
     if (this.leaping || scene.overlay || scene.leaving || scene.talking) return;
     // The visual arc changes the sprite origin. Sample and land with the normal
     // origin so the physics feet cannot end up a tile above the landing point.
-    player.setOrigin(0.5, 0.5);
+    place(player, HERO_BODY, 0); player.setAngle(0);
     const body = player.body as Phaser.Physics.Arcade.Body;
     body.reset(player.x, player.y);
     body.updateFromGameObject();
@@ -119,7 +120,7 @@ export class Traversal {
     scene.tweens.addCounter({ from: 0, to: 1, duration, onUpdate: tween => { this.lift = Math.sin(tween.getValue()! * Math.PI) * (steps ? 0.55 : 0.3); },
       onComplete: () => {
         this.lift = 0;
-        player.setOrigin(0.5, 0.5);
+        place(player, HERO_BODY, 0); player.setAngle(0);
         body.checkCollision.none = false;
         body.reset(player.x, player.y);
         body.updateFromGameObject();
