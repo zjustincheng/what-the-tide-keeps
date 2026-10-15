@@ -1,5 +1,5 @@
 import { MEMBERS } from '../../rules/battle';
-import { anchor, forgetAll, held, hollow, remind, tideTakesAll } from '../../rules/memory';
+import { anchor, forgetAll, held, hollow, readPage, remind, tideTakesAll, writePage } from '../../rules/memory';
 import type { Companion } from '../../rules/memory';
 import { roster, techniques } from '../../rules/world';
 import type { ShopId } from '../../rules/world';
@@ -37,6 +37,7 @@ import { loadPursuit } from '../../storage/pursuit';
 import { AnchorView } from '../../ui/AnchorView';
 import { PieceView } from '../../ui/PieceView';
 import { GiveView } from '../../ui/GiveView';
+import { WriteView } from '../../ui/WriteView';
 import { FRAGMENTS } from '../../content/piecing';
 import type { Remindable } from '../../content/piecing';
 import { ResurrectionView } from '../../ui/ResurrectionView';
@@ -63,7 +64,7 @@ export function openFishing(scene: AreaScene, spot: SpotId) {
     () => { scene.overlay?.destroy(); scene.overlay = undefined; scene.resumeExploration(); });
 }
 
-export const openJournal = (scene: AreaScene) => scene.openPanel(() => new JournalView(loadJournal(), () => scene.closePanel(), orders(loadWorld()), leads(loadWorld())));
+export const openJournal = (scene: AreaScene) => scene.openPanel(() => new JournalView(loadJournal(), () => scene.closePanel(), orders(loadWorld()), leads(loadWorld()), loadMemory()));
 export const openBestiary = (scene: AreaScene) => scene.openPanel(() => new BestiaryView(loadBestiary(), loadGrimoire(), () => scene.closePanel()));
 
 // Who goes into the next fight.
@@ -119,22 +120,31 @@ export function writeDown(scene: AreaScene, then: () => void) {
   scene.overlay = new AnchorView(loadMemory(), friends, (id, reminder, given) => {
     scene.overlay?.destroy();
     scene.overlay = undefined;
+    let lines: readonly number[] | undefined;
     const settle = () => {
-      if (reminder) { save.ok = saveMemory(remind(loadMemory(), reminder.by, reminder.id)); music.effect('find'); }
+      if (reminder) { save.ok = saveMemory(reminder.by === 'page' ? readPage(loadMemory(), reminder.id) : remind(loadMemory(), reminder.by, reminder.id)); music.effect('find'); }
       if (id) { save.ok = saveMemory(anchor(loadMemory(), id)); music.effect('select'); }
+      if (id && lines) save.ok = saveMemory(writePage(loadMemory(), id, lines)) && save.ok;
       if (given) { const memory = loadMemory(); save.ok = saveMemory({ ...memory, companions: remindCompanion(held(memory), memory.companions ?? INITIAL_MINDS, given.to, given.id) }); music.effect('find'); }
       scene.renderMemory();
       scene.setExplorationEnabled(true);
       scene.physics.resume();
       then();
     };
-    // Giving a friend something back: they ask him about it, and he has to know.
-    const give = () => {
-      if (given && given.id !== 'craft') scene.overlay = new GiveView(given.to, given.id, () => { scene.overlay?.destroy(); scene.overlay = undefined; settle(); });
+    const next = (step: () => void) => () => { scene.overlay?.destroy(); scene.overlay = undefined; step(); };
+    // Writing it down: he chooses the two lines the page has room for.
+    const write = () => {
+      const already = id && loadMemory().anchors?.includes(id) && loadMemory().pages?.[id];
+      if (id && id in FRAGMENTS && !already) scene.overlay = new WriteView(id as Remindable, loadMemory().pages?.[id], chosen => { lines = chosen; next(settle)(); });
       else settle();
     };
-    // A friend's reminder isn't handed over: they tell it in pieces, and he puts it back together.
-    if (reminder && reminder.id in FRAGMENTS) scene.overlay = new PieceView(reminder.by, reminder.id as Remindable, () => { scene.overlay?.destroy(); scene.overlay = undefined; give(); });
+    // Giving a friend something back: they ask him about it, and he has to know.
+    const give = () => {
+      if (given && given.id !== 'craft') scene.overlay = new GiveView(given.to, given.id, next(write));
+      else write();
+    };
+    // A friend's reminder isn't handed over: they tell it in pieces, and he puts it back together. His own page, he reads.
+    if (reminder && reminder.id in FRAGMENTS) scene.overlay = new PieceView(reminder.by, reminder.id as Remindable, next(give), reminder.by === 'page' ? loadMemory().pages?.[reminder.id] : undefined);
     else give();
   }, joined);
 }

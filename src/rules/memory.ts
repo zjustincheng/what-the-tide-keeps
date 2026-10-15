@@ -7,7 +7,9 @@ export type Perk = 'mana' | 'force';
 // reminded: lost memories a companion has reminded the hero of. They are his again until the next death, which takes them back.
 // owed: how many memories this wipe takes, when it is more than one: at sea, the church can't fetch you back cleanly.
 // companions: what each companion remembers (src/rules/companionMemory.ts). fought: the companions in the fight that wiped, who each owe the tide a memory too.
-export type Memory = Readonly<{ lost: readonly MemoryId[]; pending: boolean; anchors?: readonly MemoryId[]; reminded?: readonly MemoryId[]; owed?: number; keepsakeMemories?: readonly MemoryId[]; companions?: Minds; fought?: readonly Companion[] }>;
+// pages: what he wrote out at a fire, two of each memory's four lines, by place. Paper outlasts him: pages survive every death.
+export type Pages = Readonly<Partial<Record<MemoryId, readonly [number, number]>>>;
+export type Memory = Readonly<{ lost: readonly MemoryId[]; pending: boolean; anchors?: readonly MemoryId[]; reminded?: readonly MemoryId[]; owed?: number; keepsakeMemories?: readonly MemoryId[]; companions?: Minds; fought?: readonly Companion[]; pages?: Pages }>;
 // kraken: whether he still has the party's technique from the kraken fight, which keeps everyone's dodging sharp.
 export type Hollow = Readonly<{ mana: number; damage: number; trained: boolean; kraken: boolean }>;
 
@@ -73,7 +75,7 @@ export function forget(memory: Memory, id: MemoryId): Memory {
   if (!memory.pending || !forgettable(memory).includes(id)) return memory;
   const restored = (memory.reminded ?? []).filter(other => (memory.anchors ?? []).includes(other));
   return { lost: [...memory.lost.filter(other => !restored.includes(other)), id], pending: false, anchors: [], reminded: [], owed: undefined, ...(memory.keepsakeMemories?.length ? { keepsakeMemories: memory.keepsakeMemories } : {}),
-    ...(memory.companions ? { companions: memory.companions } : {}), ...(memory.fought ? { fought: memory.fought } : {}) };
+    ...(memory.companions ? { companions: memory.companions } : {}), ...(memory.fought ? { fought: memory.fought } : {}), ...(memory.pages ? { pages: memory.pages } : {}) };
 }
 
 // Pay a whole wipe's debt at once.
@@ -127,4 +129,18 @@ export function keepMemory(memory: Memory, id: MemoryId): Memory {
   const companions = (['bear', 'vulture', 'frog', 'octopus'] as const).includes(id as Companion) ? bond(memory.companions ?? INITIAL_MINDS, id as Companion) : memory.companions;
   return { ...recall(memory, id), ...(companions ? { companions } : {}), keepsakeMemories: [...new Set([...(memory.keepsakeMemories ?? []), id])],
     anchors: (memory.anchors ?? []).filter(other => other !== id), reminded: (memory.reminded ?? []).filter(other => other !== id) };
+}
+
+// Writing it out: two of its four lines, the two he most wants to keep. Only what he still holds can be written.
+export function writePage(memory: Memory, id: MemoryId, lines: readonly number[]): Memory {
+  const kept = [...new Set(lines)].filter(line => Number.isInteger(line) && line >= 0 && line < 4).sort();
+  if (!held(memory).includes(id) || INITIAL_LOST.includes(id) || kept.length !== 2) return memory;
+  return { ...memory, pages: { ...memory.pages, [id]: [kept[0], kept[1]] } };
+}
+// His own page, read at a fire, brings back a memory he lost as a friend would: until the next death.
+export function canReadPage(memory: Memory, id: MemoryId): boolean {
+  return Boolean(memory.pages?.[id]) && memory.lost.includes(id) && !(memory.reminded ?? []).includes(id) && !INITIAL_LOST.includes(id);
+}
+export function readPage(memory: Memory, id: MemoryId): Memory {
+  return canReadPage(memory, id) ? { ...memory, reminded: [...(memory.reminded ?? []), id] } : memory;
 }

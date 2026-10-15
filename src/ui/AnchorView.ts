@@ -1,5 +1,5 @@
 import { memories } from '../content/memories';
-import { ANCHOR_SLOTS, canRemind, held, PERKS, PERK_BONUS } from '../rules/memory';
+import { ANCHOR_SLOTS, canReadPage, canRemind, held, PERKS, PERK_BONUS } from '../rules/memory';
 import type { Companion, Memory, MemoryId } from '../rules/memory';
 import { canRemindCompanion, COMPANION_MEMORY_IDS, INITIAL_MINDS, remembers } from '../rules/companionMemory';
 import type { CompanionMemoryId } from '../rules/companionMemory';
@@ -11,12 +11,14 @@ export class AnchorView {
   private root: HTMLElement;
   private cleanup = new AbortController();
 
-  constructor(memory: Memory, companions: readonly { id: Companion; name: string }[], onDone: (anchor: MemoryId | null, reminder: { by: Companion; id: MemoryId } | null, given?: { to: Companion; id: CompanionMemoryId } | null) => void, joined: readonly { id: Companion; name: string }[] = companions) {
+  constructor(memory: Memory, companions: readonly { id: Companion; name: string }[], onDone: (anchor: MemoryId | null, reminder: { by: Companion | 'page'; id: MemoryId } | null, given?: { to: Companion; id: CompanionMemoryId } | null) => void, joined: readonly { id: Companion; name: string }[] = companions) {
     const written = memory.anchors ?? [];
     const reminded = memory.reminded ?? [];
     const bound = memory.keepsakeMemories ?? [];
     // Who can remind him of what: each companion he still remembers, for each thing he has lost.
     const offers = companions.flatMap(({ id: by, name }) => memory.lost.filter(id => canRemind(memory, by, id)).map(id => ({ by, name, id })));
+    // And his own pages, for what he wrote down once and has since lost.
+    const pages = memory.lost.filter(id => canReadPage(memory, id));
     // And what he can give back to them: whatever they lost that he still holds himself.
     const minds = memory.companions ?? INITIAL_MINDS;
     // Friends who don't know him can't remind him of anything: say so, rather than leave them out without a word.
@@ -38,8 +40,12 @@ export class AnchorView {
       ${offers.length ? `<fieldset class="memory-choices reminders"><legend>Ask a friend to remind you</legend>${offers.map(({ by, name, id }) => `
         <label class="memory-choice"><input type="radio" name="remind" value="${by}:${id}" />
           <span><strong>${name}: ${memories[id].name}</strong><small>Yours again until the next time you die.</small></span></label>`).join('')}
-        <label class="memory-choice reminder-anchor" hidden><input type="radio" name="anchor" disabled /><span><strong></strong><small>Write this reminder down now. It will remain yours after the next death.</small></span></label>
       </fieldset>` : ''}
+      ${pages.length ? `<fieldset class="memory-choices reminders pages"><legend>Your own pages</legend>${pages.map(id => `
+        <label class="memory-choice"><input type="radio" name="remind" value="page:${id}" />
+          <span><strong>Your page: ${memories[id].name}</strong><small>In your handwriting. Yours again until the next time you die.</small></span></label>`).join('')}
+      </fieldset>` : ''}
+      ${offers.length || pages.length ? `<div class="memory-choices"><label class="memory-choice reminder-anchor" hidden><input type="radio" name="anchor" disabled /><span><strong></strong><small>Write this reminder down now. It will remain yours after the next death.</small></span></label></div>` : ''}
       ${strangers.length ? `<p class="memories-lost strangers">The ${strangers.join(' and the ')} ${strangers.length > 1 ? 'don’t' : 'doesn’t'} know you, and can’t remind you of anything until you remind them who you are.</p>` : ''}
       ${gifts.length ? `<fieldset class="memory-choices reminders gifts"><legend>Remind a friend</legend>${gifts.map(({ to, name, id }) => `
         <label class="memory-choice"><input type="radio" name="give" value="${to}:${id}" />
@@ -54,7 +60,7 @@ export class AnchorView {
     const reminder = () => {
       const value = this.root.querySelector<HTMLInputElement>('input[name="remind"]:checked')?.value;
       if (!value) return null;
-      const [by, id] = value.split(':') as [Companion, MemoryId];
+      const [by, id] = value.split(':') as [Companion | 'page', MemoryId];
       return { by, id };
     };
     const update = () => {

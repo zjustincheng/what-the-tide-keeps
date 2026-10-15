@@ -34,6 +34,9 @@ test('a friend’s reminder can be written down in the same visit and survives d
   // The bear tells it; asked to just tell it, he does, and the page is written once it's whole.
   await page.getByRole('button', { name: 'Just tell me', exact: true }).click();
   await page.getByRole('button', { name: 'Keep it', exact: true }).click();
+  const trial = page.getByRole('dialog', { name: 'You write down the trial.' }).getByRole('checkbox');
+  await trial.nth(0).check(); await trial.nth(2).check();
+  await page.getByRole('button', { name: 'Write it', exact: true }).click();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('tide-keeps.memory.v1')!).anchors)).toEqual(['trial']);
   await die(page); await page.locator('.cinema-skip').click();
   await expect(page.locator('.resurrection')).toContainText('Restored through the written page · The trial');
@@ -77,4 +80,28 @@ test('keepsake comparisons show actual tempered values, wearer, and Hollow attac
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole('button', { name: 'Done', exact: true }).click(); await page.reload(); await boot(page);
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('tide-keeps.gear.v1')!).bear)).toEqual(['broken-link']);
+});
+
+test('a page outlasts the memory: the journal keeps it in his hand, and reading it at a fire brings the memory back', async ({ page }) => {
+  await start(page, { lost: ['home', 'name', 'kraken'], pending: false, pages: { kraken: [0, 3] } });
+  // The journal keeps the page; he no longer remembers writing it.
+  await page.locator('#game').focus(); await page.keyboard.press('j');
+  const kept = page.locator('.journal-page[data-memory="kraken"]');
+  await expect(kept).toContainText('The harbour bell would not stop');
+  await expect(kept).toContainText('“All five,” the bear said.');
+  await expect(kept).toContainText('You don’t remember writing it.');
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
+  // At a fire he can read it back, with no friend to tell him.
+  await page.evaluate(async () => (await import('/src/scenes/area/panels.ts')).writeDown(window.loadoutRun.game!.scene.getScene('church') as AreaScene, () => {}));
+  await page.getByRole('group', { name: 'Your own pages' }).getByRole('radio', { name: /Your page: The kraken/ }).check();
+  await page.getByRole('button', { name: 'Done', exact: true }).click();
+  const reading = page.getByRole('dialog', { name: 'You read what you wrote about the kraken.' });
+  // What he wrote is already in place; the two lines between are his to find.
+  await expect(reading.locator('.piecing-place[data-right="true"]')).toHaveCount(2);
+  await expect(reading.locator('.piecing-piece:visible')).toHaveCount(2);
+  await reading.locator('.piecing-piece[data-piece="1"]').click(); await reading.locator('.piecing-piece[data-piece="2"]').click();
+  await expect(reading.locator('.piecing-says')).toContainText('You wrote it so you would know.');
+  await reading.getByRole('button', { name: 'Keep it', exact: true }).click();
+  const memory = await page.evaluate(() => JSON.parse(localStorage.getItem('tide-keeps.memory.v1')!));
+  expect(memory.reminded).toEqual(['kraken']); expect(memory.pages).toEqual({ kraken: [0, 3] });
 });

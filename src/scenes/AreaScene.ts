@@ -16,6 +16,7 @@ import type { ResurrectionView } from '../ui/ResurrectionView';
 import type { AnchorView } from '../ui/AnchorView';
 import type { PieceView } from '../ui/PieceView';
 import type { GiveView } from '../ui/GiveView';
+import type { WriteView } from '../ui/WriteView';
 import type { CookView } from '../ui/CookView';
 import type { JournalView } from '../ui/JournalView';
 import type { BestiaryView } from '../ui/BestiaryView';
@@ -67,7 +68,7 @@ import { beginBattle, beginKrakenTutorial } from './area/battles';
 import { openBestiary, openEquipment, openFishing, openJournal, openParty, openSettings, wake } from './area/panels';
 
 type Prop = { sprite: Phaser.Physics.Arcade.Sprite; hiddenIf: Condition[]; shadow?: Phaser.GameObjects.Ellipse; transition?: Phaser.Tweens.Tween };
-type Overlay = CinematicView | MemoriesView | BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView | KeepsakeView | SoundtrackView | PieceView | GiveView;
+type Overlay = CinematicView | MemoriesView | BattleView | ResurrectionView | AnchorView | EquipmentView | ShopView | FishingView | SettingsView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView | KeepsakeView | SoundtrackView | PieceView | GiveView | WriteView;
 type Panel = MemoriesView | CookView | JournalView | DiceView | BestiaryView | PartyView | ShellView | ArmView | ClimbView | EndingView | KeepsakeView | SoundtrackView;
 
 // Creatures that breathe on the map even though they are only props.

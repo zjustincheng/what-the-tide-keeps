@@ -1,5 +1,5 @@
 import { memories } from '../content/memories';
-import { FRAGMENTS, TELLING } from '../content/piecing';
+import { FRAGMENTS, READING, TELLING } from '../content/piecing';
 import type { Remindable } from '../content/piecing';
 import { scramble, settle } from '../rules/piecing';
 import type { Companion } from '../rules/memory';
@@ -14,8 +14,11 @@ export class PieceView {
   private placed: (number | undefined)[] = [undefined, undefined, undefined, undefined];
   private right = [false, false, false, false];
 
-  constructor(by: Companion, id: Remindable, onDone: () => void) {
-    const pieces = FRAGMENTS[id], told = scramble(id), name = MEMBERS[by].name;
+  // by: the friend telling it, or 'page' for his own page, read back, with the two lines he wrote already in place.
+  constructor(by: Companion | 'page', id: Remindable, onDone: () => void, written: readonly number[] = []) {
+    const pieces = FRAGMENTS[id], told = scramble(id).filter(piece => !written.includes(piece));
+    const voice = by === 'page' ? READING : TELLING[by];
+    for (const line of written) { this.placed[line] = line; this.right[line] = true; }
     this.root = document.createElement('section');
     this.root.className = 'battle resurrection piecing';
     this.root.setAttribute('role', 'dialog');
@@ -24,12 +27,12 @@ export class PieceView {
     this.root.tabIndex = -1;
     this.root.dataset.memory = id;
     this.root.innerHTML = `
-      <div class="battle-heading"><p class="eyebrow">BY THE FIRE</p><h2 id="piecing-title">The ${name.toLowerCase()} tells you about ${memories[id].name.toLowerCase()}.</h2></div>
-      <div class="piecing-voice"><img src="${import.meta.env.BASE_URL}assets/${by}.svg" alt="" /><p class="piecing-says" role="status">“${TELLING[by].open}”</p></div>
+      <div class="battle-heading"><p class="eyebrow">BY THE FIRE</p><h2 id="piecing-title">${by === 'page' ? `You read what you wrote about ${memories[id].name.toLowerCase()}.` : `The ${MEMBERS[by].name.toLowerCase()} tells you about ${memories[id].name.toLowerCase()}.`}</h2></div>
+      <div class="piecing-voice"><img src="${import.meta.env.BASE_URL}assets/${by === 'page' ? 'hero' : by}.svg" alt="" /><p class="piecing-says" role="status">${by === 'page' ? voice.open : `“${voice.open}”`}</p></div>
       <ol class="piecing-places" aria-label="The order it happened">${pieces.map((_, place) => `<li><button type="button" class="piecing-place" data-place="${place}" aria-label="Place ${place + 1}, empty">${place + 1}</button></li>`).join('')}</ol>
       <div class="piecing-pool" role="group" aria-label="What they tell you">${told.map(piece => `<button type="button" class="piecing-piece" data-piece="${piece}">${pieces[piece]}</button>`).join('')}</div>
       <div class="piecing-whole" hidden><p>${pieces.join(' ')}</p><p class="memories-lost">Yours again, until the next time you die. Write it down, and it stays.</p></div>
-      <div class="anchor-actions"><button id="piecing-keep" type="button" hidden>Keep it</button><button id="piecing-tell" type="button">Just tell me</button></div>`;
+      <div class="anchor-actions"><button id="piecing-keep" type="button" hidden>Keep it</button><button id="piecing-tell" type="button">${by === 'page' ? 'Read it through' : 'Just tell me'}</button></div>`;
     document.querySelector('.game-frame')!.append(this.root);
     const signal = this.cleanup.signal;
     const says = this.root.querySelector<HTMLElement>('.piecing-says')!;
@@ -51,7 +54,7 @@ export class PieceView {
     };
     const whole = () => {
       this.placed = [0, 1, 2, 3]; this.right = [true, true, true, true]; render();
-      says.textContent = `“${TELLING[by].done}”`;
+      says.textContent = by === 'page' ? voice.done : `“${voice.done}”`;
       this.root.querySelector<HTMLElement>('.piecing-whole')!.hidden = false;
       this.root.querySelector<HTMLElement>('.piecing-pool')!.hidden = true;
       // Whole, it reads as one memory rather than four pieces.
@@ -66,7 +69,7 @@ export class PieceView {
       if (done) { whole(); return; }
       this.right = right;
       this.placed = this.placed.map((piece, place) => (right[place] ? piece : undefined));
-      says.textContent = `“${TELLING[by].wrong}”`;
+      says.textContent = by === 'page' ? voice.wrong : `“${voice.wrong}”`;
       music.effect('select');
       render();
       pool.find(button => !button.hidden)?.focus({ preventScroll: true });
@@ -95,7 +98,7 @@ export class PieceView {
     tell.addEventListener('click', whole, { signal });
     keep.addEventListener('click', onDone, { signal });
     render();
-    pool[0].focus({ preventScroll: true });
+    pool[0]?.focus({ preventScroll: true });
   }
 
   destroy() {

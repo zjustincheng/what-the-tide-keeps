@@ -136,7 +136,16 @@ test('the vulture duel, her note, and writing a memory down', async ({ page }) =
   await expect(page.getByRole('heading', { name: 'Write something down.' })).toBeVisible();
   await page.getByRole('group', { name: 'Memories you still hold' }).getByRole('radio', { name: /The feast/ }).check();
   await page.getByRole('button', { name: 'Done' }).click();
-  expect(JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.memory.v1')))!).anchors).toEqual(['feast']);
+  // The page has room for two lines of it: he chooses which, and a third won't fit.
+  const writing = page.getByRole('dialog', { name: 'You write down the feast.' });
+  const lines = writing.getByRole('group', { name: 'What you remember' }).getByRole('checkbox');
+  await expect(writing.getByRole('button', { name: 'Write it' })).toBeDisabled();
+  await lines.nth(1).check(); await lines.nth(3).check();
+  await expect(lines.nth(0)).toBeDisabled();
+  await writing.getByRole('button', { name: 'Write it' }).click();
+  const saved = JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.memory.v1')))!);
+  expect(saved.anchors).toEqual(['feast']);
+  expect(saved.pages).toEqual({ feast: [1, 3] });
 });
 
 test('coming to the vulture with her note in hand, there is no fight', async ({ page }) => {
@@ -253,6 +262,9 @@ test('by the fire, a companion reminds the hero of what he lost, and writing it 
   await talk(page, 'Rest');
   await page.getByRole('radio', { name: /The kraken · reminded/ }).check();
   await page.getByRole('button', { name: 'Done' }).click();
+  const kraken = page.getByRole('dialog', { name: 'You write down the kraken.' }).getByRole('checkbox');
+  await kraken.nth(0).check(); await kraken.nth(3).check();
+  await page.getByRole('button', { name: 'Write it' }).click();
   memory = JSON.parse((await page.evaluate(() => localStorage.getItem('tide-keeps.memory.v1')))!);
   expect(memory.anchors).toEqual(['kraken']);
 });

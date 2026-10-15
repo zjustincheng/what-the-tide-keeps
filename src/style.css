@@ -1094,3 +1094,12 @@ button.die[aria-pressed="true"] { border-color: #bc755e; color: #d8a890; }
 .piecing-whole p:first-child { margin: 0 0 6px; padding: 10px 12px; border-left: 2px solid #9bad72; background: #10201b; color: #e6ecd2; font: 13px/1.6 Georgia, serif; }
 .giving .piecing-piece[data-wrong="true"] { text-decoration: line-through; opacity: .45; cursor: default; }
 .giving-heard { margin: 0; min-height: 1.5em; font-size: 12px; font-style: italic; color: #b9c3ad; padding-left: 50px; }
+/* Pages he wrote at fires: in the journal, faded where the memory is gone. */
+.journal-pages { width: min(560px, 100%); text-align: left; }
+.journal-page { margin: 0 0 8px; padding: 8px 12px; border-left: 2px solid #c2ac73; background: #1b2620; }
+.journal-page h4 { margin: 0 0 4px; font: 11px ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; color: #c2ac73; }
+.journal-page p { margin: 0 0 4px; font: italic 13px/1.5 Georgia, serif; color: #e6dcc0; }
+.journal-page[data-lost="true"] p { color: #8a8f80; }
+.journal-page .journal-page-note { font-style: normal; font-size: 11px; color: #b9a2a0; }
+.writing .writing-lines .memory-choice span { font: 12px/1.45 Georgia, serif; color: #e6dcc0; }
+.writing .writing-lines { grid-template-columns: 1fr; }

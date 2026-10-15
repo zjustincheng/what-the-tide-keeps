@@ -22,14 +22,19 @@ function parse(raw: string | null): Memory | undefined {
   if (raw === null) return undefined;
   const saved: unknown = JSON.parse(raw);
   if (typeof saved !== 'object' || saved === null) return undefined;
-  const { lost, pending, anchors = [], reminded = [], keepsakeMemories = [], owed, companions, fought } = saved as Record<string, unknown>;
+  const { lost, pending, anchors = [], reminded = [], keepsakeMemories = [], owed, companions, fought, pages } = saved as Record<string, unknown>;
   if (!Array.isArray(lost) || typeof pending !== 'boolean') return undefined;
   const bound = Array.isArray(keepsakeMemories) ? MEMORY_IDS.filter(id => keepsakeMemories.includes(id)) : [];
   const ids = MEMORY_IDS.filter(id => lost.includes(id));
   // Keep the order memories were lost in, dropping anything unknown.
   const kept = lost.filter((id, index): id is MemoryId => !bound.includes(id) && ids.includes(id) && lost.indexOf(id) === index);
   const back = Array.isArray(reminded) ? MEMORY_IDS.filter(id => reminded.includes(id) && kept.includes(id)) : [];
-  return { lost: kept, pending, keepsakeMemories: bound, companions: minds(companions), fought: Array.isArray(fought) ? COMPANIONS.filter(who => fought.includes(who)) : [], owed: typeof owed === 'number' && owed > 1 ? Math.min(3, Math.floor(owed)) : undefined, reminded: back, anchors: Array.isArray(anchors) ? MEMORY_IDS.filter(id => !bound.includes(id) && anchors.includes(id) && (!kept.includes(id) || back.includes(id))) : [] };
+  // Pages: two different lines of a known memory, each one of its four.
+  const written = typeof pages === 'object' && pages !== null ? Object.fromEntries(MEMORY_IDS.flatMap(id => {
+    const lines = (pages as Record<string, unknown>)[id];
+    return Array.isArray(lines) && lines.length === 2 && lines.every(line => Number.isInteger(line) && line >= 0 && line < 4) && lines[0] !== lines[1] ? [[id, [Math.min(lines[0], lines[1]), Math.max(lines[0], lines[1])]]] : [];
+  })) : {};
+  return { ...(Object.keys(written).length ? { pages: written } : {}), lost: kept, pending, keepsakeMemories: bound, companions: minds(companions), fought: Array.isArray(fought) ? COMPANIONS.filter(who => fought.includes(who)) : [], owed: typeof owed === 'number' && owed > 1 ? Math.min(3, Math.floor(owed)) : undefined, reminded: back, anchors: Array.isArray(anchors) ? MEMORY_IDS.filter(id => !bound.includes(id) && anchors.includes(id) && (!kept.includes(id) || back.includes(id))) : [] };
 }
 
 export function loadMemory(): Memory {

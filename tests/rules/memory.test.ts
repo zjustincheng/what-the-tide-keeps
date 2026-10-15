@@ -108,3 +108,22 @@ test('a written reminder becomes truly held even when there is no other memory t
 test('passing an empty list cannot forgive a wipe that still has an unprotected memory', () => {
   const owed = wipe(createMemory()); assert.equal(forgetAll(owed, []), owed);
 });
+
+test('a page holds two lines of a memory he still has, outlasts every death, and brings it back when read', async () => {
+  const { createMemory, writePage, canReadPage, readPage, held, wipe, forgetAll } = await import('../../src/rules/memory.ts');
+  let memory = writePage(createMemory(), 'kraken', [3, 1]);
+  assert.deepEqual(memory.pages, { kraken: [1, 3] });
+  assert.equal(writePage(memory, 'kraken', [1, 1]), memory, 'two different lines');
+  assert.equal(writePage(memory, 'home', [0, 1]), memory, 'nothing he never had');
+  assert.equal(canReadPage(memory, 'kraken'), false, 'nothing to bring back while he holds it');
+  memory = forgetAll(wipe(memory), ['kraken']);
+  assert.deepEqual(memory.pages, { kraken: [1, 3] }, 'the page survives the death that took the memory');
+  assert.equal(canReadPage(memory, 'kraken'), true);
+  memory = readPage(memory, 'kraken');
+  assert.ok(held(memory).includes('kraken'));
+  assert.equal(canReadPage(memory, 'feast'), false, 'no page, no reading');
+  // Read, it fades at the next death like any reminder; the page is still there to read again.
+  memory = forgetAll(wipe(memory), ['feast']);
+  assert.ok(!held(memory).includes('kraken'));
+  assert.equal(canReadPage(memory, 'kraken'), true);
+});

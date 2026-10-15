@@ -62,6 +62,9 @@ export const TELLING: Record<Companion, { open: string; wrong: string; done: str
   octopus: { open: 'Pieces first. That’s how the sea gives things back.', wrong: 'Close. The tide moved some of it. Again.', done: 'There. Now it’s yours, not just mine.' },
 };
 
+// His own page, read back: the voice is his handwriting.
+export const READING = { open: 'In your handwriting. You don’t remember writing it. Two lines; the rest is yours to find.', wrong: 'That isn’t how it went. You know your own hand.', done: 'Yes. You were there. You wrote it so you would know.' };
+
 // Places that stir a memory the hero has lost: something here he almost knows.
 export const STIRS: Record<Remindable, { places: readonly string[]; line: string }> = {
   feast: { places: ['feast-hall'], line: 'The long tables. The rafters. Your throat goes dry, and you don’t know why.' },
