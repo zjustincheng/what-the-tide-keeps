@@ -10,6 +10,7 @@ import { BOUNTY, SUPPLIES, SUPPLY_IDS } from '../rules/economy';
 import type { Supplies, SupplyId } from '../rules/economy';
 
 import { loadGrimoire, saveGrimoire } from '../storage/grimoire';
+import { burst, enter, finish, OUTRO, popIn, trace } from './parryFx';
 import { music } from '../audio/music';
 import { beaten, sighted } from '../storage/bestiary';
 import type { Effect as Sound } from '../audio/effects';
@@ -550,6 +551,7 @@ export class BattleView {
     const times = circleTimes(lead), struck: Dodge[] = [];
     const late = (next.move.window?.graze ?? DODGE.graze) * quick * (this.state.techniques.includes('footing') ? FOOTING : 1);
     let circles: HTMLButtonElement[] = [];
+    let parryScreen: HTMLElement | undefined, parryField: HTMLElement | undefined;
     if (kind === 'circles') {
       const field = document.createElement('div'); field.className = 'dodge-circles';
       const layout = circleLayout(this.state.round);
@@ -562,11 +564,11 @@ export class BattleView {
         const approach = document.createElement('span'); approach.className = 'dodge-approach'; circle.append(approach);
         // Each circle shows a lead before its moment, and its ring closes onto it over that lead.
         const appear = at - lead;
-        this.later(() => { circle.dataset.shown = 'true'; }, appear);
+        this.later(() => { circle.dataset.shown = 'true'; popIn(circle); }, appear);
         approach.animate([{ transform: 'scale(2.6)', opacity: .3 }, { transform: 'scale(1)', opacity: 1 }], { duration: lead, delay: appear, easing: 'linear', fill: 'both' });
         circle.addEventListener('pointerdown', event => { event.preventDefault(); this.prompt?.strike?.(i); }, { signal: this.cleanup.signal });
         // Left unstruck past its moment, the circle is missed, and the blow lands.
-        this.later(() => { if (this.prompts === shown && this.prompt && struck.length === i) this.prompt.answer('miss', false, 'Too slow · hit.'); }, at + late + 1);
+        this.later(() => { if (this.prompts === shown && this.prompt && struck.length === i) { burst(field, circle, 'miss'); this.prompt.answer('miss', false, 'Too slow · hit.'); } }, at + late + 1);
         field.append(circle);
         return circle;
       });
@@ -577,7 +579,10 @@ export class BattleView {
       const instruction = document.createElement('p'); instruction.className = 'dodge-instruction';
       instruction.textContent = 'Strike 1, 2, 3 in order, each as its ring closes. Space strikes the next.';
       screen.append(heading, field, instruction);
-      this.root.append(screen); pieces.push(screen);
+      trace(field, layout, times.map(at => at - lead));
+      this.root.append(screen); enter(screen, heading, field);
+      // The screen outlives the prompt by a moment, to play its end, then goes.
+      parryScreen = screen; parryField = field;
       hint = 'Strike the circles in order, each as its ring closes · Space strikes the next';
     }
     this.get('.dodge-call').textContent = `${call} ${kind === 'keys' ? `Type ${keys.join(' ')}!` : kind === 'circles' ? 'Parry!' : 'Dodge!'}`;
@@ -591,6 +596,7 @@ export class BattleView {
       impact, kind,
       answer: (dodge, early = false, reason) => {
         clearTimeout(this.timer); cancelAnimationFrame(sweep); this.prompt = undefined;
+        if (parryScreen) { const screen = parryScreen; finish(screen, dodge); this.later(() => screen.remove(), OUTRO); }
         card.dataset.targeted = 'false';
         delete this.root.dataset.impact;
         pieces.forEach(piece => piece.querySelectorAll<HTMLButtonElement>('button').forEach(key => key.disabled = true));
@@ -616,10 +622,11 @@ export class BattleView {
       },
       strike: (index = struck.length) => {
         // Out of order, the parry breaks.
-        if (index !== struck.length) { circles[index]?.setAttribute('data-result', 'miss'); this.prompt?.answer('miss', false, 'Out of order · hit.'); return; }
+        if (index !== struck.length) { circles[index]?.setAttribute('data-result', 'miss'); if (parryField && circles[index]) burst(parryField, circles[index], 'miss'); this.prompt?.answer('miss', false, 'Out of order · hit.'); return; }
         const error = performance.now() - (started + times[index]);
         const dodge = grade(error, next.move, quick, this.state.techniques.includes('footing'));
         circles[index].dataset.result = dodge;
+        if (parryField) burst(parryField, circles[index], dodge);
         if (dodge === 'miss') { this.prompt?.answer('miss', error < 0, error < 0 ? 'Too soon · hit.' : 'Too slow · hit.'); return; }
         music.effect('key', 4 + index * 3);
         struck.push(dodge);

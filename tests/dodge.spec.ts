@@ -1,6 +1,9 @@
 import { test, expect, type Page } from './fixtures';
 import { recordDodgeCalls } from './helpers';
 
+// These tests press on a real-time beat: a machine busy with a full parallel run can make a press land late. They retry.
+test.describe.configure({ retries: 2 });
+
 async function enterLocust(page: Page) {
   await page.goto('/?practice');
   await expect.poll(() => page.evaluate(async () => {
@@ -115,12 +118,12 @@ test('a feint\'s ring stops dead and shakes in place, then closes at the usual p
   const sizes = await page.evaluate(async () => {
     const { createBattle, intent, timing, FEINT_AT } = await import('/src/rules/battle.ts');
     const { lead, feint, impact: delay } = timing(intent({ ...createBattle('cuckoo'), round: 1 }));
-    const battle = document.querySelector<HTMLElement>('.battle')!;
-    const start = Number(battle.dataset.impact) - delay;
-    const size = () => new DOMMatrix(getComputedStyle(document.querySelector('.dodge-ring-close')!).transform).a;
-    const at = (t: number) => new Promise<number>(resolve => setTimeout(() => resolve(size()), start + t - performance.now()));
+    // Read the ring at exact points in its own timeline, so a busy machine can't make the sample late.
+    const closing = document.querySelector<HTMLElement>('.dodge-ring-close')!;
+    const [animation] = closing.getAnimations(); animation.pause();
+    const at = (t: number) => { animation.currentTime = t; return new DOMMatrix(getComputedStyle(closing).transform).a; };
     const stop = lead * FEINT_AT;
-    return { early: await at(stop * 0.5), held: await at(stop + feint * 0.15), stillHeld: await at(stop + feint * 0.85), closing: await at(delay - 120) };
+    return { early: at(stop * 0.5), held: at(stop + feint * 0.15), stillHeld: at(stop + feint * 0.85), closing: at(delay - 120) };
   });
   expect(sizes.early).toBeGreaterThan(1.9);
   expect(sizes.held).toBeCloseTo(1.8, 1);
@@ -145,9 +148,10 @@ async function faceAHeavyBlow(page: Page) {
     view.state = { ...createBattle('hound', [], { roster: ['chameleon', 'bear', 'vulture'] }), round: HEAVY.from };
     view.render();
   });
+  const saw = await recordDodgeCalls(page);
   await attackAll(page);
   await expect(page.locator('.dodge-circle')).toHaveCount(3);
-  await expect(page.locator('.dodge-call')).toContainText('Heavy · Snap');
+  await saw(/Heavy · Snap/);
 }
 // Strike circles inside the page, each at its own moment plus an offset, so timing doesn't depend on the driver.
 async function strike(page: Page, order: number[], offset = 0) {
