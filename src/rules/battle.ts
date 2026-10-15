@@ -161,9 +161,11 @@ export type Battle = Readonly<{
 export type Dodge = 'perfect' | 'graze' | 'miss';
 // How a blow is dodged. ring: press as a ring closes. target: click a circle somewhere on screen as it closes.
 // keys: type a short sequence before a spell lands. bar: stop a sweeping marker in the zone, like reeling a fish.
-export type DodgeKind = 'ring' | 'keys' | 'bar';
-export function dodgeKind(move: Pick<Move, 'dodge' | 'type' | 'drain' | 'hits' | 'damage'>): DodgeKind {
+export type DodgeKind = 'ring' | 'keys' | 'bar' | 'circles';
+export function dodgeKind(move: Pick<Move, 'dodge' | 'type' | 'drain' | 'hits' | 'damage' | 'heavy'>): DodgeKind {
   if (move.dodge) return move.dodge;
+  // A heavy blow is parried, not stepped out of: circles struck in order, each as its ring closes.
+  if (move.heavy) return 'circles';
   if (move.type === 'spell') return 'keys';
   if (move.drain) return 'bar';
   return 'ring';
@@ -574,6 +576,17 @@ export function enemyMana(battle: Battle): number {
 // Now and then an ordinary foe puts its whole weight behind a blow: on the third round, and every fourth after, it hits half
 // again as hard and the window to dodge it closes in. A rhythm, not a roll, so it can be learned. Bosses keep their own heavy blows.
 export const HEAVY = { every: 4, from: 3, damage: 1.5, window: 0.7 } as const;
+// Parrying it: three circles, each landing a beat after the last, each ring closing over the usual lead.
+export const CIRCLES = { count: 3, gap: 450 } as const;
+// When each circle must be struck, after the first appears.
+export const circleTimes = (lead = LEAD): number[] => Array.from({ length: CIRCLES.count }, (_, i) => lead + i * CIRCLES.gap);
+// Where the circles sit, as a share of the space for them: a different shape each heavy round, so it can't be clicked blind.
+const LAYOUTS: readonly (readonly (readonly [number, number])[])[] = [[[0.2, 0.6], [0.5, 0.25], [0.8, 0.6]], [[0.25, 0.3], [0.75, 0.3], [0.5, 0.75]], [[0.8, 0.35], [0.35, 0.65], [0.2, 0.25]]];
+export const circleLayout = (round: number) => LAYOUTS[Math.floor(round / HEAVY.every) % LAYOUTS.length];
+// Every circle struck well is a parry; any missed, and the blow lands; otherwise it grazes.
+export function parry(strikes: readonly Dodge[]): Dodge {
+  return strikes.length < CIRCLES.count || strikes.includes('miss') ? 'miss' : strikes.every(strike => strike === 'perfect') ? 'perfect' : 'graze';
+}
 const OWN_HEAVY: readonly Encounter[] = ['kraken', 'boar', 'hyena', 'viper', 'cuckoo', 'cuttlefish', 'human'];
 export function heavyRound(battle: Pick<Battle, 'encounter' | 'round'>): boolean {
   return !OWN_HEAVY.includes(battle.encounter) && battle.round >= HEAVY.from && (battle.round - HEAVY.from) % HEAVY.every === 0;
@@ -585,7 +598,7 @@ function weigh(battle: Battle, move: Move & { tell: string }): Move & { tell: st
   return {
     ...move, heavy: true, damage: Math.ceil(move.damage * HEAVY.damage),
     window: { perfect: Math.round(window.perfect * HEAVY.window), graze: Math.round(window.graze * HEAVY.window) },
-    tell: `${move.tell} It sets its whole weight behind this one: it will hit hard, and the moment to dodge is short.`,
+    tell: `${move.tell} It sets its whole weight behind this one. Parry it: strike each circle in order as its ring closes.`,
   };
 }
 

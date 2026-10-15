@@ -3,7 +3,7 @@ import { BOAR_PHASE_SHOTS } from '../presentation/bossScenes';
 import { strikeFeedback } from '../presentation/battleFeedback';
 import type { BattleFeedback } from '../presentation/battleFeedback';
 import { actionPreview } from '../presentation/battleActions';
-import { act, agility, FEINT_AT, LEAD, timing, canAct, canCast, canFlee, canUse, cast, condition, cost, createBattle, DODGE, dodgeKind, ENEMIES, enemyMana, enemyTarget, flee, GATHER, grade, hesitate, intent, matchup, MEMORY_NAMES, MEMBERS, nextStrike, PATIENCE, SPELL, STAGES, strike, SURVIVE, TRAITS, useSupply, venom, visibleMana, warded } from '../rules/battle';
+import { act, agility, circleLayout, circleTimes, FEINT_AT, FOOTING, parry, LEAD, timing, canAct, canCast, canFlee, canUse, cast, condition, cost, createBattle, DODGE, dodgeKind, ENEMIES, enemyMana, enemyTarget, flee, GATHER, grade, hesitate, intent, matchup, MEMORY_NAMES, MEMBERS, nextStrike, PATIENCE, SPELL, STAGES, strike, SURVIVE, TRAITS, useSupply, venom, visibleMana, warded } from '../rules/battle';
 import type { Action, Battle, BattleOptions, Dodge, DodgeKind, Fighter, Foe, MemberId, Encounter } from '../rules/battle';
 import { checkSequence, SPELLS } from '../rules/spells';
 import { BOUNTY, SUPPLIES, SUPPLY_IDS } from '../rules/economy';
@@ -52,7 +52,7 @@ export class BattleView {
   private prompts = 0;
   private casts = 0;
   private promptCleanup?: () => void;
-  private prompt?: { impact: number; kind: DodgeKind; answer: (dodge: Dodge, early?: boolean, reason?: string) => void; key?: (digit: number) => void; stop?: () => Dodge };
+  private prompt?: { impact: number; kind: DodgeKind; answer: (dodge: Dodge, early?: boolean, reason?: string) => void; key?: (digit: number) => void; stop?: () => Dodge; strike?: (circle?: number) => void };
   // Set while a spell is being typed.
   private casting?: (key: number) => void;
   // The stage the screen last showed, so a boss's rising scene plays when it changes during the fight.
@@ -546,10 +546,39 @@ export class BattleView {
       move();
       hint = 'Space or tap · inside the gold';
     }
-    this.get('.dodge-call').textContent = `${call} ${kind === 'keys' ? `Type ${keys.join(' ')}!` : 'Dodge!'}`;
+    // A heavy blow is parried: numbered circles, each landing a beat after the last. Strike them in order as each ring closes.
+    const times = circleTimes(lead), struck: Dodge[] = [];
+    const late = (next.move.window?.graze ?? DODGE.graze) * quick * (this.state.techniques.includes('footing') ? FOOTING : 1);
+    let circles: HTMLButtonElement[] = [];
+    if (kind === 'circles') {
+      const field = document.createElement('div'); field.className = 'dodge-circles';
+      const layout = circleLayout(this.state.round);
+      circles = times.map((at, i) => {
+        const circle = document.createElement('button');
+        circle.type = 'button'; circle.className = 'dodge-circle'; circle.textContent = String(i + 1);
+        circle.dataset.impact = String(started + at);
+        circle.style.left = `${layout[i][0] * 100}%`; circle.style.top = `${layout[i][1] * 100}%`;
+        circle.setAttribute('aria-label', `Parry ${i + 1} of ${times.length}`);
+        const approach = document.createElement('span'); approach.className = 'dodge-approach'; circle.append(approach);
+        // Each circle shows a lead before its moment, and its ring closes onto it over that lead.
+        const appear = at - lead;
+        this.later(() => { circle.dataset.shown = 'true'; }, appear);
+        approach.animate([{ transform: 'scale(2.6)', opacity: .3 }, { transform: 'scale(1)', opacity: 1 }], { duration: lead, delay: appear, easing: 'linear', fill: 'both' });
+        circle.addEventListener('pointerdown', event => { event.preventDefault(); this.prompt?.strike?.(i); }, { signal: this.cleanup.signal });
+        // Left unstruck past its moment, the circle is missed, and the blow lands.
+        this.later(() => { if (this.prompts === shown && this.prompt && struck.length === i) this.prompt.answer('miss', false, 'Too slow · hit.'); }, at + late + 1);
+        field.append(circle);
+        return circle;
+      });
+      const instruction = document.createElement('p'); instruction.className = 'dodge-instruction';
+      instruction.textContent = 'Strike 1, 2, 3 in order, each as its ring closes. Space strikes the next.';
+      bar.prepend(field); bar.append(instruction); pieces.push(field, instruction);
+      hint = 'Strike the circles in order, each as its ring closes · Space strikes the next';
+    }
+    this.get('.dodge-call').textContent = `${call} ${kind === 'keys' ? `Type ${keys.join(' ')}!` : kind === 'circles' ? 'Parry!' : 'Dodge!'}`;
     button.querySelector('small')!.textContent = hint;
-    bar.hidden = false; button.hidden = kind === 'keys'; button.disabled = false;
-    if (kind === 'keys') this.root.focus({ preventScroll: true }); else button.focus({ preventScroll: true });
+    bar.hidden = false; button.hidden = kind === 'keys' || kind === 'circles'; button.disabled = false;
+    if (kind === 'keys' || kind === 'circles') this.root.focus({ preventScroll: true }); else button.focus({ preventScroll: true });
     let typed = 0;
     const allowed = LEAD * 1.6 * quick;
     this.promptCleanup = () => { cancelAnimationFrame(sweep); pieces.forEach(piece => piece.remove()); };
@@ -580,6 +609,19 @@ export class BattleView {
           this.prompt?.answer(quick ? 'perfect' : 'graze', false, quick ? 'Dodged!' : 'Matched late · grazed.');
         }
       },
+      strike: (index = struck.length) => {
+        // Out of order, the parry breaks.
+        if (index !== struck.length) { circles[index]?.setAttribute('data-result', 'miss'); this.prompt?.answer('miss', false, 'Out of order · hit.'); return; }
+        const error = performance.now() - (started + times[index]);
+        const dodge = grade(error, next.move, quick, this.state.techniques.includes('footing'));
+        circles[index].dataset.result = dodge;
+        if (dodge === 'miss') { this.prompt?.answer('miss', error < 0, error < 0 ? 'Too soon · hit.' : 'Too slow · hit.'); return; }
+        music.effect('key', 4 + index * 3);
+        struck.push(dodge);
+        if (struck.length < times.length) return;
+        const result = parry(struck);
+        this.prompt?.answer(result, false, result === 'perfect' ? 'Parried!' : 'Grazed · partial parry.');
+      },
       stop: () => {
         const t = ((performance.now() - started) / 700) % 2, at = t < 1 ? t : 2 - t;
         const inner = { start: zone.start + zone.width / 4, end: zone.start + zone.width * 3 / 4 };
@@ -587,7 +629,7 @@ export class BattleView {
       },
     };
     // No answer at all means the blow lands in full.
-    const wait = kind === 'keys' ? allowed : kind === 'bar' ? 2400 : delay + DODGE.graze + 1;
+    const wait = kind === 'keys' ? allowed : kind === 'bar' ? 2400 : kind === 'circles' ? times[times.length - 1] + late + 50 : delay + DODGE.graze + 1;
     this.timer = this.later(() => this.prompt?.answer('miss', false, 'Time ran out · hit.'), wait);
   }
 
@@ -595,6 +637,7 @@ export class BattleView {
     if (!this.prompt) return;
     if (this.prompt.kind === 'keys') return;
     if (this.prompt.kind === 'bar') { this.prompt.answer(this.prompt.stop!()); return; }
+    if (this.prompt.kind === 'circles') { this.prompt.strike!(); return; }
     const error = performance.now() - this.prompt.impact;
     // Pressing far too early commits the dodge too soon; it cannot be retried.
     const next = nextStrike(this.state)!;

@@ -125,3 +125,17 @@ test('now and then an ordinary foe throws its whole weight: harder, with a narro
   assert.equal(heavyRound({ encounter: 'boar', round: HEAVY.from }), false);
   assert.equal(intent({ ...createBattle('boar'), round: HEAVY.from }).heavy, undefined);
 });
+
+test('a heavy blow is parried with circles struck in order: all well is a parry, any missed and it lands', async () => {
+  const { createBattle, intent, dodgeKind, parry, circleTimes, circleLayout, CIRCLES, LEAD, HEAVY } = await import('../../src/rules/battle.ts');
+  assert.equal(dodgeKind(intent({ ...createBattle('hound'), round: HEAVY.from })), 'circles');
+  assert.equal(dodgeKind(intent({ ...createBattle('hound'), round: 1 })), 'ring', 'an ordinary blow is still a ring');
+  assert.deepEqual(circleTimes(), Array.from({ length: CIRCLES.count }, (_, i) => LEAD + i * CIRCLES.gap));
+  assert.equal(parry(['perfect', 'perfect', 'perfect']), 'perfect');
+  assert.equal(parry(['perfect', 'graze', 'perfect']), 'graze');
+  assert.equal(parry(['perfect', 'perfect', 'miss']), 'miss');
+  assert.equal(parry(['perfect', 'perfect']), 'miss', 'a circle never struck is a miss');
+  // Each heavy round lays the circles out differently.
+  assert.notDeepEqual(circleLayout(HEAVY.from), circleLayout(HEAVY.from + HEAVY.every));
+  assert.equal(circleLayout(HEAVY.from).length, CIRCLES.count);
+});

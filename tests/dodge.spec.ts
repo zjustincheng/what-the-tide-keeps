@@ -136,7 +136,7 @@ test('waiting out the feint dodges the cut', async ({ page }) => {
   await saw('Dodged!');
 });
 
-test('a heavy blow shows itself: a red ring, and the call says so', async ({ page }) => {
+async function faceAHeavyBlow(page: Page) {
   await enterLocust(page);
   await page.evaluate(async () => {
     const { game } = await import('/src/main.ts');
@@ -146,7 +146,33 @@ test('a heavy blow shows itself: a red ring, and the call says so', async ({ pag
     view.render();
   });
   await attackAll(page);
-  await expect(page.locator('.dodge-ring[data-heavy]')).toHaveCount(1);
+  await expect(page.locator('.dodge-circle')).toHaveCount(3);
   await expect(page.locator('.dodge-call')).toContainText('Heavy · Snap');
-  await page.screenshot({ path: test.info().outputPath('heavy.png') });
+}
+// Strike circles inside the page, each at its own moment plus an offset, so timing doesn't depend on the driver.
+async function strike(page: Page, order: number[], offset = 0) {
+  await page.evaluate(([order, offset]) => new Promise<void>(resolve => {
+    const circles = Array.from(document.querySelectorAll<HTMLElement>('.dodge-circle'));
+    let left = order.length;
+    order.forEach((index, n) => {
+      // Struck in the given order: the nth strike lands at the nth circle's moment.
+      const at = Number(circles[n].dataset.impact) + offset;
+      setTimeout(() => { circles[index].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); if (--left === 0) resolve(); }, Math.max(0, at - performance.now()));
+    });
+  }), [order, offset] as const);
+}
+
+test('a heavy blow is parried by striking its circles in order, each as its ring closes', async ({ page }) => {
+  await faceAHeavyBlow(page);
+  const saw = await recordDodgeCalls(page);
+  await strike(page, [0, 1, 2]);
+  // Only every circle struck well is called a parry.
+  await saw('Parried!');
+});
+
+test('struck out of order, the parry breaks and the blow lands', async ({ page }) => {
+  await faceAHeavyBlow(page);
+  const saw = await recordDodgeCalls(page);
+  await strike(page, [1]);
+  await saw('Out of order · hit.');
 });
