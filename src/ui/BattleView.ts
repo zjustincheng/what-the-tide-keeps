@@ -883,11 +883,13 @@ export class BattleView {
     // In its second stage a boss gets a new name, and the screen says so.
     const stage = state.stage === 2 ? STAGES[state.encounter] : undefined;
     this.root.dataset.stage = String(state.stage);
-    this.get('#battle-title').textContent = this.tutorial ? state.phase === 'victory' ? 'The Kraken Falls.' : 'The Kraken' : stage ? `${stage.title}.` : 'Stand together.';
+    // Alone, before anyone has joined him, there is nobody to stand together with.
+    const alone = state.party.length === 1;
+    this.get('#battle-title').textContent = this.tutorial ? state.phase === 'victory' ? 'The Kraken Falls.' : 'The Kraken' : stage ? `${stage.title}.` : alone ? 'Stand your ground.' : 'Stand together.';
     this.get('.battle-heading .eyebrow').textContent = this.tutorial ? done ? 'THE FIVE · THE END OF THE FIGHT' : `THE FIVE · ROUND ${state.round}` : stage ? 'SECOND STAGE' : 'THE CONDEMNED';
     this.get('#battle-turn').textContent = this.tutorial && done
       ? state.phase === 'victory' ? 'The sea falls quiet. The feast is waiting in the capital.' : 'The tide breaks over the harbour. You get another chance.'
-      : done ? (this.arena && state.phase !== 'victory' ? 'The ringmaster calls it. The crowd boos, and then forgets you.' : state.phase === 'fled' ? 'You run. Half your coins scatter behind you.' : state.phase === 'victory' ? `${SURVIVE[state.encounter] ? 'You lived through it.' : this.arena ? 'The crowd roars. The ringmaster has your prize.' : `It falls quiet. You find ${BOUNTY[state.encounter]} coins.`}${state.party.some(member => member.health < member.maxHealth) ? ' Your wounds will linger until you rest at a fire.' : ''}` : 'The party falls.')
+      : done ? (this.arena && state.phase !== 'victory' ? 'The ringmaster calls it. The crowd boos, and then forgets you.' : state.phase === 'fled' ? 'You run. Half your coins scatter behind you.' : state.phase === 'victory' ? `${SURVIVE[state.encounter] ? 'You lived through it.' : this.arena ? 'The crowd roars. The ringmaster has your prize.' : `It falls quiet. You find ${BOUNTY[state.encounter]} coins.`}${state.party.some(member => member.health < member.maxHealth) ? ' Your wounds will linger until you rest at a fire.' : ''}` : (alone ? 'You fall.' : 'The party falls.'))
       : `Round ${state.round} · ${state.phase === 'player' ? `${remaining} actions remaining` : 'The enemy moves'}${state.soured ? ' · Soured: healing burns' : ''}`;
     if (state.encounter === 'human' && state.phase === 'victory') this.get('#battle-turn').textContent = 'His borrowed spells are silent. He is still breathing. What happens next is your choice.';
     this.renderTutorial(state, done);
