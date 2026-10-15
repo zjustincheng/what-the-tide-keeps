@@ -570,9 +570,14 @@ export class BattleView {
         field.append(circle);
         return circle;
       });
+      // The parry has a screen of its own: the battle dims, and the circles are large and far apart, easy to see and to hit.
+      const screen = document.createElement('div'); screen.className = 'parry-screen';
+      screen.setAttribute('role', 'group'); screen.setAttribute('aria-label', 'Parry the heavy blow');
+      const heading = document.createElement('p'); heading.className = 'parry-call'; heading.textContent = `${call} Parry!`;
       const instruction = document.createElement('p'); instruction.className = 'dodge-instruction';
       instruction.textContent = 'Strike 1, 2, 3 in order, each as its ring closes. Space strikes the next.';
-      bar.prepend(field); bar.append(instruction); pieces.push(field, instruction);
+      screen.append(heading, field, instruction);
+      this.root.append(screen); pieces.push(screen);
       hint = 'Strike the circles in order, each as its ring closes · Space strikes the next';
     }
     this.get('.dodge-call').textContent = `${call} ${kind === 'keys' ? `Type ${keys.join(' ')}!` : kind === 'circles' ? 'Parry!' : 'Dodge!'}`;
