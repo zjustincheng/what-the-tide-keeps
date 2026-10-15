@@ -1,6 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
 declare global { interface Window { bearRun: typeof import('../src/main'); } }
 test.use({ storageState: { cookies: [], origins: [] }, reducedMotion: 'reduce' });
+// Each test walks the bear's whole quest across four areas; under a full parallel run that outlasts the usual minute.
+test.slow();
 async function ready(page: Page, key: string) { await page.waitForFunction(key => Boolean((window.bearRun.game?.scene.getScene(key) as import('../src/scenes/AreaScene').AreaScene | undefined)?.player?.active), key); }
 async function start(page: Page) {
   await page.addInitScript(() => {
@@ -15,15 +17,19 @@ async function travel(page: Page, from: string, to: string) { await page.evaluat
 async function talk(page: Page, key: string, x: number, y: number, prompt: string) {
   await page.evaluate(([key, x, y]) => { const s = window.bearRun.game!.scene.getScene(key) as import('../src/scenes/AreaScene').AreaScene; s.player.setPosition(x, y); const b = s.player.body as import('phaser').Physics.Arcade.Body; b.reset(x, y); b.updateFromGameObject(); }, [key, x, y] as const);
   await page.locator('#game').focus(); await expect(page.locator('#prompt')).toContainText(prompt); await page.keyboard.press('e');
+  // Under load a key can land before the scene is listening: wait for the conversation to open, and ask again if it didn't.
+  await expect(async () => { if (await page.locator('#dialogue').isHidden()) await page.keyboard.press('e'); await expect(page.locator('#dialogue')).toBeVisible({ timeout: 1000 }); }).toPass();
 }
+// Walk away, and wait until the conversation has really closed before doing anything else.
+async function leave(page: Page) { await page.keyboard.press('Escape'); await expect(page.locator('#dialogue')).toBeHidden(); }
 async function advanceToChoice(page: Page, choice: RegExp) {
   for (let i = 0; i < 8 && !await page.getByRole('button', { name: choice }).isVisible(); i++) await page.locator('#continue').click();
   await expect(page.getByRole('button', { name: choice })).toBeVisible();
 }
 async function record(page: Page) {
-  await talk(page, 'farmland', 120, 248, 'bear'); await expect(page.locator('#dialogue-text')).toContainText('stone'); await page.keyboard.press('Escape');
+  await talk(page, 'farmland', 120, 248, 'bear'); await expect(page.locator('#dialogue-text')).toContainText('stone'); await leave(page);
   await travel(page, 'farmland', 'mill-inside'); await talk(page, 'mill-inside', 312, 252, 'ledger');
-  await page.locator('#continue').click(); await expect(page.locator('#dialogue-text')).toContainText('UNABLE TO STAND'); await page.keyboard.press('Escape');
+  await page.locator('#continue').click(); await expect(page.locator('#dialogue-text')).toContainText('UNABLE TO STAND'); await leave(page);
   await travel(page, 'mill-inside', 'farmland'); await talk(page, 'farmland', 56, 240, 'miller');
   await advanceToChoice(page, /Let the bear speak/); await page.getByRole('button', { name: /Let the bear speak/ }).click();
   await expect(page.locator('#speaker')).toHaveText('THE BEAR');
@@ -34,7 +40,7 @@ async function record(page: Page) {
 }
 async function reward(page: Page, equipNow = false) {
   await talk(page, 'farmland', 120, 248, 'bear'); await advanceToChoice(page, /Keep the broken link/); await page.getByRole('button', { name: /Keep the broken link/ }).click();
-  await expect(page.locator('#dialogue-text')).toContainText('warm from his paw'); await page.keyboard.press('Escape');
+  await expect(page.locator('#dialogue-text')).toContainText('warm from his paw'); await leave(page);
   const story = page.locator('.cinematic[data-story="bearChain"]'); await expect(story).toBeVisible();
   await story.locator('.cinema-skip').click(); await expect(story).toHaveCount(0);
   await expect(page.locator('.keepsake-award')).toContainText('This bond survives death');
@@ -45,20 +51,20 @@ async function reward(page: Page, equipNow = false) {
 }
 
 test('the formal route changes the labour order before the bear gives the link', async ({ page }) => {
-  await start(page); await record(page); await page.getByRole('button', { name: /Take it to the reeve/ }).click(); await page.keyboard.press('Escape');
-  await talk(page, 'farmland', 120, 248, 'bear'); await expect(page.locator('#dialogue-text')).toContainText('reeve'); await expect(page.getByRole('button', { name: /Keep the broken link/ })).toHaveCount(0); await page.keyboard.press('Escape');
+  await start(page); await record(page); await page.getByRole('button', { name: /Take it to the reeve/ }).click(); await leave(page);
+  await talk(page, 'farmland', 120, 248, 'bear'); await expect(page.locator('#dialogue-text')).toContainText('reeve'); await expect(page.getByRole('button', { name: /Keep the broken link/ })).toHaveCount(0); await leave(page);
   await travel(page, 'farmland', 'town'); await talk(page, 'town', 120, 128, 'reeve');
   await advanceToChoice(page, /Show the miller’s statement/); await page.getByRole('button', { name: /Show the miller’s statement/ }).click();
-  await page.locator('#continue').click(); await page.locator('#continue').click(); await expect(page.locator('#dialogue-text')).toContainText('no chained labour'); await page.keyboard.press('Escape');
+  await page.locator('#continue').click(); await page.locator('#continue').click(); await expect(page.locator('#dialogue-text')).toContainText('no chained labour'); await leave(page);
   await travel(page, 'town', 'farmland'); await reward(page, true);
   const worn = await page.evaluate(() => JSON.parse(localStorage.getItem('tide-keeps.gear.v1')!).bear); expect(worn).toContain('broken-link');
-  await talk(page, 'farmland', 120, 248, 'old chain'); await expect(page.locator('#dialogue-text')).toContainText('lies loose'); await expect(page.getByRole('button', { name: /Keep the broken link/ })).toHaveCount(0); await page.keyboard.press('Escape');
+  await talk(page, 'farmland', 120, 248, 'old chain'); await expect(page.locator('#dialogue-text')).toContainText('lies loose'); await expect(page.getByRole('button', { name: /Keep the broken link/ })).toHaveCount(0); await leave(page);
   await travel(page, 'farmland', 'mill-inside'); await talk(page, 'mill-inside', 312, 252, 'ledger'); await page.locator('#continue').click(); await expect(page.locator('#dialogue-text')).toContainText('NO CHAINED LABOUR');
 });
 
 test('leaving on the bear’s terms restores his memory, and it survives death and reload while unequipped', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
-  await start(page); await record(page); await page.getByRole('button', { name: /Leave with him/ }).click(); await page.keyboard.press('Escape'); await reward(page);
+  await start(page); await record(page); await page.getByRole('button', { name: /Leave with him/ }).click(); await leave(page); await reward(page);
   await page.locator('#game').focus(); await page.keyboard.press('Tab');
   const slot = page.getByRole('combobox', { name: 'Bear keepsake 1', exact: true }); await slot.selectOption('broken-link');
   await expect(page.locator('.equipment')).toContainText('Protect guards the whole party'); await slot.selectOption('');
